@@ -1336,7 +1336,7 @@ td.mono { font-variant-numeric: tabular-nums; }
             <option>Other</option>
           </select>
         </div>
-        <div class="fg"><label>व्स (inches)</label>
+        <div class="fg"><label>Diameter (inches)</label>
           <select id="bc_dia">
             <option>4 inch</option><option>4.5 inch</option><option>5 inch</option><option>6 inch</option><option>8 inch</option>
           </select>
@@ -1358,7 +1358,7 @@ td.mono { font-variant-numeric: tabular-nums; }
     <div class="tbl-wrap">
       <div class="tbl-toolbar"><span class="tbl-toolbar-title">🔩 Casing Entries</span></div>
       <div class="tbl-scroll">
-        <table><thead><tr><th>Date</th><th>Type</th><th>व्स</th><th>ंबी (ft)</th><th>Rate/ft</th><th>Total</th><th>Paid</th><th>Balance</th><th>Supplier</th><th>Action</th></tr></thead>
+        <table><thead><tr><th>Date</th><th>Type</th><th>Diameter</th><th>Length (ft)</th><th>Rate/ft</th><th>Total</th><th>Paid</th><th>Balance</th><th>Supplier</th><th>Action</th></tr></thead>
         <tbody id="casingBody"></tbody></table>
       </div>
     </div>
@@ -1596,7 +1596,7 @@ td.mono { font-variant-numeric: tabular-nums; }
     <div class="card card-pad" style="max-width:600px">
       <div class="card-header"><div class="card-title"><span class="ct-icon">🏗️</span> RCC Slab Material Calculator</div></div>
       <div class="form-grid">
-        <div class="fg"><label>ंबी (m)</label><input type="number" id="sl_l" placeholder="10" oninput="calcSlab()"></div>
+        <div class="fg"><label>Length (m)</label><input type="number" id="sl_l" placeholder="10" oninput="calcSlab()"></div>
         <div class="fg"><label>Width (m)</label><input type="number" id="sl_w" placeholder="8" oninput="calcSlab()"></div>
         <div class="fg"><label>Thickness (mm)</label><input type="number" id="sl_t" placeholder="150" oninput="calcSlab()"></div>
         <div class="fg"><label>Grade</label>
@@ -2593,7 +2593,7 @@ function createProject(){
   nav('dashboard');
 }
 function deleteProject(id){
-  if(id==='default'||!confirm(' Project deletedelete's?')) return;
+  if(id==='default'||!confirm('Delete this project?')) return;
   projects=projects.filter(p=>p.id!==id);
   saveProjList();
   if(CP===id){ CP='default'; localStorage.setItem('ps_cp','default'); loadData(); }
@@ -2781,7 +2781,7 @@ function renderRates(){
     if(!supMap[m.supplier]) supMap[m.supplier]={rates:[],qty:0};
     supMap[m.supplier].rates.push(r); supMap[m.supplier].qty+=parseFloat(m.qty)||0;
   });
-  if(!Object.keys(supMap).length){ body.innerHTML=empRow(6,'💹',' Material's any Entry none'); return; }
+  if(!Object.keys(supMap).length){ body.innerHTML=empRow(6,'💹','No materials for rate comparison'); return; }
   const entries=Object.entries(supMap).map(([name,d])=>({ name, avg:d.rates.reduce((a,b)=>a+b,0)/d.rates.length, min:Math.min(...d.rates), max:Math.max(...d.rates), qty:d.qty })).sort((a,b)=>a.avg-b.avg);
   const minAvg=entries[0].avg;
   body.innerHTML=entries.map((e,i)=>{
@@ -3740,8 +3740,8 @@ function openEdit(type, id){
     html=`<div class="form-grid">
       <div class="fg"><label>Date</label><input type="date" id="ed_date" value="${item.date||''}"></div>
       <div class="fg"><label>Type</label><input type="text" id="ed_type" value="${item.type||''}"></div>
-      <div class="fg"><label>व्स</label><input type="text" id="ed_dia" value="${item.dia||''}"></div>
-      <div class="fg"><label>ंबी (ft)</label><input type="number" id="ed_length" value="${item.length||0}"></div>
+      <div class="fg"><label>Diameter</label><input type="text" id="ed_dia" value="${item.dia||''}"></div>
+      <div class="fg"><label>Length (ft)</label><input type="number" id="ed_length" value="${item.length||0}"></div>
       <div class="fg"><label>Rate (₹/ft)</label><input type="number" id="ed_rate" value="${item.rate||0}"></div>
       <div class="fg"><label>Total (₹)</label><input type="number" id="ed_amount" value="${item.amount||0}"></div>
       <div class="fg"><label>Supplier</label><input type="text" id="ed_supplier" value="${item.supplier||''}"></div>
@@ -4622,12 +4622,12 @@ function renderBoreInfoDisplay(){
       <div class="stat-card s-teal" data-icon="⬇️"><div class="stat-label">Total Depth</div><div class="stat-value">${boreInfo.depth||'—'}<span style="font-size:12px;font-weight:400"> ft</span></div></div>
       <div class="stat-card s-green" data-icon="💧"><div class="stat-label">Water (ft)</div><div class="stat-value">${boreInfo.water_depth||'—'}<span style="font-size:12px;font-weight:400"> ft</span></div></div>
       <div class="stat-card s-amber" data-icon="🌊"><div class="stat-label">Yield</div><div class="stat-value" style="font-size:14px">${boreInfo.yield||'—'}</div></div>
-      <div class="stat-card s-pur" data-icon="📏"><div class="stat-label">व्स</div><div class="stat-value" style="font-size:14px">${boreInfo.dia||'—'}</div></div>
+      <div class="stat-card s-pur" data-icon="📏"><div class="stat-label">Diameter</div><div class="stat-value" style="font-size:14px">${boreInfo.dia||'—'}</div></div>
     </div>
     <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:13px">
       <div><span class="text-muted">Status:</span> <strong>${statusMap[boreInfo.status]||boreInfo.status||'—'}</strong></div>
       <div><span class="text-muted">Contractor:</span> <strong>${boreInfo.contractor||'—'}</strong>${boreInfo.mobile?` <a href="tel:${boreInfo.mobile}" style="margin-left:4px">📞 ${boreInfo.mobile}</a>`:''}</div>
-      <div><span class="text-muted">पाण्'s Type:</span> <strong>${boreInfo.water_type||'—'}</strong></div>
+      <div><span class="text-muted">Water Type:</span> <strong>${boreInfo.water_type||'—'}</strong></div>
       ${boreInfo.note?`<div style="width:100%;color:var(--muted);font-size:12px">📝 ${boreInfo.note}</div>`:''}
     </div>
   </div>`;
@@ -4691,7 +4691,7 @@ function saveCasing(){
   const rate=parseFloat(document.getElementById('bc_rate')?.value)||0;
   const amount=parseFloat(document.getElementById('bc_amount')?.value)||length*rate;
   const paid=parseFloat(document.getElementById('bc_paid')?.value)||0;
-  if(!length){ showToast('ंबी required!','warn'); return; }
+  if(!length){ showToast('Length required!','warn'); return; }
   boreCasing.push({ id:Date.now(), date:document.getElementById('bc_date')?.value||today(), type:document.getElementById('bc_type')?.value, dia:document.getElementById('bc_dia')?.value, length, rate, amount, paid, supplier:document.getElementById('bc_supplier')?.value, mode:document.getElementById('bc_mode')?.value, note:document.getElementById('bc_note')?.value });
   saveAll(); renderCasing();
   ['bc_length','bc_rate','bc_amount','bc_supplier','bc_note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -4850,7 +4850,7 @@ function renderBoreSummary(){
     ${boreInfo.location?`<div class="card card-pad">
       <div class="card-title" style="margin-bottom:12px"><span class="ct-icon">💧</span> Bore Details</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;font-size:13px">
-        ${[['📍 Location',boreInfo.location],['⬇️ Total Depth',boreInfo.depth?boreInfo.depth+' ft':'—'],['💧 Water',boreInfo.water_depth?boreInfo.water_depth+' ft':'—'],['🌊 Yield',boreInfo.yield||'—'],['📏 व्स',boreInfo.dia||'—'],['🧪 पाण्'s Type',boreInfo.water_type||'—']].map(([l,v])=>`<div style="padding:8px;background:var(--bg);border-radius:8px"><div style="font-size:10px;color:var(--muted)">${l}</div><div class="font-bold">${v}</div></div>`).join('')}
+        ${[['📍 Location',boreInfo.location],['⬇️ Total Depth',boreInfo.depth?boreInfo.depth+' ft':'—'],['💧 Water',boreInfo.water_depth?boreInfo.water_depth+' ft':'—'],['🌊 Yield',boreInfo.yield||'—'],['📏 Diameter',boreInfo.dia||'—'],['🧪 Water Type',boreInfo.water_type||'—']].map(([l,v])=>`<div style="padding:8px;background:var(--bg);border-radius:8px"><div style="font-size:10px;color:var(--muted)">${l}</div><div class="font-bold">${v}</div></div>`).join('')}
       </div>
     </div>`:''}`;
 }
@@ -5155,9 +5155,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   const tpEl = document.getElementById('topbarProj');
   if(tpEl && initProj) tpEl.textContent = '📁 '+initProj.name;
   // modal close on bg
-  document.getElementById('payModal').addEventListener('click',function(e){if(e.target===)closeModal('payModal');});
-  document.getElementById('editModal').addEventListener('click',function(e){if(e.target===)closeModal('editModal');});
-  document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===)closeLightbox();});
+  document.getElementById('payModal').addEventListener('click',function(e){if(e.target===this)closeModal('payModal');});
+  document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeModal('editModal');});
+  document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLightbox();});
   // calc defaults
   calcSlab(); calcBrick(); calcPlaster(); calcPaint(); calcConcrete();
   doConvert();
