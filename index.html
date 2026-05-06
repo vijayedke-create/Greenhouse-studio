@@ -749,6 +749,7 @@ td.mono { font-variant-numeric: tabular-nums; }
       <div class="form-actions">
         <button class="btn btn-pri" onclick="calcMat()">🔢 Calculate</button>
         <button class="btn btn-acc" onclick="saveMaterial()">💾 Save</button>
+        <button class="btn btn-pdf" onclick="exportAllDataPDF()">📄 PDF Report</button>
         <button class="btn btn-excel" onclick="exportExcel('material')">📊 Excel</button>
       </div>
     </div>
@@ -932,6 +933,7 @@ td.mono { font-variant-numeric: tabular-nums; }
       </div>
       <div class="form-actions">
         <button class="btn btn-acc" onclick="saveLabour()">💾 Save</button>
+        <button class="btn btn-pdf" onclick="exportAllDataPDF()">📄 PDF Report</button>
         <button class="btn btn-excel" onclick="exportExcel('labour')">📊 Excel</button>
       </div>
     </div>
@@ -1681,9 +1683,9 @@ td.mono { font-variant-numeric: tabular-nums; }
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
     <div style="font-size:17px;font-weight:800;color:var(--text);">📈 <span id="rpt_projName">Project</span> — Done Report</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-pdf btn-sm" onclick="window.print()">🖨️ PDF Print</button>
+      <button class="btn btn-acc btn-sm" onclick="exportAllDataPDF()" style="font-weight:700">📄 Complete PDF Report</button>
+      <button class="btn btn-pdf btn-sm" onclick="window.print()">🖨️ Print This Page</button>
       <button class="btn btn-excel btn-sm" onclick="exportExcel('all')">📊 Full Excel</button>
-      <button class="btn btn-outline btn-sm" onclick="exportExcel('monthly')">📅 Monthly Report</button>
       <button class="btn btn-pri btn-sm" onclick="backupData()">☁️ Backup</button>
     </div>
   </div>
@@ -3879,6 +3881,216 @@ function clearAllData(){ if(confirm('All data will be cleared! Sure?')&&confirm(
 // ══════════════════════════════════════════════════════════════
 //  EXCEL EXPORT
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  PDF EXPORT - ALL DATA
+// ══════════════════════════════════════════════════════════════
+function exportAllDataPDF(){
+  const proj = projects.find(p=>p.id===CP);
+  const projName = proj?.name || 'Project';
+  
+  // Calculate totals
+  const mT=materials.reduce((s,m)=>s+m.total,0), mP=materials.reduce((s,m)=>s+m.paid,0);
+  const lT=labours.reduce((s,l)=>s+l.total,0), lP=labours.reduce((s,l)=>s+l.paid,0);
+  const gT=mT+lT, gP=mP+lP;
+  
+  const pdfContent = `
+    <div style="font-family:Arial,sans-serif;max-width:1000px;margin:0 auto;padding:40px;line-height:1.6">
+      <!-- Header -->
+      <div style="text-align:center;border-bottom:3px solid #333;padding-bottom:20px;margin-bottom:30px">
+        <h1 style="margin:0;color:#333;font-size:28px">Construction Project Report</h1>
+        <h2 style="margin:10px 0;color:#666;font-size:20px">${projName}</h2>
+        <p style="margin:5px 0;color:#999;font-size:14px">Generated on ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'})}</p>
+      </div>
+      
+      <!-- Summary Section -->
+      <div style="background:#f5f5f5;padding:20px;border-radius:10px;margin-bottom:30px">
+        <h3 style="margin:0 0 15px 0;color:#333;border-bottom:2px solid #333;padding-bottom:10px">📊 Project Summary</h3>
+        <table style="width:100%;border-collapse:collapse">
+          <tr style="border-bottom:1px solid #ddd">
+            <td style="padding:12px;font-weight:bold">Total Expenses</td>
+            <td style="padding:12px;text-align:right;font-size:18px;color:#1a73e8">${fmt(gT)}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #ddd">
+            <td style="padding:12px;font-weight:bold">Amount Paid</td>
+            <td style="padding:12px;text-align:right;font-size:18px;color:#0f9d58">${fmt(gP)}</td>
+          </tr>
+          <tr style="background:#fff3cd">
+            <td style="padding:12px;font-weight:bold;font-size:16px">Balance Due</td>
+            <td style="padding:12px;text-align:right;font-size:20px;font-weight:bold;color:#dc3545">${fmt(gT-gP)}</td>
+          </tr>
+        </table>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px">
+          <div style="background:white;padding:12px;border-radius:5px">
+            <div style="font-size:12px;color:#666">Material Expenses</div>
+            <div style="font-size:16px;font-weight:bold;color:#1a73e8">${fmt(mT)}</div>
+            <div style="font-size:11px;color:#999">Paid: ${fmt(mP)} | Pending: ${fmt(mT-mP)}</div>
+          </div>
+          <div style="background:white;padding:12px;border-radius:5px">
+            <div style="font-size:12px;color:#666">Labour Expenses</div>
+            <div style="font-size:16px;font-weight:bold;color:#1a73e8">${fmt(lT)}</div>
+            <div style="font-size:11px;color:#999">Paid: ${fmt(lP)} | Pending: ${fmt(lT-lP)}</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Material Section -->
+      ${materials.length > 0 ? `
+      <div style="page-break-before:always;margin-bottom:30px">
+        <h3 style="color:#333;border-bottom:2px solid #1a73e8;padding-bottom:10px;margin-bottom:15px">🧱 Material Entries (${materials.length})</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:#1a73e8;color:white">
+              <th style="padding:10px;text-align:left">Date</th>
+              <th style="padding:10px;text-align:left">Material</th>
+              <th style="padding:10px;text-align:left">Supplier</th>
+              <th style="padding:10px;text-align:right">Qty</th>
+              <th style="padding:10px;text-align:right">Rate</th>
+              <th style="padding:10px;text-align:right">Total</th>
+              <th style="padding:10px;text-align:right">Paid</th>
+              <th style="padding:10px;text-align:right">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${materials.map((m,i)=>{
+              const bal = m.total - m.paid;
+              return `<tr style="border-bottom:1px solid #ddd;background:${i%2===0?'#f9f9f9':'white'}">
+                <td style="padding:8px">${m.date}</td>
+                <td style="padding:8px"><strong>${m.type}</strong></td>
+                <td style="padding:8px">${m.supplier}</td>
+                <td style="padding:8px;text-align:right">${m.qty||'—'} ${m.unit||''}</td>
+                <td style="padding:8px;text-align:right">${m.rate ? '₹'+m.rate : '—'}</td>
+                <td style="padding:8px;text-align:right;font-weight:bold">${fmt(m.total)}</td>
+                <td style="padding:8px;text-align:right;color:#0f9d58">${fmt(m.paid)}</td>
+                <td style="padding:8px;text-align:right;font-weight:bold;color:${bal>0?'#dc3545':'#0f9d58'}">${fmt(bal)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="background:#e3f2fd;font-weight:bold">
+              <td colspan="5" style="padding:10px;text-align:right">TOTAL:</td>
+              <td style="padding:10px;text-align:right">${fmt(mT)}</td>
+              <td style="padding:10px;text-align:right">${fmt(mP)}</td>
+              <td style="padding:10px;text-align:right;color:#dc3545">${fmt(mT-mP)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      ` : ''}
+      
+      <!-- Labour Section -->
+      ${labours.length > 0 ? `
+      <div style="page-break-before:always;margin-bottom:30px">
+        <h3 style="color:#333;border-bottom:2px solid #0f9d58;padding-bottom:10px;margin-bottom:15px">👷 Labour Entries (${labours.length})</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:#0f9d58;color:white">
+              <th style="padding:10px;text-align:left">Date</th>
+              <th style="padding:10px;text-align:left">Work Type</th>
+              <th style="padding:10px;text-align:left">Name</th>
+              <th style="padding:10px;text-align:left">Mobile</th>
+              <th style="padding:10px;text-align:right">Total</th>
+              <th style="padding:10px;text-align:right">Paid</th>
+              <th style="padding:10px;text-align:right">Balance</th>
+              <th style="padding:10px;text-align:center">Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${labours.map((l,i)=>{
+              const bal = l.total - l.paid;
+              return `<tr style="border-bottom:1px solid #ddd;background:${i%2===0?'#f9f9f9':'white'}">
+                <td style="padding:8px">${l.date}</td>
+                <td style="padding:8px"><strong>${l.type}</strong></td>
+                <td style="padding:8px">${l.name}</td>
+                <td style="padding:8px">${l.mobile||'—'}</td>
+                <td style="padding:8px;text-align:right;font-weight:bold">${fmt(l.total)}</td>
+                <td style="padding:8px;text-align:right;color:#0f9d58">${fmt(l.paid)}</td>
+                <td style="padding:8px;text-align:right;font-weight:bold;color:${bal>0?'#dc3545':'#0f9d58'}">${fmt(bal)}</td>
+                <td style="padding:8px;text-align:center">${l.progress||0}%</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="background:#e8f5e9;font-weight:bold">
+              <td colspan="4" style="padding:10px;text-align:right">TOTAL:</td>
+              <td style="padding:10px;text-align:right">${fmt(lT)}</td>
+              <td style="padding:10px;text-align:right">${fmt(lP)}</td>
+              <td style="padding:10px;text-align:right;color:#dc3545">${fmt(lT-lP)}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      ` : ''}
+      
+      <!-- Agreements Section -->
+      ${agreements.length > 0 ? `
+      <div style="page-break-before:always;margin-bottom:30px">
+        <h3 style="color:#333;border-bottom:2px solid #9c27b0;padding-bottom:10px;margin-bottom:15px">📑 Agreements (${agreements.length})</h3>
+        ${agreements.map((a,i)=>{
+          const typeNames = {
+            rcc:'RCC Contractor', brickwork:'Brickwork', plastering:'Plastering',
+            flooring:'Flooring/Tiles', plumbing:'Plumbing', electrical:'Electrical',
+            painting:'Painting', interior:'Full Interior', kitchen:'Modular Kitchen'
+          };
+          return `<div style="border:1px solid #ddd;padding:15px;margin-bottom:15px;background:${i%2===0?'#f9f9f9':'white'}">
+            <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+              <div>
+                <div style="font-size:16px;font-weight:bold;color:#333">${a.party}</div>
+                <div style="font-size:12px;color:#666">${typeNames[a.type]||a.type}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:18px;font-weight:bold;color:#1a73e8">${fmt(a.total)}</div>
+                <div style="font-size:11px;color:#999">Date: ${a.date}</div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:#666;margin-top:8px">
+              <strong>Contact:</strong> ${a.mobile} ${a.email?'| '+a.email:''}
+            </div>
+            <div style="font-size:12px;color:#666;margin-top:5px">
+              <strong>Payment:</strong> ${a.pay_terms} | <strong>Advance:</strong> ${fmt(a.advance)}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      ` : ''}
+      
+      <!-- Footer -->
+      <div style="margin-top:40px;padding-top:20px;border-top:2px solid #ddd;text-align:center;color:#999;font-size:12px">
+        <p>Construction Management System | ${projName}</p>
+        <p>Report generated on ${new Date().toLocaleString('en-IN')}</p>
+      </div>
+    </div>
+  `;
+  
+  // Open in new window for printing/PDF
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${projName} - Full Report</title>
+      <meta charset="UTF-8">
+      <style>
+        @media print {
+          body { margin: 0; }
+          button { display: none; }
+          .no-print { display: none; }
+        }
+        @page { size: A4; margin: 15mm; }
+      </style>
+    </head>
+    <body>
+      <div class="no-print" style="text-align:center;padding:20px;background:#f5f5f5;border-bottom:1px solid #ddd;position:sticky;top:0;z-index:100">
+        <button onclick="window.print()" style="padding:12px 24px;background:#1a73e8;color:white;border:none;border-radius:5px;cursor:pointer;font-size:16px;margin-right:10px">🖨️ Print / Save as PDF</button>
+        <button onclick="window.close()" style="padding:12px 24px;background:#666;color:white;border:none;border-radius:5px;cursor:pointer;font-size:16px">✖️ Close</button>
+      </div>
+      ${pdfContent}
+    </body>
+    </html>
+  `);
+  win.document.close();
+}
+
 function exportExcel(type){
   const proj=projects.find(p=>p.id===CP)?.name||'Project';
   const wb=XLSX.utils.book_new();
@@ -4861,7 +5073,6 @@ function renderAll(){
 // ══════════════════════════════════════════════════════════════
 //  AGREEMENTS MODULE
 // ══════════════════════════════════════════════════════════════
-let agreements = [];
 
 function agreementTab(tab){
   ['create','list'].forEach(t=>{
