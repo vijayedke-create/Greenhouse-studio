@@ -7924,17 +7924,16 @@ function toggleTheme(){
 // ════════════════════════════════════════════════
 // CLIENT PORTAL — URL HASH MODE
 // ════════════════════════════════════════════════
-function checkPortalMode(){
-  // Check both ?portal param AND #portal hash (for backward compat)
+async function checkPortalMode(){
   const params = new URLSearchParams(window.location.search);
   const hasPortal = params.has('portal') || window.location.hash.startsWith('#portal');
   if(!hasPortal) return;
 
-  // ── पूर्ण app-shell लपवा ──
+  // ── app-shell लपवा ──
   const shell = document.getElementById('app-shell');
   if(shell) shell.style.display='none';
 
-  // ── Portal overlay fullscreen दाखवा ──
+  // ── Portal overlay दाखवा ──
   const overlay = document.getElementById('client-portal-overlay');
   if(overlay){
     overlay.style.display='block';
@@ -7947,13 +7946,59 @@ function checkPortalMode(){
   const backBtn = overlay&&overlay.querySelector('button[onclick="closeClientPortal()"]');
   if(backBtn) backBtn.style.display='none';
 
+  // ── Firebase URL param मधून load ──
+  const fbFromUrl = params.get('fb') ? decodeURIComponent(params.get('fb')) : '';
+  if(fbFromUrl) localStorage.setItem('gs_fb_url', fbFromUrl);
+  const fbUrl = fbFromUrl || localStorage.getItem('gs_fb_url') || '';
+
+  // ── Firebase वरून data load ──
+  if(fbUrl){
+    try{
+      const r = await fetch(fbUrl+'/.json');
+      if(r.ok){
+        const data = await r.json();
+        if(data&&data.db){
+          db = data.db;
+          (db.contacts||[]).forEach(c=>{ if(c.pin) c.pin=String(c.pin); });
+        }
+        if(data&&data.officeInfo) officeInfo = data.officeInfo;
+      }
+    }catch(e){ console.warn('Portal Firebase load:', e); }
+  }
+
   // ── Office info update ──
   const sn = document.getElementById('cp-studio-name');
   if(sn) sn.textContent = officeInfo.name||'Greenhouse Studio';
   const li = document.getElementById('cp-logo-img');
   if(li&&officeInfo.logo){li.src=officeInfo.logo;li.style.display='block';li.style.filter='none';}
 
-  // ── Back button block ──
+  // ── URL मध्ये PIN असेल तर auto-login ──
+  const autoPin = params.get('pin') ? decodeURIComponent(params.get('pin')) : '';
+  if(autoPin && autoPin.length===4){
+    const match = (db.contacts||[]).find(c=> String(c.pin).trim() === String(autoPin).trim());
+    if(match){
+      // Auto-login — PIN screen skip करा
+      cpCurrentClient = match;
+      if(document.getElementById('cp-login-screen'))
+        document.getElementById('cp-login-screen').style.display='none';
+      if(document.getElementById('cp-dashboard-screen'))
+        document.getElementById('cp-dashboard-screen').style.display='block';
+      const _nb = document.getElementById('cp-client-name-bar');
+      if(_nb) _nb.textContent = 'Welcome, ' + match.name;
+      const _logoutBtn = document.getElementById('cp-logout-btn');
+      if(_logoutBtn) _logoutBtn.onclick=()=>{
+        cpCurrentClient=null;
+        document.getElementById('cp-login-screen').style.display='flex';
+        document.getElementById('cp-dashboard-screen').style.display='none';
+      };
+      setTimeout(()=>cpTab('overview'), 100);
+      // URL clean करा — PIN URL मधून काढा (security)
+      window.history.replaceState(null,'',window.location.pathname+'?portal=1');
+      return;
+    }
+  }
+
+  // ── Manual PIN entry ──
   window.history.replaceState(null,'',window.location.pathname+'?portal=1');
   window.onpopstate=()=>window.history.replaceState(null,'',window.location.pathname+'?portal=1');
 }
@@ -8860,24 +8905,25 @@ function cpRemovePin(cid) {
 function cpWhatsApp(cid) {
   const c = db.contacts.find(x => x.id === cid);
   if (!c || !c.pin) { showErr('PIN set करा आधी'); return; }
-  // Build client portal URL — same folder, client-portal.html
-  // Portal URL = same file + #portal hash
   const _base = window.location.href.split('?')[0].split('#')[0];
   const _fbUrl = localStorage.getItem('gs_fb_url')||'';
-  const portalUrl = _base + '?portal=1' + (_fbUrl ? '&fb='+encodeURIComponent(_fbUrl) : '');
+  // PIN link मध्येच — client ला PIN टाकायची गरज नाही, direct auto-login
+  const portalUrl = _base
+    + '?portal=1'
+    + '&pin=' + encodeURIComponent(c.pin)
+    + (_fbUrl ? '&fb=' + encodeURIComponent(_fbUrl) : '');
   const msg = `Dear ${c.name},
 
-आपला Client Portal तयार आहे! 🎉
+आपला Client Portal ready आहे! 🎉
 
+खालील link उघडा:
 ${portalUrl}
 
-PIN: ${c.pin}
-
 Portal मध्ये पाहता येईल:
-✅ Project progress
+✅ Project progress & stage
 ✅ Payment history
-✅ Site visit reports
-✅ Drawings
+✅ Site visit reports & photos
+✅ Drawings & documents
 
 - ${officeInfo.arch || ''} | ${officeInfo.name || 'Greenhouse Studio'}`;
   const waUrl = 'https://wa.me/' + formatWA(c.wa || c.phone || '') + '?text=' + encodeURIComponent(msg);
