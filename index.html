@@ -699,6 +699,7 @@ td.mono { font-variant-numeric: tabular-nums; }
     <button class="subtab" onclick="matTab('rates')">💹 Rate Compare</button>
     <button class="subtab" onclick="matTab('convert')">🔄 Unit Convert</button>
     <button class="subtab" onclick="matTab('alerts')">🔔 Alerts</button>
+    <button class="btn btn-sm btn-acc" onclick="exportMaterialPDF()" style="margin-left:auto">📄 PDF Download</button>
   </div>
 
   <!-- Material Entry -->
@@ -1134,6 +1135,7 @@ td.mono { font-variant-numeric: tabular-nums; }
     <button class="subtab" onclick="labTab('attendance')">🗓️ Attendance</button>
     <button class="subtab" onclick="labTab('runbill')">📄 Running Bill</button>
     <button class="subtab" onclick="labTab('progress')">📊 Progress</button>
+    <button class="btn btn-sm btn-acc" onclick="exportLabourPDF()" style="margin-left:auto">📄 PDF Download</button>
   </div>
 
   <!-- Labour Entry -->
@@ -3253,6 +3255,240 @@ function calcSteelSlab(){
       </div>
     </div>
   `;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PDF EXPORT FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+
+function exportMaterialPDF(){
+  if(materials.length === 0){
+    showToast('⚠️ No material data to export!','warn');
+    return;
+  }
+  
+  const projectName = activeProject ? projects.find(p=>p.id===activeProject)?.name : 'All Projects';
+  const filteredMats = materials.filter(m=>!activeProject || m.projectId===activeProject);
+  
+  if(filteredMats.length === 0){
+    showToast('⚠️ No material data for this project!','warn');
+    return;
+  }
+  
+  // Create printable content
+  let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Material List - ${projectName}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { text-align: center; color: #333; border-bottom: 3px solid #0369a1; padding-bottom: 10px; }
+        h2 { color: #0369a1; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background: #0369a1; color: white; padding: 10px; text-align: left; font-size: 12px; }
+        td { border: 1px solid #ddd; padding: 8px; font-size: 11px; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .summary { background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .summary-item { display: inline-block; margin-right: 30px; }
+        .summary-label { font-size: 12px; color: #666; }
+        .summary-value { font-size: 18px; font-weight: bold; color: #0369a1; }
+        .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <h1>📦 Material Purchase List</h1>
+      <h2>Project: ${projectName}</h2>
+      <div class="summary">
+        <div class="summary-item">
+          <div class="summary-label">Total Entries</div>
+          <div class="summary-value">${filteredMats.length}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Expense</div>
+          <div class="summary-value">₹${filteredMats.reduce((s,m)=>s+m.total,0).toLocaleString('en-IN')}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Paid</div>
+          <div class="summary-value">₹${filteredMats.reduce((s,m)=>s+(m.paid||0),0).toLocaleString('en-IN')}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Balance</div>
+          <div class="summary-value">₹${filteredMats.reduce((s,m)=>s+(m.total-(m.paid||0)),0).toLocaleString('en-IN')}</div>
+        </div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Supplier</th>
+            <th>Invoice</th>
+            <th>Quantity</th>
+            <th>Total (₹)</th>
+            <th>Paid (₹)</th>
+            <th>Balance (₹)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  filteredMats.forEach(m=>{
+    const bal = m.total - (m.paid||0);
+    html += `
+      <tr>
+        <td>${m.date}</td>
+        <td>${m.type}${m.details ? '<br><small style="color:#666">'+m.details+'</small>' : ''}</td>
+        <td>${m.supplier||'-'}</td>
+        <td>${m.invoice||'-'}</td>
+        <td>${m.qty||'-'} ${m.unit||''}</td>
+        <td>₹${m.total.toLocaleString('en-IN')}</td>
+        <td>₹${(m.paid||0).toLocaleString('en-IN')}</td>
+        <td>₹${bal.toLocaleString('en-IN')}</td>
+        <td>${bal>0 ? 'Pending' : 'Paid'}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+      <div class="footer">
+        Generated on ${new Date().toLocaleDateString('en-IN')} at ${new Date().toLocaleTimeString('en-IN')}
+      </div>
+    </body>
+    </html>
+  `;
+  
+  // Open print dialog
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(()=>printWindow.print(), 500);
+}
+
+function exportLabourPDF(){
+  if(labour.length === 0){
+    showToast('⚠️ No labour data to export!','warn');
+    return;
+  }
+  
+  const projectName = activeProject ? projects.find(p=>p.id===activeProject)?.name : 'All Projects';
+  const filteredLab = labour.filter(l=>!activeProject || l.projectId===activeProject);
+  
+  if(filteredLab.length === 0){
+    showToast('⚠️ No labour data for this project!','warn');
+    return;
+  }
+  
+  // Create printable content
+  let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Labour List - ${projectName}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { text-align: center; color: #333; border-bottom: 3px solid #059669; padding-bottom: 10px; }
+        h2 { color: #059669; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background: #059669; color: white; padding: 10px; text-align: left; font-size: 12px; }
+        td { border: 1px solid #ddd; padding: 8px; font-size: 11px; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .summary { background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .summary-item { display: inline-block; margin-right: 30px; }
+        .summary-label { font-size: 12px; color: #666; }
+        .summary-value { font-size: 18px; font-weight: bold; color: #059669; }
+        .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #666; }
+        .progress-bar { background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden; }
+        .progress-fill { background: #059669; height: 100%; }
+      </style>
+    </head>
+    <body>
+      <h1>👷 Labour Work List</h1>
+      <h2>Project: ${projectName}</h2>
+      <div class="summary">
+        <div class="summary-item">
+          <div class="summary-label">Total Entries</div>
+          <div class="summary-value">${filteredLab.length}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Expense</div>
+          <div class="summary-value">₹${filteredLab.reduce((s,l)=>s+l.total,0).toLocaleString('en-IN')}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Paid</div>
+          <div class="summary-value">₹${filteredLab.reduce((s,l)=>s+(l.paid||0),0).toLocaleString('en-IN')}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Balance</div>
+          <div class="summary-value">₹${filteredLab.reduce((s,l)=>s+(l.total-(l.paid||0)),0).toLocaleString('en-IN')}</div>
+        </div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Work Type</th>
+            <th>Worker</th>
+            <th>Mobile</th>
+            <th>Quantity</th>
+            <th>Rate</th>
+            <th>Total (₹)</th>
+            <th>Paid (₹)</th>
+            <th>Balance (₹)</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  filteredLab.forEach(l=>{
+    const bal = l.total - (l.paid||0);
+    const progress = l.progress || 0;
+    html += `
+      <tr>
+        <td>${l.date}</td>
+        <td>${l.work}</td>
+        <td>${l.name||'-'}</td>
+        <td>${l.mobile||'-'}</td>
+        <td>${l.qty||'-'} ${l.unit||''}</td>
+        <td>₹${(l.rate||0).toLocaleString('en-IN')}</td>
+        <td>₹${l.total.toLocaleString('en-IN')}</td>
+        <td>₹${(l.paid||0).toLocaleString('en-IN')}</td>
+        <td>₹${bal.toLocaleString('en-IN')}</td>
+        <td>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${progress}%"></div>
+          </div>
+          ${progress}%
+        </td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+      <div class="footer">
+        Generated on ${new Date().toLocaleDateString('en-IN')} at ${new Date().toLocaleTimeString('en-IN')}
+      </div>
+    </body>
+    </html>
+  `;
+  
+  // Open print dialog
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(()=>printWindow.print(), 500);
 }
 
 // ══════════════════════════════════════════════════════════════
