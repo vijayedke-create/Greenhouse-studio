@@ -1445,6 +1445,118 @@ td.mono { font-variant-numeric: tabular-nums; }
             <option>मिश्र / Mixed</option>
           </select>
         </div>
+        
+        <!-- Stage-wise Details (for RCC/Brickwork) -->
+        <div class="fg full" id="stage_wise_section" style="display:none">
+          <div style="background:#f0f9ff;padding:16px;border-radius:8px;border:1px solid #0369a1">
+            <div style="font-weight:700;margin-bottom:12px;color:#0369a1">📊 टप्प्याटप्प्याने तपशील / Stage-wise Details</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">
+              
+              <!-- Ground Floor -->
+              <div style="background:white;padding:12px;border-radius:6px;border:1px solid #ddd">
+                <div style="font-weight:600;margin-bottom:8px;color:#333">🏗️ Ground Floor (भूतल)</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <select id="stage_ground_type" onchange="toggleStageFields('ground')" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px">
+                    <option value="rate">Per Sq.Ft (प्रति चौ.फूट)</option>
+                    <option value="lumpsum">Lumpsum (एकूण)</option>
+                  </select>
+                  <div id="stage_ground_rate_fields">
+                    <input type="number" id="stage_ground_area" placeholder="Area in Sq.Ft (क्षेत्रफळ)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px;margin-bottom:6px" oninput="calculateStageTotal()">
+                    <input type="number" id="stage_ground_rate" placeholder="Rate/Sq.Ft (दर)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px" oninput="calculateStageTotal()">
+                  </div>
+                  <div id="stage_ground_lumpsum_field" style="display:none">
+                    <input type="number" id="stage_ground_lumpsum" placeholder="Lumpsum Amount (एकूण रक्कम)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px" oninput="calculateStageTotal()">
+                  </div>
+                  <div style="font-size:12px;color:#666;padding:4px;background:#f9f9f9;border-radius:4px">
+                    Amount: <span id="stage_ground_amount" style="font-weight:600;color:#0369a1">₹0</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- First Floor -->
+              <div style="background:white;padding:12px;border-radius:6px;border:1px solid #ddd">
+                <div style="font-weight:600;margin-bottom:8px;color:#333">🏢 First Floor (पहिला मजला)</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <select id="stage_first_type" onchange="toggleStageFields('first')" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px">
+                    <option value="rate">Per Sq.Ft (प्रति चौ.फूट)</option>
+                    <option value="lumpsum">Lumpsum (एकूण)</option>
+                  </select>
+                  <div id="stage_first_rate_fields">
+                    <input type="number" id="stage_first_area" placeholder="Area in Sq.Ft (क्षेत्रफळ)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px;margin-bottom:6px" oninput="autoFillFirstFloorRate();calculateStageTotal()">
+                    <input type="number" id="stage_first_rate" placeholder="Rate/Sq.Ft (दर)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px" oninput="calculateStageTotal()">
+                  </div>
+                  <div id="stage_first_lumpsum_field" style="display:none">
+                    <input type="number" id="stage_first_lumpsum" placeholder="Lumpsum Amount (एकूण रक्कम)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px" oninput="calculateStageTotal()">
+                  </div>
+                  <div style="font-size:12px;color:#666;padding:4px;background:#f9f9f9;border-radius:4px">
+                    Amount: <span id="stage_first_amount" style="font-weight:600;color:#0369a1">₹0</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Second Floor -->
+              <div style="background:white;padding:12px;border-radius:6px;border:1px solid #ddd">
+                <div style="font-weight:600;margin-bottom:8px;color:#333">🏬 Second Floor (दुसरा मजला)</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <select id="stage_second_type" onchange="toggleStageFields('second')" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px">
+                    <option value="rate">Per Sq.Ft (प्रति चौ.फूट)</option>
+                    <option value="lumpsum">Lumpsum (एकूण)</option>
+                  </select>
+                  <div id="stage_second_rate_fields">
+                    <input type="number" id="stage_second_area" placeholder="Area in Sq.Ft (क्षेत्रफळ)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px;margin-bottom:6px" oninput="autoFillSecondFloorRate();calculateStageTotal()">
+                    <input type="number" id="stage_second_rate" placeholder="Rate/Sq.Ft (दर)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px" oninput="calculateStageTotal()">
+                  </div>
+                  <div id="stage_second_lumpsum_field" style="display:none">
+                    <input type="number" id="stage_second_lumpsum" placeholder="Lumpsum Amount (एकूण रक्कम)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px" oninput="calculateStageTotal()">
+                  </div>
+                  <div style="font-size:12px;color:#666;padding:4px;background:#f9f9f9;border-radius:4px">
+                    Amount: <span id="stage_second_amount" style="font-weight:600;color:#0369a1">₹0</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Third Floor -->
+              <div style="background:white;padding:12px;border-radius:6px;border:1px solid #ddd">
+                <div style="font-weight:600;margin-bottom:8px;color:#333">🏙️ Third Floor (तिसरा मजला)</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <select id="stage_third_type" onchange="toggleStageFields('third')" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px">
+                    <option value="rate">Per Sq.Ft (प्रति चौ.फूट)</option>
+                    <option value="lumpsum">Lumpsum (एकूण)</option>
+                  </select>
+                  <div id="stage_third_rate_fields">
+                    <input type="number" id="stage_third_area" placeholder="Area in Sq.Ft (क्षेत्रफळ)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px;margin-bottom:6px" oninput="autoFillThirdFloorRate();calculateStageTotal()">
+                    <input type="number" id="stage_third_rate" placeholder="Rate/Sq.Ft (दर)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px" oninput="calculateStageTotal()">
+                  </div>
+                  <div id="stage_third_lumpsum_field" style="display:none">
+                    <input type="number" id="stage_third_lumpsum" placeholder="Lumpsum Amount (एकूण रक्कम)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px" oninput="calculateStageTotal()">
+                  </div>
+                  <div style="font-size:12px;color:#666;padding:4px;background:#f9f9f9;border-radius:4px">
+                    Amount: <span id="stage_third_amount" style="font-weight:600;color:#0369a1">₹0</span>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+            
+            <!-- Total Calculation -->
+            <div style="margin-top:16px;padding:12px;background:white;border-radius:6px;border:2px solid #0369a1;display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:13px;color:#666">Total Area (एकूण क्षेत्रफळ)</div>
+                <div style="font-size:18px;font-weight:700;color:#333" id="stage_total_area">0 Sq.Ft</div>
+              </div>
+              <div>
+                <div style="font-size:13px;color:#666">Grand Total (एकूण रक्कम)</div>
+                <div style="font-size:24px;font-weight:700;color:#0369a1" id="stage_grand_total">₹0</div>
+              </div>
+              <button type="button" class="btn btn-sm btn-acc" onclick="calculateStageTotal()">🔢 Calculate Total</button>
+            </div>
+            
+            <div style="margin-top:8px;padding:8px;background:#fef3c7;border-radius:4px;font-size:12px;color:#92400e">
+              💡 <strong>टीप / Tip:</strong> Ground floor चा rate भरल्यावर, वरच्या मजल्यांचा rate automatic +₹10 होईल
+            </div>
+          </div>
+        </div>
+        
         <div class="fg full"><label>Special Terms</label><textarea id="agr_terms" rows="2" placeholder="Penalty, quality specs..."></textarea></div>
       </div>
       <div class="form-actions">
@@ -5741,10 +5853,132 @@ const agreementTemplates = {
 
 function loadAgreementTemplate(){
   const type = document.getElementById('agr_type')?.value;
+  const stageSection = document.getElementById('stage_wise_section');
+  
+  // Show stage section only for RCC and Brickwork
+  if(stageSection){
+    if(type === 'rcc' || type === 'brickwork'){
+      stageSection.style.display = 'block';
+    } else {
+      stageSection.style.display = 'none';
+      clearStageFields();
+    }
+  }
+  
   if(!type || !agreementTemplates[type]) return;
   const tmpl = agreementTemplates[type];
   document.getElementById('agr_scope').value = tmpl.scope;
   document.getElementById('agr_terms').value = tmpl.terms;
+}
+
+function toggleStageFields(stage){
+  const type = document.getElementById(`stage_${stage}_type`)?.value;
+  const rateFields = document.getElementById(`stage_${stage}_rate_fields`);
+  const lumpsumField = document.getElementById(`stage_${stage}_lumpsum_field`);
+  
+  if(type === 'lumpsum'){
+    if(rateFields) rateFields.style.display = 'none';
+    if(lumpsumField) lumpsumField.style.display = 'block';
+  } else {
+    if(rateFields) rateFields.style.display = 'block';
+    if(lumpsumField) lumpsumField.style.display = 'none';
+  }
+  calculateStageTotal();
+}
+
+function clearStageFields(){
+  ['ground','first','second','third'].forEach(stage=>{
+    const areaEl = document.getElementById(`stage_${stage}_area`);
+    const rateEl = document.getElementById(`stage_${stage}_rate`);
+    const lumpsumEl = document.getElementById(`stage_${stage}_lumpsum`);
+    const amountEl = document.getElementById(`stage_${stage}_amount`);
+    const typeEl = document.getElementById(`stage_${stage}_type`);
+    if(areaEl) areaEl.value = '';
+    if(rateEl) rateEl.value = '';
+    if(lumpsumEl) lumpsumEl.value = '';
+    if(amountEl) amountEl.textContent = '₹0';
+    if(typeEl) typeEl.value = 'rate';
+    
+    // Reset display
+    const rateFields = document.getElementById(`stage_${stage}_rate_fields`);
+    const lumpsumField = document.getElementById(`stage_${stage}_lumpsum_field`);
+    if(rateFields) rateFields.style.display = 'block';
+    if(lumpsumField) lumpsumField.style.display = 'none';
+  });
+  const totalArea = document.getElementById('stage_total_area');
+  const grandTotal = document.getElementById('stage_grand_total');
+  if(totalArea) totalArea.textContent = '0 Sq.Ft';
+  if(grandTotal) grandTotal.textContent = '₹0';
+}
+
+function autoFillFirstFloorRate(){
+  const groundRate = parseFloat(document.getElementById('stage_ground_rate')?.value) || 0;
+  const firstArea = parseFloat(document.getElementById('stage_first_area')?.value) || 0;
+  const firstRateEl = document.getElementById('stage_first_rate');
+  
+  if(groundRate > 0 && firstArea > 0 && (!firstRateEl.value || firstRateEl.value == 0)){
+    firstRateEl.value = groundRate + 10; // Ground + ₹10
+  }
+}
+
+function autoFillSecondFloorRate(){
+  const groundRate = parseFloat(document.getElementById('stage_ground_rate')?.value) || 0;
+  const secondArea = parseFloat(document.getElementById('stage_second_area')?.value) || 0;
+  const secondRateEl = document.getElementById('stage_second_rate');
+  
+  if(groundRate > 0 && secondArea > 0 && (!secondRateEl.value || secondRateEl.value == 0)){
+    secondRateEl.value = groundRate + 20; // Ground + ₹20
+  }
+}
+
+function autoFillThirdFloorRate(){
+  const groundRate = parseFloat(document.getElementById('stage_ground_rate')?.value) || 0;
+  const thirdArea = parseFloat(document.getElementById('stage_third_area')?.value) || 0;
+  const thirdRateEl = document.getElementById('stage_third_rate');
+  
+  if(groundRate > 0 && thirdArea > 0 && (!thirdRateEl.value || thirdRateEl.value == 0)){
+    thirdRateEl.value = groundRate + 30; // Ground + ₹30
+  }
+}
+
+function calculateStageTotal(){
+  const stages = ['ground','first','second','third'];
+  let totalArea = 0;
+  let grandTotal = 0;
+  
+  stages.forEach(stage=>{
+    const type = document.getElementById(`stage_${stage}_type`)?.value || 'rate';
+    let amount = 0;
+    
+    if(type === 'lumpsum'){
+      // Lumpsum mode: direct fixed amount
+      amount = parseFloat(document.getElementById(`stage_${stage}_lumpsum`)?.value) || 0;
+    } else {
+      // Rate mode: area × rate
+      const area = parseFloat(document.getElementById(`stage_${stage}_area`)?.value) || 0;
+      const rate = parseFloat(document.getElementById(`stage_${stage}_rate`)?.value) || 0;
+      amount = area * rate;
+      totalArea += area;
+    }
+    
+    // Update individual amount display
+    const amountEl = document.getElementById(`stage_${stage}_amount`);
+    if(amountEl) amountEl.textContent = '₹' + amount.toLocaleString('en-IN');
+    
+    grandTotal += amount;
+  });
+  
+  // Update totals
+  const totalAreaEl = document.getElementById('stage_total_area');
+  const grandTotalEl = document.getElementById('stage_grand_total');
+  if(totalAreaEl) totalAreaEl.textContent = totalArea.toFixed(0) + ' Sq.Ft';
+  if(grandTotalEl) grandTotalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
+  
+  // Auto-fill main total field
+  const mainTotalEl = document.getElementById('agr_total');
+  if(mainTotalEl) mainTotalEl.value = grandTotal;
+  
+  return {totalArea, grandTotal};
 }
 
 function saveAgreement(){
@@ -5757,6 +5991,49 @@ function saveAgreement(){
   if(!type || !party || !mobile || !total || !scope){
     showToast('Type, Party, Mobile, Total Value, and Scope required!','warn');
     return;
+  }
+  
+  // Collect stage details if RCC or Brickwork
+  let stageDetails = null;
+  if(type === 'rcc' || type === 'brickwork'){
+    const stages = ['ground','first','second','third'];
+    const stageData = [];
+    stages.forEach(stage=>{
+      const stageType = document.getElementById(`stage_${stage}_type`)?.value || 'rate';
+      const stageLabels = {
+        ground: 'Ground Floor',
+        first: 'First Floor',
+        second: 'Second Floor',
+        third: 'Third Floor'
+      };
+      
+      if(stageType === 'lumpsum'){
+        const lumpsum = parseFloat(document.getElementById(`stage_${stage}_lumpsum`)?.value) || 0;
+        if(lumpsum > 0){
+          stageData.push({
+            stage: stageLabels[stage],
+            type: 'lumpsum',
+            lumpsum,
+            amount: lumpsum
+          });
+        }
+      } else {
+        const area = parseFloat(document.getElementById(`stage_${stage}_area`)?.value) || 0;
+        const rate = parseFloat(document.getElementById(`stage_${stage}_rate`)?.value) || 0;
+        if(area > 0){
+          stageData.push({
+            stage: stageLabels[stage],
+            type: 'rate',
+            area,
+            rate,
+            amount: area * rate
+          });
+        }
+      }
+    });
+    if(stageData.length > 0){
+      stageDetails = stageData;
+    }
   }
   
   agreements.push({
@@ -5780,6 +6057,7 @@ function saveAgreement(){
     scope,
     material: document.getElementById('agr_material')?.value,
     terms: document.getElementById('agr_terms')?.value,
+    stages: stageDetails,
     status: 'Active'
   });
   
