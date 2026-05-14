@@ -1376,6 +1376,7 @@ td.mono { font-variant-numeric: tabular-nums; }
     <div class="card card-pad mb-16">
       <div class="card-header"><div class="card-title"><span class="ct-icon">📑</span> Create Agreement</div></div>
       <div class="form-grid">
+        <input type="hidden" id="agr_edit_id" value="">
         <div class="fg"><label>Date *</label><input type="date" id="agr_date"></div>
         <div class="fg"><label>Type *</label>
           <select id="agr_type" onchange="loadAgreementTemplate()">
@@ -1383,7 +1384,12 @@ td.mono { font-variant-numeric: tabular-nums; }
             <optgroup label="बांधकाम / Construction">
               <option value="rcc">RCC कंत्राटदार / RCC Contractor</option>
               <option value="brickwork">वीटकाम / Brickwork</option>
+              <option value="compound_wall">कंपाऊंड वॉल / Compound Wall</option>
+              <option value="elevation">एलिवेशन / Elevation</option>
               <option value="plastering">प्लास्टर / Plastering</option>
+              <option value="ips">IPS फरशी / IPS Flooring</option>
+              <option value="breakup">ब्रेकअप / Breakup</option>
+              <option value="parapet">टेरेस पॅरापेट / Terrace Parapet</option>
               <option value="flooring">फरशी/टाइल्स / Flooring/Tiles</option>
               <option value="plumbing">प्लंबिंग / Plumbing</option>
               <option value="electrical">इलेक्ट्रिकल / Electrical</option>
@@ -1419,8 +1425,11 @@ td.mono { font-variant-numeric: tabular-nums; }
         <div class="fg"><label>दर प्रकार / Rate Type</label>
           <select id="agr_rate_type">
             <option value="sqft">प्रति चौ.फूट / Per Sq.Ft</option>
+            <option value="sqm">प्रति चौ.मीटर / Per Sq.M</option>
             <option value="rft">प्रति आर.फूट / Per RFT</option>
+            <option value="brass">प्रति ब्रास / Per Brass</option>
             <option value="cum">प्रति क्यूबिक मीटर / Per CUM</option>
+            <option value="piece">प्रति नग / Per Piece</option>
             <option value="lumpsum">एकूण / Lumpsum</option>
             <option value="day">प्रति दिवस / Per Day</option>
           </select>
@@ -1446,6 +1455,17 @@ td.mono { font-variant-numeric: tabular-nums; }
             <option>कंत्राटदार सर्व पुरवतो / Contractor supplies all</option>
             <option>मिश्र / Mixed</option>
           </select>
+        </div>
+        
+        <!-- Work Details Section (Marathi) -->
+        <div class="fg full">
+          <div style="background:#fff9e6;padding:16px;border-radius:8px;border:1px solid #f59e0b;margin-top:16px">
+            <div style="font-weight:700;margin-bottom:12px;color:#d97706">📋 कामाचा तपशील / Work Details</div>
+            <textarea id="agr_work_details" rows="5" placeholder="उदा: दररोज ८ तास काम, रविवार सुट्टी, साहित्य मालकाकडून, पाणी आणि वीज मालकाकडून, काम पूर्ण होण्याची अंतिम तारीख..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit"></textarea>
+            <div style="margin-top:8px;font-size:12px;color:#92400e">
+              💡 <strong>टीप:</strong> कामाचे तास, सुट्ट्या, साहित्य पुरवठा, देखभाल वगैरे लिहा
+            </div>
+          </div>
         </div>
         
         <!-- Stage-wise Details (for RCC/Brickwork) -->
@@ -2895,8 +2915,9 @@ function renderAgreements(){
   }
   
   const typeNames = {
-    rcc:'RCC', brickwork:'Brickwork', plastering:'Plastering', flooring:'Flooring',
-    plumbing:'Plumbing', electrical:'Electrical', painting:'Painting',
+    rcc:'RCC', brickwork:'Brickwork', compound_wall:'Compound Wall', elevation:'Elevation',
+    plastering:'Plastering', ips:'IPS', breakup:'Breakup', parapet:'Parapet',
+    flooring:'Flooring', plumbing:'Plumbing', electrical:'Electrical', painting:'Painting',
     waterproofing:'Waterproofing', centering:'Centering', steel:'Steel Work',
     interior:'Interior', kitchen:'Kitchen', wardrobe:'Wardrobe', ceiling:'Ceiling',
     furniture:'Furniture', architect:'Architect', engineer:'Engineer',
@@ -2910,6 +2931,7 @@ function renderAgreements(){
     <td class="mono font-bold">${fmt(a.total)}</td>
     <td><span class="badge ${a.status==='Active'?'b-green':'b-muted'}">${a.status}</span></td>
     <td><div class="td-actions">
+      <button class="btn btn-primary btn-xs" onclick="editAgreement('${a.id}')">✏️ Edit</button>
       <button class="btn btn-acc btn-xs" onclick="viewAgreementPDF('${a.id}')">📄 PDF</button>
       <button class="btn btn-err btn-xs" onclick="delAgreement('${a.id}')">🗑️</button>
     </div></td>
@@ -2924,16 +2946,77 @@ function delAgreement(id){
   showToast('Deleted','warn');
 }
 
+function editAgreement(id){
+  const agr = agreements.find(a=>String(a.id)===String(id));
+  if(!agr) return;
+  
+  // Switch to create tab
+  agreementTab('create');
+  
+  // Fill form with existing data
+  document.getElementById('agr_date').value = agr.date;
+  document.getElementById('agr_type').value = agr.type;
+  document.getElementById('agr_party').value = agr.party;
+  document.getElementById('agr_contact').value = agr.contact || '';
+  document.getElementById('agr_mobile').value = agr.mobile;
+  document.getElementById('agr_email').value = agr.email || '';
+  document.getElementById('agr_address').value = agr.address || '';
+  document.getElementById('agr_gst').value = agr.gst || '';
+  document.getElementById('agr_rate_type').value = agr.rate_type;
+  document.getElementById('agr_rate').value = agr.rate;
+  document.getElementById('agr_qty').value = agr.qty;
+  document.getElementById('agr_total').value = agr.total;
+  document.getElementById('agr_adv').value = agr.advance || 0;
+  document.getElementById('agr_pay_terms').value = agr.pay_terms;
+  document.getElementById('agr_start').value = agr.start_date || '';
+  document.getElementById('agr_end').value = agr.end_date || '';
+  document.getElementById('agr_scope').value = agr.scope;
+  document.getElementById('agr_material').value = agr.material;
+  document.getElementById('agr_terms').value = agr.terms || '';
+  document.getElementById('agr_work_details').value = agr.work_details || '';
+  
+  // Load stage details if present
+  if(agr.stages && agr.stages.length > 0){
+    loadAgreementTemplate(); // Show stage section
+    agr.stages.forEach(s=>{
+      const stageKey = s.stage.toLowerCase().replace(' floor','');
+      if(s.type === 'lumpsum'){
+        document.getElementById(`stage_${stageKey}_type`).value = 'lumpsum';
+        toggleStageFields(stageKey);
+        document.getElementById(`stage_${stageKey}_lumpsum`).value = s.lumpsum;
+      } else {
+        document.getElementById(`stage_${stageKey}_type`).value = 'rate';
+        toggleStageFields(stageKey);
+        document.getElementById(`stage_${stageKey}_area`).value = s.area;
+        document.getElementById(`stage_${stageKey}_rate`).value = s.rate;
+      }
+    });
+    calculateStageTotal();
+  }
+  
+  // Store the ID for update
+  document.getElementById('agr_edit_id').value = id;
+  
+  // Change button text
+  const saveBtn = document.querySelector('#pg-agreements button[onclick="saveAgreement()"]');
+  if(saveBtn) saveBtn.textContent = '💾 Update Agreement';
+  
+  showToast('Edit mode: Modify and save','info');
+}
+
 function viewAgreementPDF(id){
   const agr = agreements.find(a=>String(a.id)===String(id));
   if(!agr) return;
   
   // Generate PDF content
   const typeNames = {
-    rcc:'RCC Contractor', brickwork:'Brickwork Contractor', plastering:'Plastering Contractor',
+    rcc:'RCC Contractor', brickwork:'Brickwork Contractor', compound_wall:'Compound Wall Contractor',
+    elevation:'Elevation Work', plastering:'Plastering Contractor', ips:'IPS Flooring',
+    breakup:'Breakup/Demolition', parapet:'Terrace Parapet Work',
     flooring:'Flooring/Tiles Contractor', plumbing:'Plumbing Contractor', electrical:'Electrical Contractor',
     painting:'Painting Contractor', interior:'Full Interior Package', kitchen:'Modular Kitchen',
-    wardrobe:'Wardrobe/Carpentry', architect:'Architect', engineer:'Structural Engineer'
+    wardrobe:'Wardrobe/Carpentry', architect:'Architect', engineer:'Structural Engineer',
+    waterproofing:'Waterproofing', centering:'Centering Work', steel:'Steel/Bar Bending'
   };
   
   const pdfContent = `
@@ -2978,6 +3061,8 @@ function viewAgreementPDF(id){
       
       <h3 style="color:#333;border-bottom:1px solid #ccc;padding-bottom:5px;margin-top:30px">MATERIAL SUPPLY</h3>
       <p>${agr.material}</p>
+      
+      ${agr.work_details ? `<h3 style="color:#333;border-bottom:1px solid #ccc;padding-bottom:5px;margin-top:30px">कामाचा तपशील / WORK DETAILS</h3><p style="white-space:pre-wrap">${agr.work_details}</p>` : ''}
       
       ${agr.terms ? `<h3 style="color:#333;border-bottom:1px solid #ccc;padding-bottom:5px;margin-top:30px">TERMS & CONDITIONS</h3><p>${agr.terms}</p>` : ''}
       
@@ -3051,9 +3136,29 @@ const agreementTemplates = {
     scope: 'Brickwork for all walls as per architectural drawings. Includes plastering base. Bricks and cement/sand mortar by owner. Labour and tools by contractor.',
     terms: 'Quality: First class bricks, 1:6 cement mortar. Plumb and level to be maintained. Payment on completion of each floor.'
   },
+  compound_wall: {
+    scope: 'कंपाऊंड वॉल बांधकाम - पाया, वीटकाम, प्लास्टर. उंची आणि लांबी रेखाचित्रानुसार. वीट आणि सिमेंट मालकाकडून.',
+    terms: 'गुणवत्ता: First class विटा, ९ इंच भिंत. दर: प्रति ब्रास किंवा प्रति चौ.फूट. पेमेंट: काम पूर्ण झाल्यावर.'
+  },
+  elevation: {
+    scope: 'एलिवेशन काम - प्रोजेक्शन, कॉर्निस, आर्च, जाळी काम, देकोरेटिव्ह प्लास्टर. डिझाइन आणि साहित्य मालकाच्या मान्यतेनुसार.',
+    terms: 'गुणवत्ता: Approved design प्रमाणे. माप: प्रति चौ.फूट किंवा प्रति नग. पेमेंट: Stage-wise.'
+  },
   plastering: {
     scope: 'Cement plastering for internal and external walls. Thickness as per specifications. Material (cement, sand) by owner.',
     terms: 'Quality: Smooth finish, no cracks. Curing for 7 days. Payment after final inspection and approval.'
+  },
+  ips: {
+    scope: 'IPS फरशी काम - चुना आणि पाण्याचा मिश्र, गुळगुळीत फिनिश. जाडी ४० मिमी. Pigment मालकाकडून.',
+    terms: 'गुणवत्ता: गुळगुळीत पृष्ठभाग, तडे नसावे. Curing: ७ दिवस. दर: प्रति चौ.फूट.'
+  },
+  breakup: {
+    scope: 'ब्रेकअप काम - जुनी भिंत, फरशी, RCC तोडणे. Debris काढणे आणि site cleaning. Equipment कंत्राटदाराकडून.',
+    terms: 'Safety: Proper safety measures. Debris disposal बाहेर. दर: प्रति चौ.फूट किंवा lumpsum. पेमेंट: काम पूर्ण झाल्यावर.'
+  },
+  parapet: {
+    scope: 'टेरेस पॅरापेट बांधकाम - ४ इंच/९ इंच भिंत, उंची ३ फूट. Coping stone/plaster. साहित्य मालकाकडून.',
+    terms: 'गुणवत्ता: सरळ आणि मजबूत. Waterproofing junction. दर: प्रति आर.फूट. पेमेंट: पूर्ण झाल्यावर.'
   },
   flooring: {
     scope: 'Vitrified tiles flooring for entire house. Includes leveling, tile laying, grouting. Tiles by owner, adhesive/grout by contractor.',
@@ -3207,6 +3312,7 @@ function calculateStageTotal(){
 }
 
 function saveAgreement(){
+  const editId = document.getElementById('agr_edit_id')?.value;
   const type = document.getElementById('agr_type')?.value;
   const party = document.getElementById('agr_party')?.value.trim();
   const mobile = document.getElementById('agr_mobile')?.value;
@@ -3260,8 +3366,7 @@ function saveAgreement(){
     }
   }
   
-  agreements.push({
-    id: Date.now(),
+  const agreementData = {
     date: document.getElementById('agr_date')?.value || today(),
     type,
     party,
@@ -3281,18 +3386,43 @@ function saveAgreement(){
     scope,
     material: document.getElementById('agr_material')?.value,
     terms: document.getElementById('agr_terms')?.value,
+    work_details: document.getElementById('agr_work_details')?.value || '',
     stages: stageDetails,
     status: 'Active'
-  });
+  };
+  
+  if(editId){
+    // Update existing agreement
+    const index = agreements.findIndex(a=>String(a.id)===String(editId));
+    if(index !== -1){
+      agreements[index] = {...agreements[index], ...agreementData};
+      showToast('✅ Agreement updated!','ok');
+    }
+  } else {
+    // Create new agreement
+    agreements.push({
+      id: Date.now(),
+      ...agreementData
+    });
+    showToast('✅ Agreement saved!','ok');
+  }
   
   saveAll();
   renderAgreements();
-  ['agr_party','agr_contact','agr_mobile','agr_email','agr_address','agr_gst','agr_rate','agr_qty','agr_total','agr_scope','agr_terms'].forEach(id=>{
+  
+  // Clear form
+  ['agr_party','agr_contact','agr_mobile','agr_email','agr_address','agr_gst','agr_rate','agr_qty','agr_total','agr_scope','agr_terms','agr_work_details'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('agr_adv').value='0';
+  document.getElementById('agr_edit_id').value='';
+  clearStageFields();
+  
+  // Reset button text
+  const saveBtn = document.querySelector('#pg-agreements button[onclick="saveAgreement()"]');
+  if(saveBtn) saveBtn.textContent = '💾 Save Agreement';
+  
   agreementTab('list');
-  showToast('✅ Agreement saved!','ok');
 }
 
 // ══════════════════════════════════════════════════════════════
