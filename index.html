@@ -125,6 +125,16 @@ header{display:flex;align-items:center;gap:0}
 main{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px 20px 80px;min-height:0;-webkit-overflow-scrolling:touch}
 
 /* ── VIEWS ── */
+.proj-step{animation:fadeUp .3s ease}
+.step-head{font-size:14px;font-weight:800;color:var(--grn);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--bdr)}
+.brief-card{background:var(--surf2);border:1.5px solid var(--bdr);border-radius:12px;padding:14px;margin-bottom:14px}
+.brief-card-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--grn);margin-bottom:12px}
+.fl{font-size:10px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px}
+.ml{font-weight:400;color:var(--mut);font-size:11px}
+.check-chip{display:flex;align-items:center;gap:6px;padding:7px 12px;background:#fff;border:1.5px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
+.check-chip:hover{border-color:var(--grn)}
+.check-chip-lg{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#fff;border:1.5px solid var(--bdr);border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;flex:1;min-width:180px}
+.check-chip-lg:hover{border-color:var(--grn);background:#e8f4ee}
 .view-section{display:none!important}
 .view-section.active{display:block!important;animation:fadeUp .32s cubic-bezier(.16,1,.3,1)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -1299,92 +1309,329 @@ html{transition:background .3s,color .3s}
 
 <!-- ADD PROJECT -->
 <div class="modal-bg" id="m-proj">
-  <div class="modal-box" style="width:640px">
-    <div class="modal-head"><div class="modal-title" id="m-proj-title">New Project</div><button class="modal-close" onclick="closeModal('m-proj')">✕</button></div>
-    <div class="modal-body">
-      <div class="form-row c2">
-        <div class="fg"><label>Project / Site Name *</label><input class="fi" id="p-name" placeholder="e.g. Sharma Villa"></div>
-        <div class="fg"><label>Client *</label><select class="fi fi-sel" id="p-client"></select></div>
+  <div class="modal-box" style="width:720px;max-width:98vw;padding:0;overflow:hidden">
+
+    <!-- Step Progress Bar -->
+    <div style="background:var(--grn);padding:16px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="modal-title" id="m-proj-title" style="color:#fff;font-size:16px">नवीन प्रोजेक्ट / New Project</div>
+        <button class="modal-close" onclick="closeModal('m-proj')" style="color:#fff;opacity:.7">✕</button>
       </div>
-      <div class="form-row c2">
-        <div class="fg"><label>Site Address</label><input class="fi" id="p-address" placeholder="Site address"></div>
-        <div class="fg">
-          <label>Payment Mode</label>
-          <select class="fi fi-sel" id="p-paymode" onchange="toggleUpiSub('p-upi-sub',this.value)">
-            <option>UPI</option><option>Net Banking</option><option>Cheque</option><option>Cash</option><option>Other</option>
-          </select>
-          <div id="p-upi-sub" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
-            <span class="upi-chip on" data-target="p-upi-app" onclick="selectUpi(this,'GPay')">🟢 GPay</span>
-            <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'PhonePe')">🟣 PhonePe</span>
-            <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'Paytm')">🔵 Paytm</span>
-            <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'BHIM')">🇮🇳 BHIM</span>
-            <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'Amazon Pay')">🟠 Amazon Pay</span>
-            <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'Cred')">⚫ Cred</span>
-            <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'Other UPI')">➕ Other</span>
-          </div>
-          <input type="hidden" id="p-upi-app" value="GPay">
+      <!-- Steps -->
+      <div style="display:flex;gap:6px;align-items:center">
+        ${[1,2,3,4,5].map((s,i)=>`
+        <div id="pstep-dot-${s}" onclick="goProjStep(${s})"
+          style="width:28px;height:28px;border-radius:50%;background:${i===0?'var(--gold)':'rgba(255,255,255,.25)'};color:${i===0?'var(--grn)':'rgba(255,255,255,.7)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:pointer;transition:all .3s;flex-shrink:0">${s}</div>
+        ${s<5?'<div style="flex:1;height:2px;background:rgba(255,255,255,.2);border-radius:2px"><div id="pstep-line-'+s+'" style="width:0%;height:100%;background:var(--gold);border-radius:2px;transition:width .4s"></div></div>':''}`).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px">
+        ${['Basic Info','Brief','Rooms','Drawings','Finish'].map(l=>`<div style="font-size:9px;color:rgba(255,255,255,.5);font-weight:600;text-align:center;flex:1">${l}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="modal-body" style="padding:20px;max-height:70vh;overflow-y:auto">
+
+      <!-- ═══ STEP 1: BASIC INFO ═══ -->
+      <div id="pstep-1" class="proj-step">
+        <div class="step-head">📋 Basic Information / मूलभूत माहिती</div>
+        <div class="form-row c2">
+          <div class="fg"><label>Project / Site Name * <span class="ml">प्रोजेक्ट नाव</span></label><input class="fi" id="p-name" placeholder="e.g. Sharma Villa"></div>
+          <div class="fg"><label>Client * <span class="ml">क्लाइंट</span></label><select class="fi fi-sel" id="p-client"></select></div>
         </div>
-      </div>
-      <div class="fg" style="margin-bottom:0">
-        <label>Services <span style="font-weight:400;color:var(--mut)">(एकापेक्षा जास्त निवडा)</span></label>
-        <div class="svc-grid" id="svc-grid" style="margin-top:8px"></div>
-      </div>
-      <!-- Interior Design sub-panel — shown when Interior Design selected -->
-      <div id="int-sub-panel" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;padding:12px;background:rgba(44,95,138,.04);border:1px solid rgba(44,95,138,.2);border-radius:10px;">
-        <div style="width:100%;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:6px">🏠 Interior Design — Areas</div>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Living Room" style="accent-color:var(--blue)"> Living Room</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Master Bedroom" style="accent-color:var(--blue)"> Master Bedroom</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Bedroom 2" style="accent-color:var(--blue)"> Bedroom 2</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Bedroom 3" style="accent-color:var(--blue)"> Bedroom 3</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Kitchen" style="accent-color:var(--blue)"> Kitchen</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Dining Area" style="accent-color:var(--blue)"> Dining Area</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Bathroom" style="accent-color:var(--blue)"> Bathroom</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Kids Room" style="accent-color:var(--blue)"> Kids Room</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Pooja Room" style="accent-color:var(--blue)"> Pooja Room</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Study/Office" style="accent-color:var(--blue)"> Study/Office</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Balcony" style="accent-color:var(--blue)"> Balcony</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="Full Home Interior" style="accent-color:var(--blue)"> Full Home</label>
-      </div>
-      <!-- Apartment sub-panel — shown when Apartment Design is selected -->
-      <div id="apt-sub-panel" style="display:none;margin-top:10px;background:rgba(26,58,42,.04);border:1px solid rgba(26,58,42,.15);border-radius:10px;padding:14px;">
-        <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--grn);margin-bottom:10px">🏢 Apartment Details</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-          <div>
-            <label style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:5px">Top Floor</label>
-            <select class="fi fi-sel" id="apt-floors" onchange="updateAptFloors()" style="font-size:12px">
-              <option value="">Select Top Floor</option>
-              <option>Ground Floor (G)</option>
-              <option>G+1</option><option>G+2</option><option>G+3</option><option>G+4</option>
-              <option>G+5</option><option>G+6</option><option>G+7</option><option>G+8</option>
-              <option>G+9</option><option>G+10</option><option>G+11</option><option>G+12</option>
-              <option>G+13</option><option>G+14</option><option>G+15</option>
+        <div class="form-row c2">
+          <div class="fg"><label>Site Address <span class="ml">साइट पत्ता</span></label><input class="fi" id="p-address" placeholder="Village, Taluka, District"></div>
+          <div class="fg"><label>Project Type <span class="ml">प्रकार</span></label>
+            <select class="fi fi-sel" id="p-type">
+              <option value="">Select Type</option>
+              <option>Residential Bungalow</option><option>Apartment Building</option>
+              <option>Row House</option><option>Commercial</option>
+              <option>Industrial</option><option>Renovation</option><option>Other</option>
             </select>
           </div>
-          <div style="display:flex;align-items:flex-end;padding-bottom:4px">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink)">
-              <input type="checkbox" id="apt-parking" onchange="updateAptFloors()" style="width:16px;height:16px;accent-color:var(--grn)">
-              🅿️ Parking / Basement Floor
-            </label>
+        </div>
+        <div class="form-row c3">
+          <div class="fg"><label>Total Amount (₹) <span class="ml">रक्कम</span></label><input class="fi" id="p-total" type="number" placeholder="0"></div>
+          <div class="fg"><label>Initial Advance (₹) <span class="ml">आगाऊ</span></label><input class="fi" id="p-advance" type="number" placeholder="0"></div>
+          <div class="fg"><label>Deadline <span class="ml">अंतिम तारीख</span></label><input class="fi" id="p-deadline" type="date"></div>
+        </div>
+        <div class="form-row c2">
+          <div class="fg"><label>Payment Mode</label>
+            <select class="fi fi-sel" id="p-paymode" onchange="toggleUpiSub('p-upi-sub',this.value)">
+              <option>UPI</option><option>Net Banking</option><option>Cheque</option><option>Cash</option><option>Other</option>
+            </select>
+            <div id="p-upi-sub" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
+              <span class="upi-chip on" data-target="p-upi-app" onclick="selectUpi(this,'GPay')">🟢 GPay</span>
+              <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'PhonePe')">🟣 PhonePe</span>
+              <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'Paytm')">🔵 Paytm</span>
+              <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'BHIM')">🇮🇳 BHIM</span>
+              <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'Cred')">⚫ Cred</span>
+              <span class="upi-chip" data-target="p-upi-app" onclick="selectUpi(this,'Other UPI')">➕ Other</span>
+            </div>
+            <input type="hidden" id="p-upi-app" value="GPay">
+          </div>
+          <div class="fg"><label>Services <span class="ml">सेवा</span></label><div class="svc-grid" id="svc-grid" style="margin-top:8px"></div></div>
+        </div>
+        <div id="int-sub-panel" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;padding:12px;background:rgba(44,95,138,.04);border:1px solid rgba(44,95,138,.2);border-radius:10px">
+          <div style="width:100%;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:6px">🏠 Interior Design — Areas</div>
+          ${['Living Room','Master Bedroom','Bedroom 2','Bedroom 3','Kitchen','Dining Area','Bathroom','Kids Room','Pooja Room','Study/Office','Balcony','Full Home Interior'].map(r=>`<label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer"><input type="checkbox" value="${r}" style="accent-color:var(--blue)"> ${r}</label>`).join('')}
+        </div>
+        <div id="apt-sub-panel" style="display:none;margin-top:10px;background:rgba(26,58,42,.04);border:1px solid rgba(26,58,42,.15);border-radius:10px;padding:14px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--grn);margin-bottom:10px">🏢 Apartment Details</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div><label style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:5px">Top Floor</label>
+              <select class="fi fi-sel" id="apt-floors" onchange="updateAptFloors()" style="font-size:12px">
+                <option value="">Select Top Floor</option>
+                ${['Ground Floor (G)','G+1','G+2','G+3','G+4','G+5','G+6','G+7','G+8','G+9','G+10'].map(o=>`<option>${o}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:4px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink)">
+                <input type="checkbox" id="apt-parking" onchange="updateAptFloors()" style="width:16px;height:16px;accent-color:var(--grn)"> 🅿️ Parking / Basement Floor
+              </label>
+            </div>
+          </div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:7px">Floor Plans Required</div><div id="apt-floors-checks" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
+        </div>
+        <div class="fg" style="margin-top:12px"><label>Notes <span class="ml">टिपा</span></label><textarea class="fi fi-ta" id="p-notes" placeholder="Additional info..."></textarea></div>
+      </div>
+
+      <!-- ═══ STEP 2: PROJECT BRIEF ═══ -->
+      <div id="pstep-2" class="proj-step" style="display:none">
+        <div class="step-head">📐 Project Brief / प्रोजेक्ट ब्रिफ</div>
+
+        <!-- Plot Details -->
+        <div class="brief-card">
+          <div class="brief-card-title">🗺️ Plot Details / प्लॉट माहिती</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+            <div><label class="fl">Length / लांबी (ft)</label><input class="fi" id="br-len" type="number" placeholder="40" oninput="calcBriefArea()"></div>
+            <div><label class="fl">Width / रुंदी (ft)</label><input class="fi" id="br-wid" type="number" placeholder="60" oninput="calcBriefArea()"></div>
+            <div><label class="fl">Area / क्षेत्रफळ (sq ft)</label><input class="fi" id="br-area" type="number" placeholder="Auto"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label class="fl">Floors / मजले</label>
+              <select class="fi fi-sel" id="br-floors">
+                <option value="">Select</option>
+                ${['Ground Only (G)','G+1','G+2','G+3','G+4','G+5'].map(o=>`<option>${o}</option>`).join('')}
+              </select>
+            </div>
+            <div><label class="fl">North Direction / उत्तर दिशा</label>
+              <select class="fi fi-sel" id="br-north">
+                <option value="">Select</option>
+                <option>Top (↑ North at top)</option><option>Right (→ North at right)</option>
+                <option>Bottom (↓ North at bottom)</option><option>Left (← North at left)</option>
+              </select>
+            </div>
           </div>
         </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:7px">Floor Plans Required <span style="font-weight:400;color:var(--dim)">(auto-selected, uncheck to remove)</span></div>
-          <div id="apt-floors-checks" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+
+        <!-- Road Details -->
+        <div class="brief-card">
+          <div class="brief-card-title">🛣️ Road Details / रस्ता माहिती</div>
+          <div style="margin-bottom:10px">
+            <label class="fl">Road Direction / रस्ता कोणत्या बाजूला? (Multiple select)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+              ${['North / उत्तर','South / दक्षिण','East / पूर्व','West / पश्चिम'].map((d,i)=>`
+              <label class="check-chip"><input type="checkbox" value="${['North','South','East','West'][i]}" name="br-road"> ${d}</label>`).join('')}
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label class="fl">Main Road Width / मुख्य रस्ता रुंदी (ft)</label><input class="fi" id="br-rw1" type="number" placeholder="30"></div>
+            <div><label class="fl">Side Road Width / बाजूचा रस्ता (ft)</label><input class="fi" id="br-rw2" type="number" placeholder="if corner plot"></div>
+          </div>
+        </div>
+
+        <!-- Family Brief -->
+        <div class="brief-card">
+          <div class="brief-card-title">👨‍👩‍👧‍👦 Family & Lifestyle / कुटुंब माहिती</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div><label class="fl">Family Members / कुटुंब सदस्य</label><input class="fi" id="br-family" type="number" placeholder="4"></div>
+            <div><label class="fl">Budget / बजेट</label>
+              <select class="fi fi-sel" id="br-budget">
+                <option value="">Select Budget</option>
+                ${['Under ₹20L','₹20L–₹40L','₹40L–₹60L','₹60L–₹1Cr','₹1Cr–₹2Cr','₹2Cr+'].map(b=>`<option>${b}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label class="fl">Family Requirements / कुटुंबाच्या गरजा</label><textarea class="fi fi-ta" id="br-family-req" placeholder="Joint family, elderly parents, kids..." style="min-height:70px"></textarea></div>
+            <div><label class="fl">Special Requirements / विशेष गरजा</label><textarea class="fi fi-ta" id="br-special" placeholder="Vastu, accessibility, solar..." style="min-height:70px"></textarea></div>
+          </div>
+        </div>
+
+        <!-- Vastu & Special -->
+        <div class="brief-card">
+          <div class="brief-card-title">✨ Additional Preferences</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            ${['🌿 Vastu Compliance','♿ Wheelchair Accessible','🏫 Joint Family Layout','🌱 Eco Friendly','☀️ Solar Ready','🌬️ Cross Ventilation','💧 Rainwater Harvesting','🐄 Cattle Area','🏪 Shop on Ground Floor','🔒 Extra Security'].map(s=>`
+            <label class="check-chip"><input type="checkbox" value="${s}" name="br-pref"> ${s}</label>`).join('')}
+          </div>
         </div>
       </div>
-      <div class="form-row c3">
-        <div class="fg"><label>Total Amount (Rs.) <span style="font-weight:400;color:var(--mut)">(optional)</span></label><input class="fi" id="p-total" type="number" placeholder="0 (add later)"></div>
-        <div class="fg"><label>Initial Advance (Rs.)</label><input class="fi" id="p-advance" type="number" placeholder="0"></div>
-        <div class="fg"><label>Deadline</label><input class="fi" id="p-deadline" type="date"></div>
+
+      <!-- ═══ STEP 3: ROOMS ═══ -->
+      <div id="pstep-3" class="proj-step" style="display:none">
+        <div class="step-head">🛏️ Room Requirements / खोल्यांची माहिती</div>
+
+        <!-- Bedrooms -->
+        <div class="brief-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="brief-card-title" style="margin:0">🛏️ Bedrooms / बेडरूम</div>
+            <button type="button" onclick="addBriefBedroom()" style="padding:6px 14px;background:var(--grn);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">+ Add Bedroom</button>
+          </div>
+          <div id="br-bedrooms-list"></div>
+          <div id="br-bed-empty" style="text-align:center;padding:20px;color:var(--mut);font-size:13px">+ बेडरूम जोडण्यासाठी वरील बटण दाबा</div>
+        </div>
+
+        <!-- Toilets -->
+        <div class="brief-card">
+          <div class="brief-card-title">🚿 Bathrooms & Toilets / बाथरूम व टॉयलेट</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            ${[
+              ['wc_attach','🚽 WC Attached / अटॅच टॉयलेट'],
+              ['bath_attach','🚿 Bathroom Attached / अटॅच बाथरूम'],
+              ['bath_wc_attach','🛁 Bath + WC Attached'],
+              ['common_toilet','🚾 Common Toilet / सामायिक टॉयलेट'],
+              ['common_bath','🛁 Common Bathroom'],
+              ['powder_room','💄 Powder Room / Guest Toilet'],
+              ['servant_toilet','🧹 Servant Toilet / नोकर टॉयलेट']
+            ].map(([v,l])=>`<label class="check-chip-lg"><input type="checkbox" value="${v}" name="br-bath"> ${l}</label>`).join('')}
+          </div>
+          <div style="margin-top:10px">
+            <label class="fl" style="margin-bottom:8px">Toilet Features / टॉयलेट सुविधा</label>
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              ${[['western','Western Toilet / वेस्टर्न'],['indian','Indian Toilet / इंडियन'],['shower','Shower Area'],['bathtub','Bathtub / बाथटब'],['ventilation','Ventilation Window']].map(([v,l])=>`
+              <label class="check-chip"><input type="checkbox" value="${v}" name="br-toilet-feat"> ${l}</label>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Pooja Room -->
+        <div class="brief-card">
+          <div class="brief-card-title">🙏 Pooja Room / पूजा रूम</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${[
+              ['separate','🙏 Separate Pooja Room / स्वतंत्र पूजा रूम'],
+              ['hall','🛋️ Pooja in Hall / हॉलमध्ये'],
+              ['kitchen','🍳 Near Kitchen / किचन जवळ'],
+              ['bedroom','🛏️ In Master Bedroom / बेडरूममध्ये'],
+              ['wall_temple','🏛️ Wall Mounted Temple / भिंतीवर'],
+              ['no_pooja','❌ Not Required']
+            ].map(([v,l])=>`
+            <label class="check-chip-lg"><input type="radio" value="${v}" name="br-pooja"> ${l}</label>`).join('')}
+          </div>
+        </div>
+
+        <!-- Kitchen -->
+        <div class="brief-card">
+          <div class="brief-card-title">🍳 Kitchen / किचन</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            ${[
+              ['separate','🍳 Separate Kitchen / स्वतंत्र किचन'],
+              ['kitchen_dining','🍽️ Kitchen + Dining Combined'],
+              ['open','🌐 Open Kitchen'],
+              ['island','🏝️ Island Kitchen'],
+              ['modular','✨ Modular Kitchen']
+            ].map(([v,l])=>`
+            <label class="check-chip-lg"><input type="radio" value="${v}" name="br-kitchen"> ${l}</label>`).join('')}
+          </div>
+          <div>
+            <label class="fl" style="margin-bottom:8px">Kitchen Add-ons / अतिरिक्त सुविधा</label>
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              ${[['store','Store Room'],['utility','Utility Area'],['wash','Washing Area'],['dry_balcony','Dry Balcony'],['pantry','Pantry']].map(([v,l])=>`
+              <label class="check-chip"><input type="checkbox" value="${v}" name="br-kitchen-addon"> ${l}</label>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Other Rooms -->
+        <div class="brief-card">
+          <div class="brief-card-title">🏠 Other Rooms / इतर खोल्या</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            ${[
+              '📚 Study / Library','🚗 Parking / Garage','🌿 Balcony / Terrace',
+              '🏋️ Gym Room','🎬 Home Theatre','🧺 Utility / Store Room',
+              '💼 Office / Shop (Ground)','👴 Senior Room (Ground Floor)',
+              '🌳 Terrace Garden','🏊 Swimming Pool','🎮 Kids Play Area',
+              '🧘 Meditation Room','🐄 Cattle / Gosala Area'
+            ].map(r=>`<label class="check-chip"><input type="checkbox" value="${r}" name="br-other"> ${r}</label>`).join('')}
+          </div>
+        </div>
+
+        <!-- Floor Details -->
+        <div class="brief-card">
+          <div class="brief-card-title">🏢 Floor Requirements / मजले</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            ${['Ground Floor','First Floor (G+1)','Second Floor (G+2)','Third Floor (G+3)','Terrace Floor','Basement','Parking Floor / Stilt'].map(f=>`
+            <label class="check-chip"><input type="checkbox" value="${f}" name="br-floors-req"> ${f}</label>`).join('')}
+          </div>
+        </div>
       </div>
-      <div class="fg" style="margin-bottom:0"><label>Notes</label><textarea class="fi fi-ta" id="p-notes" placeholder="Additional info..."></textarea></div>
-      <div class="form-actions">
-        <button class="btn-full" id="proj-save-btn" style="background:var(--gold);color:var(--grn)" onclick="saveProject()">Add Project</button>
-        <button class="btn-full" style="background:var(--surf2);color:var(--mut);border:1px solid var(--bdr)" onclick="closeModal('m-proj')">Cancel</button>
+
+      <!-- ═══ STEP 4: DRAWINGS ═══ -->
+      <div id="pstep-4" class="proj-step" style="display:none">
+        <div class="step-head">📐 Architect Services / आर्किटेक्ट सेवा</div>
+
+        <!-- Drawing Services -->
+        <div class="brief-card">
+          <div class="brief-card-title">📋 Required Drawings / आवश्यक ड्रॉइंग्स</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            ${[
+              ['blueprint','📘 Blueprint / Blue Print Plan'],
+              ['centerline','📏 Centerline Plan / सेंटरलाइन'],
+              ['estimate','💰 Estimate / BOQ अंदाजपत्रक'],
+              ['floor_plan_2d','🏠 2D Floor Plan'],
+              ['elevation_3d','🎨 3D Elevation / थ्रीडी'],
+              ['elevation_2d','🏛️ 2D Elevation Drawing'],
+              ['section','✂️ Section Drawing'],
+              ['structural','⚙️ Structural Drawing'],
+              ['plumbing','🔧 Plumbing Layout'],
+              ['electrical','⚡ Electrical Layout'],
+              ['approval','📄 Approval / Permission Drawing'],
+              ['walkthrough','🎬 Walkthrough Animation'],
+              ['interior','🛋️ Interior Design Drawing'],
+              ['landscape','🌳 Landscape Design'],
+              ['furniture','🪑 Furniture Layout'],
+              ['vastu','🧭 Vastu Plan'],
+              ['others','📋 Others / इतर']
+            ].map(([v,l])=>`
+            <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s"
+              onmouseover="this.style.borderColor='var(--grn)'" onmouseout="this.style.borderColor='var(--bdr)'">
+              <input type="checkbox" value="${v}" name="br-drawings" style="accent-color:var(--grn);width:15px;height:15px;flex-shrink:0"> ${l}
+            </label>`).join('')}
+          </div>
+        </div>
+
+        <!-- Select All -->
+        <div style="display:flex;gap:8px;margin-top:-4px;margin-bottom:14px">
+          <button type="button" onclick="selectAllDrawings()" style="padding:7px 14px;background:var(--grn);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Select All</button>
+          <button type="button" onclick="clearAllDrawings()" style="padding:7px 14px;background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Clear All</button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 5: REVIEW & FINISH ═══ -->
+      <div id="pstep-5" class="proj-step" style="display:none">
+        <div class="step-head">✅ Review & Submit / तपासा आणि सबमिट करा</div>
+        <div id="proj-review-body" style="background:var(--surf2);border-radius:12px;padding:16px;font-size:13px;line-height:2"></div>
+        <div style="margin-top:14px;padding:12px;background:#e8f4ee;border:1px solid #c0dbc8;border-radius:10px;font-size:12px;color:var(--grn)">
+          ✅ सगळी माहिती बरोबर असल्यास <b>Save Project</b> दाबा. नंतर edit करता येईल.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Nav -->
+    <div style="padding:14px 20px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;background:var(--surf2)">
+      <button id="proj-prev-btn" onclick="prevProjStep()" style="display:none;padding:10px 20px;background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">← मागे</button>
+      <div style="font-size:12px;color:var(--mut)" id="proj-step-label">Step 1 of 5</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="closeModal('m-proj')" style="padding:10px 16px;background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:10px;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Cancel</button>
+        <button id="proj-next-btn" onclick="nextProjStep()" style="padding:10px 24px;background:var(--grn);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">पुढे →</button>
+        <button id="proj-save-btn" onclick="saveProject()" style="display:none;padding:10px 24px;background:var(--gold);color:var(--grn);border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">💾 Save Project</button>
       </div>
     </div>
   </div>
 </div>
+
 
 <!-- ADD PAYMENT -->
 <div class="modal-bg" id="m-pay">
@@ -2380,7 +2627,7 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('mob
 function openModal(id){
   // Init — no sub-function calls that could recurse
   try{
-    if(id==='m-proj') populateProjModal();
+    if(id==='m-proj'){ populateProjModal(); if(typeof resetProjModal==='function') resetProjModal(); }
     if(id==='m-pay') populatePayModal();
     if(id==='m-contact'){
       ['c-name','c-wa','c-phone','c-address','c-other'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
@@ -3702,6 +3949,276 @@ function updateAptFloors(){
     checksDiv.appendChild(lbl);
   });
 }
+// ══════════════════════════════════════
+// PROJECT BRIEF PANEL JS
+// ══════════════════════════════════════
+let _briefBedroomCount = 0;
+
+function toggleProjectBrief() {
+  const panel = document.getElementById('project-brief-panel');
+  const btn = document.getElementById('brief-toggle-btn');
+  if(!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  btn.innerHTML = isOpen
+    ? '📋 + Add Project Brief (Plot, Rooms, Drawings)'
+    : '📋 ▲ Hide Project Brief';
+  if(!isOpen && _briefBedroomCount === 0) addBriefBedroom();
+}
+
+function calcBriefArea() {
+  const l = parseFloat(document.getElementById('br-len')?.value) || 0;
+  const w = parseFloat(document.getElementById('br-wid')?.value) || 0;
+  if(l && w) { const a = document.getElementById('br-area'); if(a) a.value = (l*w).toFixed(0); }
+}
+
+function addBriefBedroom() {
+  _briefBedroomCount++;
+  const idx = _briefBedroomCount;
+  const list = document.getElementById('br-bedrooms-list');
+  if(!list) return;
+  const row = document.createElement('div');
+  row.id = 'br-bed-row-' + idx;
+  row.style.cssText = 'background:#fff;border:1.5px solid var(--bdr);border-radius:10px;padding:12px;position:relative';
+  const emptyEl = document.getElementById('br-bed-empty');
+  if(emptyEl) emptyEl.style.display = 'none';
+  row.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--grn)">🛏️ Bedroom ${idx}</div>
+      <button type="button" onclick="removeBriefBedroom(${idx})" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label class="fl">Type / प्रकार</label>
+        <select class="fi fi-sel" id="br-bed-type-${idx}" style="font-size:12px">
+          <option value="master">🛏️ Master Bedroom</option>
+          <option value="children">👧 Children's Bedroom</option>
+          <option value="guest">🏨 Guest Bedroom</option>
+          <option value="parents">👴 Parents' Bedroom</option>
+          <option value="office">💼 Office Bedroom</option>
+          <option value="servant">🧹 Servant Room</option>
+          <option value="other">📦 Other</option>
+        </select>
+      </div>
+      <div><label class="fl">Size / आकार</label>
+        <select class="fi fi-sel" id="br-bed-size-${idx}" style="font-size:12px">
+          <option value="">No preference</option>
+          <option value="small">Small (10×10 ft)</option>
+          <option value="medium">Medium (12×12 ft)</option>
+          <option value="large">Large (14×14 ft)</option>
+          <option value="xlarge">Extra Large (16×16+ ft)</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="fl" style="margin-bottom:6px">Attached Toilet / अटॅच टॉयलेट</label>
+      <div style="display:flex;flex-wrap:wrap;gap:7px">
+        ${[['none_toilet','❌ None'],['wc_only','🚽 WC Only'],['bath_wc','🚿 Bath + WC'],['bath_only','🛁 Bath Only']].map(([v,l])=>`
+        <label class="check-chip"><input type="radio" value="${v}" name="br-bed-toilet-${idx}" style="accent-color:var(--grn)"> ${l}</label>`).join('')}
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      ${[['dress','👗 Dressing Room'],['balc','🌿 Balcony'],['ward','🪵 Wardrobe Space'],['ac','❄️ AC Provision']].map(([k,l])=>`
+      <label class="check-chip">
+        <input type="checkbox" name="br-bed-${k}-${idx}" value="yes" style="accent-color:var(--grn)"> ${l}
+      </label>`).join('')}
+    </div>`;
+  list.appendChild(row);
+  // Default select 'None'
+  const noneRadio = row.querySelector('input[value="none_toilet"]');
+  if(noneRadio) noneRadio.checked = true;
+}
+
+function removeBriefBedroom(idx) {
+  const row = document.getElementById('br-bed-row-' + idx);
+  if(row) row.remove();
+}
+
+function getBriefData() {
+  const panel = document.getElementById('project-brief-panel');
+  if(!panel || panel.style.display === 'none') return null;
+
+  // Bedrooms
+  const bedrooms = [];
+  for(let i=1; i<=_briefBedroomCount; i++){
+    const row = document.getElementById('br-bed-row-'+i);
+    if(!row) continue;
+    const typeEl = document.getElementById('br-bed-type-'+i);
+    const sizeEl = document.getElementById('br-bed-size-'+i);
+    const toilet = row.querySelector('input[name="br-bed-toilet-'+i+'"]:checked')?.value||'none_toilet';
+    bedrooms.push({
+      type: typeEl?.value||'master',
+      size: sizeEl?.value||'',
+      toilet
+    });
+  }
+
+  // Roads
+  const roads = [...document.querySelectorAll('input[name="br-road"]:checked')].map(e=>e.value);
+
+  // Bathrooms
+  const bathrooms = [...document.querySelectorAll('input[name="br-bath"]:checked')].map(e=>e.value);
+
+  // Drawings
+  const drawings = [...document.querySelectorAll('input[name="br-drawings"]:checked')].map(e=>e.value);
+
+  // Others
+  const others = [...document.querySelectorAll('input[name="br-other"]:checked')].map(e=>e.value);
+
+  return {
+    plotLength: document.getElementById('br-len')?.value||'',
+    plotWidth:  document.getElementById('br-wid')?.value||'',
+    plotArea:   document.getElementById('br-area')?.value||'',
+    floors:     document.getElementById('br-floors')?.value||'',
+    northDir:   document.getElementById('br-north')?.value||'',
+    roads,
+    roadWidth:  document.getElementById('br-rw1')?.value||'',
+    roadWidth2: document.getElementById('br-rw2')?.value||'',
+    bedrooms,
+    bathrooms,
+    poojaRoom:  document.querySelector('input[name="br-pooja"]:checked')?.value||'',
+    kitchen:    document.querySelector('input[name="br-kitchen"]:checked')?.value||'',
+    otherRooms: others,
+    drawings,
+    budget:     document.querySelector('input[name="br-budget"]:checked')?.value||'',
+  };
+}
+
+// Reset brief panel when modal opens for new project
+// ════════════════════════════════════════
+// MULTI-STEP PROJECT FORM
+// ════════════════════════════════════════
+let _projCurrentStep = 1;
+const PROJ_TOTAL_STEPS = 5;
+
+function goProjStep(step) {
+  if(step < 1 || step > PROJ_TOTAL_STEPS) return;
+  // Validate step 1 before moving forward
+  if(_projCurrentStep === 1 && step > 1) {
+    if(!document.getElementById('p-name')?.value.trim()) { alert('Project Name टाका / Enter Project Name'); return; }
+    if(!document.getElementById('p-client')?.value) { alert('Client निवडा / Select Client'); return; }
+  }
+  // Hide all steps
+  for(let i=1;i<=PROJ_TOTAL_STEPS;i++){
+    const el=document.getElementById('pstep-'+i);
+    if(el) el.style.display='none';
+  }
+  // Show current
+  const cur = document.getElementById('pstep-'+step);
+  if(cur) cur.style.display='block';
+  _projCurrentStep = step;
+
+  // Update dots
+  for(let i=1;i<=PROJ_TOTAL_STEPS;i++){
+    const dot = document.getElementById('pstep-dot-'+i);
+    if(!dot) continue;
+    if(i < step){ dot.style.background='var(--gold)'; dot.style.color='var(--grn)'; dot.innerHTML='✓'; }
+    else if(i === step){ dot.style.background='var(--gold)'; dot.style.color='var(--grn)'; dot.innerHTML=i; }
+    else{ dot.style.background='rgba(255,255,255,.25)'; dot.style.color='rgba(255,255,255,.7)'; dot.innerHTML=i; }
+  }
+  // Update lines
+  for(let i=1;i<PROJ_TOTAL_STEPS;i++){
+    const line=document.getElementById('pstep-line-'+i);
+    if(line) line.style.width = i < step ? '100%' : '0%';
+  }
+
+  // Update nav buttons
+  const prevBtn = document.getElementById('proj-prev-btn');
+  const nextBtn = document.getElementById('proj-next-btn');
+  const saveBtn = document.getElementById('proj-save-btn');
+  const label   = document.getElementById('proj-step-label');
+  if(prevBtn) prevBtn.style.display = step > 1 ? 'block' : 'none';
+  if(nextBtn) nextBtn.style.display = step < PROJ_TOTAL_STEPS ? 'block' : 'none';
+  if(saveBtn) saveBtn.style.display = step === PROJ_TOTAL_STEPS ? 'block' : 'none';
+  if(label)   label.textContent = 'Step ' + step + ' of ' + PROJ_TOTAL_STEPS;
+
+  // Build review on step 5
+  if(step === PROJ_TOTAL_STEPS) buildProjReview();
+}
+
+function nextProjStep() { goProjStep(_projCurrentStep + 1); }
+function prevProjStep() { goProjStep(_projCurrentStep - 1); }
+
+function buildProjReview() {
+  const name  = document.getElementById('p-name')?.value||'—';
+  const cid   = document.getElementById('p-client')?.value;
+  const client = cid ? gc(cid) : null;
+  const total = document.getElementById('p-total')?.value||'0';
+  const addr  = document.getElementById('p-address')?.value||'—';
+  const floors = document.getElementById('br-floors')?.value||'—';
+  const len   = document.getElementById('br-len')?.value;
+  const wid   = document.getElementById('br-wid')?.value;
+  const area  = document.getElementById('br-area')?.value;
+  const north = document.getElementById('br-north')?.value||'—';
+  const roads = [...document.querySelectorAll('input[name="br-road"]:checked')].map(e=>e.value).join(', ')||'—';
+  const pooja = document.querySelector('input[name="br-pooja"]:checked')?.value||'—';
+  const kitchen = document.querySelector('input[name="br-kitchen"]:checked')?.value||'—';
+  const budget = document.getElementById('br-budget')?.value||'—';
+  const drawings = [...document.querySelectorAll('input[name="br-drawings"]:checked')].map(e=>e.value);
+  const bedCount = document.querySelectorAll('[id^="br-bed-row-"]').length;
+  const bathrooms = [...document.querySelectorAll('input[name="br-bath"]:checked')].map(e=>e.value).join(', ')||'—';
+  const svcs = [...document.querySelectorAll('#svc-grid .svc-tog.on')].map(e=>e.dataset.svc||e.textContent.trim()).join(', ')||'—';
+
+  const el = document.getElementById('proj-review-body');
+  if(!el) return;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px">
+      <div>📌 <b>Project:</b> ${name}</div>
+      <div>👤 <b>Client:</b> ${client?client.name:'—'}</div>
+      <div>📍 <b>Address:</b> ${addr}</div>
+      <div>💰 <b>Amount:</b> ₹${Number(total).toLocaleString('en-IN')}</div>
+      <div>📐 <b>Plot:</b> ${len||'—'} × ${wid||'—'} ft (${area||'—'} sqft)</div>
+      <div>🏢 <b>Floors:</b> ${floors}</div>
+      <div>🧭 <b>North:</b> ${north}</div>
+      <div>🛣️ <b>Road:</b> ${roads}</div>
+      <div>🛏️ <b>Bedrooms:</b> ${bedCount}</div>
+      <div>🚿 <b>Bathrooms:</b> ${bathrooms}</div>
+      <div>🙏 <b>Pooja:</b> ${pooja}</div>
+      <div>🍳 <b>Kitchen:</b> ${kitchen}</div>
+      <div>💰 <b>Budget:</b> ${budget}</div>
+      <div>🏗️ <b>Services:</b> ${svcs}</div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)">
+      📐 <b>Drawings:</b> ${drawings.length ? drawings.join(', ') : '—'}
+    </div>`;
+}
+
+function selectAllDrawings() {
+  document.querySelectorAll('input[name="br-drawings"]').forEach(e=>e.checked=true);
+}
+function clearAllDrawings() {
+  document.querySelectorAll('input[name="br-drawings"]').forEach(e=>e.checked=false);
+}
+
+function resetProjModal(){
+  _projCurrentStep = 1;
+  _briefBedroomCount = 0;
+  const list = document.getElementById('br-bedrooms-list');
+  if(list) list.innerHTML = '';
+  const empty = document.getElementById('br-bed-empty');
+  if(empty) empty.style.display = 'block';
+  // Reset all inputs in modal
+  document.querySelectorAll('#m-proj input.fi, #m-proj select.fi, #m-proj textarea.fi').forEach(e=>e.value='');
+  document.querySelectorAll('#m-proj input[type=checkbox], #m-proj input[type=radio]').forEach(e=>e.checked=false);
+  // Reset UPI chips
+  document.querySelectorAll('#p-upi-sub .upi-chip').forEach((c,i)=>c.classList.toggle('on',i===0));
+  document.querySelectorAll('#svc-grid .svc-tog').forEach(t=>t.classList.remove('on'));
+  // Go to step 1
+  goProjStep(1);
+}
+
+function resetBriefPanel(){
+  _briefBedroomCount = 0;
+  const list = document.getElementById('br-bedrooms-list');
+  if(list) list.innerHTML = '';
+  const panel = document.getElementById('project-brief-panel');
+  if(panel) panel.style.display = 'none';
+  const btn = document.getElementById('brief-toggle-btn');
+  if(btn) btn.innerHTML = '📋 + Add Project Brief (Plot, Rooms, Drawings)';
+  // Clear all checkboxes/radios
+  document.querySelectorAll('#project-brief-panel input[type=checkbox], #project-brief-panel input[type=radio]').forEach(e=>e.checked=false);
+  document.querySelectorAll('#project-brief-panel input.fi, #project-brief-panel select.fi').forEach(e=>e.value='');
+}
+
 // ── Edit Project ──
 let _editProjectId = null;
 
@@ -8441,6 +8958,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       <button class="cp-tab" onclick="cpTab('payments')">💰 Payments</button>
       <button class="cp-tab" onclick="cpTab('sitevisits')">🏗️ Site Visits</button>
       <button class="cp-tab" onclick="cpTab('drawings')">📐 Drawings</button>
+      <button class="cp-tab" onclick="cpTab('brief')">📋 Project Brief</button>
+      <button class="cp-tab" onclick="cpTab('request')">✏️ Drawing Request</button>
     </div>
 
     <!-- Content area -->
@@ -8651,9 +9170,453 @@ function renderCpContent() {
   else if (cpCurrentTab === 'payments') el.innerHTML = renderCpPayments(c, projs);
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
   else if (cpCurrentTab === 'drawings') el.innerHTML = renderCpDrawings(c, projs);
+  else if (cpCurrentTab === 'brief') { el.innerHTML = renderCpBrief(c, projs); initCpBrief(); }
+  else if (cpCurrentTab === 'request') { el.innerHTML = renderCpRequest(c, projs); }
 }
 
 function fmtCp(n) { return '₹' + Number(n || 0).toLocaleString('en-IN'); }
+
+// ════════════════════════════════════════
+// 📋 PROJECT BRIEF TAB
+// ════════════════════════════════════════
+function renderCpBrief(c, projs) {
+  const projOpts = projs.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  return `
+  <div style="max-width:600px;margin:0 auto">
+    <div style="background:linear-gradient(135deg,var(--grn),#2d5a3d);border-radius:16px;padding:20px;margin-bottom:20px;color:#fff">
+      <div style="font-size:18px;font-weight:800;margin-bottom:4px">📋 Project Brief</div>
+      <div style="font-size:12px;opacity:.7">तुमच्या project चे details fill करा — Architect ला पाठवले जाईल</div>
+    </div>
+
+    <!-- Project select -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:8px">Project</div>
+      <select id="brief-proj" class="fi fi-sel" style="width:100%">
+        <option value="">-- Project निवडा --</option>
+        ${projOpts}
+      </select>
+    </div>
+
+    <!-- Plot Details -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:var(--grn);margin-bottom:14px">🗺️ Plot Details</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Plot Length (ft)</label>
+          <input id="brief-length" class="fi" type="number" placeholder="e.g. 40">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Plot Width (ft)</label>
+          <input id="brief-width" class="fi" type="number" placeholder="e.g. 60">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Plot Area (sq ft)</label>
+          <input id="brief-area" class="fi" type="number" placeholder="Auto calculated">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Number of Floors</label>
+          <select id="brief-floors" class="fi fi-sel">
+            <option value="">Select</option>
+            <option>Ground Floor (G)</option>
+            <option>G+1</option><option>G+2</option><option>G+3</option>
+            <option>G+4</option><option>G+5</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Road & Direction -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:var(--grn);margin-bottom:14px">🧭 Road & Direction</div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:8px">North Direction (plot वर North कुठे आहे?)</label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="brief-north-btns">
+          ${['↑ Top','→ Right','↓ Bottom','← Left'].map((d,i)=>`
+            <button onclick="briefSelectNorth(this,'${['Top','Right','Bottom','Left'][i]}')"
+              style="padding:10px 6px;border-radius:10px;border:1.5px solid var(--bdr);background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">${d}</button>`).join('')}
+        </div>
+        <input type="hidden" id="brief-north" value="">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:8px">Road कोणत्या बाजूला आहे? (multiple select)</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="brief-road-btns">
+          ${['North','South','East','West'].map(d=>`
+            <button onclick="briefToggleRoad(this,'${d}')"
+              style="padding:8px 16px;border-radius:20px;border:1.5px solid var(--bdr);background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">${d}</button>`).join('')}
+        </div>
+        <input type="hidden" id="brief-roads" value="">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Main Road Width (ft)</label>
+          <input id="brief-road-width" class="fi" type="number" placeholder="e.g. 30">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Side Road Width (ft) <span style="font-weight:400;color:var(--mut)">(if corner)</span></label>
+          <input id="brief-road-width2" class="fi" type="number" placeholder="if any">
+        </div>
+      </div>
+    </div>
+
+    <!-- Rooms Required -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:var(--grn);margin-bottom:14px">🛏️ Rooms Required</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Bedrooms</label>
+          <select id="brief-bed" class="fi fi-sel">
+            ${[1,2,3,4,5,6].map(n=>`<option>${n} Bedroom${n>1?'s':''}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Bathrooms</label>
+          <select id="brief-bath" class="fi fi-sel">
+            ${[1,2,3,4,5].map(n=>`<option>${n} Bathroom${n>1?'s':''}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:8px">Additional Rooms (हवे असलेले select करा)</label>
+        <div style="display:flex;flex-wrap:wrap;gap:7px" id="brief-rooms-btns">
+          ${['🙏 Pooja Room','📚 Study Room','🍳 Kitchen','🍽️ Dining','🛋️ Living Room','🚗 Parking','🏊 Terrace Garden','👴 Senior Room (Ground)','💼 Office/Shop','🧺 Utility Room','🏋️ Gym','🎬 Home Theatre'].map(r=>`
+            <button onclick="briefToggleRoom(this)" data-room="${r}"
+              style="padding:7px 12px;border-radius:20px;border:1.5px solid var(--bdr);background:#fff;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s">${r}</button>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Services Required -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:var(--grn);margin-bottom:12px">🏗️ Architect कडून कोणत्या Services पाहिजे?</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px" id="brief-svc-btns">
+        ${[
+          '📐 Architectural Drawing','🏛️ Elevation Design','🏠 Interior Design',
+          '🌿 Vastu Compliance','🏢 3D Visualization','📋 Structural Drawing',
+          '⚡ Electrical Drawing','🔧 Plumbing Drawing','📄 Permission Drawing',
+          '🏗️ Site Supervision','💡 Lighting Design','🌳 Landscape Design'
+        ].map(s=>`
+          <button onclick="briefToggleSvc(this)" data-svc="${s}"
+            style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--bdr);background:#fff;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s">${s}</button>`).join('')}
+      </div>
+    </div>
+
+    <!-- Special Requirements -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:var(--grn);margin-bottom:10px">✨ Special Requirements</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px" id="brief-special-btns">
+        ${['♿ Wheelchair Accessible','🏫 Joint Family','🌱 Eco Friendly','🔒 Extra Security','☀️ Solar Ready','🌬️ Cross Ventilation','💧 Rainwater Harvesting','🐄 Cattle Area','🏪 Shop on Ground Floor'].map(s=>`
+          <button onclick="briefToggleSpecial(this)" data-sp="${s}"
+            style="padding:7px 12px;border-radius:20px;border:1.5px solid var(--bdr);background:#fff;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s">${s}</button>`).join('')}
+      </div>
+      <textarea id="brief-notes" class="fi fi-ta" placeholder="इतर काही सांगायचे आहे का? (Optional)" style="min-height:80px"></textarea>
+    </div>
+
+    <!-- Budget -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:var(--grn);margin-bottom:12px">💰 Construction Budget</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px" id="brief-budget-btns">
+        ${['Under ₹20L','₹20L - ₹40L','₹40L - ₹60L','₹60L - ₹1Cr','₹1Cr - ₹2Cr','₹2Cr+'].map(b=>`
+          <button onclick="briefSelectBudget(this,'${b}')"
+            style="padding:8px 16px;border-radius:20px;border:1.5px solid var(--bdr);background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">${b}</button>`).join('')}
+        <input type="hidden" id="brief-budget" value="">
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button onclick="submitBrief()" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--grn),#2d5a3d);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:30px;font-family:'Plus Jakarta Sans',sans-serif">
+      📤 Submit Brief to Architect
+    </button>
+  </div>`;
+}
+
+function initCpBrief() {
+  // Auto-calculate area when length/width changes
+  ['brief-length','brief-width'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input',()=>{
+      const l = parseFloat(document.getElementById('brief-length').value)||0;
+      const w = parseFloat(document.getElementById('brief-width').value)||0;
+      if(l&&w) document.getElementById('brief-area').value = (l*w).toFixed(0);
+    });
+  });
+}
+
+function briefSelectNorth(btn, dir) {
+  document.querySelectorAll('#brief-north-btns button').forEach(b=>{
+    b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bdr)';
+  });
+  btn.style.background='var(--grn)'; btn.style.color='#fff'; btn.style.borderColor='var(--grn)';
+  document.getElementById('brief-north').value = dir;
+}
+
+function briefToggleRoad(btn, dir) {
+  const isOn = btn.style.background === 'var(--grn)' || btn.dataset.on==='1';
+  btn.style.background = isOn ? '#fff' : 'var(--grn)';
+  btn.style.color = isOn ? '' : '#fff';
+  btn.style.borderColor = isOn ? 'var(--bdr)' : 'var(--grn)';
+  btn.dataset.on = isOn ? '0' : '1';
+  const sel = [...document.querySelectorAll('#brief-road-btns button[data-on="1"]')].map(b=>b.textContent);
+  document.getElementById('brief-roads').value = sel.join(', ');
+}
+
+function briefToggleRoom(btn) {
+  const isOn = btn.dataset.on==='1';
+  btn.style.background = isOn ? '#fff' : 'rgba(26,58,42,.08)';
+  btn.style.borderColor = isOn ? 'var(--bdr)' : 'var(--grn)';
+  btn.style.color = isOn ? '' : 'var(--grn)';
+  btn.dataset.on = isOn ? '0' : '1';
+}
+
+function briefToggleSvc(btn) {
+  const isOn = btn.dataset.on==='1';
+  btn.style.background = isOn ? '#fff' : 'var(--grn)';
+  btn.style.color = isOn ? '' : '#fff';
+  btn.style.borderColor = isOn ? 'var(--bdr)' : 'var(--grn)';
+  btn.dataset.on = isOn ? '0' : '1';
+}
+
+function briefToggleSpecial(btn) {
+  const isOn = btn.dataset.on==='1';
+  btn.style.background = isOn ? '#fff' : '#e8f4ee';
+  btn.style.borderColor = isOn ? 'var(--bdr)' : 'var(--grn)';
+  btn.style.color = isOn ? '' : 'var(--grn)';
+  btn.dataset.on = isOn ? '0' : '1';
+}
+
+function briefSelectBudget(btn, val) {
+  document.querySelectorAll('#brief-budget-btns button').forEach(b=>{
+    b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bdr)';
+  });
+  btn.style.background='#fffbee'; btn.style.borderColor='var(--gold)'; btn.style.color='#7a5a00';
+  document.getElementById('brief-budget').value = val;
+}
+
+function submitBrief() {
+  const proj = document.getElementById('brief-proj').value;
+  if(!proj){ alert('Project निवडा'); return; }
+  const p = (db.projects||[]).find(x=>x.id===proj);
+  if(!p) return;
+
+  const rooms = [...document.querySelectorAll('#brief-rooms-btns button[data-on="1"]')].map(b=>b.dataset.room);
+  const svcs  = [...document.querySelectorAll('#brief-svc-btns button[data-on="1"]')].map(b=>b.dataset.svc);
+  const special = [...document.querySelectorAll('#brief-special-btns button[data-on="1"]')].map(b=>b.dataset.sp);
+
+  const brief = {
+    projectId: proj,
+    projectName: p.name,
+    clientName: cpCurrentClient.name,
+    submittedAt: new Date().toLocaleString('en-IN'),
+    plotLength: document.getElementById('brief-length').value,
+    plotWidth: document.getElementById('brief-width').value,
+    plotArea: document.getElementById('brief-area').value,
+    floors: document.getElementById('brief-floors').value,
+    northDir: document.getElementById('brief-north').value,
+    roads: document.getElementById('brief-roads').value,
+    roadWidth: document.getElementById('brief-road-width').value,
+    roadWidth2: document.getElementById('brief-road-width2').value,
+    bedrooms: document.getElementById('brief-bed').value,
+    bathrooms: document.getElementById('brief-bath').value,
+    rooms, svcs, special,
+    budget: document.getElementById('brief-budget').value,
+    notes: document.getElementById('brief-notes').value,
+  };
+
+  // Save brief to project
+  p.clientBrief = brief;
+
+  // Save to Firebase
+  try {
+    const fbUrl = localStorage.getItem('gs_fb_url') ||
+      (new URLSearchParams(window.location.search).get('fb') ? decodeURIComponent(new URLSearchParams(window.location.search).get('fb')) : '');
+    if(fbUrl){
+      fetch(fbUrl+'/db/projects.json', {method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({[proj]: p})
+      });
+    }
+  } catch(e){}
+
+  // Show success
+  document.getElementById('cp-content').innerHTML = `
+  <div style="text-align:center;padding:60px 20px">
+    <div style="font-size:64px;margin-bottom:16px">✅</div>
+    <div style="font-size:20px;font-weight:800;color:var(--grn);margin-bottom:8px">Brief Submitted!</div>
+    <div style="font-size:14px;color:var(--mut);margin-bottom:24px">Architect ला तुमचे project details पाठवले आहेत.</div>
+    <div style="background:var(--surf2);border-radius:14px;padding:16px;text-align:left;max-width:340px;margin:0 auto;font-size:12px;line-height:2">
+      <b>Plot:</b> ${brief.plotLength||'—'} × ${brief.plotWidth||'—'} ft (${brief.plotArea||'—'} sq ft)<br>
+      <b>Floors:</b> ${brief.floors||'—'}<br>
+      <b>North:</b> ${brief.northDir||'—'}<br>
+      <b>Road:</b> ${brief.roads||'—'} (${brief.roadWidth||'—'} ft)<br>
+      <b>Rooms:</b> ${brief.bedrooms}, ${brief.bathrooms}<br>
+      <b>Extra:</b> ${rooms.join(', ')||'—'}<br>
+      <b>Services:</b> ${svcs.length} selected<br>
+      <b>Budget:</b> ${brief.budget||'—'}
+    </div>
+    <button onclick="cpTab('brief')" style="margin-top:20px;padding:12px 28px;background:var(--grn);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Edit Brief</button>
+  </div>`;
+}
+
+// ════════════════════════════════════════
+// ✏️ DRAWING REQUEST TAB
+// ════════════════════════════════════════
+function renderCpRequest(c, projs) {
+  const projOpts = projs.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  // Show existing requests
+  const allReqs = projs.flatMap(p=>(p.drawingRequests||[]).map(r=>({...r,pname:p.name})));
+  allReqs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  return `
+  <div style="max-width:600px;margin:0 auto">
+    <div style="background:linear-gradient(135deg,#2c5f8a,#1a3a6a);border-radius:16px;padding:20px;margin-bottom:20px;color:#fff">
+      <div style="font-size:18px;font-weight:800;margin-bottom:4px">✏️ Drawing Request</div>
+      <div style="font-size:12px;opacity:.7">Architect कडून नवीन drawing किंवा revision मागा</div>
+    </div>
+
+    <!-- New Request Form -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:18px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#2c5f8a;margin-bottom:14px">+ New Request</div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Project</label>
+        <select id="req-proj" class="fi fi-sel" style="width:100%">
+          <option value="">-- Project निवडा --</option>
+          ${projOpts}
+        </select>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:8px">Drawing Type</label>
+        <div style="display:flex;flex-wrap:wrap;gap:7px" id="req-type-btns">
+          ${[
+            '🏠 Floor Plan','🏛️ Elevation','✂️ Section',
+            '🎨 3D View','⚙️ Structural','⚡ Electrical',
+            '🔧 Plumbing','📄 Permission Set','🔄 Revision'
+          ].map(t=>`
+            <button onclick="reqSelectType(this,'${t}')" data-type="${t}"
+              style="padding:8px 12px;border-radius:20px;border:1.5px solid var(--bdr);background:#fff;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s">${t}</button>`).join('')}
+          <input type="hidden" id="req-type" value="">
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Priority</label>
+        <div style="display:flex;gap:8px">
+          ${[['🟢 Normal','normal'],['🟡 Urgent','urgent'],['🔴 Very Urgent','critical']].map(([l,v])=>`
+            <button onclick="reqSelectPriority(this,'${v}')" data-pri="${v}"
+              style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bdr);background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">${l}</button>`).join('')}
+          <input type="hidden" id="req-priority" value="normal">
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Description / Details</label>
+        <textarea id="req-desc" class="fi fi-ta" placeholder="कोणते drawing पाहिजे, कोणते changes पाहिजे ते सांगा..." style="min-height:90px"></textarea>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Required By (Date)</label>
+        <input id="req-date" class="fi" type="date">
+      </div>
+
+      <button onclick="submitDrawingRequest()" style="width:100%;padding:14px;background:linear-gradient(135deg,#2c5f8a,#1a3a6a);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">
+        📤 Request पाठवा
+      </button>
+    </div>
+
+    <!-- Previous Requests -->
+    ${allReqs.length ? `
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px">
+      <div style="font-size:13px;font-weight:800;color:var(--grn);margin-bottom:14px">📋 Previous Requests</div>
+      ${allReqs.map(r=>{
+        const priColor = r.priority==='critical'?'#c0392b':r.priority==='urgent'?'#d35400':'#27ae60';
+        const priLabel = r.priority==='critical'?'🔴 Very Urgent':r.priority==='urgent'?'🟡 Urgent':'🟢 Normal';
+        const statusColor = r.status==='completed'?'#27ae60':r.status==='in_progress'?'#2c5f8a':'#7a7568';
+        const statusLabel = r.status==='completed'?'✅ Completed':r.status==='in_progress'?'⚙️ In Progress':'⏳ Pending';
+        return `<div style="padding:12px;background:var(--surf2);border-radius:10px;margin-bottom:8px;border-left:3px solid ${priColor}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;font-weight:700">${r.type||'Drawing Request'}</div>
+              <div style="font-size:11px;color:var(--mut)">${r.pname} · ${r.date}</div>
+            </div>
+            <span style="font-size:10px;font-weight:700;color:${statusColor};background:${statusColor}22;padding:3px 9px;border-radius:20px">${statusLabel}</span>
+          </div>
+          ${r.desc?`<div style="font-size:12px;color:var(--mut);line-height:1.6">${r.desc}</div>`:''}
+          ${r.reqDate?`<div style="font-size:11px;color:var(--mut);margin-top:4px">📅 Required by: ${r.reqDate}</div>`:''}
+          ${r.architectReply?`<div style="margin-top:8px;padding:8px;background:#e8f4ee;border-radius:8px;font-size:12px;color:var(--grn)"><b>Architect:</b> ${r.architectReply}</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+  </div>`;
+}
+
+function reqSelectType(btn, type) {
+  document.querySelectorAll('#req-type-btns button').forEach(b=>{
+    b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bdr)';
+  });
+  btn.style.background='#2c5f8a'; btn.style.color='#fff'; btn.style.borderColor='#2c5f8a';
+  document.getElementById('req-type').value = type;
+}
+
+function reqSelectPriority(btn, val) {
+  document.querySelectorAll('[data-pri]').forEach(b=>{
+    b.style.background='#fff'; b.style.color=''; b.style.borderColor='var(--bdr)';
+  });
+  const colors = {normal:'#27ae60',urgent:'#d35400',critical:'#c0392b'};
+  btn.style.background = colors[val]+'22';
+  btn.style.borderColor = colors[val];
+  btn.style.color = colors[val];
+  document.getElementById('req-priority').value = val;
+}
+
+function submitDrawingRequest() {
+  const projId = document.getElementById('req-proj').value;
+  if(!projId){ alert('Project निवडा'); return; }
+  const type = document.getElementById('req-type').value;
+  if(!type){ alert('Drawing type निवडा'); return; }
+  const desc = document.getElementById('req-desc').value.trim();
+  if(!desc){ alert('Description लिहा'); return; }
+
+  const p = (db.projects||[]).find(x=>x.id===projId);
+  if(!p) return;
+  if(!p.drawingRequests) p.drawingRequests = [];
+
+  const req = {
+    id: 'REQ' + Date.now(),
+    type,
+    desc,
+    priority: document.getElementById('req-priority').value || 'normal',
+    reqDate: document.getElementById('req-date').value,
+    date: new Date().toLocaleDateString('en-IN'),
+    status: 'pending',
+    clientName: cpCurrentClient.name,
+  };
+  p.drawingRequests.push(req);
+
+  // Save to Firebase
+  try {
+    const _params = new URLSearchParams(window.location.search);
+    const fbUrl = _params.get('fb') ? decodeURIComponent(_params.get('fb')) : localStorage.getItem('gs_fb_url')||'';
+    if(fbUrl){
+      fetch(fbUrl+'/db/projects/'+projId+'/drawingRequests.json',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(req)
+      });
+    }
+  }catch(e){}
+
+  // Show success
+  document.getElementById('cp-content').innerHTML = `
+  <div style="text-align:center;padding:60px 20px">
+    <div style="font-size:64px;margin-bottom:16px">📤</div>
+    <div style="font-size:20px;font-weight:800;color:#2c5f8a;margin-bottom:8px">Request Sent!</div>
+    <div style="font-size:14px;color:var(--mut);margin-bottom:8px">Architect ला तुमची drawing request पाठवली आहे.</div>
+    <div style="font-size:12px;color:var(--mut);margin-bottom:24px">Type: <b>${type}</b> · Priority: <b>${req.priority}</b></div>
+    <button onclick="cpTab('request')" style="padding:12px 28px;background:#2c5f8a;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">+ New Request</button>
+  </div>`;
+}
 
 // ── OVERVIEW TAB ──
 function renderCpOverview(c, projs) {
