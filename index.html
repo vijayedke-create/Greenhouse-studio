@@ -8958,7 +8958,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       <button class="cp-tab" onclick="cpTab('payments')">💰 Payments</button>
       <button class="cp-tab" onclick="cpTab('sitevisits')">🏗️ Site Visits</button>
       <button class="cp-tab" onclick="cpTab('drawings')">📐 Drawings</button>
-      <button class="cp-tab" onclick="cpTab('brief')">📋 Project Brief</button>
+      <button class="cp-tab" onclick="cpTab('brief')">➕ Add New Project</button>
       <button class="cp-tab" onclick="cpTab('request')">✏️ Drawing Request</button>
     </div>
 
@@ -9184,15 +9184,53 @@ function renderCpBrief(c, projs) {
   return `
   <div style="max-width:600px;margin:0 auto">
     <div style="background:linear-gradient(135deg,var(--grn),#2d5a3d);border-radius:16px;padding:20px;margin-bottom:20px;color:#fff">
-      <div style="font-size:18px;font-weight:800;margin-bottom:4px">📋 Project Brief</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:4px">➕ Add New Project</div>
       <div style="font-size:12px;opacity:.7">तुमच्या project चे details fill करा — Architect ला पाठवले जाईल</div>
+    </div>
+
+    <!-- Client Info -->
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:var(--grn);margin-bottom:14px">👤 Client Information / क्लाइंट माहिती</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Client Name / नाव *</label>
+          <input id="brief-client-name" class="fi" placeholder="Your full name / पूर्ण नाव" value="${c.name||''}">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Mobile / मोबाइल</label>
+          <input id="brief-client-mobile" class="fi" type="tel" placeholder="9XXXXXXXXX" value="${c.wa||c.phone||''}">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Site Address / साइट पत्ता *</label>
+        <input id="brief-client-address" class="fi" placeholder="Village / City, Taluka, District / गाव, तालुका, जिल्हा">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Email (Optional)</label>
+          <input id="brief-client-email" class="fi" type="email" placeholder="email@example.com">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Project Type / प्रकार</label>
+          <select id="brief-proj-type" class="fi fi-sel">
+            <option value="">Select Type</option>
+            <option>Residential Bungalow</option>
+            <option>Apartment Building</option>
+            <option>Row House</option>
+            <option>Commercial</option>
+            <option>Industrial</option>
+            <option>Renovation</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <!-- Project select -->
     <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:8px">Project</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:8px">Link to Existing Project (Optional)</div>
       <select id="brief-proj" class="fi fi-sel" style="width:100%">
-        <option value="">-- Project निवडा --</option>
+        <option value="">-- Project निवडा (Optional) --</option>
         ${projOpts}
       </select>
     </div>
@@ -9394,19 +9432,25 @@ function briefSelectBudget(btn, val) {
 }
 
 function submitBrief() {
+  const clientName = document.getElementById('brief-client-name')?.value.trim();
+  const clientAddr = document.getElementById('brief-client-address')?.value.trim();
+  if(!clientName){ alert('Client Name टाका / Enter Client Name'); return; }
+  if(!clientAddr){ alert('Site Address टाका / Enter Site Address'); return; }
   const proj = document.getElementById('brief-proj').value;
-  if(!proj){ alert('Project निवडा'); return; }
-  const p = (db.projects||[]).find(x=>x.id===proj);
-  if(!p) return;
+  const p = proj ? (db.projects||[]).find(x=>x.id===proj) : null;
 
   const rooms = [...document.querySelectorAll('#brief-rooms-btns button[data-on="1"]')].map(b=>b.dataset.room);
   const svcs  = [...document.querySelectorAll('#brief-svc-btns button[data-on="1"]')].map(b=>b.dataset.svc);
   const special = [...document.querySelectorAll('#brief-special-btns button[data-on="1"]')].map(b=>b.dataset.sp);
 
   const brief = {
-    projectId: proj,
-    projectName: p.name,
-    clientName: cpCurrentClient.name,
+    projectId: proj||'NEW',
+    projectName: p ? p.name : 'New Project Request',
+    clientName: clientName || cpCurrentClient.name,
+    clientMobile: document.getElementById('brief-client-mobile')?.value||'',
+    clientEmail: document.getElementById('brief-client-email')?.value||'',
+    siteAddress: clientAddr,
+    projectType: document.getElementById('brief-proj-type')?.value||'',
     submittedAt: new Date().toLocaleString('en-IN'),
     plotLength: document.getElementById('brief-length').value,
     plotWidth: document.getElementById('brief-width').value,
@@ -9445,14 +9489,16 @@ function submitBrief() {
     <div style="font-size:20px;font-weight:800;color:var(--grn);margin-bottom:8px">Brief Submitted!</div>
     <div style="font-size:14px;color:var(--mut);margin-bottom:24px">Architect ला तुमचे project details पाठवले आहेत.</div>
     <div style="background:var(--surf2);border-radius:14px;padding:16px;text-align:left;max-width:340px;margin:0 auto;font-size:12px;line-height:2">
-      <b>Plot:</b> ${brief.plotLength||'—'} × ${brief.plotWidth||'—'} ft (${brief.plotArea||'—'} sq ft)<br>
-      <b>Floors:</b> ${brief.floors||'—'}<br>
-      <b>North:</b> ${brief.northDir||'—'}<br>
-      <b>Road:</b> ${brief.roads||'—'} (${brief.roadWidth||'—'} ft)<br>
-      <b>Rooms:</b> ${brief.bedrooms}, ${brief.bathrooms}<br>
-      <b>Extra:</b> ${rooms.join(', ')||'—'}<br>
-      <b>Services:</b> ${svcs.length} selected<br>
-      <b>Budget:</b> ${brief.budget||'—'}
+      <b>👤 Name:</b> ${brief.clientName}<br>
+      <b>📱 Mobile:</b> ${brief.clientMobile||'—'}<br>
+      <b>📍 Address:</b> ${brief.siteAddress}<br>
+      <b>🏗️ Type:</b> ${brief.projectType||'—'}<br>
+      <b>📐 Plot:</b> ${brief.plotLength||'—'} × ${brief.plotWidth||'—'} ft<br>
+      <b>🏢 Floors:</b> ${brief.floors||'—'}<br>
+      <b>🧭 North:</b> ${brief.northDir||'—'}<br>
+      <b>🛣️ Road:</b> ${brief.roads||'—'}<br>
+      <b>🛏️ Bedrooms:</b> ${rooms.join(', ')||'—'}<br>
+      <b>💰 Budget:</b> ${brief.budget||'—'}
     </div>
     <button onclick="cpTab('brief')" style="margin-top:20px;padding:12px 28px;background:var(--grn);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Edit Brief</button>
   </div>`;
