@@ -697,15 +697,20 @@ html{transition:background .3s,color .3s}
             <option value="amt_high">Amount High–Low</option>
             <option value="amt_low">Amount Low–High</option>
           </select>
+          <button class="btn btn-gold btn-sm" onclick="openBulkAdvance()" style="white-space:nowrap">💰 Bulk Advance</button>
         </div>
       </div>
 
       <!-- KPI Summary -->
       <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px" id="pay-kpi"></div>
 
+      <!-- Bulk Advance History tab -->
+      <div id="bulk-advance-list" style="margin-bottom:14px;display:none"></div>
+
       <!-- Status Filter Tabs -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="pay-filter-tabs">
         <button class="pay-ftab active" data-pf="all"     onclick="paySetFilter('all')">📋 All</button>
+        <button class="pay-ftab" data-pf="bulk" onclick="paySetFilter('bulk');renderBulkAdvances()">💰 Bulk Advances</button>
         <button class="pay-ftab"        data-pf="pending" onclick="paySetFilter('pending')">⏳ Pending Balance</button>
         <button class="pay-ftab"        data-pf="paid"    onclick="paySetFilter('paid')">✅ Fully Paid</button>
         <button class="pay-ftab"        data-pf="overdue" onclick="paySetFilter('overdue')">🔴 Overdue</button>
@@ -751,6 +756,7 @@ html{transition:background .3s,color .3s}
               <option value="value">Sort: Contract Value</option>
             </select>
             <button onclick="rptExportCategory()" style="background:var(--grn);color:#fff;border:none;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">📄 Export PDF</button>
+            <button onclick="openClientSummaryReport()" style="background:#1a3a6a;color:#fff;border:none;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">📊 Client Summary Report</button>
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
@@ -3143,7 +3149,331 @@ function delPay(id,pid){if(!confirm('Delete this payment?'))return;db.payments=d
 // ════════════════════════════════════════════════
 // Payment view state
 let _payFilter='all', _payView='grouped';
-function paySetFilter(f){_payFilter=f;document.querySelectorAll('.pay-ftab').forEach(b=>b.classList.toggle('active',b.dataset.pf===f));renderPayments();}
+function paySetFilter(f){
+  _payFilter=f;
+  document.querySelectorAll('.pay-ftab').forEach(b=>b.classList.toggle('active',b.dataset.pf===f));
+  const bulkList = document.getElementById('bulk-advance-list');
+  if(f==='bulk'){
+    if(bulkList) bulkList.style.display='block';
+    renderBulkAdvances();
+    document.getElementById('pay-list').style.display='none';
+  } else {
+    if(bulkList) bulkList.style.display='none';
+    document.getElementById('pay-list').style.display='block';
+    renderPayments();
+  }
+}
+
+// ════════════════════════════════════════
+// 📊 CLIENT SUMMARY REPORT
+// ════════════════════════════════════════
+function openClientSummaryReport(){
+  const sel = document.getElementById('cs-client');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">-- Select Client --</option>';
+  (db.contacts||[]).forEach(c=>{
+    const projs = (db.projects||[]).filter(p=>p.clientId===c.id);
+    if(!projs.length) return;
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name + ' (' + projs.length + ' project' + (projs.length>1?'s':'') + ')';
+    sel.appendChild(o);
+  });
+  sel.onchange = csPreview;
+  document.getElementById('cs-preview').style.display = 'none';
+  openModal('m-client-summary');
+}
+
+function csPreview(){
+  const cid = document.getElementById('cs-client').value;
+  if(!cid){ document.getElementById('cs-preview').style.display='none'; return; }
+  const c = gc(cid);
+  const projs = (db.projects||[]).filter(p=>p.clientId===cid);
+  const totalVal  = projs.reduce((a,p)=>a+p.total, 0);
+  const totalPaid = projs.reduce((a,p)=>a+ppaid(p.id), 0);
+  const totalBal  = totalVal - totalPaid;
+  const fmt = n => '₹' + Number(n||0).toLocaleString('en-IN');
+
+  const prev = document.getElementById('cs-preview');
+  prev.style.display = 'block';
+  prev.innerHTML = `
+    <div style="font-weight:800;font-size:14px;color:var(--grn);margin-bottom:8px">👤 ${c.name}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:#fff;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--mut);font-weight:700">Projects</div>
+        <div style="font-size:20px;font-weight:800;color:var(--grn)">${projs.length}</div>
+      </div>
+      <div style="background:#fff;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--mut);font-weight:700">Total Paid</div>
+        <div style="font-size:14px;font-weight:800;color:#27ae60">${fmt(totalPaid)}</div>
+      </div>
+      <div style="background:#fff;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--mut);font-weight:700">Balance Due</div>
+        <div style="font-size:14px;font-weight:800;color:${totalBal>0?'var(--red)':'#27ae60'}">${fmt(totalBal)}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--mut)">${projs.map(p=>`• ${p.name} — ${p.stage}`).join('<br>')}
+    </div>`;
+}
+
+function downloadClientSummaryPDF(){
+  const cid = document.getElementById('cs-client').value;
+  if(!cid){ showErr('Client निवडा'); return; }
+  generateClientSummaryPDF(cid);
+  closeModal('m-client-summary');
+}
+
+function generateClientSummaryPDF(cid){
+  const c = gc(cid);
+  if(!c) return;
+
+  const projs = (db.projects||[]).filter(p=>p.clientId===cid);
+  if(!projs.length){ showErr('No projects found'); return; }
+
+  const fmt  = n => '₹' + Number(n||0).toLocaleString('en-IN');
+  const logo = officeInfo.logo ? `<img src="${officeInfo.logo}" style="height:48px;object-fit:contain">` : '';
+  const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+
+  // Totals
+  const totalVal  = projs.reduce((a,p)=>a+p.total, 0);
+  const totalPaid = projs.reduce((a,p)=>a+ppaid(p.id), 0);
+  const totalBal  = totalVal - totalPaid;
+  const pct = totalVal>0 ? Math.round(totalPaid/totalVal*100) : 0;
+
+  // Bulk advances for this client
+  const bulkList = (db.bulkAdvances||[]).filter(b=>b.clientId===cid);
+
+  // Project rows
+  const projRows = projs.map((p,i)=>{
+    const paid  = ppaid(p.id);
+    const bal   = pbal(p.id);
+    const pPct  = p.total>0 ? Math.round(paid/p.total*100) : 0;
+    // payments for this project
+    const pays = (db.payments||[]).filter(x=>x.projectId===p.id).sort((a,b)=>a.date.localeCompare(b.date));
+    const payRows = pays.map(x=>`
+      <tr style="background:#f9f7f4">
+        <td style="padding:5px 10px;font-size:11px;color:#6b7280" colspan="2">&nbsp;&nbsp;&nbsp;↳ ${x.date} · ${x.stage} · ${x.mode||'—'} ${x.bulkAdvanceId?'<span style="font-size:10px;background:#fff3cd;padding:1px 6px;border-radius:10px;color:#856404">Bulk</span>':''}</td>
+        <td style="padding:5px 10px;font-size:11px;color:#27ae60;font-weight:600;text-align:right">+${fmt(x.amount)}</td>
+        <td></td>
+      </tr>`).join('');
+
+    return `
+    <tr style="background:${i%2===0?'#f5f2ec':'#fff'}">
+      <td style="padding:11px 14px;font-size:13px;font-weight:700;color:#1a3a2a">${p.name}</td>
+      <td style="padding:11px 14px;font-size:12px;color:#6b7280">${p.stage||'—'} ${p.deadline?'· 📅 '+p.deadline:''}</td>
+      <td style="padding:11px 14px;font-size:13px;font-weight:700;text-align:right">${fmt(p.total)}</td>
+      <td style="padding:11px 14px;font-size:13px;font-weight:700;text-align:right;color:#27ae60">${fmt(paid)}</td>
+      <td style="padding:11px 14px;font-size:13px;font-weight:700;text-align:right;color:${bal>0?'#c0392b':'#27ae60'}">${bal>0?fmt(bal):'✅ Nil'}</td>
+      <td style="padding:11px 14px">
+        <div style="background:#e8e2d9;border-radius:20px;height:6px;width:80px;overflow:hidden">
+          <div style="background:${pPct>=100?'#27ae60':'#1a3a2a'};height:100%;width:${pPct}%"></div>
+        </div>
+        <div style="font-size:10px;color:#6b7280;margin-top:2px">${pPct}%</div>
+      </td>
+    </tr>
+    ${payRows}`;
+  }).join('');
+
+  // Bulk advances section
+  const bulkSection = bulkList.length ? `
+    <div style="margin-top:28px">
+      <div style="font-size:13px;font-weight:800;color:#1a3a6a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #1a3a6a">
+        💰 Bulk Advance History
+      </div>
+      ${bulkList.map(ba=>`
+        <div style="background:#fffbee;border:1px solid #c9a84c;border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#1a3a2a">📅 ${ba.date} — ${ba.mode}</div>
+              <div style="font-size:11px;color:#6b7280">${ba.note||''} · Ref: ${ba.id}</div>
+            </div>
+            <div style="font-size:18px;font-weight:800;color:#c9a84c">${fmt(ba.totalAmount)}</div>
+          </div>
+          <table style="width:100%;border-collapse:collapse">
+            <tr style="font-size:10px;font-weight:700;color:#7a5a00;text-transform:uppercase">
+              <td style="padding:4px 8px">Project</td>
+              <td style="padding:4px 8px">Stage</td>
+              <td style="padding:4px 8px;text-align:right">Amount</td>
+            </tr>
+            ${(ba.payments||[]).map(p=>`
+            <tr style="border-top:1px solid #e8d58a">
+              <td style="padding:5px 8px;font-size:12px;font-weight:600">${p.pname}</td>
+              <td style="padding:5px 8px;font-size:12px;color:#7a5a00">${p.stage}</td>
+              <td style="padding:5px 8px;font-size:12px;font-weight:700;text-align:right;color:#1a3a2a">${fmt(p.amt)}</td>
+            </tr>`).join('')}
+          </table>
+        </div>`).join('')}
+    </div>` : '';
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Summary Report — ${c.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;color:#1a1a18;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{@page{margin:1.2cm}body{font-size:12px}}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div style="background:linear-gradient(135deg,#1a3a2a 0%,#2d5a3d 100%);padding:22px 32px;display:flex;justify-content:space-between;align-items:center">
+  <div style="display:flex;align-items:center;gap:14px">
+    ${logo}
+    <div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;color:#c9a84c">${officeInfo.name||'Greenhouse Studio'}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5)">${officeInfo.addr||''} ${officeInfo.phone?'· '+officeInfo.phone:''}</div>
+    </div>
+  </div>
+  <div style="text-align:right">
+    <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:.5px">CLIENT SUMMARY REPORT</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">Generated: ${today}</div>
+  </div>
+</div>
+<div style="height:4px;background:linear-gradient(90deg,#c9a84c,#e8c96e,#c9a84c)"></div>
+
+<!-- Client Info Card -->
+<div style="padding:20px 32px;background:#f5f2ec;border-bottom:2px solid #e8e2d9">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px">
+    <div>
+      <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Client / Engineer</div>
+      <div style="font-size:22px;font-weight:800;color:#1a3a2a;font-family:'Playfair Display',serif">${c.name}</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:4px">
+        ${c.phone?'📞 '+c.phone+'&nbsp;&nbsp;':''}
+        ${c.wa?'📱 '+c.wa+'&nbsp;&nbsp;':''}
+        ${c.address?'📍 '+c.address:''}
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="background:#fff;border-radius:12px;padding:14px 18px;text-align:center;min-width:100px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Projects</div>
+        <div style="font-size:28px;font-weight:800;color:#1a3a2a;line-height:1.2">${projs.length}</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:14px 18px;text-align:center;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Contract Value</div>
+        <div style="font-size:16px;font-weight:800;color:#1a3a2a;font-family:'JetBrains Mono',monospace">${fmt(totalVal)}</div>
+      </div>
+      <div style="background:#e8f7ee;border-radius:12px;padding:14px 18px;text-align:center;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="font-size:10px;font-weight:700;color:#27ae60;text-transform:uppercase;letter-spacing:.5px">Total Received</div>
+        <div style="font-size:16px;font-weight:800;color:#27ae60;font-family:'JetBrains Mono',monospace">${fmt(totalPaid)}</div>
+      </div>
+      <div style="background:${totalBal>0?'#fdecea':'#e8f7ee'};border-radius:12px;padding:14px 18px;text-align:center;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="font-size:10px;font-weight:700;color:${totalBal>0?'#c0392b':'#27ae60'};text-transform:uppercase;letter-spacing:.5px">Balance Due</div>
+        <div style="font-size:16px;font-weight:800;color:${totalBal>0?'#c0392b':'#27ae60'};font-family:'JetBrains Mono',monospace">${totalBal>0?fmt(totalBal):'✅ Nil'}</div>
+      </div>
+    </div>
+  </div>
+  <!-- Overall Progress Bar -->
+  <div style="margin-top:16px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:5px">
+      <span>Overall Collection Progress</span><span style="font-weight:700">${pct}%</span>
+    </div>
+    <div style="background:#e8e2d9;border-radius:20px;height:10px;overflow:hidden">
+      <div style="background:${pct>=100?'#27ae60':'#1a3a2a'};height:100%;width:${pct}%;border-radius:20px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Projects Table -->
+<div style="padding:24px 32px">
+  <div style="font-size:12px;font-weight:800;color:#1a3a2a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">📋 All Projects & Payment Details</div>
+  <table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="background:#1a3a2a">
+        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left">Project Name</th>
+        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left">Stage</th>
+        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:right">Contract</th>
+        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:right">Advance / Paid</th>
+        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:right">Balance</th>
+        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff">Progress</th>
+      </tr>
+    </thead>
+    <tbody>${projRows}</tbody>
+    <tfoot>
+      <tr style="background:#1a3a2a">
+        <td colspan="2" style="padding:12px 14px;color:#fff;font-weight:800;font-size:13px">TOTAL</td>
+        <td style="padding:12px 14px;color:#c9a84c;font-weight:800;font-size:14px;text-align:right;font-family:'JetBrains Mono',monospace">${fmt(totalVal)}</td>
+        <td style="padding:12px 14px;color:#27ae60;font-weight:800;font-size:14px;text-align:right;font-family:'JetBrains Mono',monospace">${fmt(totalPaid)}</td>
+        <td style="padding:12px 14px;color:${totalBal>0?'#ff6b6b':'#27ae60'};font-weight:800;font-size:14px;text-align:right;font-family:'JetBrains Mono',monospace">${totalBal>0?fmt(totalBal):'✅ Nil'}</td>
+        <td style="padding:12px 14px;color:#fff;font-weight:700">${pct}% collected</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  ${bulkSection}
+
+  <!-- Footer -->
+  <div style="margin-top:32px;padding-top:16px;border-top:2px solid #e8e2d9;display:flex;justify-content:space-between;align-items:flex-end">
+    <div style="font-size:11px;color:#6b7280">
+      <div>Generated by <b>${officeInfo.name||'Greenhouse Studio'}</b></div>
+      <div>${today} · Confidential</div>
+    </div>
+    <div style="text-align:right">
+      <div style="height:35px;border-bottom:1.5px solid #999;width:180px;margin-bottom:5px"></div>
+      <div style="font-size:12px;font-weight:700;color:#1a3a2a">${officeInfo.arch||'Architect'}</div>
+      <div style="font-size:11px;color:#6b7280">${officeInfo.name||'Greenhouse Studio'}</div>
+    </div>
+  </div>
+</div>
+
+<script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500));<\/script>
+</body></html>`;
+
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+function renderBulkAdvances(){
+  const el = document.getElementById('bulk-advance-list');
+  if(!el) return;
+  const advances = [...(db.bulkAdvances||[])].reverse();
+  if(!advances.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">💰</div><p>No bulk advances yet</p></div>';
+    return;
+  }
+  const fmt = n=>'₹'+Number(n||0).toLocaleString('en-IN');
+  el.innerHTML = advances.map(ba=>{
+    const c = gc(ba.clientId);
+    const rows = (ba.payments||[]).map((p,i)=>`
+      <tr style="background:${i%2===0?'var(--surf2)':'#fff'}">
+        <td style="padding:8px 12px;font-size:13px;font-weight:600">${p.pname||'—'}</td>
+        <td style="padding:8px 12px;font-size:12px;color:var(--mut)">${p.stage}</td>
+        <td style="padding:8px 12px;font-size:13px;font-weight:700;text-align:right;color:var(--rgreen)">${fmt(p.amt)}</td>
+      </tr>`).join('');
+    return `<div class="card" style="margin-bottom:14px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#1a3a2a,#2d5a3d);padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:15px">💰 ${c?c.name:'—'}</div>
+          <div style="color:rgba(255,255,255,.6);font-size:11px">${ba.date} · ${ba.mode} ${ba.note?'· '+ba.note:''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:800;color:var(--gold)">${fmt(ba.totalAmount)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5)">${(ba.payments||[]).length} projects</div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--surf2)">
+          <th style="padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mut);text-align:left">Project</th>
+          <th style="padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mut);text-align:left">Stage</th>
+          <th style="padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mut);text-align:right">Amount</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr style="background:var(--grn)">
+          <td colspan="2" style="padding:10px 12px;color:#fff;font-weight:700;font-size:13px">Total Allocated</td>
+          <td style="padding:10px 12px;text-align:right;color:var(--gold);font-weight:800;font-size:15px">${fmt((ba.payments||[]).reduce((a,p)=>a+p.amt,0))}</td>
+        </tr></tfoot>
+      </table>
+      ${ba.totalAmount > (ba.payments||[]).reduce((a,p)=>a+p.amt,0) ?
+        `<div style="padding:8px 12px;background:#fffbee;font-size:12px;color:#7a5a00">
+          ⏳ Unallocated: ${fmt(ba.totalAmount - (ba.payments||[]).reduce((a,p)=>a+p.amt,0))}
+        </div>` : ''}
+    </div>`;
+  }).join('');
+}
 function paySetView(v){
   _payView=v;
   const grp=document.getElementById('pay-view-grp'),lst=document.getElementById('pay-view-list');
@@ -8468,9 +8798,10 @@ function saveInteriorEst(){
   // Materials
   const materials = [...document.querySelectorAll('#ie-materials-list input:checked')].map(e=>e.value);
   // Includes
-  const includes = [...document.querySelectorAll('#ie-includes input:checked')].map(e=>e.value);
-  // Excludes
-  const excludes = [...document.querySelectorAll('#ie-excludes input:checked')].map(e=>e.value);
+  // Collect includes — editable text inputs with checkboxes
+  const includes = [...document.querySelectorAll('.ie-inc-row')].filter(r=>r.querySelector('input[type=checkbox]')?.checked).map(r=>r.querySelector('input[type=text]')?.value.trim()).filter(Boolean);
+  // Collect excludes
+  const excludes = [...document.querySelectorAll('.ie-exc-row')].filter(r=>r.querySelector('input[type=checkbox]')?.checked).map(r=>r.querySelector('input[type=text]')?.value.trim()).filter(Boolean);
 
   const est = {
     id: _ieEditId || uid('IE'),
@@ -8683,6 +9014,264 @@ ${est.notes?`<div style="padding:0 32px 20px">
   const w = window.open('','_blank');
   w.document.write(html);
   w.document.close();
+}
+
+// ════════════════════════════════════════
+// 💰 BULK ADVANCE ENTRY
+// ════════════════════════════════════════
+let _baRowCount = 0;
+let _baClientProjects = [];
+
+function openBulkAdvance(){
+  _baRowCount = 0;
+  _baClientProjects = [];
+  document.getElementById('ba-rows').innerHTML = '';
+  document.getElementById('ba-balance-bar').style.display = 'none';
+  document.getElementById('ba-summary').style.display = 'none';
+
+  // Populate client dropdown
+  const sel = document.getElementById('ba-client');
+  sel.innerHTML = '<option value="">Select Client / Engineer</option>';
+  (db.contacts||[]).forEach(c=>{
+    const projs = (db.projects||[]).filter(p=>p.clientId===c.id);
+    if(projs.length){
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.name + ' (' + projs.length + ' projects)';
+      sel.appendChild(o);
+    }
+  });
+
+  // Set today's date
+  document.getElementById('ba-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('ba-total').value = '';
+
+  openModal('m-bulk-advance');
+}
+
+function baLoadProjects(){
+  const cid = document.getElementById('ba-client').value;
+  _baClientProjects = (db.projects||[]).filter(p=>p.clientId===cid);
+  _baRowCount = 0;
+  document.getElementById('ba-rows').innerHTML = '';
+  if(!cid) return;
+  // Auto add one row per project (balance>0)
+  const pending = _baClientProjects.filter(p=>pbal(p.id)>0);
+  const toAdd = pending.length ? pending : _baClientProjects;
+  toAdd.forEach(p=>baAddRow(p.id));
+  baUpdateBalance();
+}
+
+function baAddRow(preselect){
+  _baRowCount++;
+  const idx = _baRowCount;
+  const cid = document.getElementById('ba-client').value;
+  const projs = (db.projects||[]).filter(p=>p.clientId===cid);
+
+  const rowsEl = document.getElementById('ba-rows');
+  const row = document.createElement('div');
+  row.id = 'ba-row-'+idx;
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 130px 140px 34px;gap:8px;padding:8px;border-bottom:1px solid var(--bdr);align-items:center';
+
+  const projOpts = projs.map(p=>{
+    const bal = pbal(p.id);
+    return `<option value="${p.id}" ${preselect===p.id?'selected':''}>${p.name} (bal: ₹${Number(bal).toLocaleString('en-IN')})</option>`;
+  }).join('');
+
+  row.innerHTML = `
+    <select class="fi fi-sel" id="ba-proj-${idx}" onchange="baUpdateBalance()" style="font-size:12px;padding:6px 8px">
+      <option value="">Select Project</option>
+      ${projOpts}
+    </select>
+    <input class="fi" id="ba-stage-${idx}" placeholder="Advance / Stage" value="Advance" style="font-size:12px;padding:6px 8px">
+    <input class="fi" id="ba-amt-${idx}" type="number" placeholder="0" oninput="baUpdateBalance()" style="font-size:13px;padding:6px 8px;text-align:right;font-weight:700">
+    <button onclick="document.getElementById('ba-row-${idx}').remove();baUpdateBalance()" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:0">×</button>`;
+
+  rowsEl.appendChild(row);
+  baUpdateBalance();
+}
+
+function baUpdateBalance(){
+  const total = parseFloat(document.getElementById('ba-total').value)||0;
+  let allocated = 0;
+  for(let i=1;i<=_baRowCount;i++){
+    const amtEl = document.getElementById('ba-amt-'+i);
+    if(amtEl) allocated += parseFloat(amtEl.value)||0;
+  }
+  const remaining = total - allocated;
+  const pct = total > 0 ? Math.min(100, Math.round(allocated/total*100)) : 0;
+  const fmt = n => '₹' + Number(n).toLocaleString('en-IN');
+
+  // Show balance bar
+  const bar = document.getElementById('ba-balance-bar');
+  if(total > 0 && bar) bar.style.display = 'block';
+
+  const td = document.getElementById('ba-total-display');
+  const al = document.getElementById('ba-allocated');
+  const rm = document.getElementById('ba-remaining');
+  const pf = document.getElementById('ba-progress-fill');
+  const ow = document.getElementById('ba-overage-warn');
+
+  if(td) td.textContent = fmt(total);
+  if(al) al.textContent = fmt(allocated);
+  if(rm) rm.textContent = fmt(Math.abs(remaining));
+  if(pf) pf.style.width = pct + '%';
+  if(ow) ow.style.display = remaining < 0 ? 'block' : 'none';
+
+  // Update summary
+  baBuildSummary(total, allocated, remaining);
+}
+
+function baBuildSummary(total, allocated, remaining){
+  const cid = document.getElementById('ba-client').value;
+  const c = gc(cid);
+  const date = document.getElementById('ba-date').value;
+  const mode = document.getElementById('ba-mode').value;
+  const fmt = n => '₹' + Number(n).toLocaleString('en-IN');
+
+  const rows = [];
+  for(let i=1;i<=_baRowCount;i++){
+    const projSel = document.getElementById('ba-proj-'+i);
+    const stageEl = document.getElementById('ba-stage-'+i);
+    const amtEl   = document.getElementById('ba-amt-'+i);
+    if(!projSel||!amtEl) continue;
+    const pid = projSel.value;
+    const p = gp(pid);
+    const amt = parseFloat(amtEl.value)||0;
+    if(p && amt > 0){
+      rows.push({pname:p.name, stage:stageEl?.value||'Advance', amt});
+    }
+  }
+
+  const summEl = document.getElementById('ba-summary');
+  const bodyEl = document.getElementById('ba-summary-body');
+  if(!summEl || !bodyEl || !rows.length || !total) { if(summEl) summEl.style.display='none'; return; }
+
+  summEl.style.display = 'block';
+  bodyEl.innerHTML = `
+    <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e8d58a">
+      <b>Client:</b> ${c?c.name:'—'} &nbsp;|&nbsp; <b>Date:</b> ${date} &nbsp;|&nbsp; <b>Mode:</b> ${mode}<br>
+      <b>Total Received:</b> ${fmt(total)} &nbsp;|&nbsp; <b>Allocated:</b> ${fmt(allocated)} &nbsp;|&nbsp; <b>Remaining:</b> ${fmt(remaining)}
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <tr style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#7a5a00">
+        <td style="padding:3px 6px">Project</td>
+        <td style="padding:3px 6px">Stage</td>
+        <td style="padding:3px 6px;text-align:right">Amount</td>
+        <td style="padding:3px 6px;text-align:right">Balance After</td>
+      </tr>
+      ${rows.map(r=>{
+        const p = (db.projects||[]).find(x=>x.name===r.pname);
+        const balAfter = p ? pbal(p.id) - r.amt : 0;
+        return `<tr style="border-top:1px solid #e8d58a">
+          <td style="padding:4px 6px;font-weight:700">${r.pname}</td>
+          <td style="padding:4px 6px;color:#7a5a00">${r.stage}</td>
+          <td style="padding:4px 6px;text-align:right;font-weight:700;color:#1a3a2a">${fmt(r.amt)}</td>
+          <td style="padding:4px 6px;text-align:right;color:${balAfter>0?'#c0392b':'#27ae60'}">${fmt(balAfter)}</td>
+        </tr>`;
+      }).join('')}
+    </table>`;
+}
+
+function saveBulkAdvance(){
+  const cid   = document.getElementById('ba-client').value;
+  const total = parseFloat(document.getElementById('ba-total').value)||0;
+  const date  = document.getElementById('ba-date').value;
+  const mode  = document.getElementById('ba-mode').value;
+  const note  = document.getElementById('ba-note').value.trim();
+
+  if(!cid){ showErr('Client निवडा'); return; }
+  if(!total){ showErr('Total amount enter करा'); return; }
+  if(!date){ showErr('Date select करा'); return; }
+
+  const c = gc(cid);
+  const payments = [];
+
+  for(let i=1;i<=_baRowCount;i++){
+    const pid   = document.getElementById('ba-proj-'+i)?.value;
+    const stage = document.getElementById('ba-stage-'+i)?.value || 'Advance';
+    const amt   = parseFloat(document.getElementById('ba-amt-'+i)?.value)||0;
+    if(!pid || !amt) continue;
+    payments.push({pid, stage, amt});
+  }
+
+  if(!payments.length){ showErr('कमीत कमी एक project आणि amount add करा'); return; }
+
+  const allocated = payments.reduce((a,p)=>a+p.amt, 0);
+  if(allocated > total + 1){ // 1 rupee tolerance
+    if(!confirm(`Allocated (₹${allocated.toLocaleString('en-IN')}) > Total (₹${total.toLocaleString('en-IN')}). Continue?`)) return;
+  }
+
+  // Create a bulk advance record
+  const bulkId = uid('BA');
+  const bulkRecord = {
+    id: bulkId,
+    clientId: cid,
+    clientName: c?.name||'',
+    totalAmount: total,
+    date, mode, note,
+    payments: payments.map(p=>({pid:p.pid, stage:p.stage, amt:p.amt, pname:gp(p.pid)?.name||''})),
+    createdAt: new Date().toISOString(),
+  };
+
+  // Save individual payments to db.payments
+  payments.forEach(p=>{
+    db.payments.push({
+      id: uid('TX'),
+      projectId: p.pid,
+      amount: p.amt,
+      date,
+      mode,
+      stage: p.stage,
+      notes: (note ? note + ' | ' : '') + 'Bulk Advance #' + bulkId,
+      bulkAdvanceId: bulkId,
+      drawings: [],
+    });
+  });
+
+  // Save bulk record
+  if(!db.bulkAdvances) db.bulkAdvances = [];
+  db.bulkAdvances.push(bulkRecord);
+
+  // Activity log
+  db.activities.unshift({
+    text: 'Bulk Advance — ' + (c?.name||''),
+    sub: '₹' + total.toLocaleString('en-IN') + ' → ' + payments.length + ' projects',
+    time: 'Just now',
+    color: '#c9a84c',
+  });
+
+  try{ saveAll(); }catch(e){ saveLocal(); }
+  closeModal('m-bulk-advance');
+  renderPayments();
+  renderDashboard();
+  showOk('✅ Bulk Advance saved! ' + payments.length + ' payments added.');
+}
+
+function ieAddInclude(txt){
+  const list = document.getElementById('ie-includes');
+  if(!list) return;
+  const row = document.createElement('div');
+  row.className = 'ie-inc-row';
+  row.style.cssText = 'display:flex;align-items:center;gap:6px';
+  row.innerHTML = `<input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+    <input type="text" value="${txt||''}" placeholder="Add item..." class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px;border-bottom:1px dashed #86efac">
+    <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>`;
+  list.appendChild(row);
+  row.querySelector('input[type=text]').focus();
+}
+
+function ieAddExclude(txt){
+  const list = document.getElementById('ie-excludes');
+  if(!list) return;
+  const row = document.createElement('div');
+  row.className = 'ie-exc-row';
+  row.style.cssText = 'display:flex;align-items:center;gap:6px';
+  row.innerHTML = `<input type="checkbox" checked style="accent-color:#dc2626;flex-shrink:0">
+    <input type="text" value="${txt||''}" placeholder="Add item..." class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px;border-bottom:1px dashed #fca5a5">
+    <button onclick="this.closest('.ie-exc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>`;
+  list.appendChild(row);
+  row.querySelector('input[type=text]').focus();
 }
 
 function renderToolsView(){
@@ -9199,29 +9788,98 @@ document.addEventListener('DOMContentLoaded',async ()=>{
 
       <!-- Includes / Excludes -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
-        <div>
-          <div style="font-size:11px;font-weight:800;color:#27ae60;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">✅ Estimate Includes</div>
+        <!-- INCLUDES -->
+        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:800;color:#16a34a;text-transform:uppercase;letter-spacing:.5px">✅ Estimate Includes</div>
+            <button type="button" onclick="ieAddInclude()" style="padding:4px 10px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">+ Add</button>
+          </div>
           <div id="ie-includes" style="display:flex;flex-direction:column;gap:5px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Material cost" checked style="accent-color:#27ae60"> Material cost</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Carpenter charges" checked style="accent-color:#27ae60"> Carpenter charges</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Architect/design fee" checked style="accent-color:#27ae60"> Architect / Design fee</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Labour charges" checked style="accent-color:#27ae60"> All labour charges</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Installation charges" checked style="accent-color:#27ae60"> Installation & fixing</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Hardware fitting" checked style="accent-color:#27ae60"> Hardware fitting</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Transportation" checked style="accent-color:#27ae60"> Transportation</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Edge banding & assembly" checked style="accent-color:#27ae60"> Edge banding & assembly</label>
+            <div class="ie-inc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+              <input type="text" value="Material cost" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-inc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+              <input type="text" value="Carpenter charges" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-inc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+              <input type="text" value="Architect / Design fee" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-inc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+              <input type="text" value="All labour charges" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-inc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+              <input type="text" value="Installation & fixing charges" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-inc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+              <input type="text" value="Hardware fitting charges" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-inc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+              <input type="text" value="Transportation for material" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-inc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#16a34a;flex-shrink:0">
+              <input type="text" value="Cutting, edge banding & assembly" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-inc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
           </div>
         </div>
-        <div>
-          <div style="font-size:11px;font-weight:800;color:#c0392b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">❌ Excluding Works</div>
+
+        <!-- EXCLUDES -->
+        <div style="background:#fff5f5;border:1.5px solid #fca5a5;border-radius:12px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.5px">❌ Excluding Works</div>
+            <button type="button" onclick="ieAddExclude()" style="padding:4px 10px;background:#dc2626;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">+ Add</button>
+          </div>
           <div id="ie-excludes" style="display:flex;flex-direction:column;gap:5px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Electrical wiring" checked style="accent-color:#c0392b"> Electrical wiring</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="LED lights & fittings" checked style="accent-color:#c0392b"> LED lights & fittings</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Painting work" checked style="accent-color:#c0392b"> Painting work</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Civil modifications" checked style="accent-color:#c0392b"> Civil modifications</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Marble/Granite" checked style="accent-color:#c0392b"> Marble / Granite</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="Appliances/Electronics" checked style="accent-color:#c0392b"> Appliances / Electronics</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="GST if applicable" checked style="accent-color:#c0392b"> GST (if applicable)</label>
+            <div class="ie-exc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#dc2626;flex-shrink:0">
+              <input type="text" value="Electrical wiring & switch points" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-exc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-exc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#dc2626;flex-shrink:0">
+              <input type="text" value="LED lights & fittings" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-exc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-exc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#dc2626;flex-shrink:0">
+              <input type="text" value="Painting work" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-exc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-exc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#dc2626;flex-shrink:0">
+              <input type="text" value="Civil modifications" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-exc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-exc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#dc2626;flex-shrink:0">
+              <input type="text" value="Marble / Granite" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-exc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-exc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#dc2626;flex-shrink:0">
+              <input type="text" value="Appliances / Electronics" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-exc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <div class="ie-exc-row" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" checked style="accent-color:#dc2626;flex-shrink:0">
+              <input type="text" value="GST if applicable" class="ie-ie-input" style="flex:1;border:none;background:transparent;font-size:12px;color:#1a1a18;outline:none;padding:2px 4px">
+              <button onclick="this.closest('.ie-exc-row').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0">×</button>
+            </div>
           </div>
         </div>
       </div>
@@ -9238,6 +9896,96 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
       <div class="form-actions">
         <button style="flex:1;padding:12px;background:linear-gradient(135deg,#1a3a6a,#2c5f8a);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif" onclick="saveInteriorEst()">💾 Save Estimate</button>
         <button style="flex:1;padding:12px;background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:10px;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif" onclick="closeModal('m-interior-est')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BULK ADVANCE MODAL -->
+<div class="modal-bg" id="m-bulk-advance">
+  <div class="modal-box" style="width:680px;max-width:98vw;padding:0;overflow:hidden">
+    <div class="modal-head" style="background:linear-gradient(135deg,#1a3a2a,#2d5a3d);color:#fff;padding:16px 20px">
+      <div class="modal-title" style="color:#fff">💰 Bulk Advance Entry / एकत्रित आगाऊ</div>
+      <button class="modal-close" onclick="closeModal('m-bulk-advance')" style="color:#fff">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px;max-height:80vh;overflow-y:auto">
+
+      <!-- Step 1: Client + Total Amount -->
+      <div style="background:var(--surf2);border:1.5px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:800;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Step 1 — Client & Total Amount</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Client / Engineer *</label>
+            <select class="fi fi-sel" id="ba-client" onchange="baLoadProjects()">
+              <option value="">Select Client</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Total Amount Received (₹) *</label>
+            <input class="fi" id="ba-total" type="number" placeholder="50000" oninput="baUpdateBalance()">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Date</label>
+            <input class="fi" id="ba-date" type="date">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Payment Mode</label>
+            <select class="fi fi-sel" id="ba-mode">
+              <option>UPI / GPay</option><option>UPI / PhonePe</option><option>Net Banking</option>
+              <option>Cheque</option><option>Cash</option><option>NEFT/RTGS</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--mut);display:block;margin-bottom:5px">Reference / Note</label>
+            <input class="fi" id="ba-note" placeholder="Cheque no., UPI ref...">
+          </div>
+        </div>
+      </div>
+
+      <!-- Balance Tracker -->
+      <div id="ba-balance-bar" style="display:none;background:linear-gradient(135deg,var(--grn),#2d5a3d);border-radius:12px;padding:14px;margin-bottom:16px;color:#fff">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;opacity:.7">Total Received</div>
+          <div style="font-size:22px;font-weight:800;color:var(--gold)" id="ba-total-display">₹0</div>
+        </div>
+        <div style="background:rgba(255,255,255,.15);border-radius:20px;height:8px;overflow:hidden;margin-bottom:8px">
+          <div id="ba-progress-fill" style="background:var(--gold);height:100%;border-radius:20px;transition:width .4s ease;width:0%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span>✅ Allocated: <b id="ba-allocated">₹0</b></span>
+          <span>⏳ Remaining: <b id="ba-remaining" style="color:var(--gold)">₹0</b></span>
+        </div>
+      </div>
+
+      <!-- Step 2: Distribute to Projects -->
+      <div style="background:var(--surf2);border:1.5px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:800;color:var(--grn);text-transform:uppercase;letter-spacing:.5px">Step 2 — Distribute to Projects</div>
+          <button onclick="baAddRow()" style="padding:5px 12px;background:var(--grn);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">+ Add Project</button>
+        </div>
+
+        <!-- Header -->
+        <div style="display:grid;grid-template-columns:1fr 130px 140px 34px;gap:8px;padding:7px 10px;background:var(--grn);border-radius:8px;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">
+          <div>Project</div><div>Stage / Label</div><div style="text-align:right">Amount (₹)</div><div></div>
+        </div>
+        <div id="ba-rows"></div>
+
+        <div style="margin-top:10px;padding:10px 12px;background:#e8f4ee;border-radius:8px;font-size:12px;color:var(--grn);display:none" id="ba-overage-warn">
+          ⚠️ Allocated amount exceeds total received!
+        </div>
+      </div>
+
+      <!-- Summary Preview -->
+      <div id="ba-summary" style="display:none;background:#fffbee;border:1.5px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:800;color:#7a5a00;margin-bottom:10px">📋 Summary Preview</div>
+        <div id="ba-summary-body" style="font-size:12px;line-height:2"></div>
+      </div>
+
+      <div class="form-actions">
+        <button onclick="saveBulkAdvance()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--grn),#2d5a3d);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">💾 Save All Payments</button>
+        <button onclick="closeModal('m-bulk-advance')" style="flex:1;padding:12px;background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:10px;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Cancel</button>
       </div>
     </div>
   </div>
@@ -9271,6 +10019,32 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
       <div class="form-actions">
         <button class="btn-full" style="background:var(--grn);color:#fff" onclick="saveExpense()">Save</button>
         <button class="btn-full" style="background:var(--surf2);color:var(--mut);border:1px solid var(--bdr)" onclick="closeModal('m-expense')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT SUMMARY REPORT MODAL -->
+<div class="modal-bg" id="m-client-summary">
+  <div class="modal-box" style="width:500px;max-width:96vw">
+    <div class="modal-head" style="background:linear-gradient(135deg,#1a3a6a,#2c5f8a);color:#fff">
+      <div class="modal-title" style="color:#fff">📊 Client Summary Report</div>
+      <button class="modal-close" onclick="closeModal('m-client-summary')" style="color:#fff">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg" style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Client / Engineer निवडा *</label>
+        <select class="fi fi-sel" id="cs-client" style="font-size:14px">
+          <option value="">-- Select Client --</option>
+        </select>
+      </div>
+
+      <!-- Preview after selection -->
+      <div id="cs-preview" style="display:none;background:var(--surf2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.8"></div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="downloadClientSummaryPDF()" style="flex:1;padding:12px;background:linear-gradient(135deg,#1a3a6a,#2c5f8a);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">📄 Download PDF</button>
+        <button onclick="closeModal('m-client-summary')" style="padding:12px 20px;background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:10px;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Cancel</button>
       </div>
     </div>
   </div>
@@ -10393,7 +11167,11 @@ function renderCpDrawings(c, projs) {
               ${f.notes ? `<div style="font-size:10px;color:var(--mut)">${f.notes}</div>` : ''}
               <div style="font-size:10px;color:var(--mut)">${f.date||''}</div>
             </div>
-            <a href="${f.url}" target="_blank" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">↗ Open</a>
+            ${f.type==='direct' && f.fileData
+              ? `<a href="${f.fileData}" download="${f.fileName||f.name}" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block">⬇️ Download</a>
+                 ${['jpg','jpeg','png','pdf'].includes(f.fileExt||'') ? `<a href="${f.fileData}" target="_blank" style="background:var(--surf2);color:var(--grn);border:1px solid var(--grn);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block;margin-left:6px">👁 View</a>` : ''}`
+              : `<a href="${f.url}" target="_blank" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block">↗ Open</a>`
+            }
           </div>`;
         });
       });
