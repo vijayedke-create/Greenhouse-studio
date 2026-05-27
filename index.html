@@ -3471,6 +3471,10 @@ function renderBulkAdvances(){
         `<div style="padding:8px 12px;background:#fffbee;font-size:12px;color:#7a5a00">
           ⏳ Unallocated: ${fmt(ba.totalAmount - (ba.payments||[]).reduce((a,p)=>a+p.amt,0))}
         </div>` : ''}
+      <div style="padding:10px 14px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end;background:var(--surf2)">
+        <button onclick="editBulkAdvance('${ba.id}')" style="padding:7px 16px;background:var(--gold);color:var(--grn);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">✏️ Edit</button>
+        <button onclick="deleteBulkAdvance('${ba.id}')" style="padding:7px 16px;background:#fdecea;color:var(--red);border:1px solid #f5c6c6;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">🗑 Delete</button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -9022,12 +9026,19 @@ ${est.notes?`<div style="padding:0 32px 20px">
 let _baRowCount = 0;
 let _baClientProjects = [];
 
-function openBulkAdvance(){
+let _baEditId = null;
+
+function openBulkAdvance(editId){
   _baRowCount = 0;
+  _baEditId = editId || null;
   _baClientProjects = [];
   document.getElementById('ba-rows').innerHTML = '';
   document.getElementById('ba-balance-bar').style.display = 'none';
   document.getElementById('ba-summary').style.display = 'none';
+
+  // Update modal title
+  const title = document.querySelector('#m-bulk-advance .modal-title');
+  if(title) title.textContent = editId ? '✏️ Edit Bulk Advance' : '💰 Bulk Advance Entry / एकत्रित आगाऊ';
 
   // Populate client dropdown
   const sel = document.getElementById('ba-client');
@@ -9042,11 +9053,76 @@ function openBulkAdvance(){
     }
   });
 
-  // Set today's date
-  document.getElementById('ba-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('ba-total').value = '';
+  if(editId){
+    // Load existing bulk advance
+    const ba = (db.bulkAdvances||[]).find(b=>b.id===editId);
+    if(ba){
+      document.getElementById('ba-client').value = ba.clientId;
+      document.getElementById('ba-total').value = ba.totalAmount;
+      document.getElementById('ba-date').value = ba.date;
+      document.getElementById('ba-mode').value = ba.mode||'UPI / GPay';
+      document.getElementById('ba-note').value = ba.note||'';
+      // Load projects for this client
+      _baClientProjects = (db.projects||[]).filter(p=>p.clientId===ba.clientId);
+      // Add rows for each payment
+      (ba.payments||[]).forEach(p=>{
+        _baRowCount++;
+        const idx = _baRowCount;
+        const rowsEl = document.getElementById('ba-rows');
+        const row = document.createElement('div');
+        row.id = 'ba-row-'+idx;
+        row.style.cssText = 'display:grid;grid-template-columns:1fr 130px 140px 34px;gap:8px;padding:8px;border-bottom:1px solid var(--bdr);align-items:center';
+        const projOpts = _baClientProjects.map(proj=>{
+          const bal = pbal(proj.id);
+          return `<option value="${proj.id}" ${p.pid===proj.id?'selected':''}>${proj.name} (bal: ₹${Number(bal).toLocaleString('en-IN')})</option>`;
+        }).join('');
+        row.innerHTML = `
+          <select class="fi fi-sel" id="ba-proj-${idx}" onchange="baUpdateBalance()" style="font-size:12px;padding:6px 8px">
+            <option value="">Select Project</option>
+            ${projOpts}
+          </select>
+          <input class="fi" id="ba-stage-${idx}" placeholder="Advance / Stage" value="${p.stage||'Advance'}" style="font-size:12px;padding:6px 8px">
+          <input class="fi" id="ba-amt-${idx}" type="number" placeholder="0" value="${p.amt||''}" oninput="baUpdateBalance()" style="font-size:13px;padding:6px 8px;text-align:right;font-weight:700">
+          <button onclick="document.getElementById('ba-row-${idx}').remove();baUpdateBalance()" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:0">×</button>`;
+        rowsEl.appendChild(row);
+      });
+      baUpdateBalance();
+    }
+  } else {
+    // New entry
+    document.getElementById('ba-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('ba-total').value = '';
+  }
 
   openModal('m-bulk-advance');
+}
+
+function editBulkAdvance(id){
+  openBulkAdvance(id);
+}
+
+function deleteBulkAdvance(id){
+  const ba = (db.bulkAdvances||[]).find(b=>b.id===id);
+  if(!ba) return;
+  const c = gc(ba.clientId);
+  if(!confirm(`Delete this bulk advance?
+
+Client: ${c?.name||'—'}
+Amount: ₹${ba.totalAmount.toLocaleString('en-IN')}
+Date: ${ba.date}
+
+This will also delete all ${(ba.payments||[]).length} linked payments!`)) return;
+
+  // Delete linked payments from db.payments
+  db.payments = (db.payments||[]).filter(p=>p.bulkAdvanceId!==id);
+  // Delete bulk advance record
+  db.bulkAdvances = (db.bulkAdvances||[]).filter(b=>b.id!==id);
+
+  try{ saveAll(); }catch(e){ saveLocal(); }
+  renderBulkAdvances();
+  renderPayments();
+  renderDashboard();
+  showOk('✅ Bulk Advance deleted!');
 }
 
 function baLoadProjects(){
@@ -9202,36 +9278,66 @@ function saveBulkAdvance(){
     if(!confirm(`Allocated (₹${allocated.toLocaleString('en-IN')}) > Total (₹${total.toLocaleString('en-IN')}). Continue?`)) return;
   }
 
-  // Create a bulk advance record
-  const bulkId = uid('BA');
-  const bulkRecord = {
-    id: bulkId,
-    clientId: cid,
-    clientName: c?.name||'',
-    totalAmount: total,
-    date, mode, note,
-    payments: payments.map(p=>({pid:p.pid, stage:p.stage, amt:p.amt, pname:gp(p.pid)?.name||''})),
-    createdAt: new Date().toISOString(),
-  };
-
-  // Save individual payments to db.payments
-  payments.forEach(p=>{
-    db.payments.push({
-      id: uid('TX'),
-      projectId: p.pid,
-      amount: p.amt,
-      date,
-      mode,
-      stage: p.stage,
-      notes: (note ? note + ' | ' : '') + 'Bulk Advance #' + bulkId,
-      bulkAdvanceId: bulkId,
-      drawings: [],
-    });
-  });
-
-  // Save bulk record
   if(!db.bulkAdvances) db.bulkAdvances = [];
-  db.bulkAdvances.push(bulkRecord);
+
+  if(_baEditId){
+    // ── EDIT MODE — delete old payments, create new ──
+    // Remove old linked payments
+    db.payments = (db.payments||[]).filter(p=>p.bulkAdvanceId!==_baEditId);
+    // Update bulk advance record
+    const existingIdx = db.bulkAdvances.findIndex(b=>b.id===_baEditId);
+    const updatedRecord = {
+      id: _baEditId,
+      clientId: cid,
+      clientName: c?.name||'',
+      totalAmount: total,
+      date, mode, note,
+      payments: payments.map(p=>({pid:p.pid, stage:p.stage, amt:p.amt, pname:gp(p.pid)?.name||''})),
+      createdAt: existingIdx>-1 ? db.bulkAdvances[existingIdx].createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    if(existingIdx>-1) db.bulkAdvances[existingIdx] = updatedRecord;
+    // Add new payments
+    payments.forEach(p=>{
+      db.payments.push({
+        id: uid('TX'),
+        projectId: p.pid,
+        amount: p.amt,
+        date, mode,
+        stage: p.stage,
+        notes: (note ? note + ' | ' : '') + 'Bulk Advance #' + _baEditId,
+        bulkAdvanceId: _baEditId,
+        drawings: [],
+      });
+    });
+    _baEditId = null;
+  } else {
+    // ── NEW MODE ──
+    const bulkId = uid('BA');
+    const bulkRecord = {
+      id: bulkId,
+      clientId: cid,
+      clientName: c?.name||'',
+      totalAmount: total,
+      date, mode, note,
+      payments: payments.map(p=>({pid:p.pid, stage:p.stage, amt:p.amt, pname:gp(p.pid)?.name||''})),
+      createdAt: new Date().toISOString(),
+    };
+    // Save individual payments
+    payments.forEach(p=>{
+      db.payments.push({
+        id: uid('TX'),
+        projectId: p.pid,
+        amount: p.amt,
+        date, mode,
+        stage: p.stage,
+        notes: (note ? note + ' | ' : '') + 'Bulk Advance #' + bulkId,
+        bulkAdvanceId: bulkId,
+        drawings: [],
+      });
+    });
+    db.bulkAdvances.push(bulkRecord);
+  }
 
   // Activity log
   db.activities.unshift({
