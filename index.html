@@ -1654,7 +1654,7 @@ html{transition:background .3s,color .3s}
 <!-- ADD PAYMENT -->
 <div class="modal-bg" id="m-pay">
   <div class="modal-box">
-    <div class="modal-head"><div class="modal-title">Record Payment</div><button class="modal-close" onclick="closeModal('m-pay')">✕</button></div>
+    <div class="modal-head"><div class="modal-title" id="m-pay-title">Record Payment</div><button class="modal-close" onclick="closeModal('m-pay')">✕</button></div>
     <div class="modal-body">
       <div class="form-row"><div class="fg"><label>Project *</label><select class="fi fi-sel" id="pay-proj"></select></div></div>
       <div class="form-row c2">
@@ -1683,7 +1683,7 @@ html{transition:background .3s,color .3s}
       <div class="fg" style="margin-bottom:12px"><label>Drawings Released (optional)</label><div class="svc-grid" id="pay-drw-grid"></div></div>
       <div class="fg" style="margin-bottom:0"><label>Notes</label><textarea class="fi fi-ta" id="pay-notes" placeholder="Cheque no / UTR etc..."></textarea></div>
       <div class="form-actions">
-        <button class="btn-full" style="background:var(--rgreen);color:#fff" onclick="savePayment()">Save Payment</button>
+        <button class="btn-full" id="pay-save-btn" style="background:var(--rgreen);color:#fff" onclick="savePayment()">Save Payment</button>
         <button class="btn-full" style="background:var(--surf2);color:var(--mut);border:1px solid var(--bdr)" onclick="closeModal('m-pay')">Cancel</button>
       </div>
     </div>
@@ -3103,6 +3103,7 @@ function openPD(pid){
       </div>
       <div style="display:flex;gap:5px;flex-shrink:0">
         <button class="btn-wa" style="font-size:10px;padding:4px 9px" onclick="sendWA('${pid}','${px.id}')">📲 WA</button>
+        <button class="btn btn-s btn-sm" style="color:var(--mut);border-color:var(--bdr)" onclick="editPayment('${px.id}')">✏️</button>
         <button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="delPay('${px.id}','${pid}')">✕</button>
       </div>
     </div>`).join('')
@@ -3143,6 +3144,57 @@ function openPD(pid){
 }
 function delProject(pid){if(!confirm('Delete this project and all its payments?'))return;db.projects=db.projects.filter(p=>p.id!==pid);db.payments=db.payments.filter(p=>p.projectId!==pid);closeModal('m-pd');saveAll();renderProjects();renderDashboard();}
 function delPay(id,pid){if(!confirm('Delete this payment?'))return;db.payments=db.payments.filter(p=>p.id!==id);saveAll();openPD(pid);renderPayments();renderDashboard();}
+
+let _editPayId = null;
+
+function editPayment(payId){
+  const pay = (db.payments||[]).find(p=>p.id===payId);
+  if(!pay) return;
+  _editPayId = payId;
+
+  // Update modal title
+  const titleEl = document.getElementById('m-pay-title');
+  if(titleEl) titleEl.textContent = '✏️ Edit Payment';
+  const saveBtn = document.getElementById('pay-save-btn');
+  if(saveBtn) saveBtn.textContent = 'Update Payment';
+  saveBtn.style.background = 'var(--gold)';
+  saveBtn.style.color = 'var(--grn)';
+
+  // Populate project dropdown
+  const sel = document.getElementById('pay-proj');
+  sel.innerHTML = '';
+  (db.projects||[]).forEach(p=>{
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = p.name;
+    if(p.id === pay.projectId) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.value = pay.projectId;
+  sel.disabled = true; // Don't change project on edit
+
+  // Fill fields
+  document.getElementById('pay-amt').value = pay.amount;
+  document.getElementById('pay-date').value = pay.date;
+  document.getElementById('pay-stage').value = pay.stage||'Advance';
+  document.getElementById('pay-notes').value = pay.notes||'';
+
+  // Mode
+  const modeEl = document.getElementById('pay-mode');
+  const modeBase = pay.mode?.includes('/') ? pay.mode.split('/')[0] : pay.mode||'UPI';
+  const upiApp = pay.mode?.includes('/') ? pay.mode.split('/')[1] : '';
+  if(modeEl) { modeEl.value = modeBase; toggleUpiSub('pay-upi-sub', modeBase); }
+  if(upiApp){
+    const upiInput = document.getElementById('pay-upi-app');
+    if(upiInput) upiInput.value = upiApp;
+    document.querySelectorAll('#pay-upi-sub .upi-chip').forEach(c=>{
+      const isOn = c.textContent.trim().includes(upiApp);
+      c.classList.toggle('on', isOn);
+    });
+  }
+
+  openModal('m-pay');
+}
 
 // ════════════════════════════════════════════════
 // PAYMENTS
@@ -3243,12 +3295,16 @@ function generateClientSummaryPDF(cid){
   // Bulk advances for this client
   const bulkList = (db.bulkAdvances||[]).filter(b=>b.clientId===cid);
 
+  // All advances for this client (sorted by date)
+  const allPays = (db.payments||[]).filter(x=>(db.projects||[]).some(p=>p.clientId===cid&&p.id===x.projectId)).sort((a,b)=>a.date.localeCompare(b.date));
+  const advancePays = allPays.filter(x=>x.stage==='Advance'||x.stage?.toLowerCase().includes('advance'));
+  const totalAdvance = advancePays.reduce((a,x)=>a+x.amount,0);
+
   // Project rows
   const projRows = projs.map((p,i)=>{
     const paid  = ppaid(p.id);
     const bal   = pbal(p.id);
     const pPct  = p.total>0 ? Math.round(paid/p.total*100) : 0;
-    // payments for this project
     const pays = (db.payments||[]).filter(x=>x.projectId===p.id).sort((a,b)=>a.date.localeCompare(b.date));
     const payRows = pays.map(x=>`
       <tr style="background:#f9f7f4">
@@ -4751,10 +4807,37 @@ function savePayment(){
   const upiApp=document.getElementById('pay-upi-app')?document.getElementById('pay-upi-app').value:'';
   const mode=modeBase==='UPI'&&upiApp?'UPI/'+upiApp:modeBase;
   const stage=document.getElementById('pay-stage').value;
+  const notes=document.getElementById('pay-notes').value.trim();
   if(!pid||!amt||!date){alert('Please fill Project, Amount & Date');return;}
   const drws=[...document.querySelectorAll('#pay-drw-grid .svc-tog.on')].map(s=>s.textContent);
+
+  if(_editPayId){
+    // ── EDIT MODE ──
+    const pay = (db.payments||[]).find(p=>p.id===_editPayId);
+    if(pay){
+      pay.amount = amt;
+      pay.date = date;
+      pay.mode = mode;
+      pay.stage = stage;
+      pay.notes = notes;
+      pay.drawings = drws;
+    }
+    _editPayId = null;
+    // Reset modal
+    const titleEl = document.getElementById('m-pay-title');
+    if(titleEl) titleEl.textContent = 'Record Payment';
+    const saveBtn = document.getElementById('pay-save-btn');
+    if(saveBtn){ saveBtn.textContent = 'Save Payment'; saveBtn.style.background='var(--rgreen)'; saveBtn.style.color='#fff'; }
+    const selEl = document.getElementById('pay-proj');
+    if(selEl) selEl.disabled = false;
+    saveAll(); closeModal('m-pay'); renderPayments(); renderDashboard();
+    showOk('✅ Payment updated!');
+    return;
+  }
+
+  // ── NEW MODE ──
   const payId=uid('TX');
-  db.payments.push({id:payId,projectId:pid,amount:amt,date,mode,stage,drawings:drws,notes:document.getElementById('pay-notes').value.trim()});
+  db.payments.push({id:payId,projectId:pid,amount:amt,date,mode,stage,drawings:drws,notes});
   const p=gp(pid);db.activities.unshift({text:fmt(amt)+' Payment — '+p.name,sub:stage+' · '+mode,time:'Just now',color:'#27ae60'});
   saveAll();closeModal('m-pay');renderPayments();renderDashboard();
   setTimeout(()=>sendWA(pid,payId),800);
