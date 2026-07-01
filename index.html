@@ -914,7 +914,7 @@ html{transition:background .3s,color .3s}
     <div id="view-estimates" class="view-section">
       <div class="sec-head">
         <div class="sec-title">Estimate Generator</div>
-        <button class="btn btn-gold" onclick="openModal('m-estimate')">+ New Estimate</button>
+        <button class="btn btn-gold" onclick="initEstimateModal()">+ New Estimate</button>
       </div>
       <div id="estimates-list"><div class="empty-state"><div class="empty-icon">📋</div><p>No estimates yet. Create one!</p></div></div>
     </div>
@@ -5049,30 +5049,66 @@ function delExpense(id){if(!confirm('Delete expense?'))return;db.expenses=db.exp
 // ESTIMATES
 // ════════════════════════════════════════════════
 let estSvcPrices={};
-function openEstimateModal(){ openModal("m-estimate"); }
+function openEstimateModal(){ initEstimateModal(); }
 function initEstimateModal(){
-  const sel=document.getElementById('est-client');sel.innerHTML='<option value="">Select Client</option>';
-  db.contacts.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name+' ('+c.cat+')';sel.appendChild(o);});
-  const grid=document.getElementById('est-svc-grid');grid.innerHTML='';
-  estSvcPrices={};
-  SERVICES.forEach(s=>{
-    const defaults={'Ground Floor Plan':8000,'First Floor Plan':5000,'3D Elevation':12000,'Interior Design':15000,'Structural Design':10000,'Apartment Design':25000,'Building Permission':8000,'Blueprint':5000,'Estimate':3000,'Steel Design':8000,'G+1':12000,'G+2':18000,'G+3':24000};
-    const def=defaults[s]||5000;
-    const row=document.createElement('div');row.style='display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surf2);border-radius:8px;';
-    row.innerHTML=`<input type="checkbox" id="est-svc-${s.replace(/\s+/g,'-')}" onchange="updateEstimate()">
-      <label for="est-svc-${s.replace(/\s+/g,'-')}" style="font-size:12px;flex:1;cursor:pointer">${s}</label>
-      <input type="number" value="${def}" style="width:90px;padding:4px 8px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;background:var(--surf)" data-svc="${s}" oninput="updateEstimate()">`;
-    grid.appendChild(row);
-    estSvcPrices[s]=def;
+  const sel=document.getElementById('est-client');
+  sel.innerHTML='<option value="">Select Client</option>';
+  (db.contacts||[]).forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.id;
+    o.textContent=c.name+' ('+c.cat+')';
+    sel.appendChild(o);
   });
+
+  const grid=document.getElementById('est-svc-grid');
+  if(!grid){ console.error('est-svc-grid not found'); openModal('m-estimate'); return; }
+  grid.innerHTML='';
+  estSvcPrices={};
+
+  const defaults={
+    'Apartment Design':25000,'Ground Floor Plan':8000,'First Floor Plan':6000,
+    'Second Floor Plan':6000,'Third Floor Plan':6000,'G+1':14000,'G+2':20000,'G+3':26000,
+    '3D Elevation':12000,'Interior Design':15000,'Structural Design':10000,
+    'Steel Design':8000,'Building Permission':8000,'Central Line Plan':4000,
+    'Blueprint':5000,'Estimate':3000,'Site Visit':2000,'Adhar Work':2000,'Other':5000
+  };
+
+  SERVICES.forEach(s=>{
+    const def = defaults[s]||5000;
+    estSvcPrices[s] = def;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:10px;transition:all .2s;cursor:pointer';
+    row.innerHTML = `
+      <input type="checkbox" id="est-svc-${s.replace(/[\s+]/g,'-')}"
+        style="width:15px;height:15px;accent-color:var(--grn);cursor:pointer;flex-shrink:0"
+        onchange="this.closest('div').style.background=this.checked?'#e8f4ee':'var(--surf2)';this.closest('div').style.borderColor=this.checked?'var(--grn)':'var(--bdr)';updateEstimate()">
+      <label for="est-svc-${s.replace(/[\s+]/g,'-')}" style="font-size:12px;font-weight:600;flex:1;cursor:pointer;color:var(--ink)">${s}</label>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="font-size:11px;color:var(--mut)">₹</span>
+        <input type="number" value="${def}" min="0"
+          style="width:80px;padding:4px 7px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:700;background:#fff;color:var(--ink);text-align:right"
+          data-svc="${s}" oninput="updateEstimate()" onclick="event.stopPropagation()">
+      </div>`;
+    row.onclick = function(e){
+      if(e.target.tagName!=='INPUT'){
+        const cb=this.querySelector('input[type=checkbox]');
+        cb.checked=!cb.checked;
+        this.style.background=cb.checked?'#e8f4ee':'var(--surf2)';
+        this.style.borderColor=cb.checked?'var(--grn)':'var(--bdr)';
+        updateEstimate();
+      }
+    };
+    grid.appendChild(row);
+  });
+
   updateEstimate();
   openModal('m-estimate');
 }
 function updateEstimate(){
   let sub=0;
   SERVICES.forEach(s=>{
-    const cb=document.getElementById('est-svc-'+s.replace(/\s+/g,'-'));
-    const inp=document.querySelector(`input[data-svc="${s}"]`);
+    const cb=document.getElementById('est-svc-'+s.replace(/[\s+]/g,'-'));
+    const inp=document.querySelector('input[data-svc="'+s+'"]');
     if(cb&&cb.checked&&inp) sub+=parseInt(inp.value)||0;
   });
   const gst=parseInt(document.getElementById('est-gst').value)||0;
@@ -5088,7 +5124,7 @@ function saveEstimate(){
   if(!cid){alert('Select client');return;}
   const items=[];
   SERVICES.forEach(s=>{
-    const cb=document.getElementById('est-svc-'+s.replace(/\s+/g,'-'));
+    const cb=document.getElementById('est-svc-'+s.replace(/[\s+]/g,'-'));
     const inp=document.querySelector(`input[data-svc="${s}"]`);
     if(cb&&cb.checked&&inp) items.push({service:s,amount:parseInt(inp.value)||0});
   });
@@ -9880,7 +9916,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
 
 <!-- ESTIMATE MODAL -->
 <div class="modal-bg" id="m-estimate">
-  <div class="modal-box" style="width:640px">
+  <div class="modal-box" style="width:700px;max-width:98vw">
     <div class="modal-head"><div class="modal-title">📋 Create Estimate</div><button class="modal-close" onclick="closeModal('m-estimate')">✕</button></div>
     <div class="modal-body">
       <div class="form-row c2">
@@ -9892,7 +9928,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
         <div class="fg"><label>GST %</label><select class="fi fi-sel" id="est-gst"><option value="0">No GST</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option></select></div>
       </div>
       <div class="fg" style="margin-bottom:12px"><label>Services & Charges (select and set price)</label>
-        <div id="est-svc-grid" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
+        <div id="est-svc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"></div>
       </div>
       <div class="fg" style="margin-bottom:12px"><label>Notes / Special Terms</label><textarea class="fi fi-ta" id="est-notes" placeholder="Additional conditions..."></textarea></div>
       <div id="est-summary" style="background:var(--surf2);border-radius:10px;padding:12px;font-size:13px;margin-bottom:4px"></div>
