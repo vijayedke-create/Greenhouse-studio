@@ -1741,10 +1741,12 @@ html{transition:background .3s,color .3s}
 const SERVICES=[
   'Apartment Design',
   'Ground Floor Plan','First Floor Plan','Second Floor Plan','Third Floor Plan',
-  'G+1','G+2','G+3',
-  '3D Elevation','Interior Design',
-  'Structural Design','Steel Design','Building Permission',
-  'Central Line Plan','Blueprint','Estimate','Site Visit','Adhar Work','Other'
+  'G+1 2D Floor Plan','G+2 2D Floor Plan','G+3 2D Floor Plan',
+  '3D Elevation','2D Elevation',
+  'Interior Design','Structural Design','Steel Design',
+  'Plumbing Drawing','Electrical Drawing',
+  'Building Permission','Central Line Plan','Blueprint','Estimate',
+  'Site Visit','Adhar Work','Other'
 ];
 const APT_FLOOR_OPTIONS=[
   'Ground Floor (G)','G+1','G+2','G+3','G+4','G+5','G+6','G+7','G+8',
@@ -5057,7 +5059,9 @@ function buildEstGrid(){
   estSvcPrices = {};
   const defaults={
     'Apartment Design':25000,'Ground Floor Plan':8000,'First Floor Plan':6000,
-    'Second Floor Plan':6000,'Third Floor Plan':6000,'G+1':14000,'G+2':20000,'G+3':26000,
+    'Second Floor Plan':6000,'Third Floor Plan':6000,
+    'G+1 2D Floor Plan':14000,'G+2 2D Floor Plan':20000,'G+3 2D Floor Plan':26000,
+    '2D Elevation':6000,'Plumbing Drawing':5000,'Electrical Drawing':5000,
     '3D Elevation':12000,'Interior Design':15000,'Structural Design':10000,
     'Steel Design':8000,'Building Permission':8000,'Central Line Plan':4000,
     'Blueprint':5000,'Estimate':3000,'Site Visit':2000,'Adhar Work':2000,'Other':5000
@@ -5226,7 +5230,18 @@ function generateEstimatePDF(id){
      '5. Final drawings released upon receipt of full payment.',
      '6. GST as applicable included above. TDS deductible at source.'
     ].forEach((t,i)=>doc.text(t,17,y+15+i*5.5));
-    if(est.notes){y+=58;const nl=doc.splitTextToSize('Note: '+est.notes,180);doc.setFont('helvetica','italic');doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text(nl,14,y);}
+    // Note: Point 7 (Dispute/Jurisdiction) removed as per office preference
+    if(est.notes){
+      y+=44;
+      // Notes box
+      doc.setFillColor(255,251,238);doc.roundedRect(12,y,186,8+Math.ceil(est.notes.length/80)*5,'F');
+      doc.setDrawColor(201,168,76);doc.setLineWidth(0.5);doc.roundedRect(12,y,186,8+Math.ceil(est.notes.length/80)*5,2,2,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(122,90,0);
+      doc.text('📝 Notes / Special Terms:',17,y+5.5);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(60,60,60);
+      const nl=doc.splitTextToSize(est.notes,175);
+      nl.forEach((l,i)=>doc.text(l,17,y+11+i*4.5));
+    }
     // Footer
     doc.setFillColor(26,58,42);doc.rect(0,287,210,10,'F');
     doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(180,180,180);
