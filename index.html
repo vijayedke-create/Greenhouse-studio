@@ -932,17 +932,20 @@ html{transition:background .3s,color .3s}
     <!-- ── ANALYTICS ── -->
     <div id="view-analytics" class="view-section">
       <div class="sec-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div class="sec-title">📈 Smart Analytics</div>
+        <div class="sec-title">📊 Business Intelligence</div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="an-year" class="fi fi-sel" style="width:110px;padding:6px 10px;font-size:12px" onchange="renderAnalytics()"></select>
           <button onclick="downloadAnalyticsPDF()" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">📄 PDF Report</button>
         </div>
       </div>
 
-      <!-- KPI Row -->
-      <div id="an-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
+      <!-- BI KPI Row 1 — Revenue & Finance -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px" id="an-kpi"></div>
 
-      <!-- Insight Cards Row -->
+      <!-- BI KPI Row 2 — Projects & Pipeline -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="an-kpi2"></div>
+
+      <!-- Insight Cards -->
       <div id="an-insights" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px"></div>
 
       <!-- Charts Row 1 -->
@@ -963,14 +966,24 @@ html{transition:background .3s,color .3s}
       <!-- Charts Row 2 -->
       <div class="g2" style="margin-bottom:16px">
         <div class="card">
-          <div class="card-head"><span class="card-title">🎯 Best Client Source (Revenue)</span></div>
-          <div class="card-body">
-            <div id="an-source-bars" style="padding:4px 0"></div>
-          </div>
+          <div class="card-head"><span class="card-title">🎯 Client Source Revenue</span></div>
+          <div class="card-body"><div id="an-source-bars" style="padding:4px 0"></div></div>
         </div>
         <div class="card">
-          <div class="card-head"><span class="card-title">👥 Client Category Revenue</span></div>
+          <div class="card-head"><span class="card-title">👥 Category Revenue</span></div>
           <div class="card-body"><div class="chart-wrap" style="height:200px"><canvas id="bi-cat-chart"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Top Projects + Service Popularity -->
+      <div class="g2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-head"><span class="card-title">🏆 Top Projects by Value</span></div>
+          <div class="card-body" id="an-top-projects"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">📐 Most Requested Services</span></div>
+          <div class="card-body" id="an-svc-popularity"></div>
         </div>
       </div>
 
@@ -5281,222 +5294,243 @@ _${officeInfo.arch||'Vijay Edke'} | ${officeInfo.name}_`;
 // ════════════════════════════════════════════════
 let biCharts={rev:null,cashflow:null,cat:null,pipeline:null,mode:null};
 function renderAnalytics(){
-  // ── Year selector setup ──
+  // ── Year selector ──
   const yearSel=document.getElementById('an-year');
   if(yearSel&&!yearSel.options.length){
     const curY=new Date().getFullYear();
     for(let y=curY;y>=curY-4;y--){const o=document.createElement('option');o.value=y;o.textContent=y;yearSel.appendChild(o);}
   }
   const selYear=parseInt((yearSel&&yearSel.value)||new Date().getFullYear());
-
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const pays=db.payments||[];
   const exps=db.expenses||[];
   const projs=db.projects||[];
-  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const contacts=db.contacts||[];
 
-  // ── Core numbers ──
-  const totalInc=pays.reduce((a,p)=>a+p.amount,0);
-  const totalExp=exps.reduce((a,e)=>a+e.amount,0);
-  const profit=totalInc-totalExp;
-  const totalContract=projs.reduce((a,p)=>a+p.total,0);
-  const totalPending=projs.reduce((a,p)=>a+pbal(p.id),0);
-  const avgVal=projs.length?Math.round(totalContract/projs.length):0;
-  const completedProjs=projs.filter(p=>p.stage==='Completed').length;
-  const activeProjs=projs.filter(p=>p.stage!=='Completed').length;
+  // ── Core financials ──
+  const totalInc   = pays.reduce((a,p)=>a+p.amount,0);
+  const totalExp   = exps.reduce((a,e)=>a+e.amount,0);
+  const profit     = totalInc - totalExp;
+  const totalContract = projs.reduce((a,p)=>a+p.total,0);
+  const totalPending  = projs.reduce((a,p)=>a+pbal(p.id),0);
+  const avgVal     = projs.length ? Math.round(totalContract/projs.length) : 0;
 
-  // ── Monthly arrays for selected year ──
+  // ── Year-filtered ──
   const mRev=new Array(12).fill(0);
   const mExp=new Array(12).fill(0);
   pays.forEach(p=>{const d=new Date(p.date);if(d.getFullYear()===selYear)mRev[d.getMonth()]+=p.amount;});
   exps.forEach(e=>{const d=new Date(e.date);if(d.getFullYear()===selYear)mExp[d.getMonth()]+=e.amount;});
-  const mProfit=mRev.map((r,i)=>r-mExp[i]);
-  const yearRev=mRev.reduce((a,b)=>a+b,0);
-  const yearExp=mExp.reduce((a,b)=>a+b,0);
-  const yearProfit=yearRev-yearExp;
+  const mProfit  = mRev.map((r,i)=>r-mExp[i]);
+  const yearRev  = mRev.reduce((a,b)=>a+b,0);
+  const yearExp  = mExp.reduce((a,b)=>a+b,0);
+  const yearProfit = yearRev-yearExp;
 
-  // ── Best month ──
+  // ── Monthly expenses (this month) ──
+  const now = new Date();
+  const thisMonthRev = pays.filter(p=>{const d=new Date(p.date);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();}).reduce((a,p)=>a+p.amount,0);
+  const thisMonthExp = exps.filter(e=>{const d=new Date(e.date);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();}).reduce((a,e)=>a+e.amount,0);
+  const thisMonthProfit = thisMonthRev - thisMonthExp;
+
+  // ── Project stats ──
+  const activeProjs    = projs.filter(p=>p.stage!=='Completed').length;
+  const completedProjs = projs.filter(p=>p.stage==='Completed').length;
+  const collectionRate = totalContract>0?Math.round(totalInc/totalContract*100):0;
+
+  // ── Enquiries (contacts added this year) ──
+  const newEnquiries = contacts.length; // all contacts = enquiries
+  // ── Conversion Rate (projects / contacts * 100) ──
+  const convRate = contacts.length>0?Math.round(projs.length/contacts.length*100):0;
+
+  // ── Most profitable project type by services ──
+  const svcRevMap={};
+  projs.forEach(p=>{
+    const paid=ppaid(p.id);
+    (p.services||[]).forEach(s=>{ svcRevMap[s]=(svcRevMap[s]||0)+paid; });
+  });
+  const topSvc = Object.entries(svcRevMap).sort((a,b)=>b[1]-a[1])[0];
+
+  // ── Client source ──
+  const srcMap={};
+  projs.forEach(p=>{const c=gc(p.clientId);const s=c?.source||'—';srcMap[s]=(srcMap[s]||0)+ppaid(p.id);});
+  const topSrc = Object.entries(srcMap).sort((a,b)=>b[1]-a[1])[0];
+
+  // ════ KPI ROW 1 — Financial ════
+  const kpi1=[
+    {icon:'💰',lbl:'Monthly Revenue',sub:months[now.getMonth()]+' '+now.getFullYear(),val:'₹'+fmt(thisMonthRev),color:'#e8f7ee',border:'#27ae60',tcolor:'#27ae60'},
+    {icon:'💸',lbl:'Monthly Expenses',sub:months[now.getMonth()]+' '+now.getFullYear(),val:'₹'+fmt(thisMonthExp),color:'#fdecea',border:'#c0392b',tcolor:'#c0392b'},
+    {icon:'📈',lbl:'Net Profit',sub:'This month',val:'₹'+fmt(thisMonthProfit),color:thisMonthProfit>=0?'#e8f7ee':'#fdecea',border:thisMonthProfit>=0?'#27ae60':'#c0392b',tcolor:thisMonthProfit>=0?'#27ae60':'#c0392b'},
+    {icon:'⏳',lbl:'Pending Fees',sub:projs.filter(p=>pbal(p.id)>0).length+' projects',val:'₹'+fmt(totalPending),color:'#fff8e0',border:'#c9a84c',tcolor:'#7a5a00'},
+  ];
+
+  // ════ KPI ROW 2 — Business ════
+  const kpi2=[
+    {icon:'📥',lbl:'New Enquiries',sub:'Total contacts',val:newEnquiries,color:'#eef4fb',border:'#2c5f8a',tcolor:'#2c5f8a'},
+    {icon:'🎯',lbl:'Conversion Rate',sub:'Contacts → Projects',val:convRate+'%',color:convRate>=50?'#e8f7ee':'#fff8e0',border:convRate>=50?'#27ae60':'#c9a84c',tcolor:convRate>=50?'#27ae60':'#7a5a00'},
+    {icon:'🏗️',lbl:'Avg Project Fee',sub:projs.length+' projects',val:'₹'+fmt(avgVal),color:'#f0eef8',border:'#8e44ad',tcolor:'#8e44ad'},
+    {icon:'✅',lbl:'Completed / Active',sub:'Projects',val:completedProjs+' / '+activeProjs,color:'#e8f7ee',border:'var(--grn)',tcolor:'var(--grn)'},
+  ];
+
+  const kpiCard=(k)=>`<div style="background:${k.color};border:1.5px solid ${k.border};border-radius:14px;padding:14px 16px">
+    <div style="font-size:20px;margin-bottom:6px">${k.icon}</div>
+    <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:3px">${k.lbl}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:800;color:${k.tcolor};line-height:1.2">${k.val}</div>
+    <div style="font-size:10px;color:var(--mut);margin-top:3px">${k.sub}</div>
+  </div>`;
+
+  const k1El=document.getElementById('an-kpi');
+  if(k1El) k1El.innerHTML=kpi1.map(kpiCard).join('');
+  const k2El=document.getElementById('an-kpi2');
+  if(k2El) k2El.innerHTML=kpi2.map(kpiCard).join('');
+
+  // ════ INSIGHT CARDS ════
+  const insights=[
+    {
+      icon:'🔥',lbl:'Most Profitable Service',
+      val:topSvc?topSvc[0]:'—',
+      sub:topSvc?'₹'+fmt(topSvc[1])+' total received':'Add services to projects',
+      color:'#fff8e0',border:'#c9a84c'
+    },
+    {
+      icon:'🎯',lbl:'Top Client Source',
+      val:topSrc?topSrc[0]:'—',
+      sub:topSrc?'₹'+fmt(topSrc[1])+' revenue':'Add source to contacts',
+      color:'#e8f7ee',border:'#27ae60'
+    },
+    {
+      icon:'📊',lbl:'Collection Rate',
+      val:collectionRate+'%',
+      sub:'₹'+fmt(totalInc)+' of ₹'+fmt(totalContract)+' contracted',
+      color:collectionRate>=80?'#e8f7ee':collectionRate>=60?'#fff8e0':'#fdecea',
+      border:collectionRate>=80?'#27ae60':collectionRate>=60?'#c9a84c':'#c0392b'
+    },
+  ];
+  const insEl=document.getElementById('an-insights');
+  if(insEl) insEl.innerHTML=insights.map(i=>`
+    <div style="background:${i.color};border:1.5px solid ${i.border};border-radius:14px;padding:16px">
+      <div style="font-size:26px;margin-bottom:8px">${i.icon}</div>
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:5px">${i.lbl}</div>
+      <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:4px">${i.val}</div>
+      <div style="font-size:11px;color:var(--mut);line-height:1.5">${i.sub}</div>
+    </div>`).join('');
+
+  // ════ BEST MONTH ════
   const bestMonthIdx=mRev.indexOf(Math.max(...mRev));
   const bestMonthEl=document.getElementById('an-best-month');
   if(bestMonthEl) bestMonthEl.textContent=mRev[bestMonthIdx]>0?'🏆 Best: '+months[bestMonthIdx]+' (₹'+fmt(mRev[bestMonthIdx])+')':'';
 
-  // ── KPI Cards ──
-  const kpiEl=document.getElementById('an-kpi');
-  if(kpiEl) kpiEl.innerHTML=[
-    {l:'Total Revenue',v:fmt(totalInc),sub:'All time',c:'var(--grn)',icon:'💰'},
-    {l:'Net Profit',v:fmt(profit),sub:(totalInc>0?Math.round(profit/totalInc*100):0)+'% margin',c:profit>=0?'var(--grn)':'var(--red)',icon:'📈'},
-    {l:'Pending Amount',v:fmt(totalPending),sub:activeProjs+' active projects',c:'var(--red)',icon:'⏳'},
-    {l:'Avg Project Value',v:fmt(avgVal),sub:projs.length+' projects total',c:'var(--orange)',icon:'🏗️'},
-  ].map(k=>`<div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:14px 16px">
-    <div style="font-size:18px;margin-bottom:4px">${k.icon}</div>
-    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:3px">${k.l}</div>
-    <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:${k.c}">₹${k.v}</div>
-    <div style="font-size:10px;color:var(--mut);margin-top:2px">${k.sub}</div>
-  </div>`).join('');
+  // ════ CHARTS ════
+  // Monthly Rev vs Exp Bar Chart
+  const rCtx=document.getElementById('bi-rev-chart')?.getContext('2d');
+  if(rCtx){
+    if(charts.biRev)charts.biRev.destroy();
+    charts.biRev=new Chart(rCtx,{type:'bar',data:{labels:months,datasets:[
+      {label:'Revenue ₹',data:mRev,backgroundColor:'rgba(26,58,42,.75)',borderRadius:4},
+      {label:'Expense ₹',data:mExp,backgroundColor:'rgba(192,57,43,.55)',borderRadius:4},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{ticks:{font:{size:9},callback:v=>v>=100000?'₹'+(v/100000).toFixed(1)+'L':'₹'+(v/1000)+'K'}}}}});
+  }
 
-  // ── Source Revenue (by project value, not just count) ──
-  const srcRev={};const srcCnt={};
-  projs.forEach(p=>{const c=gc(p.clientId);const s=c?(c.source||'Unknown'):'Unknown';srcRev[s]=(srcRev[s]||0)+ppaid(p.id);srcCnt[s]=(srcCnt[s]||0)+1;});
-  const srcEntries=Object.entries(srcRev).sort((a,b)=>b[1]-a[1]);
+  // Cumulative Cashflow Line
+  const cfCtx=document.getElementById('bi-cashflow-chart')?.getContext('2d');
+  if(cfCtx){
+    if(charts.biCf)charts.biCf.destroy();
+    let cumRev=0,cumExp=0;
+    const cumRevArr=[],cumExpArr=[],cumProfArr=[];
+    mRev.forEach((r,i)=>{cumRev+=r;cumExp+=mExp[i];cumRevArr.push(cumRev);cumExpArr.push(cumExp);cumProfArr.push(cumRev-cumExp);});
+    charts.biCf=new Chart(cfCtx,{type:'line',data:{labels:months,datasets:[
+      {label:'Cumulative Revenue',data:cumRevArr,borderColor:'#27ae60',borderWidth:2,tension:.4,pointRadius:3,fill:false},
+      {label:'Cumulative Expense',data:cumExpArr,borderColor:'#c0392b',borderWidth:2,tension:.4,pointRadius:3,fill:false},
+      {label:'Net Profit',data:cumProfArr,borderColor:'#c9a84c',borderWidth:2,tension:.4,pointRadius:3,fill:true,backgroundColor:'rgba(201,168,76,.08)'},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{ticks:{font:{size:9},callback:v=>v>=100000?'₹'+(v/100000).toFixed(1)+'L':'₹'+(v/1000)+'K'}}}}});
+  }
+
+  // Client Source Bars
+  const srcRevMap={};const srcCnt={};
+  projs.forEach(p=>{const c=gc(p.clientId);const s=c?(c.source||'Unknown'):'Unknown';srcRevMap[s]=(srcRevMap[s]||0)+ppaid(p.id);srcCnt[s]=(srcCnt[s]||0)+1;});
+  const srcEntries=Object.entries(srcRevMap).sort((a,b)=>b[1]-a[1]);
   const maxSrcRev=srcEntries.length?srcEntries[0][1]:1;
-  const bestSrc=srcEntries.length?srcEntries[0][0]:null;
   const srcBarsEl=document.getElementById('an-source-bars');
   if(srcBarsEl){
-    if(!srcEntries.length){srcBarsEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">No data yet</div>';}
-    else{
-      srcBarsEl.innerHTML=srcEntries.map(([src,rev])=>`
-        <div style="margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-            <span style="font-weight:600">${src} <span style="color:var(--mut);font-weight:400">(${srcCnt[src]} project${srcCnt[src]!==1?'s':''})</span></span>
-            <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--grn)">₹${fmt(rev)}</span>
-          </div>
-          <div style="background:var(--bdr);border-radius:20px;height:8px;overflow:hidden">
-            <div style="height:100%;border-radius:20px;background:${src===bestSrc?'var(--grn)':'var(--grn3,#3d7a52)'};width:${Math.round(rev/maxSrcRev*100)}%;transition:width .6s ease"></div>
-          </div>
-        </div>`).join('');
-    }
+    srcBarsEl.innerHTML=srcEntries.length?srcEntries.map(([src,rev])=>`
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span style="font-weight:600">${src} <span style="color:var(--mut)">(${srcCnt[src]} proj)</span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--grn)">₹${fmt(rev)}</span>
+        </div>
+        <div style="background:var(--bdr);border-radius:20px;height:8px;overflow:hidden">
+          <div style="height:100%;border-radius:20px;background:var(--grn);width:${Math.round(rev/maxSrcRev*100)}%;transition:width .6s ease"></div>
+        </div>
+      </div>`).join(''):'<div style="text-align:center;padding:24px;color:var(--mut)">Add source to contacts</div>';
   }
 
-  // ── Insight Cards ──
-  const collectionRate=totalContract>0?Math.round(totalInc/totalContract*100):0;
-  const growthProjs=projs.filter(p=>{const d=new Date(p.id.replace('PRJ-','20').slice(0,7));return d.getFullYear()===selYear;}).length;
-  const insights=[
-    {
-      icon: bestSrc?'🎯':'🎯',
-      label:'Best Client Source',
-      value: bestSrc||'—',
-      sub: bestSrc?'₹'+fmt(srcRev[bestSrc]||0)+' revenue · '+srcCnt[bestSrc]+' projects':'Add source to contacts',
-      color:'#e8f4ee',border:'var(--grn)'
-    },
-    {
-      icon:'💸',
-      label:'Collection Rate',
-      value:collectionRate+'%',
-      sub:'₹'+fmt(totalInc)+' received of ₹'+fmt(totalContract)+' contracted',
-      color: collectionRate>=80?'#e8f4ee':collectionRate>=60?'#fffbee':'#fde8e6',
-      border: collectionRate>=80?'var(--grn)':collectionRate>=60?'var(--gold)':'var(--red)'
-    },
-    {
-      icon:'⏳',
-      label:'Pending Recovery',
-      value:'₹'+fmt(totalPending),
-      sub:projs.filter(p=>pbal(p.id)>0).length+' projects with balance due',
-      color:'#fde8e6',border:'var(--red)'
-    }
-  ];
-  const insEl=document.getElementById('an-insights');
-  if(insEl) insEl.innerHTML=insights.map(ins=>`
-    <div style="background:${ins.color};border:1.5px solid ${ins.border};border-radius:14px;padding:14px 16px">
-      <div style="font-size:22px;margin-bottom:6px">${ins.icon}</div>
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:4px">${ins.label}</div>
-      <div style="font-size:18px;font-weight:700;color:var(--txt);margin-bottom:4px">${ins.value}</div>
-      <div style="font-size:11px;color:var(--mut);line-height:1.5">${ins.sub}</div>
-    </div>`).join('');
+  // Client Category Revenue Donut
+  const cCtx=document.getElementById('bi-cat-chart')?.getContext('2d');
+  if(cCtx){
+    if(charts.biCat)charts.biCat.destroy();
+    const catMap={};
+    projs.forEach(p=>{const c=gc(p.clientId);const cat=c?.cat||'Other';catMap[cat]=(catMap[cat]||0)+ppaid(p.id);});
+    const catEntries=Object.entries(catMap).filter(([,v])=>v>0);
+    charts.biCat=new Chart(cCtx,{type:'doughnut',data:{labels:catEntries.map(([k])=>k),datasets:[{data:catEntries.map(([,v])=>v),backgroundColor:['#1a3a2a','#c9a84c','#27ae60','#2c5f8a','#d35400','#c0392b','#8e44ad','#7a7568'],borderColor:'#fff',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}}}});
+  }
 
-  // ── Pending payments list ──
+  // ════ PENDING PAYMENTS LIST ════
   const pendingEl=document.getElementById('an-pending-list');
   if(pendingEl){
-    const pendingProjs=projs.map(p=>({p,bal:pbal(p.id),c:gc(p.clientId)})).filter(x=>x.bal>0).sort((a,b)=>b.bal-a.bal);
-    if(!pendingProjs.length){pendingEl.innerHTML='<div style="text-align:center;padding:24px;color:var(--mut)">🎉 No pending payments!</div>';}
-    else{
-      pendingEl.innerHTML=pendingProjs.map(({p,bal,c})=>{
-        const pct=p.total>0?Math.round(ppaid(p.id)/p.total*100):0;
-        return `<div style="padding:10px 0;border-bottom:1px solid var(--bdr)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <div>
-              <div style="font-size:13px;font-weight:600">${p.name}</div>
-              <div style="font-size:11px;color:var(--mut)">${c?c.name:'—'} · ${p.stage||'—'}</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--red)">₹${fmt(bal)}</div>
-              <div style="font-size:10px;color:var(--mut)">${pct}% paid</div>
-            </div>
-          </div>
-          <div style="background:var(--bdr);border-radius:20px;height:5px;overflow:hidden">
-            <div style="height:100%;border-radius:20px;background:var(--grn);width:${pct}%"></div>
-          </div>
-        </div>`;
-      }).join('');
-    }
+    const pp=projs.map(p=>({p,bal:pbal(p.id),c:gc(p.clientId)})).filter(x=>x.bal>0).sort((a,b)=>b.bal-a.bal);
+    pendingEl.innerHTML=pp.length?pp.slice(0,8).map(({p,bal,c})=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--bdr)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+          <div style="font-size:11px;color:var(--mut)">${c?c.name:'—'} · ${p.stage}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--red)">₹${fmt(bal)}</div>
+          <div style="font-size:10px;color:var(--mut)">${p.total>0?Math.round(ppaid(p.id)/p.total*100):0}% paid</div>
+        </div>
+      </div>`).join(''):'<div style="text-align:center;padding:24px;color:var(--mut)">🎉 No pending!</div>';
   }
 
-  // ── Top 5 projects ──
-  const topProjEl=document.getElementById('an-top-projects');
-  if(topProjEl){
-    const sorted=[...projs].sort((a,b)=>b.total-a.total).slice(0,5);
-    if(!sorted.length){topProjEl.innerHTML='<div style="text-align:center;padding:24px;color:var(--mut)">No projects</div>';}
-    else{
-      const maxT=sorted[0].total||1;
-      topProjEl.innerHTML=sorted.map((p,i)=>{
-        const c=gc(p.clientId);
-        const paid=ppaid(p.id);
-        const pct=p.total>0?Math.round(paid/p.total*100):0;
-        return `<div style="padding:8px 0;border-bottom:1px solid var(--bdr)">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--mut);width:18px">#${i+1}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-              <div style="display:flex;gap:4px;margin-top:3px">
-                <div style="background:var(--bdr);border-radius:20px;height:4px;flex:1;overflow:hidden"><div style="height:100%;border-radius:20px;background:var(--grn);width:${pct}%"></div></div>
-              </div>
-            </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--grn)">₹${fmt(p.total)}</div>
-              <div style="font-size:10px;color:var(--mut)">${pct}% collected</div>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
-    }
+  // ════ TOP PROJECTS LIST ════
+  const topPEl=document.getElementById('an-top-projects');
+  if(topPEl){
+    const sorted=[...projs].sort((a,b)=>b.total-a.total).slice(0,6);
+    topPEl.innerHTML=sorted.length?sorted.map((p,i)=>{
+      const c=gc(p.clientId);const pct=p.total>0?Math.round(ppaid(p.id)/p.total*100):0;
+      return `<div style="padding:9px 0;border-bottom:1px solid var(--bdr)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:12px;font-weight:700">${i+1}. ${p.name}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--grn)">₹${fmt(p.total)}</div>
+        </div>
+        <div style="background:var(--bdr);border-radius:20px;height:5px;overflow:hidden">
+          <div style="background:${pct>=100?'var(--rgreen)':'var(--grn)'};height:100%;width:${pct}%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:10px;color:var(--mut)">${c?c.name:'—'} · ${p.stage}</span>
+          <span style="font-size:10px;color:var(--mut)">${pct}% paid</span>
+        </div>
+      </div>`;
+    }).join(''):'<div style="text-align:center;padding:24px;color:var(--mut)">No projects</div>';
   }
 
-  // ── CHARTS ──
-  const CHART_OPTS={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a7568',font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{color:'#7a7568',font:{size:10}}},y:{grid:{color:'#e8e2d9'},ticks:{color:'#7a7568',font:{size:10},callback:v=>'₹'+(v>=1000?(v/1000).toFixed(0)+'K':v)}}}};
-
-  // Monthly Revenue vs Expense
-  const r1=document.getElementById('bi-rev-chart');if(!r1)return;
-  if(biCharts.rev)biCharts.rev.destroy();
-  biCharts.rev=new Chart(r1.getContext('2d'),{type:'bar',data:{labels:months,datasets:[
-    {label:'Revenue',data:mRev,backgroundColor:'rgba(26,58,42,.2)',borderColor:'#1a3a2a',borderWidth:2,borderRadius:4},
-    {label:'Expense',data:mExp,backgroundColor:'rgba(192,57,43,.15)',borderColor:'#c0392b',borderWidth:2,borderRadius:4}
-  ]},options:{...CHART_OPTS,plugins:{legend:{labels:{color:'#7a7568',font:{size:10},boxWidth:10}}}}});
-
-  // Cumulative cash flow
-  const r2=document.getElementById('bi-cashflow-chart');if(!r2)return;
-  if(biCharts.cashflow)biCharts.cashflow.destroy();
-  let cumRev=0,cumExp=0;
-  const cumRevArr=[],cumExpArr=[];
-  mRev.forEach((r,i)=>{cumRev+=r;cumExp+=mExp[i];cumRevArr.push(cumRev);cumExpArr.push(cumExp);});
-  biCharts.cashflow=new Chart(r2.getContext('2d'),{type:'line',data:{labels:months,datasets:[
-    {label:'Cumul. Revenue',data:cumRevArr,borderColor:'#1a3a2a',borderWidth:2.5,tension:.4,fill:true,backgroundColor:'rgba(26,58,42,.06)',pointRadius:3},
-    {label:'Cumul. Expense',data:cumExpArr,borderColor:'#c0392b',borderWidth:2,tension:.4,fill:false,pointRadius:3,borderDash:[5,3]}
-  ]},options:{...CHART_OPTS}});
-
-  // Category Revenue
-  const catRev={};
-  projs.forEach(p=>{const c=gc(p.clientId);const cat=c?c.cat:'Unknown';catRev[cat]=(catRev[cat]||0)+ppaid(p.id);});
-  const catEntries=Object.entries(catRev).sort((a,b)=>b[1]-a[1]);
-  const r3=document.getElementById('bi-cat-chart');if(!r3)return;
-  if(biCharts.cat)biCharts.cat.destroy();
-  const palette=['#1a3a2a','#c9a84c','#d35400','#2c5f8a','#8e44ad','#27ae60','#c0392b','#7a7568'];
-  biCharts.cat=new Chart(r3.getContext('2d'),{type:'doughnut',data:{labels:catEntries.map(e=>e[0]),datasets:[{data:catEntries.map(e=>e[1]),backgroundColor:palette,borderColor:'#fff',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{color:'#7a7568',font:{size:10},boxWidth:10}}}}});
-
-  // Project pipeline
-  const STAGES=['Concept','Layout','3D','Working Drawing','Submission','Completed'];
-  const stageCounts=STAGES.map(s=>projs.filter(p=>p.stage===s).length);
-  const r4=document.getElementById('bi-pipeline-chart');if(!r4)return;
-  if(biCharts.pipeline)biCharts.pipeline.destroy();
-  biCharts.pipeline=new Chart(r4.getContext('2d'),{type:'bar',data:{labels:STAGES,datasets:[{label:'Projects',data:stageCounts,backgroundColor:stageCounts.map((_,i)=>i===5?'rgba(26,58,42,.8)':'rgba(201,168,76,.4)'),borderColor:stageCounts.map((_,i)=>i===5?'#1a3a2a':'#c9a84c'),borderWidth:2,borderRadius:6}]},options:{...CHART_OPTS,plugins:{legend:{display:false}},indexAxis:'y',scales:{x:{grid:{color:'#e8e2d9'},ticks:{color:'#7a7568',font:{size:10},callback:v=>Number.isInteger(v)?v:''}},y:{grid:{display:false},ticks:{color:'#7a7568',font:{size:10}}}}}});
-
-  // Payment mode
-  const modeRev={};
-  pays.forEach(p=>{const m=p.mode||'Other';modeRev[m]=(modeRev[m]||0)+p.amount;});
-  const r5=document.getElementById('bi-mode-chart');if(!r5)return;
-  if(biCharts.mode)biCharts.mode.destroy();
-  const modeEntries=Object.entries(modeRev).sort((a,b)=>b[1]-a[1]);
-  biCharts.mode=new Chart(r5.getContext('2d'),{type:'pie',data:{labels:modeEntries.map(e=>e[0]),datasets:[{data:modeEntries.map(e=>e[1]),backgroundColor:palette,borderColor:'#fff',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#7a7568',font:{size:10},boxWidth:10}}}}});
+  // ════ SERVICE POPULARITY ════
+  const svcPEl=document.getElementById('an-svc-popularity');
+  if(svcPEl){
+    const svcCount={};
+    projs.forEach(p=>(p.services||[]).forEach(s=>{svcCount[s]=(svcCount[s]||0)+1;}));
+    const svcSorted=Object.entries(svcCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const maxCnt=svcSorted[0]?.[1]||1;
+    svcPEl.innerHTML=svcSorted.length?svcSorted.map(([s,cnt])=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="font-weight:600">${s}</span>
+          <span style="color:var(--mut)">${cnt} project${cnt!==1?'s':''}</span>
+        </div>
+        <div style="background:var(--bdr);border-radius:20px;height:6px;overflow:hidden">
+          <div style="height:100%;border-radius:20px;background:#2c5f8a;width:${Math.round(cnt/maxCnt*100)}%"></div>
+        </div>
+      </div>`).join(''):'<div style="text-align:center;padding:24px;color:var(--mut)">No services data</div>';
+  }
 }
 
-// ── PDF Analytics Report ──
 function downloadAnalyticsPDF(){
   const pays=db.payments||[];
   const exps=db.expenses||[];
