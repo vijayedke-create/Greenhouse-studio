@@ -551,6 +551,7 @@ html{transition:background .3s,color .3s}
     <button class="nav-btn" data-view="timeline" onclick="switchView('timeline')"><span class="nav-icon">📅</span>Timeline</button>
     <button class="nav-btn" data-view="materials" onclick="switchView('materials')"><span class="nav-icon">🧱</span>Materials</button>
     <button class="nav-btn" data-view="interiorest" onclick="switchView('interiorest')"><span class="nav-icon">🛋️</span>Interior Estimate</button>
+    <button class="nav-btn" data-view="completion" onclick="switchView('completion')"><span class="nav-icon">📋</span>Completion Report</button>
   </nav>
   <div class="sidebar-footer">
     <div class="user-row">
@@ -1025,6 +1026,7 @@ html{transition:background .3s,color .3s}
     <div id="view-invoice" class="view-section"><div id="inv-body"></div></div>
     <div id="view-timeline" class="view-section"><div id="tl-body"></div></div>
     <div id="view-materials" class="view-section"><div id="mat-body"></div></div>
+    <div id="view-completion" class="view-section"><div id="cmp-body"></div></div>
     <div id="view-interiorest" class="view-section">
       <div class="sec-head">
         <div class="sec-title">🛋️ Interior Work Estimate</div>
@@ -2609,7 +2611,8 @@ function renderView(v){
     agreement:renderAgreementView,
     invoice:renderInvoiceView,
     timeline:renderTimelineView,
-    materials:renderMaterialsView,interiorest:renderInteriorEstList
+    materials:renderMaterialsView,interiorest:renderInteriorEstList,
+    completion:function(){if(window.renderCompletionView)renderCompletionView();}
   };
   var fn=renderMap[v];
   if(typeof fn==='function') fn();
@@ -11629,6 +11632,469 @@ Portal मध्ये पाहता येईल:
 <div id="gs-toast-ok" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a4a2a;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:9998;align-items:center;gap:8px;max-width:90vw;border:1px solid #2d6a3d"></div>
 <div id="gs-toast-err" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#4a1515;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:9998;align-items:center;gap:8px;max-width:90vw;border:1px solid #6a2d2d"></div>
 <!-- Firebase sync uses REST API fetch — no SDK needed -->
+
+<!-- ████████████████████████████████████████████████████
+     COMPLETION / WORK PROGRESS REPORT GENERATOR
+     Injected module — view: completion
+     ████████████████████████████████████████████████████ -->
+<style>
+#cmp-body .cmp-grid{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start}
+@media(max-width:1000px){#cmp-body .cmp-grid{grid-template-columns:1fr}}
+#cmp-body .cmp-card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;margin-bottom:12px;overflow:hidden}
+#cmp-body .cmp-card>h4{font-size:12px;font-weight:700;color:var(--grn3);padding:11px 13px;background:var(--surf2);border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;align-items:center;gap:7px}
+#cmp-body .cmp-card>h4 .ar{margin-left:auto;font-size:10px;color:var(--mut);transition:transform .2s}
+#cmp-body .cmp-card.cl>h4 .ar{transform:rotate(-90deg)}
+#cmp-body .cmp-card.cl .cb{display:none}
+#cmp-body .cb{padding:13px}
+#cmp-body .cmp-f{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#cmp-body .cmp-f .fg.w{grid-column:1/-1}
+#cmp-body .cmp-f label{font-size:10.5px;font-weight:600;color:var(--mut);display:block;margin-bottom:3px}
+#cmp-body .cmp-f input,#cmp-body .cmp-f select,#cmp-body .cmp-f textarea{width:100%;font-family:inherit;font-size:12.5px;padding:7px 9px;border:1px solid var(--bdr2);border-radius:8px;background:var(--surf2);color:var(--ink)}
+#cmp-body textarea{resize:vertical;line-height:1.55}
+#cmp-body .srow{display:grid;grid-template-columns:20px 1fr 52px 96px 26px;gap:5px;align-items:center;margin-bottom:6px}
+#cmp-body .srow input,#cmp-body .srow select{font-size:11.5px;padding:5px 6px;border:1px solid var(--bdr2);border-radius:7px;background:var(--surf2);color:var(--ink);width:100%;font-family:inherit}
+#cmp-body .srow .no{font-size:10.5px;color:var(--mut);text-align:center;font-weight:700}
+#cmp-body .srow .sub{grid-column:2/5;display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:-2px 0 4px}
+#cmp-body .xb{border:0;background:transparent;color:var(--bdr2);cursor:pointer;font-size:15px;padding:3px}
+#cmp-body .xb:hover{color:var(--red)}
+#cmp-body .chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+#cmp-body .chip{border:1px solid var(--bdr2);background:var(--surf2);border-radius:18px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit}
+#cmp-body .chip:hover{border-color:var(--grn3);color:var(--grn3)}
+#cmp-body .tot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:9px 12px;background:var(--grn);color:#fff;border-radius:9px}
+#cmp-body .tot b{font-family:'Playfair Display',serif;font-size:21px;color:var(--gold2)}
+#cmp-body .tot small{display:block;font-size:9.5px;color:rgba(255,255,255,.6)}
+#cmp-body .cmp-hint{font-size:10.5px;color:var(--mut);margin-top:7px;line-height:1.5}
+#cmp-body .phg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}
+#cmp-body .ph{position:relative;border:1px solid var(--bdr);border-radius:7px;overflow:hidden}
+#cmp-body .ph img{width:100%;height:70px;object-fit:cover;display:block}
+#cmp-body .ph input{width:100%;border:0;border-top:1px solid var(--bdr);font-size:10px;padding:3px 5px;background:var(--surf);color:var(--ink);font-family:inherit}
+#cmp-body .ph .xb{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border-radius:50%;width:18px;height:18px;padding:0;font-size:12px;line-height:1}
+#cmp-body .sv{display:flex;align-items:center;gap:7px;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;background:var(--surf2);margin-bottom:6px}
+#cmp-body .sv .m{flex:1;min-width:0}
+#cmp-body .sv b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cmp-body .sv small{font-size:10px;color:var(--mut)}
+#cmp-body .pvbox{background:var(--bdr);border-radius:12px;padding:14px;overflow:auto;max-height:calc(100vh - 190px)}
+#cmp-body .pvbar{display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600}
+/* A4 sheet — same markup is reused in the print window */
+.cmp-sheet{width:210mm;min-height:297mm;background:#fff;color:#15150f;margin:0 auto 14px;padding:13mm 15mm 15mm;
+  box-shadow:0 4px 22px rgba(0,0,0,.18);font-family:'Plus Jakarta Sans',sans-serif;font-size:10.4pt;display:flex;flex-direction:column;transform-origin:top center}
+.cmp-sheet *{box-sizing:border-box}
+.cmp-sheet .lh{display:flex;align-items:flex-start;gap:12px;padding-bottom:8px}
+.cmp-sheet .lh img{height:54px;width:auto;object-fit:contain}
+.cmp-sheet .lh .n{font-family:'Playfair Display',serif;font-size:21pt;font-weight:800;color:#1a3a2a;line-height:1.05}
+.cmp-sheet .lh .a{font-size:8.6pt;color:#5d574c;margin-top:3px;line-height:1.45}
+.cmp-sheet .lh .r{margin-left:auto;text-align:right;font-size:8.3pt;color:#5d574c;line-height:1.5;min-width:145px}
+.cmp-sheet .lh .r b{display:block;color:#1a3a2a;font-size:8.7pt}
+.cmp-sheet .rl{height:2.2px;background:#1a3a2a;margin-bottom:1.6px}
+.cmp-sheet .rl2{height:1px;background:#c9a84c;margin-bottom:11px}
+.cmp-sheet .dt{text-align:center;margin:3px 0 11px}
+.cmp-sheet .dt h3{font-family:'Playfair Display',serif;font-size:14.5pt;font-weight:700;letter-spacing:.6px;color:#1a3a2a;margin:0}
+.cmp-sheet .dt i{display:block;width:62px;height:2px;background:#c9a84c;margin:5px auto 0}
+.cmp-sheet .mt{display:flex;justify-content:space-between;font-size:9.3pt;margin-bottom:9px;color:#3d3530}
+.cmp-sheet .to{font-size:9.7pt;line-height:1.6;margin-bottom:8px;white-space:pre-line}
+.cmp-sheet .sj{font-size:9.7pt;margin-bottom:9px;padding:7px 9px;background:#f4f2ec;border-left:3px solid #c9a84c;line-height:1.5}
+.cmp-sheet .pr{font-size:9.7pt;line-height:1.72;margin-bottom:8px;text-align:justify}
+.cmp-sheet table{width:100%;border-collapse:collapse}
+.cmp-sheet table.t{font-size:8.9pt;margin-bottom:10px}
+.cmp-sheet table.t th{background:#1a3a2a;color:#fff;font-weight:600;font-size:8.3pt;padding:5px 6px;text-align:left;border:.6px solid #1a3a2a}
+.cmp-sheet table.t td{padding:4.5px 6px;border:.6px solid #ccc5b8;vertical-align:top}
+.cmp-sheet table.t tr:nth-child(even) td{background:#faf9f6}
+.cmp-sheet table.t tfoot td{background:#eef1ea;font-weight:700;border-top:1.2px solid #1a3a2a}
+.cmp-sheet .c{text-align:center}.cmp-sheet .rt{text-align:right}
+.cmp-sheet table.kv{font-size:9.3pt;margin-bottom:10px}
+.cmp-sheet table.kv td{padding:4px 6px;border-bottom:.6px solid #e0dbd1;vertical-align:top}
+.cmp-sheet table.kv td:first-child{width:36%;color:#5d574c}
+.cmp-sheet table.kv td:last-child{font-weight:600}
+.cmp-sheet .sb{display:flex;gap:9px;margin-bottom:10px}
+.cmp-sheet .sb div{flex:1;border:.8px solid #d8d1c4;border-radius:7px;padding:7px 9px;background:#f9f8f4}
+.cmp-sheet .sb span{display:block;font-size:8pt;color:#6b6558}
+.cmp-sheet .sb b{font-family:'Playfair Display',serif;font-size:13pt;color:#1a3a2a}
+.cmp-sheet .st{display:inline-block;padding:1px 6px;border-radius:9px;font-size:7.5pt;font-weight:700}
+.cmp-sheet .st.d{background:#e3f3e9;color:#1e7a44}
+.cmp-sheet .st.p{background:#fdf1dd;color:#9a6708}
+.cmp-sheet .st.n{background:#f0eeea;color:#77716a}
+.cmp-sheet .sg{margin-top:auto;padding-top:18px;display:flex;justify-content:space-between;align-items:flex-end}
+.cmp-sheet .sg .l{font-size:9.1pt;line-height:1.6;color:#3d3530}
+.cmp-sheet .sg .s{text-align:center;min-width:185px}
+.cmp-sheet .sg .s img{height:44px;object-fit:contain;display:block;margin:0 auto -2px}
+.cmp-sheet .sg .s .sp{height:44px}
+.cmp-sheet .sg .s .ln{border-top:.9px solid #55503f;padding-top:4px;font-size:9.1pt;font-weight:700}
+.cmp-sheet .sg .s small{font-size:8.1pt;color:#5d574c;display:block;line-height:1.45}
+.cmp-sheet .ft{margin-top:11px;padding-top:6px;border-top:.8px solid #e0dbd1;display:flex;justify-content:space-between;font-size:7.5pt;color:#8a8478}
+.cmp-sheet .pg{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.cmp-sheet .pg figure{border:.8px solid #d8d1c4;border-radius:6px;overflow:hidden;margin:0}
+.cmp-sheet .pg img{width:100%;height:62mm;object-fit:cover;display:block}
+.cmp-sheet .pg figcaption{font-size:8.3pt;padding:4px 7px;background:#f7f5f1;color:#3d3530}
+</style>
+<script>
+/* ═══════════ COMPLETION REPORT MODULE ═══════════ */
+(function(){
+const CMP_DECL='This is to certify that I have inspected the construction work at site and that the work of {project} belonging to {client} at {site} has been carried out as per the sanctioned plan and drawings issued by this office. The work up to {stage} stage stands satisfactorily completed as on {date}. The overall physical progress of the work is {pct}% and the value of work executed at site is {incurred} against the estimated cost of construction of {cost}. The material and workmanship used are found to be of acceptable quality.';
+
+const CMP_PRESETS={
+ load:[['Excavation and foundation',10],['Plinth / जोत level',12],['Superstructure masonry up to lintel',14],['Lintel level',8],['Roof slab casting',16],['Brickwork and partitions',8],['Internal and external plaster',10],['Flooring and tiling',8],['Plumbing, electrical and joinery',8],['Painting and finishing',6]],
+ rcc:[['Excavation and footing',8],['Columns up to plinth / जोत',10],['Plinth beam and filling',7],['Ground floor slab (first slab)',14],['First floor columns and walls',10],['First floor slab (second slab)',14],['Brickwork and lintels',8],['Internal and external plaster',10],['Flooring, doors and windows',10],['Plumbing, electrical and painting',9]],
+ g2:[['Excavation and footing',7],['Columns up to plinth / जोत',8],['Plinth beam and filling',6],['First slab (stilt / ground)',12],['Second slab',12],['Third slab',12],['Brickwork and lintels',8],['Internal and external plaster',10],['Flooring and tiling',9],['Doors, windows and joinery',6],['Plumbing and electrification',6],['Painting and finishing',4]],
+ apt:[['Excavation, PCC and raft / footing',8],['Columns up to plinth / जोत',7],['Plinth beam and filling',5],['Stilt slab',6],['First floor slab',6],['Second floor slab',6],['Third floor slab',6],['Fourth floor slab',6],['Fifth floor slab',6],['Sixth floor slab',6],['Seventh floor slab',6],['Terrace slab and staircase cabin',5],['Brickwork and block masonry',6],['Internal and external plaster',8],['Flooring, tiling and dado',6],['Plumbing, electrification and lifts',5],['Painting, elevation and finishing',2]]
+};
+const CMP_FIELDS=['type','ref','date','stage','bank','branch','loan','bankaddr','client','proj','site','plot','parea','barea','struct','cc','ccdate','start','end','cost','decl','place','encl'];
+
+let cmpStages=[],cmpPhotos=[],cmpId=null,cmpZoom=.62,cmpDrawn=false;
+
+const q=id=>document.getElementById('cmp-'+id);
+const gv=id=>{const e=q(id);return e?e.value:'';};
+const ce=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cinr=n=>(!n||isNaN(n))?'—':'₹ '+Number(n).toLocaleString('en-IN',{maximumFractionDigits:0});
+const cdmy=d=>{if(!d)return '—';const p=String(d).split('-');return p.length===3?p[2]+'-'+p[1]+'-'+p[0]:d;};
+const ctoday=()=>new Date().toISOString().slice(0,10);
+const cmpAll=()=>{if(!db.compReports)db.compReports=[];return db.compReports;};
+function cmpSave(){try{if(typeof saveAll==='function')saveAll();else saveLocal();}catch(e){try{saveLocal();}catch(e2){}}}
+function cmpToast(m){if(typeof toastOk==='function')return toastOk(m);if(typeof showToast==='function')return showToast(m);console.log(m);}
+
+/* ── main view ── */
+window.renderCompletionView=function(){
+  const box=document.getElementById('cmp-body');
+  if(!box)return;
+  if(cmpDrawn){cmpRender();return;}
+  box.innerHTML=`
+  <div class="sec-head">
+    <div class="sec-title">📋 Completion / Progress Report</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="cmpNew()">New</button>
+      <button class="btn btn-sm" onclick="cmpStore()">Save</button>
+      <button class="btn btn-gold" onclick="cmpPrint()">Print / PDF</button>
+    </div>
+  </div>
+  <div class="cmp-grid">
+    <div>
+      <div class="cmp-card"><h4 onclick="cmpTog(this)">Report details <span class="ar">▾</span></h4><div class="cb">
+        <div class="cmp-f">
+          <div class="fg w"><label>Pick a project (auto-fills details)</label><select id="cmp-pick" onchange="cmpFromProject(this.value)"></select></div>
+          <div class="fg w"><label>Report type</label><select id="cmp-type" onchange="cmpRender()">
+            <option>STAGE COMPLETION CERTIFICATE</option><option>WORK PROGRESS REPORT</option>
+            <option>FINAL COMPLETION CERTIFICATE</option><option>ARCHITECT'S PROGRESS CERTIFICATE</option></select></div>
+          <div class="fg"><label>Reference no.</label><input id="cmp-ref" oninput="cmpRender()"></div>
+          <div class="fg"><label>Date</label><input id="cmp-date" type="date" oninput="cmpRender()"></div>
+          <div class="fg w"><label>Stage being certified (सध्याचा टप्पा)</label><input id="cmp-stage" placeholder="Second slab casting" oninput="cmpRender()"></div>
+        </div></div></div>
+
+      <div class="cmp-card"><h4 onclick="cmpTog(this)">Bank <span class="ar">▾</span></h4><div class="cb">
+        <div class="cmp-f">
+          <div class="fg w"><label>Bank name</label><input id="cmp-bank" placeholder="State Bank of India" oninput="cmpRender()"></div>
+          <div class="fg"><label>Branch</label><input id="cmp-branch" oninput="cmpRender()"></div>
+          <div class="fg"><label>Loan account no.</label><input id="cmp-loan" oninput="cmpRender()"></div>
+          <div class="fg w"><label>Branch address</label><input id="cmp-bankaddr" oninput="cmpRender()"></div>
+        </div></div></div>
+
+      <div class="cmp-card"><h4 onclick="cmpTog(this)">Borrower &amp; project <span class="ar">▾</span></h4><div class="cb">
+        <div class="cmp-f">
+          <div class="fg w"><label>Borrower / owner name</label><input id="cmp-client" oninput="cmpRender()"></div>
+          <div class="fg w"><label>Project name</label><input id="cmp-proj" oninput="cmpRender()"></div>
+          <div class="fg w"><label>Site address</label><input id="cmp-site" oninput="cmpRender()"></div>
+          <div class="fg"><label>Plot / CTS / S. no.</label><input id="cmp-plot" oninput="cmpRender()"></div>
+          <div class="fg"><label>Plot area (sq.m)</label><input id="cmp-parea" oninput="cmpRender()"></div>
+          <div class="fg"><label>Built-up area (sq.ft)</label><input id="cmp-barea" oninput="cmpRender()"></div>
+          <div class="fg"><label>Structure</label><input id="cmp-struct" placeholder="G + 2 RCC framed" oninput="cmpRender()"></div>
+          <div class="fg"><label>Sanction / CC no.</label><input id="cmp-cc" oninput="cmpRender()"></div>
+          <div class="fg"><label>Sanction date</label><input id="cmp-ccdate" type="date" oninput="cmpRender()"></div>
+          <div class="fg"><label>Work commenced</label><input id="cmp-start" type="date" oninput="cmpRender()"></div>
+          <div class="fg"><label>Expected completion</label><input id="cmp-end" type="date" oninput="cmpRender()"></div>
+          <div class="fg w"><label>Estimated cost of construction (₹)</label><input id="cmp-cost" type="number" oninput="cmpRender()"></div>
+        </div></div></div>
+
+      <div class="cmp-card"><h4 onclick="cmpTog(this)">Stages of work <span class="ar">▾</span></h4><div class="cb">
+        <div class="chips">
+          <button class="chip" onclick="cmpPreset('load')">Load-bearing house</button>
+          <button class="chip" onclick="cmpPreset('rcc')">RCC G+1</button>
+          <button class="chip" onclick="cmpPreset('g2')">RCC G+2</button>
+          <button class="chip" onclick="cmpPreset('apt')">Apartment G+7</button>
+        </div>
+        <div id="cmp-stages"></div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn btn-sm" onclick="cmpAddStage()">+ Add stage</button>
+          <button class="btn btn-sm" onclick="cmpMarkUpto()">Mark all up to current ✓</button>
+        </div>
+        <div class="tot"><span>Overall work completed<small id="cmp-wt"></small></span><b id="cmp-tot">0%</b></div>
+        <p class="cmp-hint">Weightage = त्या टप्प्याचा एकूण कामातील वाटा. बेरीज 100 नसेल तरी टक्केवारी आपोआप normalise होते.</p>
+      </div></div>
+
+      <div class="cmp-card cl"><h4 onclick="cmpTog(this)">Certificate wording <span class="ar">▾</span></h4><div class="cb">
+        <div class="cmp-f">
+          <div class="fg w"><label>Declaration paragraph</label><textarea id="cmp-decl" rows="6" oninput="cmpRender()"></textarea></div>
+          <div class="fg w"><p class="cmp-hint">Placeholders: {client} {project} {site} {stage} {pct} {cost} {incurred} {date}</p></div>
+          <div class="fg"><label>Place</label><input id="cmp-place" oninput="cmpRender()"></div>
+          <div class="fg"><label>Enclosures line</label><input id="cmp-encl" oninput="cmpRender()"></div>
+        </div></div></div>
+
+      <div class="cmp-card cl"><h4 onclick="cmpTog(this)">Site photographs <span class="ar">▾</span></h4><div class="cb">
+        <input type="file" accept="image/*" multiple onchange="cmpAddPhotos(this)" style="font-size:12px">
+        <div class="phg" id="cmp-phg"></div>
+        <p class="cmp-hint">4 फोटो एका Annexure पानावर बसतात. फोटो आपोआप compress होतात.</p>
+      </div></div>
+
+      <div class="cmp-card cl"><h4 onclick="cmpTog(this)">Saved reports <span class="ar">▾</span></h4><div class="cb">
+        <div id="cmp-saved"></div>
+      </div></div>
+    </div>
+
+    <div>
+      <div class="pvbar"><span>Preview — A4</span>
+        <button class="btn btn-sm" onclick="cmpZoomBy(-1)">−</button>
+        <button class="btn btn-sm" onclick="cmpZoomBy(1)">+</button>
+        <span id="cmp-zl">62%</span>
+      </div>
+      <div class="pvbox" id="cmp-pv"></div>
+    </div>
+  </div>`;
+  cmpDrawn=true;
+  q('decl').value=CMP_DECL;
+  q('place').value=(officeInfo.addr||'Solapur').split(',').slice(-2)[0]||'Solapur';
+  q('encl').value='Site photographs — Annexure I';
+  q('date').value=ctoday();
+  q('ref').value=cmpNextRef();
+  cmpFillPicker();
+  cmpPreset('rcc');
+  cmpDrawSaved();
+  if(innerWidth<1000)cmpZoom=.4;
+  cmpRender();
+};
+
+function cmpFillPicker(){
+  const s=q('pick');if(!s)return;
+  s.innerHTML='<option value="">— manual entry —</option>'+db.projects.map(p=>{
+    const c=gc(p.clientId);
+    return '<option value="'+p.id+'">'+ce(p.name)+(c?' · '+ce(c.name):'')+'</option>';}).join('');
+}
+window.cmpFromProject=function(pid){
+  if(!pid)return;
+  const p=gp(pid);if(!p)return;
+  const c=gc(p.clientId);
+  q('proj').value=p.name||'';
+  q('site').value=p.address||'';
+  if(c){q('client').value=c.name||'';}
+  if(p.aptFloors)q('struct').value='G + '+p.aptFloors+' RCC framed';
+  cmpRender();cmpToast('Project details filled');
+};
+
+/* ── stages ── */
+window.cmpPreset=function(k){
+  cmpStages=CMP_PRESETS[k].map(s=>({name:s[0],wt:s[1],st:'Not started',pct:0,dt:''}));
+  cmpDrawStages();cmpRender();
+};
+window.cmpAddStage=function(){cmpStages.push({name:'',wt:10,st:'Not started',pct:0,dt:''});cmpDrawStages();cmpRender();};
+window.cmpUpd=function(i,k,v){cmpStages[i][k]=v;cmpRender();};
+window.cmpDelStage=function(i){cmpStages.splice(i,1);cmpDrawStages();cmpRender();};
+window.cmpStatus=function(i,v){
+  const s=cmpStages[i];s.st=v;
+  s.pct=v==='Completed'?100:v==='Not started'?0:(s.pct||50);
+  if(v==='Completed'&&!s.dt)s.dt=ctoday();
+  if(v==='Not started')s.dt='';
+  cmpDrawStages();cmpRender();
+};
+window.cmpMarkUpto=function(){
+  const t=(gv('stage')||'').trim().toLowerCase();
+  if(!t)return alert('आधी "Stage being certified" मध्ये सध्याचा टप्पा लिहा.');
+  const i=cmpStages.findIndex(s=>s.name.toLowerCase().includes(t)||t.includes(s.name.toLowerCase()));
+  if(i<0)return alert('हा टप्पा यादीत सापडला नाही.');
+  cmpStages.forEach((s,j)=>{
+    if(j<=i){s.st='Completed';s.pct=100;if(!s.dt)s.dt=ctoday();}
+    else{s.st='Not started';s.pct=0;s.dt='';}
+  });
+  cmpDrawStages();cmpRender();
+};
+function cmpDrawStages(){
+  const el=document.getElementById('cmp-stages');if(!el)return;
+  el.innerHTML='<div class="srow" style="font-size:9.5px;font-weight:700;color:var(--mut)"><span></span><span>Stage of work</span><span style="text-align:center">Wt %</span><span style="text-align:center">Status</span><span></span></div>'
+   +(cmpStages.map((s,i)=>`<div class="srow">
+      <span class="no">${i+1}</span>
+      <input value="${ce(s.name)}" placeholder="Stage name" oninput="cmpUpd(${i},'name',this.value)">
+      <input type="number" value="${s.wt}" oninput="cmpUpd(${i},'wt',+this.value)">
+      <select onchange="cmpStatus(${i},this.value)">${['Completed','In progress','Not started'].map(o=>`<option ${s.st===o?'selected':''}>${o}</option>`).join('')}</select>
+      <button class="xb" onclick="cmpDelStage(${i})">×</button>
+      ${s.st!=='Not started'?`<div class="sub"><input type="number" value="${s.pct}" placeholder="% done" oninput="cmpUpd(${i},'pct',+this.value)"><input type="date" value="${s.dt}" oninput="cmpUpd(${i},'dt',this.value)"></div>`:''}
+    </div>`).join('')||'<div class="empty-state" style="padding:14px"><p>Pick a preset above</p></div>');
+}
+function cmpProgress(){
+  const tw=cmpStages.reduce((a,s)=>a+(+s.wt||0),0);
+  if(!tw)return 0;
+  return cmpStages.reduce((a,s)=>a+(+s.wt||0)*(+s.pct||0)/100,0)/tw*100;
+}
+
+/* ── photos (compressed) ── */
+window.cmpAddPhotos=function(el){
+  [...el.files].forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const sc=Math.min(1,900/img.width);
+        const cv=document.createElement('canvas');
+        cv.width=img.width*sc;cv.height=img.height*sc;
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        cmpPhotos.push({src:cv.toDataURL('image/jpeg',.62),cap:f.name.replace(/\.[^.]+$/,'')});
+        cmpDrawPhotos();cmpRender();
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(f);
+  });
+  el.value='';
+};
+window.cmpDelPhoto=function(i){cmpPhotos.splice(i,1);cmpDrawPhotos();cmpRender();};
+window.cmpCap=function(i,v){cmpPhotos[i].cap=v;cmpRender();};
+function cmpDrawPhotos(){
+  const el=document.getElementById('cmp-phg');if(!el)return;
+  el.innerHTML=cmpPhotos.map((p,i)=>`<div class="ph"><img src="${p.src}"><button class="xb" onclick="cmpDelPhoto(${i})">×</button>
+    <input value="${ce(p.cap)}" placeholder="Caption" oninput="cmpCap(${i},this.value)"></div>`).join('');
+}
+
+/* ── render document ── */
+function cmpSheets(){
+  const pct=cmpProgress(),cost=+gv('cost')||0,incurred=cost*pct/100;
+  const tw=cmpStages.reduce((a,s)=>a+(+s.wt||0),0)||1;
+  const logo=officeInfo.logo||'';
+  const oname=officeInfo.name||'Greenhouse Studio';
+  const oarch=officeInfo.arch||'Vijay Edke';
+  const oaddr=officeInfo.addr||'497, Sakhar Peth, Solapur';
+  const sig=localStorage.getItem('gs_signature')||'';
+  const fill=t=>t.replace(/{client}/g,gv('client')||'the owner').replace(/{project}/g,gv('proj')||'the said building')
+    .replace(/{site}/g,gv('site')||'the site').replace(/{stage}/g,gv('stage')||'the certified')
+    .replace(/{pct}/g,pct.toFixed(1)).replace(/{cost}/g,cinr(cost)).replace(/{incurred}/g,cinr(incurred))
+    .replace(/{date}/g,cdmy(gv('date')));
+
+  const head=`<div class="lh">${logo?`<img src="${logo}" alt="">`:''}
+      <div><div class="n">${ce(oname)}</div><div class="a">Architect: ${ce(oarch)}</div></div>
+      <div class="r"><b>${ce(oaddr.split(',')[0])}</b>${ce(oaddr.split(',').slice(1).join(','))}
+      ${officeInfo.phone?'<br>Ph: '+ce(officeInfo.phone):''}${officeInfo.email?'<br>'+ce(officeInfo.email):''}</div>
+    </div><div class="rl"></div><div class="rl2"></div>`;
+  const foot=n=>`<div class="ft"><span>${ce(oname)} · ${ce(gv('ref'))}</span><span>Page ${n}</span></div>`;
+  const signBlk=`<div class="sg"><div class="l">Place: ${ce(gv('place')||'Solapur')}<br>Date: ${cdmy(gv('date'))}</div>
+    <div class="s">${sig?`<img src="${sig}">`:'<div class="sp"></div>'}<div class="ln">${ce(oarch)}</div>
+    <small>For ${ce(oname)}</small></div></div>`;
+
+  const rows=cmpStages.map((s,i)=>`<tr><td class="c">${i+1}</td><td>${ce(s.name)}</td><td class="c">${s.wt||0}</td>
+    <td class="c"><span class="st ${s.st==='Completed'?'d':s.st==='In progress'?'p':'n'}">${s.st}</span></td>
+    <td class="c">${s.pct||0}%</td><td class="c">${cdmy(s.dt)}</td>
+    <td class="rt">${cost?cinr(cost*(s.wt||0)/tw*(s.pct||0)/100):'—'}</td></tr>`).join('');
+
+  const p1=`<div class="cmp-sheet">${head}
+    <div class="dt"><h3>${ce(gv('type'))}</h3><i></i></div>
+    <div class="mt"><span>Ref. no.: <b>${ce(gv('ref'))||'—'}</b></span><span>Date: <b>${cdmy(gv('date'))}</b></span></div>
+    <div class="to">To,\n<b>The Branch Manager</b>\n${ce(gv('bank'))||'—'}${gv('branch')?', '+ce(gv('branch'))+' Branch':''}\n${ce(gv('bankaddr'))}</div>
+    <div class="sj"><b>Subject:</b> ${ce(gv('type').toLowerCase())} in respect of the construction of <b>${ce(gv('client'))||'—'}</b>${gv('loan')?' — Loan A/c no. <b>'+ce(gv('loan'))+'</b>':''}</div>
+    <div class="pr">Respected Sir / Madam,</div>
+    <table class="kv">
+      <tr><td>Borrower / owner</td><td>${ce(gv('client'))||'—'}</td></tr>
+      <tr><td>Name of project</td><td>${ce(gv('proj'))||'—'}</td></tr>
+      <tr><td>Location of site</td><td>${ce(gv('site'))||'—'}</td></tr>
+      <tr><td>Plot / CTS / Survey no.</td><td>${ce(gv('plot'))||'—'}</td></tr>
+      <tr><td>Plot area / built-up area</td><td>${ce(gv('parea'))||'—'} sq.m &nbsp;/&nbsp; ${ce(gv('barea'))||'—'} sq.ft</td></tr>
+      <tr><td>Nature of structure</td><td>${ce(gv('struct'))||'—'}</td></tr>
+      <tr><td>Sanctioned plan / CC no.</td><td>${ce(gv('cc'))||'—'}${gv('ccdate')?' dated '+cdmy(gv('ccdate')):''}</td></tr>
+      <tr><td>Commenced / expected completion</td><td>${cdmy(gv('start'))} &nbsp;to&nbsp; ${cdmy(gv('end'))}</td></tr>
+      <tr><td>Estimated cost of construction</td><td>${cinr(cost)}</td></tr>
+    </table>
+    <table class="t">
+      <thead><tr><th class="c" style="width:7%">Sr.</th><th>Stage of work</th><th class="c" style="width:8%">Wt %</th>
+      <th class="c" style="width:15%">Status</th><th class="c" style="width:9%">Done</th><th class="c" style="width:14%">Completed on</th><th class="rt" style="width:16%">Value (₹)</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="7" class="c">No stages added</td></tr>'}</tbody>
+      <tfoot><tr><td colspan="4">Total</td><td class="c">${pct.toFixed(1)}%</td><td></td><td class="rt">${cinr(incurred)}</td></tr></tfoot>
+    </table>
+    <div class="sb"><div><span>Work completed</span><b>${pct.toFixed(1)}%</b></div>
+      <div><span>Value of work executed</span><b>${cinr(incurred)}</b></div>
+      <div><span>Balance work value</span><b>${cinr(cost-incurred)}</b></div></div>
+    <div class="pr">${ce(fill(gv('decl')))}</div>
+    ${cmpPhotos.length?`<div class="pr" style="margin-bottom:2px"><b>Enclosed:</b> ${ce(gv('encl')||'Site photographs — Annexure I')}</div>`:''}
+    ${signBlk}${foot(cmpPhotos.length?'1 of 2':'1 of 1')}</div>`;
+
+  const p2=cmpPhotos.length?`<div class="cmp-sheet">${head}
+    <div class="dt"><h3>ANNEXURE I — SITE PHOTOGRAPHS</h3><i></i></div>
+    <div class="mt"><span>${ce(gv('proj'))||'—'}</span><span>${ce(gv('stage'))} · ${cdmy(gv('date'))}</span></div>
+    <div class="pg">${cmpPhotos.slice(0,4).map(p=>`<figure><img src="${p.src}"><figcaption>${ce(p.cap)}</figcaption></figure>`).join('')}</div>
+    ${signBlk}${foot('2 of 2')}</div>`:'';
+  return {html:p1+p2,pct:pct,incurred:incurred};
+}
+window.cmpRender=function(){
+  if(!cmpDrawn)return;
+  const r=cmpSheets();
+  const pv=document.getElementById('cmp-pv');if(pv)pv.innerHTML=r.html;
+  const t=document.getElementById('cmp-tot');if(t)t.textContent=r.pct.toFixed(1)+'%';
+  const tw=cmpStages.reduce((a,s)=>a+(+s.wt||0),0);
+  const w=document.getElementById('cmp-wt');if(w)w.textContent=cmpStages.length?'weightage total '+tw+(tw===100?'':' — normalised'):'';
+  cmpApplyZoom();
+};
+function cmpApplyZoom(){
+  document.querySelectorAll('#cmp-pv .cmp-sheet').forEach(s=>{
+    s.style.transform='scale('+cmpZoom+')';
+    s.style.marginBottom='calc(-297mm * '+(1-cmpZoom)+' + 14px)';});
+  const z=document.getElementById('cmp-zl');if(z)z.textContent=Math.round(cmpZoom*100)+'%';
+}
+window.cmpZoomBy=function(d){cmpZoom=Math.min(1.1,Math.max(.3,cmpZoom+d*.08));cmpApplyZoom();};
+window.cmpTog=function(h){h.parentElement.classList.toggle('cl');};
+
+/* ── print in a clean window ── */
+window.cmpPrint=function(){
+  const css=[...document.querySelectorAll('style')].map(s=>s.textContent).filter(t=>t.indexOf('.cmp-sheet')>-1).join('\n');
+  const w=window.open('','_blank');
+  if(!w)return alert('Pop-up blocked — allow pop-ups to print.');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${gv('ref')||'Completion Report'}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+  <style>${css}
+  body{margin:0;background:#fff;font-family:'Plus Jakarta Sans','Noto Sans Devanagari',sans-serif}
+  .cmp-sheet{box-shadow:none;margin:0 auto;transform:none!important}
+  @page{size:A4;margin:0}
+  @media print{.cmp-sheet{page-break-after:always}.cmp-sheet:last-child{page-break-after:auto}}
+  </style></head><body>${cmpSheets().html}</body></html>`);
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},700);
+};
+
+/* ── save / load ── */
+function cmpNextRef(){
+  const d=new Date(),fy=d.getMonth()>2?d.getFullYear():d.getFullYear()-1;
+  return 'GS/CC/'+fy+'-'+String(fy+1).slice(2)+'/'+String(cmpAll().length+1).padStart(3,'0');
+}
+window.cmpNew=function(){
+  cmpId=null;CMP_FIELDS.forEach(f=>{if(q(f))q(f).value='';});
+  q('type').selectedIndex=0;q('date').value=ctoday();q('ref').value=cmpNextRef();
+  q('decl').value=CMP_DECL;q('place').value='Solapur';q('encl').value='Site photographs — Annexure I';
+  q('pick').value='';cmpStages=[];cmpPhotos=[];
+  cmpDrawStages();cmpDrawPhotos();cmpRender();
+};
+window.cmpStore=function(){
+  const o={id:cmpId||('CR-'+Date.now()),stages:cmpStages,photos:cmpPhotos,saved:new Date().toISOString()};
+  CMP_FIELDS.forEach(f=>o[f]=gv(f));
+  cmpId=o.id;
+  const a=cmpAll(),i=a.findIndex(r=>r.id===o.id);
+  i<0?a.unshift(o):a[i]=o;
+  db.activities.unshift({text:'Completion report — '+(o.client||o.proj||''),sub:(o.stage||o.type)+' · '+cdmy(o.date),time:'Just now',color:'#2c5f8a'});
+  cmpSave();cmpDrawSaved();cmpToast('Report saved');
+};
+window.cmpLoad=function(id){
+  const r=cmpAll().find(x=>x.id===id);if(!r)return;
+  CMP_FIELDS.forEach(f=>{if(q(f))q(f).value=r[f]||'';});
+  cmpStages=r.stages||[];cmpPhotos=r.photos||[];cmpId=r.id;
+  cmpDrawStages();cmpDrawPhotos();cmpRender();cmpToast('Report loaded');
+};
+window.cmpCopy=function(id){cmpLoad(id);cmpId=null;q('ref').value=cmpNextRef();q('date').value=ctoday();cmpRender();cmpToast('Copy created — save when ready');};
+window.cmpDel=function(id){
+  if(!confirm('Delete this report?'))return;
+  db.compReports=cmpAll().filter(r=>r.id!==id);cmpSave();cmpDrawSaved();
+};
+function cmpDrawSaved(){
+  const el=document.getElementById('cmp-saved');if(!el)return;
+  const a=cmpAll();
+  el.innerHTML=a.length?a.map(r=>`<div class="sv"><div class="m"><b>${ce(r.client||r.proj||'Untitled')}</b>
+    <small>${ce(r.stage||r.type)} · ${cdmy(r.date)}</small></div>
+    <button class="btn btn-sm" onclick="cmpLoad('${r.id}')">Open</button>
+    <button class="btn btn-sm" onclick="cmpCopy('${r.id}')">Copy</button>
+    <button class="btn btn-sm" onclick="cmpDel('${r.id}')">×</button></div>`).join('')
+    :'<div class="empty-state" style="padding:14px"><p>No saved reports yet</p></div>';
+}
+if(typeof VIEW_TITLES==='object')VIEW_TITLES.completion='📋 Completion Report';
+})();
+</script>
+
 </body>
 </html>
 <!-- ████████████████████████████████████████████████████
