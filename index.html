@@ -12141,15 +12141,26 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.completion='📋 Completion Report'
 #est-body .sechd input.nm{flex:1;min-width:0;font-weight:700;font-size:12.5px;padding:5px 7px;border:1px solid var(--bdr2);border-radius:7px;background:var(--surf);color:var(--ink);font-family:inherit}
 #est-body .sechd input.ar{width:74px;font-size:11.5px;padding:5px 6px;border:1px solid var(--bdr2);border-radius:7px;background:var(--surf);color:var(--ink);font-family:inherit;text-align:right}
 #est-body .sechd label{font-size:10px;color:var(--mut);display:flex;align-items:center;gap:4px;white-space:nowrap;cursor:pointer}
-#est-body .irow{display:grid;grid-template-columns:22px 1fr 62px 58px 66px 78px 24px;gap:4px;align-items:start;margin-bottom:5px}
-#est-body .irow .no{font-size:10.5px;color:var(--mut);text-align:center;font-weight:700;padding-top:6px}
-#est-body .irow textarea,#est-body .irow input,#est-body .irow select{font-size:11px;padding:5px 6px;border:1px solid var(--bdr2);border-radius:7px;background:var(--surf2);color:var(--ink);width:100%;font-family:inherit}
-#est-body .irow textarea{min-height:32px;line-height:1.4}
-#est-body .irow .amt{padding-top:6px;font-size:11px;font-weight:700;text-align:right;color:var(--ink2);overflow:hidden;text-overflow:ellipsis}
-#est-body .irow .xb{border:0;background:transparent;color:var(--bdr2);cursor:pointer;font-size:15px;padding:3px}
+/* item row — description gets its own full-width line so it stays readable
+   in the narrow left panel; unit/qty/rate wrap underneath it */
+#est-body .irow{display:grid;grid-template-columns:24px minmax(0,1fr);gap:5px;align-items:start;
+  margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--bdr)}
+#est-body .irow .no{font-size:10.5px;color:var(--mut);text-align:center;font-weight:700;padding-top:7px}
+#est-body .irow textarea,#est-body .irow input,#est-body .irow select{font-size:11.5px;padding:5px 7px;
+  border:1px solid var(--bdr2);border-radius:7px;background:var(--surf2);color:var(--ink);font-family:inherit;width:100%}
+#est-body .irow textarea{min-height:52px;line-height:1.45;resize:vertical}
+#est-body .irow .meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:center;margin-top:5px}
+#est-body .irow .meta select.lib{grid-column:1/-1}
+#est-body .irow .meta input.q,#est-body .irow .meta input.r{text-align:right}
+#est-body .irow .meta .tail{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:9px;margin-top:1px}
+#est-body .irow .meta .amt{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+#est-body .irow .xb{border:0;background:transparent;color:var(--bdr2);cursor:pointer;font-size:16px;padding:0 2px;width:auto;flex:0 0 auto;line-height:1}
 #est-body .irow .xb:hover{color:var(--red)}
-#est-body .ihead{display:grid;grid-template-columns:22px 1fr 62px 58px 66px 78px 24px;gap:4px;font-size:9.5px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;padding:0 2px}
-#est-body .ihead span:nth-child(6){text-align:right}
+#est-body .exrow{display:grid;grid-template-columns:minmax(0,1fr) 58px 86px 24px;gap:5px;align-items:center;margin-bottom:6px}
+#est-body .exrow input{font-size:11.5px;padding:5px 7px;border:1px solid var(--bdr2);border-radius:7px;background:var(--surf2);color:var(--ink);font-family:inherit;width:100%}
+#est-body .exrow .amt{font-size:11.5px;font-weight:700;text-align:right;color:var(--ink2);white-space:nowrap}
+#est-body .exrow .xb{border:0;background:transparent;color:var(--bdr2);cursor:pointer;font-size:16px;padding:0}
+#est-body .exrow .xb:hover{color:var(--red)}
 #est-body .secfoot{display:flex;justify-content:space-between;align-items:center;gap:7px;margin:6px 0 14px;padding:7px 10px;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;font-size:11.5px;font-weight:700}
 #est-body .chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}
 #est-body .chip{border:1px solid var(--bdr2);background:var(--surf2);border-radius:18px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit}
@@ -12438,17 +12449,20 @@ function estDrawSecs(){
       <label><input type="checkbox" ${s.bldg?'checked':''} onchange="estSecUpd(${si},'bldg',this.checked)" style="width:13px;height:13px;margin:0">In building total</label>
       <button class="xb" style="border:0;background:transparent;color:var(--bdr2);cursor:pointer;font-size:16px" onclick="estDelSec(${si})">×</button>
     </div>
-    <div class="ihead"><span></span><span>Description</span><span>Unit</span><span>Qty</span><span>Rate</span><span>Amount</span><span></span></div>
     ${s.items.map((it,i)=>`
       <div class="irow">
         <div class="no">${i+1}</div>
-        <div><textarea rows="2" oninput="estItemUpd(${si},${i},'d',this.value)" placeholder="Item description">${ece(it.d)}</textarea>
-          <select style="margin-top:3px" onchange="estPickLib(${si},${i},this.value);this.value=''">${estLibOpts()}</select></div>
-        <select onchange="estItemUpd(${si},${i},'u',this.value)">${EST_UNITS.map(u=>'<option'+(u===it.u?' selected':'')+'>'+u+'</option>').join('')}</select>
-        <input value="${ece(it.q)}" placeholder="qty" oninput="estItemUpd(${si},${i},'q',this.value)">
-        <input value="${ece(it.r)}" placeholder="rate" oninput="estItemUpd(${si},${i},'r',this.value)">
-        <div class="amt" id="est-amt-${si}-${i}">${e2(estAmt(it))}</div>
-        <button class="xb" onclick="estDelItem(${si},${i})">×</button>
+        <div>
+          <textarea rows="3" oninput="estItemUpd(${si},${i},'d',this.value)" placeholder="Item description">${ece(it.d)}</textarea>
+          <div class="meta">
+            <select class="lib" onchange="estPickLib(${si},${i},this.value);this.value=''">${estLibOpts()}</select>
+            <select class="u" title="Unit" onchange="estItemUpd(${si},${i},'u',this.value)">${EST_UNITS.map(u=>'<option'+(u===it.u?' selected':'')+'>'+u+'</option>').join('')}</select>
+            <input class="q" value="${ece(it.q)}" placeholder="qty" title="Quantity" oninput="estItemUpd(${si},${i},'q',this.value)">
+            <input class="r" value="${ece(it.r)}" placeholder="rate" title="Rate" oninput="estItemUpd(${si},${i},'r',this.value)">
+            <div class="tail"><span class="amt" id="est-amt-${si}-${i}">${e2(estAmt(it))}</span>
+              <button class="xb" title="Remove item" onclick="estDelItem(${si},${i})">×</button></div>
+          </div>
+        </div>
       </div>`).join('')}
     <div class="secfoot"><button class="btn btn-sm" onclick="estAddItem(${si})">+ Item</button>
       <span>Section total <span id="est-st-${si}">₹ ${e2(estSecTotal(s))}</span></span></div>`).join('');
@@ -12460,9 +12474,9 @@ window.estDelEx=function(i){estEx.splice(i,1);estDrawEx();estRender();};
 window.estExUpd=function(i,k,v){estEx[i][k]=v;estRender();};
 function estDrawEx(){
   const el=document.getElementById('est-ex');if(!el)return;
-  el.innerHTML=estEx.map((x,i)=>`<div class="irow" style="grid-template-columns:1fr 62px 90px 24px">
+  el.innerHTML=estEx.map((x,i)=>`<div class="exrow">
     <input value="${ece(x.name)}" placeholder="Electrification (4%)" oninput="estExUpd(${i},'name',this.value)">
-    <input value="${ece(x.pct)}" placeholder="%" oninput="estExUpd(${i},'pct',this.value)">
+    <input value="${ece(x.pct)}" placeholder="%" style="text-align:right" oninput="estExUpd(${i},'pct',this.value)">
     <div class="amt" id="est-ex-${i}">—</div>
     <button class="xb" onclick="estDelEx(${i})">×</button></div>`).join('');
 }
