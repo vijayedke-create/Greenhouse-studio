@@ -3165,6 +3165,7 @@ function openPD(pid){
         <div class="kpi-lbl">Payment History</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
           <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openModal('m-pay')">+ Payment</button>
+          <button class="btn btn-s btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="closeModal('m-pd');openProjAgreement('${pid}')">📜 Agreement</button>
           <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openFileManager('${pid}')">📁 Files</button>
           <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openSiteVisitModal('${pid}')">🏗️ Site Visit</button>
               <button class="btn btn-s btn-sm" style="color:var(--orange);border-color:var(--orange)" onclick="closeModal('m-pd');siteVisitPDF('${pid}')">📄 Visit Report</button>
@@ -6871,6 +6872,9 @@ function renderAgreementView(){
         </div>
       </div>
 
+      <button onclick="agrSaveToProject()" style="width:100%;padding:13px;background:var(--surf2);color:var(--grn);border:2px solid var(--grn);border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:9px">
+        💾 Project च्या Agreement मध्ये Save करा
+      </button>
       <button onclick="agrGeneratePDF()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--grn),var(--grn2));color:#fff;border:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
         📄 Generate Agreement PDF
       </button>
@@ -9764,6 +9768,409 @@ function fmShowGuide(){
 }
 
 // ════════════════════════════════════════════════
+// 📜 PROJECT AGREEMENT MODULE
+// प्रत्येक project ला एक live agreement —
+// Scope (काय करायचं / काय नाही) + Payment टप्पे
+// + Documents list + Drawing list + Files
+// Client portal मध्ये read-only दिसतं
+// ════════════════════════════════════════════════
+let agpPid = null;
+
+const AGP_DOC_PRESETS = [
+  '7/12 उतारा', 'Property Card', 'Sale Deed / खरेदीखत', 'NA Order',
+  'Layout Approval', 'Sanad', 'Aadhaar Card (Owner)', 'PAN Card (Owner)',
+  'Survey / Measurement Sheet', 'Soil Test Report', 'NOC — Fire',
+  'NOC — Environment', 'Old Sanctioned Plan', 'Site Photographs'
+];
+
+const AGP_DRAW_PRESETS = [
+  'Site Plan', 'Ground Floor Plan', 'First Floor Plan', 'Typical Floor Plan',
+  'Terrace Plan', 'Elevation', 'Section', '3D View / Render',
+  'Working Drawing', 'Door-Window Schedule', 'Electrical Layout',
+  'Plumbing Layout', 'Structural Drawing', 'Centre Line Plan',
+  'Furniture Layout', 'Submission Drawing (BP)'
+];
+
+function agpEnsure(p) {
+  if (!p) return null;
+  if (!p.agreement) {
+    p.agreement = {
+      status: 'draft', date: '', total: p.total || 0, gst: 0,
+      scopeIn: [], scopeOut: [], stages: [], docs: [], draws: [], terms: ''
+    };
+  }
+  const a = p.agreement;
+  ['scopeIn', 'scopeOut', 'stages', 'docs', 'draws'].forEach(k => { if (!Array.isArray(a[k])) a[k] = []; });
+  if (!p.files) p.files = [];
+  return a;
+}
+
+function agpProj() { return gp(agpPid); }
+
+function openProjAgreement(pid) {
+  agpPid = pid;
+  const p = gp(pid); if (!p) return;
+  const a = agpEnsure(p);
+  // First time — seed from project data
+  if (!a.scopeIn.length && (p.services || []).length) a.scopeIn = [...p.services];
+  if (!a.total) a.total = p.total || 0;
+  const t = document.getElementById('agp-title');
+  if (t) t.textContent = '📜 ' + p.name + ' — Agreement';
+  agpRender();
+  openModal('m-agp');
+}
+
+function agpFmt(n) { return Number(n || 0).toLocaleString('en-IN'); }
+
+function agpTotalWithGst() {
+  const a = agpEnsure(agpProj()); if (!a) return 0;
+  return Number(a.total || 0) * (1 + Number(a.gst || 0) / 100);
+}
+
+// ── FILE PICKER (project च्या files मधून) ──
+function agpFileOpts(selected) {
+  const p = agpProj(); if (!p) return '';
+  const files = p.files || [];
+  return '<option value="">— File जोडलेली नाही —</option>' +
+    files.map(f => `<option value="${f.id}" ${f.id === selected ? 'selected' : ''}>${(f.name || '').replace(/"/g, '')}</option>`).join('');
+}
+
+function agpFindFile(fid) {
+  const p = agpProj(); if (!p || !fid) return null;
+  return (p.files || []).find(f => f.id === fid) || null;
+}
+
+// ══ RENDER ══
+function agpRender() {
+  const el = document.getElementById('agp-body');
+  const p = agpProj(); if (!el || !p) return;
+  const a = agpEnsure(p);
+  const twg = agpTotalWithGst();
+  const pctSum = a.stages.reduce((s, r) => s + Number(r.pct || 0), 0);
+  const stageDone = a.stages.filter(s => s.status === 'done').length;
+  const docsGot = a.docs.filter(d => d.status === 'received').length;
+  const drawDone = a.draws.filter(d => d.status === 'delivered').length;
+
+  el.innerHTML = `
+  <!-- HEADER STRIP -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+    <span style="font-size:11px;padding:4px 12px;border-radius:20px;font-weight:700;background:${a.status === 'signed' ? '#e8f4ee' : '#fff4e0'};color:${a.status === 'signed' ? 'var(--rgreen)' : 'var(--orange)'}">
+      ${a.status === 'signed' ? '✅ Signed' : '📝 Draft'}
+    </span>
+    <span style="font-size:11px;color:var(--mut)">टप्पे ${stageDone}/${a.stages.length} · Docs ${docsGot}/${a.docs.length} · Drawings ${drawDone}/${a.draws.length}</span>
+    <div style="flex:1"></div>
+    <button onclick="agpToggleSigned()" style="font-size:11px;padding:5px 12px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf2);cursor:pointer;color:var(--mut)">
+      ${a.status === 'signed' ? '↩ Draft करा' : '✍️ Signed मार्क करा'}
+    </button>
+  </div>
+
+  <!-- BASIC -->
+  <div class="form-row c3">
+    <div class="fg"><label>Agreement Date</label><input class="fi" type="date" id="agp-date" value="${a.date || ''}" onchange="agpSetField('date',this.value)"></div>
+    <div class="fg"><label>Total Fee (Rs.)</label><input class="fi" type="number" id="agp-total" value="${a.total || ''}" oninput="agpSetField('total',this.value)"></div>
+    <div class="fg"><label>GST %</label><input class="fi" type="number" id="agp-gst" value="${a.gst || 0}" oninput="agpSetField('gst',this.value)"></div>
+  </div>
+  <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:9px 12px;margin-bottom:16px;font-size:12px">
+    एकूण (GST सह): <b style="font-family:'JetBrains Mono',monospace;color:var(--grn)">₹${agpFmt(Math.round(twg))}</b>
+  </div>
+
+  <!-- SCOPE IN -->
+  ${agpListBlock('scopeIn', '✅ काय काम करायचं (Scope Included)', 'var(--rgreen)', 'उदा. Ground Floor Plan, 3D Elevation...')}
+
+  <!-- SCOPE OUT -->
+  ${agpListBlock('scopeOut', '🚫 काय काम करायचं नाही (Excluded)', 'var(--red)', 'उदा. Structural design, Interior, Govt fees...')}
+
+  <!-- PAYMENT STAGES -->
+  <div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue)">💰 Payment टप्पे</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button onclick="agpStagePreset('arch')" style="font-size:10px;padding:4px 9px;border-radius:7px;border:1px solid var(--bdr);background:var(--surf2);cursor:pointer;color:var(--mut)">🏛 Standard 5</button>
+        <button onclick="agpStagePreset('simple')" style="font-size:10px;padding:4px 9px;border-radius:7px;border:1px solid var(--bdr);background:var(--surf2);cursor:pointer;color:var(--mut)">📋 Simple 3</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${a.stages.length ? a.stages.map((s, i) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${s.status === 'done' ? '#e8f4ee' : 'var(--surf2)'};border:1px solid var(--bdr);border-radius:9px;flex-wrap:wrap">
+          <button onclick="agpStageToggle(${i})" style="background:none;border:none;font-size:16px;cursor:pointer;padding:0" title="Paid/Pending">${s.status === 'done' ? '✅' : '⬜'}</button>
+          <input value="${(s.label || '').replace(/"/g, '&quot;')}" oninput="agpStageSet(${i},'label',this.value)" style="flex:1;min-width:130px;border:none;background:transparent;font-size:12px;font-weight:600;color:var(--ink);outline:none">
+          <input type="number" value="${s.pct || 0}" oninput="agpStageSet(${i},'pct',this.value)" style="width:52px;border:1px solid var(--bdr);border-radius:6px;background:var(--surf);font-size:11px;padding:3px 5px;text-align:right;color:var(--ink)">
+          <span style="font-size:11px;color:var(--mut)">%</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--grn);white-space:nowrap">₹${agpFmt(Math.round(twg * (s.pct || 0) / 100))}</span>
+          <button onclick="agpStageDel(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">✕</button>
+        </div>`).join('') : '<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px">टप्पे नाहीत — वरचे preset वापरा किंवा खाली जोडा</div>'}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:9px">
+      <input class="fi" id="agp-st-label" placeholder="टप्पा नाव" style="flex:1">
+      <input class="fi" id="agp-st-pct" type="number" placeholder="%" style="width:72px">
+      <button onclick="agpStageAdd()" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer">+</button>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:${Math.abs(pctSum - 100) < 0.01 ? 'var(--rgreen)' : 'var(--orange)'};font-weight:700">
+      एकूण: ${pctSum}% ${Math.abs(pctSum - 100) < 0.01 ? '✓' : '⚠ 100% असावं'}
+    </div>
+  </div>
+
+  <!-- DOCUMENTS LIST -->
+  <div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+      <div style="font-size:12px;font-weight:700;color:var(--orange)">📄 Documents List (Client कडून हवी कागदपत्रं)</div>
+      <button onclick="agpAddPresets('docs')" style="font-size:10px;padding:4px 9px;border-radius:7px;border:1px solid var(--bdr);background:var(--surf2);cursor:pointer;color:var(--mut)">⚡ Standard list</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${a.docs.length ? a.docs.map((d, i) => agpRowHtml('docs', d, i)).join('') : '<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px">List रिकामी आहे</div>'}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:9px">
+      <input class="fi" id="agp-doc-name" placeholder="Document नाव" style="flex:1" list="agp-doc-dl">
+      <datalist id="agp-doc-dl">${AGP_DOC_PRESETS.map(x => `<option value="${x}">`).join('')}</datalist>
+      <button onclick="agpItemAdd('docs')" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer">+</button>
+    </div>
+  </div>
+
+  <!-- DRAWINGS LIST -->
+  <div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+      <div style="font-size:12px;font-weight:700;color:var(--grn)">📐 Drawing List (आपण द्यायची drawings)</div>
+      <button onclick="agpAddPresets('draws')" style="font-size:10px;padding:4px 9px;border-radius:7px;border:1px solid var(--bdr);background:var(--surf2);cursor:pointer;color:var(--mut)">⚡ Standard list</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${a.draws.length ? a.draws.map((d, i) => agpRowHtml('draws', d, i)).join('') : '<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px">List रिकामी आहे</div>'}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:9px">
+      <input class="fi" id="agp-draw-name" placeholder="Drawing नाव" style="flex:1" list="agp-draw-dl">
+      <datalist id="agp-draw-dl">${AGP_DRAW_PRESETS.map(x => `<option value="${x}">`).join('')}</datalist>
+      <button onclick="agpItemAdd('draws')" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer">+</button>
+    </div>
+    <div style="margin-top:9px;font-size:11px;color:var(--mut);background:var(--surf2);border-radius:8px;padding:8px 10px;line-height:1.6">
+      💡 File जोडण्यासाठी आधी <b>📁 Files</b> मध्ये Drive link add करा — मग इथे dropdown मधून select करा.
+      <button onclick="closeModal('m-agp');openFileManager('${p.id}')" style="margin-left:6px;background:var(--grn);color:#fff;border:none;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer">📁 Files उघडा</button>
+    </div>
+  </div>
+
+  <!-- TERMS -->
+  <div class="fg" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+      <label style="margin:0">📋 Terms & Conditions</label>
+      <button onclick="agpDefaultTerms()" style="font-size:10px;padding:3px 9px;border-radius:7px;border:1px solid var(--bdr);background:var(--surf2);cursor:pointer;color:var(--mut)">Load Defaults</button>
+    </div>
+    <textarea class="fi fi-ta" id="agp-terms" rows="6" style="font-size:12px;line-height:1.7" oninput="agpSetField('terms',this.value)">${a.terms || ''}</textarea>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button onclick="agpToGenerator()" style="flex:1;min-width:150px;background:var(--grn);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">📄 Generator मध्ये उघडा (PDF)</button>
+    <button onclick="closeModal('m-agp')" style="flex:1;min-width:110px;background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:10px;padding:12px;font-size:13px;cursor:pointer">Close</button>
+  </div>`;
+}
+
+// ── Scope list block (scopeIn / scopeOut) ──
+function agpListBlock(key, title, color, ph) {
+  const a = agpEnsure(agpProj());
+  const arr = a[key];
+  return `<div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:16px">
+    <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:10px">${title}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px">
+      ${arr.length ? arr.map((s, i) => `
+        <span style="display:inline-flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--bdr);border-radius:20px;padding:5px 11px;font-size:12px">
+          ${s}<button onclick="agpScopeDel('${key}',${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0">✕</button>
+        </span>`).join('') : `<span style="font-size:12px;color:var(--mut)">काही नाही</span>`}
+    </div>
+    <div style="display:flex;gap:6px">
+      <input class="fi" id="agp-in-${key}" placeholder="${ph}" style="flex:1" onkeydown="if(event.key==='Enter')agpScopeAdd('${key}')">
+      <button onclick="agpScopeAdd('${key}')" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer">+</button>
+    </div>
+  </div>`;
+}
+
+// ── Doc / Drawing row ──
+function agpRowHtml(key, d, i) {
+  const isDoc = key === 'docs';
+  const states = isDoc
+    ? [['pending', '⬜ बाकी'], ['received', '✅ मिळालं']]
+    : [['pending', '⬜ बाकी'], ['progress', '🔄 चालू'], ['delivered', '✅ दिलं']];
+  const okState = isDoc ? 'received' : 'delivered';
+  const bg = d.status === okState ? '#e8f4ee' : (d.status === 'progress' ? '#fff8e6' : 'var(--surf2)');
+  return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${bg};border:1px solid var(--bdr);border-radius:9px;flex-wrap:wrap">
+    <input value="${(d.name || '').replace(/"/g, '&quot;')}" oninput="agpItemSet('${key}',${i},'name',this.value)" style="flex:1;min-width:120px;border:none;background:transparent;font-size:12px;font-weight:600;color:var(--ink);outline:none">
+    <select onchange="agpItemSet('${key}',${i},'status',this.value)" style="border:1px solid var(--bdr);border-radius:6px;background:var(--surf);font-size:11px;padding:3px 5px;color:var(--ink)">
+      ${states.map(([v, l]) => `<option value="${v}" ${d.status === v ? 'selected' : ''}>${l}</option>`).join('')}
+    </select>
+    <select onchange="agpItemSet('${key}',${i},'fileId',this.value)" style="border:1px solid var(--bdr);border-radius:6px;background:var(--surf);font-size:11px;padding:3px 5px;max-width:150px;color:var(--ink)">
+      ${agpFileOpts(d.fileId)}
+    </select>
+    <button onclick="agpItemDel('${key}',${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">✕</button>
+  </div>`;
+}
+
+// ══ ACTIONS ══
+function agpSave() { saveAll(); }
+
+function agpSetField(k, v) {
+  const a = agpEnsure(agpProj()); if (!a) return;
+  a[k] = (k === 'total' || k === 'gst') ? (parseFloat(v) || 0) : v;
+  agpSave();
+  if (k === 'total' || k === 'gst') agpRender();
+}
+
+function agpToggleSigned() {
+  const a = agpEnsure(agpProj()); if (!a) return;
+  a.status = a.status === 'signed' ? 'draft' : 'signed';
+  if (a.status === 'signed' && !a.date) a.date = new Date().toISOString().split('T')[0];
+  agpSave(); agpRender();
+  showOk(a.status === 'signed' ? '✅ Agreement signed म्हणून मार्क झालं' : '📝 Draft मध्ये परत गेलं');
+}
+
+function agpScopeAdd(key) {
+  const inp = document.getElementById('agp-in-' + key);
+  const v = (inp?.value || '').trim(); if (!v) return;
+  const a = agpEnsure(agpProj());
+  if (!a[key].includes(v)) a[key].push(v);
+  agpSave(); agpRender();
+}
+
+function agpScopeDel(key, i) {
+  const a = agpEnsure(agpProj());
+  a[key].splice(i, 1); agpSave(); agpRender();
+}
+
+function agpStagePreset(type) {
+  const a = agpEnsure(agpProj());
+  if (type === 'arch') a.stages = [
+    { label: 'Agreement signing वर', pct: 20, status: 'pending' },
+    { label: 'Concept Design submit', pct: 20, status: 'pending' },
+    { label: 'Working Drawing approval', pct: 20, status: 'pending' },
+    { label: 'Authority submission (BP)', pct: 20, status: 'pending' },
+    { label: 'Completion / Handover', pct: 20, status: 'pending' }
+  ];
+  else a.stages = [
+    { label: 'Advance on Signing', pct: 40, status: 'pending' },
+    { label: 'Design Delivery', pct: 40, status: 'pending' },
+    { label: 'Final Completion', pct: 20, status: 'pending' }
+  ];
+  agpSave(); agpRender();
+}
+
+function agpStageAdd() {
+  const label = (document.getElementById('agp-st-label')?.value || '').trim();
+  const pct = parseFloat(document.getElementById('agp-st-pct')?.value) || 0;
+  if (!label) { showErr('टप्प्याचं नाव लिहा'); return; }
+  agpEnsure(agpProj()).stages.push({ label, pct, status: 'pending' });
+  agpSave(); agpRender();
+}
+
+function agpStageSet(i, k, v) {
+  const a = agpEnsure(agpProj()); if (!a.stages[i]) return;
+  a.stages[i][k] = (k === 'pct') ? (parseFloat(v) || 0) : v;
+  agpSave();
+  if (k === 'pct') agpRender();
+}
+
+function agpStageToggle(i) {
+  const a = agpEnsure(agpProj()); if (!a.stages[i]) return;
+  a.stages[i].status = a.stages[i].status === 'done' ? 'pending' : 'done';
+  if (a.stages[i].status === 'done') a.stages[i].date = new Date().toISOString().split('T')[0];
+  agpSave(); agpRender();
+}
+
+function agpStageDel(i) {
+  const a = agpEnsure(agpProj());
+  a.stages.splice(i, 1); agpSave(); agpRender();
+}
+
+function agpItemAdd(key) {
+  const id = key === 'docs' ? 'agp-doc-name' : 'agp-draw-name';
+  const inp = document.getElementById(id);
+  const v = (inp?.value || '').trim(); if (!v) return;
+  agpEnsure(agpProj())[key].push({ name: v, status: 'pending', fileId: '' });
+  if (inp) inp.value = '';
+  agpSave(); agpRender();
+}
+
+function agpItemSet(key, i, k, v) {
+  const a = agpEnsure(agpProj()); if (!a[key][i]) return;
+  a[key][i][k] = v; agpSave();
+  if (k === 'status') agpRender();
+}
+
+function agpItemDel(key, i) {
+  const a = agpEnsure(agpProj());
+  a[key].splice(i, 1); agpSave(); agpRender();
+}
+
+function agpAddPresets(key) {
+  const a = agpEnsure(agpProj());
+  const src = key === 'docs' ? AGP_DOC_PRESETS : AGP_DRAW_PRESETS;
+  src.forEach(n => { if (!a[key].some(x => x.name === n)) a[key].push({ name: n, status: 'pending', fileId: '' }); });
+  agpSave(); agpRender();
+  showOk('✅ Standard list जोडली — नको ते ✕ ने काढा');
+}
+
+function agpDefaultTerms() {
+  const a = agpEnsure(agpProj());
+  a.terms = `1. वर दिलेल्या Scope मधलंच काम या fee मध्ये समाविष्ट आहे. Excluded यादीतलं काम वेगळ्या charge ने होईल.
+2. Design drawings ची एक revision fee मध्ये समाविष्ट. पुढील प्रत्येक revision ₹2,000.
+3. Site visits ₹2,000 प्रति visit (scope मध्ये नसल्यास). 30 km पुढील travel वेगळा.
+4. पूर्ण payment होईपर्यंत सर्व drawings चा copyright Architect कडे राहील.
+5. Government fees, stamp duty, statutory charges Client भरेल.
+6. Client कडून document किंवा decision उशिरा आल्यास timeline तेवढीच पुढे जाईल.
+7. वाद मिटवण्यासाठी आधी चर्चा, नंतर लागू कायद्याप्रमाणे arbitration.
+8. न्यायक्षेत्र: ${(window.officeInfo || { addr: '' }).addr || 'Solapur'}.`;
+  agpSave(); agpRender();
+}
+
+// ── Agreement Generator शी जोडणी ──
+function agpToGenerator() {
+  const p = agpProj(); if (!p) return;
+  const a = agpEnsure(p);
+  closeModal('m-agp');
+  switchView('agreement');
+  setTimeout(() => {
+    const sel = document.getElementById('agr-proj');
+    if (sel) { sel.value = p.id; agrLoadProject(); }
+    const set = (id, v) => { const e = document.getElementById(id); if (e && v !== undefined && v !== '') e.value = v; };
+    set('agr-date', a.date);
+    set('agr-total', a.total);
+    set('agr-gst', a.gst);
+    if (a.terms) set('agr-terms', a.terms);
+    if (a.scopeIn.length) {
+      agrSelectedServices = [...a.scopeIn];
+      document.querySelectorAll('.agr-chip').forEach(ch => ch.classList.toggle('on', agrSelectedServices.includes(ch.dataset.svc)));
+    }
+    if (a.scopeOut.length) {
+      const sc = document.getElementById('agr-scope');
+      if (sc) sc.value = (sc.value ? sc.value + '\n\n' : '') + 'EXCLUDED / यात समाविष्ट नाही:\n• ' + a.scopeOut.join('\n• ');
+    }
+    if (a.stages.length) { agrPaymentSchedule = a.stages.map(s => ({ label: s.label, pct: s.pct })); agrRenderSchedule(); }
+    if (typeof agrUpdatePreview === 'function') agrUpdatePreview();
+    showOk('📄 Agreement generator मध्ये load झालं');
+  }, 260);
+}
+
+// Generator मधून project agreement ला save
+function agrSaveToProject() {
+  const pid = document.getElementById('agr-proj')?.value;
+  if (!pid) { showErr('आधी वरून Project निवडा'); return; }
+  const p = gp(pid); if (!p) return;
+  const a = agpEnsure(p);
+  const val = id => (document.getElementById(id)?.value || '').trim();
+  a.date = val('agr-date') || a.date;
+  a.total = parseFloat(val('agr-total')) || a.total;
+  a.gst = parseFloat(val('agr-gst')) || 0;
+  a.terms = val('agr-terms') || a.terms;
+  if (Array.isArray(agrSelectedServices) && agrSelectedServices.length) a.scopeIn = [...agrSelectedServices];
+  if (Array.isArray(agrPaymentSchedule) && agrPaymentSchedule.length) {
+    a.stages = agrPaymentSchedule.map(s => {
+      const old = a.stages.find(x => x.label === s.label);
+      return { label: s.label, pct: s.pct, status: old ? old.status : 'pending', date: old ? old.date : '' };
+    });
+  }
+  saveAll();
+  showOk('✅ ' + p.name + ' च्या agreement मध्ये save झालं — Client portal मध्ये दिसेल');
+}
+
+// Quick open from a project row
+function agpQuickOpen(pid) { openProjAgreement(pid); }
+
+
+// ════════════════════════════════════════════════
 // DIGITAL SIGNATURE PAD
 // ════════════════════════════════════════════════
 let sigCtx=null,sigDrawing=false;
@@ -10447,6 +10854,22 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
   </div>
 </div>
 
+<!-- PROJECT AGREEMENT MODAL -->
+<div class="modal-bg" id="m-agp">
+  <div class="modal-box" style="width:720px;max-height:92vh;overflow-y:auto">
+    <div class="modal-head" style="position:sticky;top:0;z-index:10;background:var(--surf)">
+      <div class="modal-title" id="agp-title">📜 Project Agreement</div>
+      <button class="modal-close" onclick="closeModal('m-agp')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fffbee;border:1px solid var(--gold,#c9a84c);border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:12px;color:#7a5a00;line-height:1.7">
+        📜 इथे भरलेलं सगळं <b>Client Portal → 📜 Agreement</b> tab मध्ये client ला आपोआप दिसेल.
+      </div>
+      <div id="agp-body"></div>
+    </div>
+  </div>
+</div>
+
 <!-- FILE MANAGER MODAL — Google Drive Link System -->
 <div class="modal-bg" id="m-uploads">
   <div class="modal-box" style="width:640px;max-height:92vh;overflow-y:auto">
@@ -10550,7 +10973,8 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
     <!-- Tab bar -->
     <div style="background:#fff;border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch" id="cp-tabs">
       <button class="cp-tab active" onclick="cpTab('overview')">📊 Overview</button>
-      <button class="cp-tab" onclick="cpTab('payments')">💰 Payments</button>
+      <button class="cp-tab" onclick="cpTab('agreement')">📜 Agreement</button>
+        <button class="cp-tab" onclick="cpTab('payments')">💰 Payments</button>
       <button class="cp-tab" onclick="cpTab('sitevisits')">🏗️ Site Visits</button>
       <button class="cp-tab" onclick="cpTab('drawings')">📐 Drawings</button>
       <button class="cp-tab" onclick="cpTab('brief')">➕ Add New Project</button>
@@ -10784,6 +11208,7 @@ function renderCpContent() {
   if (cpCurrentTab === 'overview') el.innerHTML = renderCpOverview(c, projs);
   else if (cpCurrentTab === 'payments') el.innerHTML = renderCpPayments(c, projs);
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
+  else if (cpCurrentTab === 'agreement') el.innerHTML = renderCpAgreement(c, projs);
   else if (cpCurrentTab === 'drawings') el.innerHTML = renderCpDrawings(c, projs);
   else if (cpCurrentTab === 'brief') { el.innerHTML = renderCpBrief(c, projs); initCpBrief(); }
   else if (cpCurrentTab === 'request') { el.innerHTML = renderCpRequest(c, projs); }
@@ -11444,6 +11869,143 @@ function renderCpSiteVisits(c, projs) {
 }
 
 // ── DRAWINGS TAB ──
+// ════════════════════════════════════════
+// 📜 CLIENT PORTAL — AGREEMENT TAB (read-only)
+// ════════════════════════════════════════
+function renderCpAgreement(c, projs) {
+  const withAgr = projs.filter(p => p.agreement);
+  if (!withAgr.length) {
+    return `<div style="text-align:center;padding:50px 20px;color:var(--mut)">
+      <div style="font-size:42px;margin-bottom:10px;opacity:.3">📜</div>
+      <div style="font-size:14px;font-weight:700;color:var(--grn)">अजून agreement तयार नाही</div>
+      <div style="font-size:12px;margin-top:6px">Architect agreement तयार करताच इथे दिसेल</div>
+    </div>`;
+  }
+
+  const money = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+
+  return withAgr.map(p => {
+    const a = p.agreement;
+    const twg = Number(a.total || 0) * (1 + Number(a.gst || 0) / 100);
+    const fileById = fid => (p.files || []).find(f => f.id === fid && f.clientVisible);
+
+    const fileBtn = (f) => {
+      if (!f) return '';
+      if (f.type === 'direct' && f.fileData) {
+        return `<a href="${f.fileData}" download="${f.fileName || f.name}" style="background:var(--grn);color:#fff;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">⬇️ Download</a>`;
+      }
+      return `<a href="${f.url}" target="_blank" style="background:var(--grn);color:#fff;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">↗ Open</a>`;
+    };
+
+    const stagesDone = (a.stages || []).filter(s => s.status === 'done').length;
+    const paidAmt = (a.stages || []).filter(s => s.status === 'done').reduce((t, s) => t + twg * (s.pct || 0) / 100, 0);
+
+    return `
+    <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
+
+      <!-- HEAD -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <div>
+          <div style="font-weight:700;font-size:15px">${p.name}</div>
+          <div style="font-size:11px;color:var(--mut);margin-top:2px">${a.date ? 'दिनांक: ' + a.date : 'Draft agreement'}</div>
+        </div>
+        <span style="font-size:10px;padding:4px 11px;border-radius:20px;font-weight:700;background:${a.status === 'signed' ? '#e8f4ee' : '#fff4e0'};color:${a.status === 'signed' ? '#1a7a44' : '#b36b00'}">
+          ${a.status === 'signed' ? '✅ Signed' : '📝 Draft'}
+        </span>
+      </div>
+
+      <!-- FEE SUMMARY -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <div style="flex:1;min-width:100px;background:var(--surf2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px">एकूण Fee</div>
+          <div style="font-size:15px;font-weight:700;color:var(--grn);margin-top:2px">${money(Math.round(twg))}</div>
+        </div>
+        <div style="flex:1;min-width:100px;background:var(--surf2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px">पूर्ण टप्पे</div>
+          <div style="font-size:15px;font-weight:700;color:var(--grn);margin-top:2px">${stagesDone}/${(a.stages || []).length}</div>
+        </div>
+      </div>
+
+      <!-- SCOPE IN -->
+      ${(a.scopeIn || []).length ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#1a7a44;margin-bottom:7px">✅ यात समाविष्ट आहे</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${a.scopeIn.map(s => `<span style="background:#e8f4ee;color:#1a5c36;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:600">${s}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- SCOPE OUT -->
+      ${(a.scopeOut || []).length ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#c0392b;margin-bottom:7px">🚫 यात समाविष्ट नाही</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${a.scopeOut.map(s => `<span style="background:#fdeaea;color:#a03228;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:600">${s}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- PAYMENT STAGES -->
+      ${(a.stages || []).length ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#2c5f8a;margin-bottom:7px">💰 Payment टप्पे</div>
+        ${a.stages.map(s => `
+          <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:${s.status === 'done' ? '#e8f4ee' : 'var(--surf2)'};border-radius:9px;margin-bottom:5px">
+            <span style="font-size:15px">${s.status === 'done' ? '✅' : '⬜'}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:600">${s.label}</div>
+              ${s.status === 'done' && s.date ? `<div style="font-size:10px;color:var(--mut)">भरले: ${s.date}</div>` : ''}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:12px;font-weight:700;color:var(--grn)">${money(Math.round(twg * (s.pct || 0) / 100))}</div>
+              <div style="font-size:10px;color:var(--mut)">${s.pct}%</div>
+            </div>
+          </div>`).join('')}
+        <div style="font-size:11px;color:var(--mut);margin-top:6px">भरलेले: <b style="color:var(--grn)">${money(Math.round(paidAmt))}</b> · बाकी: <b style="color:#b36b00">${money(Math.round(twg - paidAmt))}</b></div>
+      </div>` : ''}
+
+      <!-- DOCUMENTS -->
+      ${(a.docs || []).length ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#b36b00;margin-bottom:7px">📄 आवश्यक Documents</div>
+        ${a.docs.map(d => {
+          const f = fileById(d.fileId);
+          const ok = d.status === 'received';
+          return `<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:${ok ? '#e8f4ee' : 'var(--surf2)'};border-radius:9px;margin-bottom:5px">
+            <span style="font-size:15px">${ok ? '✅' : '⬜'}</span>
+            <div style="flex:1;min-width:0;font-size:12px;font-weight:600">${d.name}</div>
+            ${f ? fileBtn(f) : `<span style="font-size:10px;color:var(--mut);white-space:nowrap">${ok ? 'मिळालं' : 'बाकी'}</span>`}
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+
+      <!-- DRAWINGS -->
+      ${(a.draws || []).length ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--grn);margin-bottom:7px">📐 Drawing List</div>
+        ${a.draws.map(d => {
+          const f = fileById(d.fileId);
+          const icon = d.status === 'delivered' ? '✅' : (d.status === 'progress' ? '🔄' : '⬜');
+          const lbl = d.status === 'delivered' ? 'दिलं' : (d.status === 'progress' ? 'चालू आहे' : 'बाकी');
+          const bg = d.status === 'delivered' ? '#e8f4ee' : (d.status === 'progress' ? '#fff8e6' : 'var(--surf2)');
+          return `<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:${bg};border-radius:9px;margin-bottom:5px">
+            <span style="font-size:15px">${icon}</span>
+            <div style="flex:1;min-width:0;font-size:12px;font-weight:600">${d.name}</div>
+            ${f ? fileBtn(f) : `<span style="font-size:10px;color:var(--mut);white-space:nowrap">${lbl}</span>`}
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+
+      <!-- TERMS -->
+      ${a.terms ? `
+      <details style="margin-top:6px">
+        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--mut);padding:8px 0">📋 Terms & Conditions बघा</summary>
+        <div style="font-size:11px;line-height:1.8;color:var(--mut);white-space:pre-wrap;background:var(--surf2);border-radius:9px;padding:11px 13px;margin-top:6px">${a.terms}</div>
+      </details>` : ''}
+
+    </div>`;
+  }).join('');
+}
+
 function renderCpDrawings(c, projs) {
   let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">📐 Drawings & Files</div>';
   let anyFiles = false;
