@@ -912,6 +912,24 @@ html{transition:background .3s,color .3s}
       </div>
     </div>
 
+    <!-- ── ROLES & PINS ── -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><span class="card-title">🔐 Roles &amp; PINs</span></div>
+      <p style="font-size:12px;color:var(--mut);margin:0 0 12px">
+        Admin/Engineer/Staff साठी 4-digit shared PIN — app उघडताना role निवडून हा PIN टाकावा लागतो.
+        Engineer ला फक्त Dashboard, Projects, Completion Report, Materials, Timeline दिसतं.
+        Staff ला Dashboard, Contacts, Projects, Payments, Estimates दिसतं. Admin ला सगळं.
+      </p>
+      <div class="form-row c2">
+        <div class="fg"><label>🛡️ Admin PIN</label><input class="fi" id="s-pin-admin" maxlength="4" inputmode="numeric" placeholder="4-digit"></div>
+        <div class="fg"><label>📐 Engineer PIN</label><input class="fi" id="s-pin-engineer" maxlength="4" inputmode="numeric" placeholder="4-digit"></div>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>🗂️ Staff PIN</label><input class="fi" id="s-pin-staff" maxlength="4" inputmode="numeric" placeholder="4-digit"></div>
+      </div>
+      <button class="btn btn-gold" onclick="saveRolePins()" style="margin-top:4px">Save PINs</button>
+    </div>
+
     <!-- ── ESTIMATES ── -->
     <div id="view-estimates" class="view-section">
       <div class="sec-head">
@@ -4164,6 +4182,10 @@ function renderSettings(){
   sv('s-email',officeInfo.email||'');
   st('last-saved',localStorage.getItem('gs_saved')||'—');
   st('data-counts',`${(db.contacts||[]).length} contacts, ${(db.projects||[]).length} projects, ${(db.payments||[]).length} payments`);
+  if(!officeInfo.roles) officeInfo.roles={admin:'1111',engineer:'2222',staff:'3333'};
+  sv('s-pin-admin',officeInfo.roles.admin||'');
+  sv('s-pin-engineer',officeInfo.roles.engineer||'');
+  sv('s-pin-staff',officeInfo.roles.staff||'');
   // Sync mode display
   const descEl=document.getElementById('sync-mode-desc');
   const infoEl=document.getElementById('sync-info-box');
@@ -4182,14 +4204,24 @@ function renderSettings(){
     badge.textContent=isConnected?'🟢 Firebase Connected':'⚫ Not Connected';
   }
 }
+function saveRolePins(){
+  const clean=v=>String(v||'').trim().replace(/\D/g,'').slice(0,4);
+  const a=clean(document.getElementById('s-pin-admin').value);
+  const e=clean(document.getElementById('s-pin-engineer').value);
+  const s=clean(document.getElementById('s-pin-staff').value);
+  if(a.length!==4||e.length!==4||s.length!==4){alert('प्रत्येक PIN बरोबर 4 digit हवा.');return;}
+  officeInfo=Object.assign({},officeInfo,{roles:{admin:a,engineer:e,staff:s}});
+  saveAll();
+  alert('PINs saved!');
+}
 function saveOfficeInfo(){
-  officeInfo={
+  officeInfo=Object.assign({},officeInfo,{
     name:document.getElementById('s-office-name').value.trim()||'Greenhouse Studio',
     arch:document.getElementById('s-arch-name').value.trim()||'Vijay Edke',
     addr:document.getElementById('s-office-addr').value.trim()||'497, Sakhar Peth, Solapur',
     phone:document.getElementById('s-phone').value.trim(),
     email:document.getElementById('s-email').value.trim(),
-  };
+  });
   saveAll();
   alert('Office info saved!');
 }
@@ -12698,6 +12730,232 @@ function estDrawSaved(){
     :'<div class="empty-state" style="padding:14px"><p>No saved estimates yet</p></div>';
 }
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.bankest='📐 Bank Loan Estimate';
+})();
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     ROLE LOGIN GATE — Admin / Engineer / Staff / Client
+     PIN numpad reuses .cp-dot / .cp-key styles from Client Portal
+══════════════════════════════════════════════════════════════ -->
+<div id="role-gate-overlay" style="display:none;position:fixed;inset:0;z-index:100000;background:var(--grn);overflow-y:auto">
+
+  <div id="rg-select" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px">
+    <div style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:30px;margin-bottom:4px">Greenhouse Studio</div>
+    <div style="color:rgba(255,255,255,.5);font-size:12px;margin-bottom:32px">Login म्हणून पुढे जा</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:380px">
+      <button class="rg-card" onclick="rgChoose('admin')">🛡️<br>Admin</button>
+      <button class="rg-card" onclick="rgChoose('engineer')">📐<br>Engineer</button>
+      <button class="rg-card" onclick="rgChoose('staff')">🗂️<br>Staff</button>
+      <button class="rg-card" onclick="rgClient()">👥<br>Client</button>
+    </div>
+  </div>
+
+  <div id="rg-pin" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px">
+    <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:36px 32px;width:100%;max-width:380px;text-align:center">
+      <div style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:24px;margin-bottom:4px" id="rg-role-title">Login</div>
+      <div style="color:rgba(255,255,255,.45);font-size:12px;margin-bottom:24px">4-digit PIN enter करा</div>
+      <div style="display:flex;justify-content:center;gap:14px;margin-bottom:24px">
+        <div class="cp-dot" id="rgd0"></div>
+        <div class="cp-dot" id="rgd1"></div>
+        <div class="cp-dot" id="rgd2"></div>
+        <div class="cp-dot" id="rgd3"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto 16px">
+        <button class="cp-key" onclick="rgKey('1')">1</button>
+        <button class="cp-key" onclick="rgKey('2')">2</button>
+        <button class="cp-key" onclick="rgKey('3')">3</button>
+        <button class="cp-key" onclick="rgKey('4')">4</button>
+        <button class="cp-key" onclick="rgKey('5')">5</button>
+        <button class="cp-key" onclick="rgKey('6')">6</button>
+        <button class="cp-key" onclick="rgKey('7')">7</button>
+        <button class="cp-key" onclick="rgKey('8')">8</button>
+        <button class="cp-key" onclick="rgKey('9')">9</button>
+        <button class="cp-key cp-key-clr" onclick="rgClear()">⌫</button>
+        <button class="cp-key" onclick="rgKey('0')">0</button>
+        <button class="cp-key cp-key-ok" onclick="rgSubmit()">✓</button>
+      </div>
+      <div id="rg-error" style="display:none;color:#ff8080;font-size:12px;margin-bottom:12px;animation:shake .4s ease">❌ Incorrect PIN. Try again.</div>
+      <button onclick="rgBack()" style="color:rgba(255,255,255,.35);font-size:11px;background:none;border:none;cursor:pointer">← Back</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.rg-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:16px;color:#fff;padding:24px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;line-height:2.2}
+.rg-card:hover{background:rgba(255,255,255,.16)}
+.rg-card:active{transform:scale(.96)}
+</style>
+
+<script>
+(function(){
+
+const RG_DEFAULT_PINS={admin:'1111',engineer:'2222',staff:'3333'};
+const ROLE_ACCESS={
+  admin:null, /* null = full access */
+  engineer:['dashboard','projects','completion','materials','timeline'],
+  staff:['dashboard','contacts','projects','payments','estimates']
+};
+const ROLE_LABEL={admin:'Principal Architect',engineer:'Site Engineer',staff:'Office Staff'};
+
+window.ROLE_ACCESS=ROLE_ACCESS;
+window.CURRENT_ROLE='admin';
+
+let rgPin='',rgRole=null;
+
+function rgEnsurePins(){
+  if(!officeInfo.roles) officeInfo.roles={};
+  ['admin','engineer','staff'].forEach(function(r){
+    if(!officeInfo.roles[r]) officeInfo.roles[r]=RG_DEFAULT_PINS[r];
+  });
+}
+
+window.rgChoose=function(role){
+  rgEnsurePins();
+  rgRole=role;rgPin='';
+  var t=document.getElementById('rg-role-title');
+  if(t)t.textContent=role.charAt(0).toUpperCase()+role.slice(1)+' Login';
+  document.getElementById('rg-select').style.display='none';
+  document.getElementById('rg-pin').style.display='flex';
+  document.getElementById('rg-error').style.display='none';
+  rgDots();
+};
+window.rgClient=function(){
+  document.getElementById('role-gate-overlay').style.display='none';
+  if(typeof openClientPortal==='function')openClientPortal();
+};
+window.rgBack=function(){
+  document.getElementById('rg-pin').style.display='none';
+  document.getElementById('rg-select').style.display='flex';
+  rgRole=null;rgPin='';
+};
+window.rgKey=function(d){
+  if(rgPin.length>=4)return;
+  rgPin+=d;rgDots();
+  if(rgPin.length===4)setTimeout(rgSubmit,150);
+};
+window.rgClear=function(){
+  rgPin=rgPin.slice(0,-1);rgDots();
+  document.getElementById('rg-error').style.display='none';
+};
+function rgDots(){
+  for(var i=0;i<4;i++){
+    var d=document.getElementById('rgd'+i);
+    if(d)d.classList.toggle('filled',i<rgPin.length);
+  }
+}
+window.rgSubmit=function(){
+  rgEnsurePins();
+  if(String(officeInfo.roles[rgRole]).trim()===String(rgPin).trim()){
+    try{localStorage.setItem('gs_role_session',JSON.stringify({role:rgRole,ts:Date.now()}));}catch(e){}
+    rgEnterApp(rgRole);
+  } else {
+    document.getElementById('rg-error').style.display='block';
+    rgPin='';rgDots();
+  }
+};
+function rgEnterApp(role){
+  document.getElementById('role-gate-overlay').style.display='none';
+  var shell=document.getElementById('app-shell');
+  if(shell)shell.style.display='flex';
+  document.body.style.overflow='';
+  applyRoleAccess(role);
+}
+window.rgLogout=function(){
+  try{localStorage.removeItem('gs_role_session');}catch(e){}
+  var shell=document.getElementById('app-shell');
+  if(shell)shell.style.display='none';
+  document.body.style.overflow='hidden';
+  rgRole=null;rgPin='';
+  document.getElementById('role-gate-overlay').style.display='block';
+  document.getElementById('rg-select').style.display='flex';
+  document.getElementById('rg-pin').style.display='none';
+};
+window.rgShowGate=function(){
+  var shell=document.getElementById('app-shell');
+  if(shell)shell.style.display='none';
+  document.body.style.overflow='hidden';
+  rgRole=null;rgPin='';
+  var g=document.getElementById('role-gate-overlay');
+  if(g){g.style.display='block';}
+  document.getElementById('rg-select').style.display='flex';
+  document.getElementById('rg-pin').style.display='none';
+};
+
+function currentNavView(){
+  var a=document.querySelector('.nav-btn.active');
+  return a?a.dataset.view:'dashboard';
+}
+window.applyRoleAccess=function(role){
+  window.CURRENT_ROLE=role;
+  var allowed=ROLE_ACCESS[role];
+  document.querySelectorAll('.nav-btn').forEach(function(b){
+    var v=b.dataset.view;
+    if(!allowed){b.style.display='';return;}
+    b.style.display=allowed.indexOf(v)>-1?'':'none';
+  });
+  var info=document.querySelector('.user-info');
+  if(info){
+    var roleEl=info.querySelector('span');
+    if(roleEl)roleEl.textContent=ROLE_LABEL[role]||role;
+  }
+  if(!document.getElementById('rg-logout-btn')){
+    var foot=document.querySelector('.sidebar-footer');
+    if(foot){
+      var btn=document.createElement('button');
+      btn.id='rg-logout-btn';
+      btn.textContent='🔓 Logout';
+      btn.style.cssText='width:100%;margin-top:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:8px;padding:6px 0;font-size:11px;cursor:pointer;font-family:inherit';
+      btn.onclick=rgLogout;
+      foot.appendChild(btn);
+    }
+  }
+  if(allowed&&allowed.indexOf(currentNavView())===-1&&typeof switchView==='function'){
+    switchView(allowed[0]);
+  }
+};
+
+/* ── boot: decide gate vs. straight-through ── */
+document.addEventListener('DOMContentLoaded',function(){
+  var params=new URLSearchParams(window.location.search);
+  var isPortal=params.has('portal')||window.location.hash.startsWith('#portal');
+  if(isPortal)return; /* client-portal mode handles its own screen */
+  var session=null;
+  try{session=JSON.parse(localStorage.getItem('gs_role_session')||'null');}catch(e){}
+  if(session&&session.role&&ROLE_ACCESS.hasOwnProperty(session.role)){
+    setTimeout(function(){applyRoleAccess(session.role);},60);
+  } else {
+    rgShowGate();
+  }
+});
+
+/* ── after Client Portal is closed, decide what to show next ── */
+var _origCloseClientPortal=window.closeClientPortal;
+window.closeClientPortal=function(){
+  document.getElementById('client-portal-overlay').style.display='none';
+  if(new URLSearchParams(window.location.search).has('portal')){
+    window.history.replaceState(null,'',window.location.pathname+'?portal=1');
+  }
+  document.body.style.overflow='';
+  var session=null;
+  try{session=JSON.parse(localStorage.getItem('gs_role_session')||'null');}catch(e){}
+  if(session&&session.role&&ROLE_ACCESS.hasOwnProperty(session.role)){
+    var shell=document.getElementById('app-shell');
+    if(shell)shell.style.display='flex';
+  } else {
+    rgShowGate();
+  }
+};
+
+/* ── switchView guard: block direct navigation into a disallowed view ── */
+var _origSwitchView=window.switchView;
+window.switchView=function(v){
+  if(window.ROLE_ACCESS&&window.ROLE_ACCESS[window.CURRENT_ROLE]&&window.ROLE_ACCESS[window.CURRENT_ROLE].indexOf(v)===-1){
+    v='dashboard';
+  }
+  return _origSwitchView(v);
+};
+
 })();
 </script>
 
