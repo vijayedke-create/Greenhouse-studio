@@ -10265,7 +10265,7 @@ async function checkPortalMode(){
   // ── Firebase वरून data load ──
   if(fbUrl){
     try{
-      const r = await fetch(fbUrl+'/.json');
+      const r = await fetch(fbUrl+'/greenhouseStudio.json');
       if(r.ok){
         const data = await r.json();
         if(data&&data.db){
@@ -11113,7 +11113,7 @@ async function cpSubmit() {
       try{ localStorage.setItem('gs_fb_url', fbUrl); }catch(e){}
       try{ sessionStorage.setItem('gs_fb_url', fbUrl); }catch(e){}
 
-      const r = await fetch(fbUrl + '/.json');
+      const r = await fetch(fbUrl + '/greenhouseStudio.json');
       if(r.ok){
         const data = await r.json();
         if(data && data.db){
