@@ -553,6 +553,7 @@ html{transition:background .3s,color .3s}
     <button class="nav-btn" data-view="interiorest" onclick="switchView('interiorest')"><span class="nav-icon">🛋️</span>Interior Estimate</button>
     <button class="nav-btn" data-view="completion" onclick="switchView('completion')"><span class="nav-icon">📋</span>Completion Report</button>
     <button class="nav-btn" data-view="bankest" onclick="switchView('bankest')"><span class="nav-icon">📐</span>Bank Estimate</button>
+    <button class="nav-btn" data-view="nocletter" onclick="switchView('nocletter')"><span class="nav-icon">🏛️</span>Permission Docs</button>
   </nav>
   <div class="sidebar-footer">
     <div class="user-row">
@@ -1047,6 +1048,7 @@ html{transition:background .3s,color .3s}
     <div id="view-materials" class="view-section"><div id="mat-body"></div></div>
     <div id="view-completion" class="view-section"><div id="cmp-body"></div></div>
     <div id="view-bankest" class="view-section"><div id="est-body"></div></div>
+    <div id="view-nocletter" class="view-section"><div id="noc-body"></div></div>
     <div id="view-interiorest" class="view-section">
       <div class="sec-head">
         <div class="sec-title">🛋️ Interior Work Estimate</div>
@@ -2633,7 +2635,8 @@ function renderView(v){
     timeline:renderTimelineView,
     materials:renderMaterialsView,interiorest:renderInteriorEstList,
     completion:function(){if(window.renderCompletionView)renderCompletionView();},
-    bankest:function(){if(window.renderBankEstView)renderBankEstView();}
+    bankest:function(){if(window.renderBankEstView)renderBankEstView();},
+    nocletter:function(){if(window.renderNocView)renderNocView();}
   };
   var fn=renderMap[v];
   if(typeof fn==='function') fn();
@@ -12274,7 +12277,7 @@ Portal मध्ये पाहता येईल:
 #cmp-body .pvbox{background:var(--bdr);border-radius:12px;padding:14px;overflow:auto;max-height:calc(100vh - 190px)}
 #cmp-body .pvbar{display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600}
 /* A4 sheet — same markup is reused in the print window */
-.cmp-sheet{width:210mm;min-height:297mm;height:297mm;background:#fff;color:#15150f;margin:0 auto 14px;padding:50mm 15mm 27mm 20mm;
+.cmp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;background:#fff;color:#15150f;margin:0 auto 14px;padding:50mm 15mm 27mm 20mm;
   box-shadow:0 4px 22px rgba(0,0,0,.18);font-family:'Plus Jakarta Sans',sans-serif;font-size:10.4pt;display:flex;flex-direction:column;transform-origin:top center;
   background-image:var(--cmp-lh);background-repeat:no-repeat;background-position:center;background-size:210mm 297mm;
   -webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;overflow:hidden}
@@ -12657,8 +12660,8 @@ window.cmpPrint=function(){
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
   <style>${css}
   body{margin:0;background:#fff;font-family:'Plus Jakarta Sans','Noto Sans Devanagari',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .cmp-sheet{box-shadow:none;margin:0 auto;transform:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  @page{size:A4;margin:0}
+  .cmp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;box-shadow:none;margin:0 auto;transform:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4 portrait;margin:0}
   @media print{.cmp-sheet{page-break-after:always}.cmp-sheet:last-child{page-break-after:auto}}
   </style></head><body>${cmpSheets().html}
   <script>${CMP_FIT_SRC}\ncmpFitDoc(document);<\/script></body></html>`);
@@ -13237,8 +13240,8 @@ window.estPrint=function(){
   '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">'+
   '<style>'+css+
   "body{margin:0;background:#fff;font-family:'Plus Jakarta Sans','Noto Sans Devanagari',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}"+
-  '.cmp-sheet{box-shadow:none;margin:0 auto;transform:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
-  '@page{size:A4;margin:0}'+
+  '.cmp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;box-shadow:none;margin:0 auto;transform:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '@page{size:A4 portrait;margin:0}'+
   '@media print{.cmp-sheet{page-break-after:always}.cmp-sheet:last-child{page-break-after:auto}}'+
   '</style></head><body>'+body+'</body></html>');
   w.document.close();
@@ -13292,6 +13295,381 @@ function estDrawSaved(){
     :'<div class="empty-state" style="padding:14px"><p>No saved estimates yet</p></div>';
 }
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.bankest='📐 Bank Loan Estimate';
+})();
+</script>
+
+
+<!-- ████████████████████████████████████████████████████
+     BUILDING PERMISSION DOCUMENTS — अनुमती पत्र (NOC)
+     Injected module — view: nocletter
+     Part 1 of the building-permission document set (NOC first;
+     Architect Declaration and Client Self-Declaration to follow).
+     ████████████████████████████████████████████████████ -->
+<style>
+#noc-body .noc-grid{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start}
+@media(max-width:1000px){#noc-body .noc-grid{grid-template-columns:1fr}}
+#noc-body .noc-card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;margin-bottom:12px;overflow:hidden}
+#noc-body .noc-card>h4{font-size:12px;font-weight:700;color:var(--grn3);padding:11px 13px;background:var(--surf2);border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;align-items:center;gap:7px}
+#noc-body .noc-card>h4 .ar{margin-left:auto;font-size:10px;color:var(--mut);transition:transform .2s}
+#noc-body .noc-card.cl>h4 .ar{transform:rotate(-90deg)}
+#noc-body .noc-card.cl .eb{display:none}
+#noc-body .eb{padding:13px}
+#noc-body .noc-f label{font-size:10.5px;font-weight:600;color:var(--mut);display:block;margin-bottom:3px}
+#noc-body .noc-f input,#noc-body .noc-f select,#noc-body .noc-f textarea{width:100%;font-family:inherit;font-size:12.5px;padding:7px 9px;border:1px solid var(--bdr2);border-radius:8px;background:var(--surf2);color:var(--ink);margin-bottom:9px}
+#noc-body textarea{resize:vertical;line-height:1.55;min-height:64px}
+#noc-body .noc-f2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#noc-body .ownrow{display:flex;gap:6px;align-items:center;margin-bottom:7px}
+#noc-body .ownrow input{margin-bottom:0;flex:1}
+#noc-body .ownrow .xb{border:0;background:transparent;color:var(--bdr2);cursor:pointer;font-size:17px;padding:0 3px;flex:0 0 auto;line-height:1}
+#noc-body .ownrow .xb:hover{color:var(--red)}
+#noc-body .noc-hint{font-size:10.5px;color:var(--mut);margin-top:2px;line-height:1.5}
+#noc-body .sv{display:flex;align-items:center;gap:7px;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;background:var(--surf2);margin-bottom:6px}
+#noc-body .sv .m{flex:1;min-width:0}
+#noc-body .sv b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#noc-body .sv small{font-size:10px;color:var(--mut)}
+#noc-body .pvbox{background:var(--bdr);border-radius:12px;padding:14px;overflow:auto;max-height:calc(100vh - 190px)}
+#noc-body .pvbar{display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600}
+#noc-body .pvbar label{display:flex;align-items:center;gap:4px;cursor:pointer}
+#noc-body .doc-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:700px){#noc-body .doc-form-grid{grid-template-columns:1fr}}
+#noc-body .doc-sheet-wrap{background:var(--bdr);border-radius:12px;padding:14px;overflow:auto;max-height:calc(100vh - 190px)}
+#noc-body .doc-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+#noc-body .doc-paper{width:210mm;min-height:297mm;background:#fff;color:#111;margin:0 auto;padding:18mm 18mm 18mm 18mm;box-sizing:border-box;font-family:'Noto Sans Devanagari','Plus Jakarta Sans',Arial,sans-serif;line-height:1.75;box-shadow:0 3px 14px rgba(0,0,0,.12);font-size:12pt}
+#noc-body .doc-paper h1{text-align:center;font-size:17pt;margin:0 0 20px;font-weight:700}
+#noc-body .doc-paper .to{margin-bottom:16px}
+#noc-body .doc-paper .subject{font-weight:700;margin:14px 0}
+#noc-body .doc-paper p{margin:0 0 12px;text-align:justify}
+#noc-body .doc-paper .signature{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:30px}
+#noc-body .doc-paper .sigbox{min-height:90px}
+#noc-body .doc-paper .line{border-bottom:1px solid #555;display:inline-block;min-width:190px;height:22px}
+#noc-body .doc-paper .center{text-align:center}
+#noc-body .doc-paper .numbered{margin:0 0 9px 0}
+#noc-body .doc-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}
+#noc-body .doc-tabs button.active{background:var(--grn);color:#fff;border-color:var(--grn)}
+@media print{body>*:not(#doc-print-root){display:none!important}#doc-print-root{display:block!important}}
+
+
+/* ── NOC sheet: sample-style ₹100 bond first page + continuation on page 2 ── */
+.cmp-sheet.noc{font-size:11.2pt;line-height:1.85}
+.cmp-sheet.noc.noc-front{padding:0 15mm 27mm 20mm}
+.cmp-sheet.noc.noc-front .noc-front-content{padding-top:184mm}
+.cmp-sheet.noc.noc-back{background-image:none!important;padding:22mm 18mm 25mm 20mm}
+.cmp-sheet.noc .nt{text-align:center;font-weight:700;font-size:14pt;text-decoration:underline;margin:0 0 18px}
+.cmp-sheet.noc .nh{display:flex;justify-content:space-between;gap:12px;margin-bottom:2px}
+.cmp-sheet.noc .naddr{margin-bottom:14px}
+.cmp-sheet.noc .nsub{font-weight:700;margin-bottom:2px}
+.cmp-sheet.noc .nsub2{text-align:right;font-style:italic;margin-top:18px;margin-bottom:0;font-weight:600}
+.cmp-sheet.noc .npara{text-align:justify;margin-bottom:16px;text-indent:14mm}
+.cmp-sheet.noc .npara:first-child{margin-top:4px}
+.cmp-sheet.noc .npara strong{font-weight:700}
+.cmp-sheet.noc .nsig{margin-top:30px;text-align:right}
+.cmp-sheet.noc .nsig .lbl{margin-bottom:28px}
+.cmp-sheet.noc .nsig .nm{margin-bottom:28px;font-weight:600}
+.cmp-sheet.noc .ncontinuation{text-align:center;font-size:9.5pt;color:#555;margin-top:8px}
+</style>
+
+<script>
+(function(){
+
+let nocOwners=[''],nocDrawn=false,nocId=null,nocHTML='',nocLH=localStorage.getItem('gs_noc_lh')==='1';
+
+const nq=id=>document.getElementById('noc-'+id);
+const ngv=id=>{const e=nq(id);return e?e.value:'';};
+const nce=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ndmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d;};
+const ntoday=()=>new Date().toISOString().slice(0,10);
+const nocAllSaved=()=>{if(!db.nocLetters)db.nocLetters=[];return db.nocLetters;};
+function nocSaveDb(){try{if(typeof saveAll==='function')saveAll();else saveLocal();}catch(e){try{saveLocal();}catch(e2){}}}
+function nocToast(m){if(typeof toastOk==='function')return toastOk(m);if(typeof showToast==='function')return showToast(m);console.log(m);}
+
+const NOC_FIELDS=['date','corp','city','rel','resaddr','site'];
+
+/* ── owner rows ── */
+window.nocAddOwner=function(){nocOwners.push('');nocDrawOwners();nocRender();};
+window.nocRemoveOwner=function(i){if(nocOwners.length<=1)return;nocOwners.splice(i,1);nocDrawOwners();nocRender();};
+window.nocOwnerInput=function(i,v){nocOwners[i]=v;nocRender();};
+function nocDrawOwners(){
+  const box=nq('owners');if(!box)return;
+  box.innerHTML=nocOwners.map((o,i)=>`<div class="ownrow">
+    <input value="${nce(o)}" placeholder="मालक ${i+1} चे पूर्ण नाव" oninput="nocOwnerInput(${i},this.value)">
+    <button class="xb" onclick="nocRemoveOwner(${i})" title="काढा">×</button></div>`).join('');
+  const rw=nq('relwrap');if(rw)rw.style.display=(nocOwners.filter(o=>o.trim()).length===2)?'block':'none';
+}
+
+/* ── owner opening phrase, auto-adjusts for 1 / 2 / 3+ owners ── */
+function nocOwnerOpening(){
+  const names=nocOwners.map(s=>s.trim()).filter(Boolean).map(nce);
+  const rel=nce(ngv('rel')||'माझे भाऊ');
+  if(!names.length)return 'मी ___________';
+  if(names.length===1)return 'मी <b>'+names[0]+'</b>';
+  if(names.length===2)return 'मी <b>'+names[0]+'</b> व '+rel+' <b>'+names[1]+'</b> दोघे';
+  return 'आम्ही <b>'+names.slice(0,-1).join('</b>, <b>')+'</b> व <b>'+names[names.length-1]+'</b> सर्व';
+}
+function nocSigNames(){
+  const names=nocOwners.map(s=>s.trim()).filter(Boolean);
+  return names.length?names:[''];
+}
+
+/* ══════════════════ build the printable sheet ══════════════════ */
+function nocBuild(){
+  const sc='cmp-sheet noc'+(nocLH?'':' nolh');
+  const corp=nce(ngv('corp')||'सोलापूर महानगरपालिका');
+  const city=nce(ngv('city')||'सोलापूर');
+  const resaddr=nce(ngv('resaddr'))||'___________';
+  const site=nce(ngv('site'))||'___________';
+  const sigBlock=nocSigNames().map(n=>`<div class="nm">${nce(n)||'&nbsp;'}</div>`).join('');
+  return `
+  <div class="${sc} noc-front"><div class="in"><div class="noc-front-content">
+    <div class="nt">ना हरकत प्रमाणपत्र</div>
+    <div class="nh"><div>मा. आयुक्त,</div><div>दिनांक – ${ndmy(ngv('date'))}</div></div>
+    <div class="naddr">${corp},<br>${city}.</div>
+    <div class="nsub">विषय – बांधकाम परवानगी साठी संमती देणेबाबत.</div>
+    <div class="nsub2">कृपया मागे पहा...</div>
+  </div></div></div>
+
+  <div class="${sc} noc-back"><div class="in">
+    <div class="npara">${nocOwnerOpening()} राहणार – ${resaddr}. आमच्या मालकीचा ${site} हा प्लॉट असून, सदर प्लॉटवर प्रस्तावित बांधकामासाठी बांधकाम परवानगी मिळणेकामी अर्ज सादर करण्यात आलेला आहे.</div>
+    <div class="npara">सदर प्रस्तावित बांधकामास तसेच त्यासाठी आवश्यक असलेल्या बांधकाम परवानगीच्या कार्यवाहीस आम्ही पूर्णपणे संमती देत असून, सदर बाबतीत आमची कोणतीही हरकत नाही. संबंधित महानगरपालिका कार्यालयामार्फत बांधकाम परवानगी देण्यात यावी, यास आमची संपूर्ण संमती आहे.</div>
+    <div class="npara">वरील माहिती आमच्या माहितीनुसार खरी व बरोबर असून, सदर संमतीपत्र आम्ही आमच्या स्वेच्छेने देत आहोत.</div>
+    <div class="nsig"><div class="lbl">आपला विश्वासू,</div>${sigBlock}</div>
+  </div></div>`;
+}
+
+window.nocRender=function(){
+  if(!nocDrawn)return;
+  nocHTML=nocBuild();
+  const pv=nq('pv');if(pv)pv.innerHTML=nocHTML;
+};
+window.nocToggleLH=function(v){nocLH=!!v;localStorage.setItem('gs_noc_lh',v?'1':'0');nocRender();};
+window.nocTog=function(h){h.parentElement.classList.toggle('cl');};
+
+/* ══════════════════ print ══════════════════ */
+window.nocPrint=function(){
+  const css=[].slice.call(document.querySelectorAll('style')).map(s=>s.textContent).filter(t=>t.indexOf('.cmp-sheet')>-1).join('\n');
+  const w=window.open('','_blank');
+  if(!w)return alert('Pop-up blocked — allow pop-ups to print.');
+  const body=nocHTML||nocBuild();
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>ना हरकत प्रमाणपत्र</title>'+
+  '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">'+
+  '<style>'+css+
+  "body{margin:0;background:#fff;font-family:'Noto Sans Devanagari','Plus Jakarta Sans',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}"+
+  '.cmp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;box-shadow:none;margin:0 auto;transform:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '@page{size:A4 portrait;margin:0}'+
+  '@media print{.cmp-sheet{page-break-after:always}.cmp-sheet:last-child{page-break-after:auto}}'+
+  '</style></head><body>'+body+'</body></html>');
+  w.document.close();
+  setTimeout(function(){w.focus();w.print();},700);
+};
+
+/* ══════════════════ save / load ══════════════════ */
+window.nocNew=function(){
+  nocId=null;NOC_FIELDS.forEach(f=>{if(nq(f))nq(f).value='';});
+  nq('date').value=ntoday();
+  nq('corp').value='सोलापूर महानगरपालिका';
+  nq('city').value='सोलापूर';
+  nq('rel').value='माझे भाऊ';
+  nocOwners=[''];
+  nocDrawOwners();nocRender();
+};
+window.nocStore=function(){
+  const o={id:nocId||('NOC-'+Date.now()),owners:nocOwners.slice(),saved:new Date().toISOString()};
+  NOC_FIELDS.forEach(f=>o[f]=ngv(f));
+  nocId=o.id;
+  const a=nocAllSaved(),i=a.findIndex(r=>r.id===o.id);
+  i<0?a.unshift(o):a[i]=o;
+  if(db.activities)db.activities.unshift({text:'NOC letter — '+(nocOwners.filter(Boolean).join(', ')||'Untitled'),sub:ndmy(o.date),time:'Just now',color:'#1f9d4d'});
+  nocSaveDb();nocDrawSaved();nocToast('अनुमती पत्र saved');
+};
+window.nocLoad=function(id){
+  const r=nocAllSaved().find(x=>x.id===id);if(!r)return;
+  NOC_FIELDS.forEach(f=>{if(nq(f))nq(f).value=r[f]||'';});
+  nocOwners=(r.owners&&r.owners.length)?r.owners.slice():[''];
+  nocId=r.id;
+  nocDrawOwners();nocRender();nocToast('Loaded');
+};
+window.nocCopy=function(id){nocLoad(id);nocId=null;nq('date').value=ntoday();nocRender();nocToast('Copy created — save when ready');};
+window.nocDel=function(id){
+  if(!confirm('This अनुमती पत्र delete करायचं?'))return;
+  db.nocLetters=nocAllSaved().filter(r=>r.id!==id);nocSaveDb();nocDrawSaved();
+};
+function nocDrawSaved(){
+  const el=nq('saved');if(!el)return;
+  const a=nocAllSaved();
+  el.innerHTML=a.length?a.map(r=>`<div class="sv"><div class="m"><b>${nce((r.owners||[]).filter(Boolean).join(', ')||'Untitled')}</b>
+    <small>${nce(ndmy(r.date))}</small></div>
+    <button class="btn btn-sm" onclick="nocLoad('${r.id}')">Open</button>
+    <button class="btn btn-sm" onclick="nocCopy('${r.id}')">Copy</button>
+    <button class="btn btn-sm" onclick="nocDel('${r.id}')">×</button></div>`).join('')
+    :'<div class="empty-state" style="padding:14px"><p>No saved letters yet</p></div>';
+}
+
+/* ══════════════════ main view ══════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   ADDITIONAL BUILDING-PERMISSION DOCUMENTS
+   Simple A4 page format — not bond/stamp-paper format.
+   ══════════════════════════════════════════════════════════════ */
+function docv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+function docSet(id,v){const e=document.getElementById(id);if(e)e.value=v||'';}
+function docEsc(v){return nce(v||'');}
+function docToday(){return new Date().toISOString().slice(0,10);}
+function docDmy(v){if(!v)return '________________';const a=v.split('-');return a.length===3?a[2]+' / '+a[1]+' / '+a[0]:v;}
+function docPrint(title, html){
+  const w=window.open('','_blank');
+  if(!w)return alert('Pop-up blocked — allow pop-ups to print.');
+  const css=`@page{size:A4 portrait;margin:0}@media print{body{margin:0}.doc-paper{page-break-after:auto;box-shadow:none!important}}body{margin:0;background:#fff;color:#111;font-family:'Noto Sans Devanagari','Plus Jakarta Sans',Arial,sans-serif}.doc-paper{width:210mm;min-height:297mm;box-sizing:border-box;padding:18mm;font-size:12pt;line-height:1.75}.doc-paper h1{text-align:center;font-size:17pt;margin:0 0 20px}.doc-paper p{margin:0 0 12px;text-align:justify}.to{margin-bottom:16px}.subject{font-weight:700;margin:14px 0}.signature{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:30px}.sigbox{min-height:90px}`;
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+docEsc(title)+'</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>'+css+'</style></head><body>'+html+'</body></html>');
+  w.document.close();setTimeout(()=>{w.focus();w.print();},500);
+}
+window.docBack=function(){
+  nocDrawn=false;
+  if(typeof window.renderNocView==='function') window.renderNocView();
+};
+
+window.renderArchitecturalProjectionView=function(){
+  const box=document.getElementById('noc-body');if(!box)return;
+  box.innerHTML=`
+  <div class="sec-head"><div class="sec-title">📐 Architectural Projection — हमीपत्र</div>
+    <div class="doc-toolbar"><button class="btn btn-sm" onclick="docBack()">← Permission Docs</button><button class="btn btn-sm" onclick="saveArchitecturalProjection()">Save</button><button class="btn btn-gold" onclick="printArchitecturalProjection()">🖨 Print / PDF</button></div></div>
+  <div class="doc-grid" style="display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start">
+    <div><div class="noc-card"><h4>📋 माहिती भरा <span class="ar">▼</span></h4><div class="eb"><div class="noc-f">
+      <div class="doc-form-grid"><div><label>दिनांक</label><input type="date" id="ap-date"></div><div><label>अर्जदार / मालकाचे नाव</label><input id="ap-owner" placeholder="श्री./सौ. ..."></div></div>
+      <label>बांधकामाचा पत्ता</label><textarea id="ap-site" style="min-height:92px"></textarea>
+      <label>संपर्क क्र.</label><input id="ap-phone" placeholder="9XXXXXXXXX">
+      <label>Architect / Licensed Technical Person</label><input id="ap-arch" value="श्री. विजयकुमार प्रकाश एडके">
+      <div class="noc-hint">हा फॉर्म साध्या A4 पेजसाठी आहे. Bond / Stamp Paper format वापरलेला नाही.</div>
+    </div></div></div></div>
+    <div class="doc-sheet-wrap"><div class="pvbar"><span>Live Preview</span></div><div id="ap-preview"></div></div>
+  </div>`;
+  docSet('ap-date',localStorage.getItem('gs_ap_date')||docToday());
+  docSet('ap-owner',localStorage.getItem('gs_ap_owner')||'');
+  docSet('ap-site',localStorage.getItem('gs_ap_site')||'प्लॉट क्र. १९, विश्वनाथ पार्क, गट नं. ५१४/४, मौजे कुंभारी, ता. दक्षिण सोलापूर, जि. सोलापूर, महाराष्ट्र.');
+  docSet('ap-phone',localStorage.getItem('gs_ap_phone')||'');
+  docSet('ap-arch',localStorage.getItem('gs_ap_arch')||'श्री. विजयकुमार प्रकाश एडके');
+  ['ap-date','ap-owner','ap-site','ap-phone','ap-arch'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderArchitecturalProjectionPreview));
+  renderArchitecturalProjectionPreview();
+};
+window.renderArchitecturalProjectionPreview=function(){
+  const owner=docEsc(docv('ap-owner')||'श्री./सौ. ______________________________');
+  const site=docEsc(docv('ap-site')||'______________________________');
+  const phone=docEsc(docv('ap-phone')||'________________');
+  const arch=docEsc(docv('ap-arch')||'श्री. विजयकुमार प्रकाश एडके');
+  const date=docDmy(docv('ap-date'));
+  document.getElementById('ap-preview').innerHTML=`<div class="doc-paper"><h1>हमीपत्र</h1>
+    <div class="to"><b>प्रति,</b><br>मा. आयुक्त महोदय,<br>सोलापूर महानगरपालिका, सोलापूर.</div>
+    <div class="subject">विषय : शहर सोलापूर येथील ${site} या जागेवरील बांधकाम परवानगी / एकत्रीकरण / विभाजन बाबत.</div>
+    <p><b>अर्जदार :</b> ${owner}</p><p><b>रा. संपूर्ण पत्ता :</b> ${site}</p><p><b>संपर्क क्र. :</b> ${phone}</p>
+    <p>महोदय,</p>
+    <p>मी / आम्ही, वरील नमूद जागेचा/बांधकामाचा कायदेशीर मालक/मालक असून, सदर जागेवर बांधकाम परवानगी मिळविण्याकरिता सादर केलेल्या नकाशामध्ये दर्शविण्यात आलेले Architectural Projection हे मंजूर नकाशानुसारच राहतील. सदर Architectural Projection च्या जागेवर कोणतेही कायमस्वरूपी बंदिस्त बांधकाम (Enclosure) करणार नाही, याची मी / आम्ही हमी देत आहोत.</p>
+    <p>तसेच, चुकीची / खोटी अथवा दिशाभूल करणारी माहिती दिल्यास, भारतीय दंड संहिता, 1860 मधील कलम 199 व 200 अन्वये होणाऱ्या कारवाईस मी / आम्ही पात्र राहू. तसेच अशा चुकीच्या माहितीमुळे अथवा नियमबाह्य बाबींमुळे देण्यात आलेली बांधकाम परवानगी UDCPR मधील लागू तरतुदीनुसार रद्द करण्याचे अधिकार महानगरपालिकेस राहतील, याची मला / आम्हाला पूर्ण जाणीव आहे.</p>
+    <p>वरीलप्रमाणे हमीपत्र मी / आम्ही स्वखुशीने व कोणत्याही दबावाशिवाय, बांधकाम परवानगी मिळविण्याच्या उद्देशाने सादर करीत आहे / आहोत.</p>
+    <div class="signature"><div class="sigbox"><b>आपला / आपली,</b><br><br>अर्जदाराची सही : ______________________<br>नाव : ${owner}<br>दिनांक : ${date}<br>ठिकाण : सोलापूर</div><div class="sigbox"><br>Architect / Licensed Technical Person<br>${arch}</div></div>
+  </div>`;
+};
+window.saveArchitecturalProjection=function(){['ap-date','ap-owner','ap-site','ap-phone','ap-arch'].forEach(id=>localStorage.setItem('gs_'+id,docv(id)));showOk('✅ Architectural Projection हमीपत्र saved');};
+window.printArchitecturalProjection=function(){saveArchitecturalProjection();const el=document.getElementById('ap-preview');docPrint('Architectural Projection – हमीपत्र',el?el.innerHTML:'');};
+
+window.renderClientSelfDeclarationView=function(){
+  const box=document.getElementById('noc-body');if(!box)return;
+  box.innerHTML=`
+  <div class="sec-head"><div class="sec-title">📄 Client Self Declaration — स्वयंघोषणापत्र</div>
+    <div class="doc-toolbar"><button class="btn btn-sm" onclick="docBack()">← Permission Docs</button><button class="btn btn-sm" onclick="saveClientSelfDeclaration()">Save</button><button class="btn btn-gold" onclick="printClientSelfDeclaration()">🖨 Print / PDF</button></div></div>
+  <div style="display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start">
+    <div><div class="noc-card"><h4>👤 मालक / बांधकाम माहिती <span class="ar">▼</span></h4><div class="eb"><div class="noc-f">
+      <div class="doc-form-grid"><div><label>मालक १</label><input id="cs-owner1" placeholder="श्री./सौ. ..."></div><div><label>मालक २</label><input id="cs-owner2" placeholder="श्री./सौ. ..."></div></div>
+      <label>बांधकामाचा पत्ता</label><textarea id="cs-site" style="min-height:92px"></textarea><label>संपर्क क्र.</label><input id="cs-phone" placeholder="9XXXXXXXXX"><label>Architect / Licensed Technical Person</label><input id="cs-arch" value="श्री. विजयकुमार प्रकाश एडके"><div class="doc-form-grid"><div><label>दिनांक</label><input type="date" id="cs-date"></div><div><label>ठिकाण</label><input id="cs-place" value="सोलापूर"></div></div>
+      <div class="noc-hint">स्वयंघोषणापत्र साध्या A4 पेजवर तयार केले आहे; Bond / Stamp Paper format नाही.</div>
+    </div></div></div></div>
+    <div class="doc-sheet-wrap"><div class="pvbar"><span>Live Preview</span></div><div id="cs-preview"></div></div>
+  </div>`;
+  docSet('cs-owner1',localStorage.getItem('gs_cs_owner1')||'');docSet('cs-owner2',localStorage.getItem('gs_cs_owner2')||'');
+  docSet('cs-site',localStorage.getItem('gs_cs_site')||'प्लॉट क्र. १९, विश्वनाथ पार्क, गट नं. ५१४/४, मौजे कुंभारी, ता. दक्षिण सोलापूर, जि. सोलापूर, महाराष्ट्र.');
+  docSet('cs-phone',localStorage.getItem('gs_cs_phone')||'');docSet('cs-arch',localStorage.getItem('gs_cs_arch')||'श्री. विजयकुमार प्रकाश एडके');docSet('cs-date',localStorage.getItem('gs_cs_date')||docToday());docSet('cs-place',localStorage.getItem('gs_cs_place')||'सोलापूर');
+  ['cs-owner1','cs-owner2','cs-site','cs-phone','cs-arch','cs-date','cs-place'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderClientSelfDeclarationPreview));
+  renderClientSelfDeclarationPreview();
+};
+window.renderClientSelfDeclarationPreview=function(){
+  const o1=docv('cs-owner1'),o2=docv('cs-owner2');
+  const owners=o1&&o2?o1+' व '+o2:(o1||o2||'श्री./सौ. ______________________________');
+  const site=docEsc(docv('cs-site')||'______________________________');const phone=docEsc(docv('cs-phone')||'________________');const arch=docEsc(docv('cs-arch')||'श्री. विजयकुमार प्रकाश एडके');const date=docDmy(docv('cs-date'));const place=docEsc(docv('cs-place')||'सोलापूर');
+  document.getElementById('cs-preview').innerHTML=`<div class="doc-paper"><h1>स्वयं - घोषणापत्र (मालकाकडून)</h1>
+    <div class="to"><b>प्रति,</b><br>मा. आयुक्त महोदय,<br>सोलापूर महानगरपालिका, सोलापूर.</div>
+    <div class="subject">विषय : मंजूर नकाशानुसार बांधकाम करण्याबाबत स्वयंघोषणा.</div>
+    <p><b>मालकाचे नाव :</b> ${docEsc(owners)}</p><p><b>बांधकामाचा पत्ता :</b> ${site}</p><p><b>संपर्क क्र. :</b> ${phone}</p>
+    <div class="center"><b>घोषणा</b></div>
+    <p>मी / आम्ही, खाली सही करणारा / करणारी, वरील नमूद बांधकामाचा / जागेचा कायदेशीर मालक असून खालीलप्रमाणे जाहीर करतो / करते –</p>
+    <p class="numbered"><b>1.</b> सोलापूर महानगरपालिकेकडून मंजूर करण्यात आलेला बांधकाम नकाशा तसेच लागू UDCPR नियम वाचलेले असून, मंजूर नकाशा व लागू नियमांनुसारच बांधकाम करण्यास मी / आम्ही सहमत आहे / आहोत.</p>
+    <p class="numbered"><b>2.</b> सदर बांधकामाचे तांत्रिक पर्यवेक्षण परवानाधारक तांत्रिक व्यक्ती (Licensed Technical Person) आर्किटेक्ट / इंजिनिअर ${arch} यांच्यामार्फत करण्यात येत असून, मंजूर नकाशानुसार आवश्यक तांत्रिक देखरेख व प्रमाणनाची जबाबदारी लागू नियमांनुसार पार पाडण्यात येईल.</p>
+    <p class="numbered"><b>3.</b> माझ्याकडून / आमच्याकडून मंजूर नकाशापासून कोणताही फरक करून किंवा कोणतेही अनधिकृत बांधकाम केल्यास, त्याची संपूर्ण जबाबदारी माझी / आमची राहील.</p>
+    <p class="numbered"><b>4.</b> माझ्याकडून / आमच्याकडून किंवा माझ्या / आमच्या आदेशाने मंजूर बांधकामामध्ये कोणताही बदल अथवा अनधिकृत बांधकाम झाल्यास, त्याबाबत परवानाधारक तांत्रिक व्यक्तीस जबाबदार धरले जाणार नाही.</p>
+    <p class="numbered"><b>5.</b> अशा परिस्थितीत सक्षम प्राधिकरणास लागू कायदे व नियमांनुसार बांधकाम थांबविणे, अनधिकृत बांधकामावर कारवाई करणे, ते पाडणे तसेच त्यासाठी झालेला खर्च माझ्याकडून / आमच्याकडून वसूल करण्याचे अधिकार राहतील, हे मी / आम्ही मान्य करतो / करते.</p>
+    <div class="signature"><div class="sigbox"><b>मालकाची सही :</b> ______________________<br>नाव : ${docEsc(o1||'______________________________')}<br><br><b>मालकाची सही :</b> ______________________<br>नाव : ${docEsc(o2||'______________________________')}</div><div class="sigbox">दिनांक : ${date}<br>ठिकाण : ${place}<br><br>Architect / Licensed Technical Person<br>${arch}</div></div>
+  </div>`;
+};
+window.saveClientSelfDeclaration=function(){['cs-owner1','cs-owner2','cs-site','cs-phone','cs-arch','cs-date','cs-place'].forEach(id=>localStorage.setItem('gs_'+id,docv(id)));showOk('✅ Client Self Declaration saved');};
+window.printClientSelfDeclaration=function(){saveClientSelfDeclaration();const el=document.getElementById('cs-preview');docPrint('Client Self Declaration – स्वयंघोषणापत्र',el?el.innerHTML:'');};
+
+window.renderNocView=function(){
+  const box=document.getElementById('noc-body');
+  if(!box)return;
+  if(nocDrawn){nocRender();return;}
+  box.innerHTML=`
+  <div class="sec-head">
+    <div class="sec-title">🏛️ ना हरकत प्रमाणपत्र (NOC)</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="nocNew()">New</button>
+      <button class="btn btn-sm" onclick="nocStore()">Save</button>
+      <button class="btn btn-gold" onclick="nocPrint()">🖨 Print / PDF</button>
+      <button class="btn btn-sm" onclick="renderArchitecturalProjectionView()">📐 Architectural Projection</button>
+      <button class="btn btn-sm" onclick="renderClientSelfDeclarationView()">📄 Client Self Declaration</button>
+    </div>
+  </div>
+  <div class="noc-grid">
+    <div>
+      <div class="noc-card"><h4 onclick="nocTog(this)">👤 मालक व पत्ता<span class="ar">▼</span></h4><div class="eb">
+        <div class="noc-f">
+          <label>दिनांक (Date)</label>
+          <input type="date" id="noc-date">
+          <label>महानगरपालिका / नगरपालिका / ग्रामपंचायत</label>
+          <input id="noc-corp" placeholder="उदा. सोलापूर महानगरपालिका">
+          <label>शहर / गाव</label>
+          <input id="noc-city" placeholder="उदा. सोलापूर">
+          <label>मालकांची नावे (Owners) — एकापेक्षा जास्त असल्यास + ने add करा</label>
+          <div id="noc-owners"></div>
+          <button class="chip" onclick="nocAddOwner()" style="margin-bottom:9px">+ आणखी एक मालक</button>
+          <div id="noc-relwrap" style="display:none">
+            <label>दोन मालकांमधील नाते (उदा. भाऊ / वडील / पत्नी)</label>
+            <input id="noc-rel" placeholder="माझे भाऊ" oninput="nocRender()">
+          </div>
+          <label>राहण्याचा पत्ता (Resident Address)</label>
+          <textarea id="noc-resaddr" placeholder="उदा. ११६, वाणी गल्ली, ता- उ. सोलापूर, सोलापूर" oninput="nocRender()"></textarea>
+        </div>
+      </div></div>
+      <div class="noc-card"><h4 onclick="nocTog(this)">📍 साईट / प्लॉट माहिती<span class="ar">▼</span></h4><div class="eb">
+        <div class="noc-f">
+          <label>स.नं. / सि.स.नं. / प्लॉट नं. / सोसायटी / गाव / तालुका / जिल्हा (एकत्र टाइप करा)</label>
+          <textarea id="noc-site" style="min-height:90px" placeholder="स. नं – 93/2C, सि.स.नं. – 1003 A/22. प्लॉट नं. – 22, गणेश गौरी सहकारी गृहनिर्माण संस्था मर्यादित, बाळे, ता- उ. सोलापूर, सोलापूर" oninput="nocRender()"></textarea>
+          <div class="noc-hint">हा मजकूर पत्रात जसाच्या तसा (verbatim) येतो — जितकं डिटेल टाइप कराल तितकं पत्रात दिसेल.</div>
+        </div>
+      </div></div>
+      <div class="noc-card cl"><h4 onclick="nocTog(this)">💾 Saved Letters<span class="ar">▼</span></h4><div class="eb" id="noc-saved"></div></div>
+    </div>
+    <div>
+      <div class="pvbox">
+        <div class="pvbar">
+          <span>Preview</span>
+          <label style="margin-left:auto"><input type="checkbox" id="noc-lhchk" onchange="nocToggleLH(this.checked)"> Letterhead</label>
+        </div>
+        <div id="noc-pv"></div>
+      </div>
+    </div>
+  </div>`;
+  nocDrawn=true;
+  const lhchk=nq('lhchk');if(lhchk)lhchk.checked=nocLH;
+  ['date','corp','city'].forEach(f=>{const e=nq(f);if(e)e.addEventListener('input',nocRender);});
+  nocNew();
+  nocDrawSaved();
+};
+if(typeof VIEW_TITLES==='object')VIEW_TITLES.nocletter='🏛️ Permission Docs';
 })();
 </script>
 
