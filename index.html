@@ -3519,6 +3519,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:#1a1a18;background:#fff;-w
 </div>
 
 <script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500));<\/script>
+
+<style>
+.cp-action{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff;border-radius:9px;padding:7px 11px;font-size:11px;font-weight:700;cursor:pointer}.cp-dl-btn{border:1px solid var(--grn);background:#fff;color:var(--grn);border-radius:9px;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer}.cp-dl-btn:hover{background:var(--grn);color:#fff}
+</style>
 </body></html>`;
 
   const w = window.open('','_blank');
@@ -10976,6 +10980,7 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
     <!-- Tab bar -->
     <div style="background:#fff;border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch" id="cp-tabs">
       <button class="cp-tab active" onclick="cpTab('overview')">📊 Overview</button>
+      <button class="cp-tab" onclick="cpTab('project')">🏗️ Project</button>
       <button class="cp-tab" onclick="cpTab('agreement')">📜 Agreement</button>
         <button class="cp-tab" onclick="cpTab('payments')">💰 Payments</button>
       <button class="cp-tab" onclick="cpTab('sitevisits')">🏗️ Site Visits</button>
@@ -11026,6 +11031,7 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
 let cpPin = '';
 let cpCurrentClient = null;
 let cpCurrentTab = 'overview';
+let cpOpenProjectId = null;
 
 // ── OPEN: Launch client portal overlay ──
 function openClientPortal() {
@@ -11209,6 +11215,7 @@ function renderCpContent() {
   const c = cpCurrentClient;
   const projs = (db.projects || []).filter(p => p.clientId === c.id);
   if (cpCurrentTab === 'overview') el.innerHTML = renderCpOverview(c, projs);
+  else if (cpCurrentTab === 'project') el.innerHTML = renderCpProject(c, projs);
   else if (cpCurrentTab === 'payments') el.innerHTML = renderCpPayments(c, projs);
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
   else if (cpCurrentTab === 'agreement') el.innerHTML = renderCpAgreement(c, projs);
@@ -11510,8 +11517,16 @@ function submitBrief() {
     notes: document.getElementById('brief-notes').value,
   };
 
-  // Save brief to project
-  p.clientBrief = brief;
+  // Save brief to existing project or create a project-request record
+  if(p){
+    p.clientBrief = brief;
+  } else {
+    brief.requestId = 'BRIEF' + Date.now();
+    db.clientProjectRequests = db.clientProjectRequests || [];
+    db.clientProjectRequests.unshift(brief);
+  }
+  db.activities = db.activities || [];
+  db.activities.unshift({text:'New Project Request — '+brief.clientName,sub:(brief.projectType||'New Project')+' · '+brief.siteAddress,time:'Just now',color:'#c9a84c'});
 
   // Save to Firebase
   try {
@@ -11520,10 +11535,15 @@ function submitBrief() {
     if(fbUrl){
       fetch(fbUrl+'/db/projects.json', {method:'PATCH',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({[proj]: p})
+        body: JSON.stringify(proj ? {[proj]: p} : {})
       });
     }
   } catch(e){}
+  try{
+    const fbUrl = localStorage.getItem('gs_fb_url') || '';
+    if(fbUrl && !proj){ fetch(fbUrl+'/db/clientProjectRequests.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(brief)}); }
+  }catch(e){}
+  try{ saveAll(); }catch(e){}
 
   // Show success
   document.getElementById('cp-content').innerHTML = `
@@ -11754,7 +11774,7 @@ function renderCpOverview(c, projs) {
     const stagePct = Math.round(((stageIdx + 1) / STAGES.length) * 100);
     const visits = (db.siteVisits || []).filter(v => v.projId === p.id);
     html += `
-      <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:12px">
+      <div onclick="cpOpenProject('${p.id}')" style="background:#fff;border:1.5px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;transition:transform .18s,box-shadow .18s" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(26,58,42,.10)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
           <div>
             <div style="font-weight:700;font-size:15px;color:var(--txt)">${p.name}</div>
@@ -11807,9 +11827,102 @@ function renderCpOverview(c, projs) {
   return html;
 }
 
+
+function cpOpenProject(pid){
+  cpOpenProjectId = pid;
+  cpCurrentTab = 'project';
+  renderCpContent();
+}
+
+function cpPdfDownload(filename, title, sections){
+  try{
+    const {jsPDF}=window.jspdf;
+    if(!jsPDF) throw new Error('jsPDF library not loaded');
+    const doc=new jsPDF('p','mm','a4');
+    const W=210, H=297;
+    const green=[26,58,42], gold=[201,168,76];
+    let y=18;
+    doc.setFillColor(...green); doc.rect(0,0,W,30,'F');
+    doc.setTextColor(...gold); doc.setFont('helvetica','bold'); doc.setFontSize(18);
+    doc.text((officeInfo.name||'Greenhouse Studio').toUpperCase(),14,13);
+    doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','normal');
+    doc.text((officeInfo.arch||'Principal Architect')+'  |  '+(officeInfo.phone||''),14,21);
+    doc.setTextColor(...green); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(title,14,40); y=48;
+    sections.forEach(sec=>{
+      if(y>H-35){doc.addPage();y=18;}
+      doc.setFillColor(246,243,237); doc.roundedRect(12,y-5,186,9,2,2,'F');
+      doc.setTextColor(...green); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text(sec.heading,16,y+1); y+=10;
+      doc.setTextColor(55,55,55); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+      const lines=Array.isArray(sec.lines)?sec.lines:[String(sec.lines||'')];
+      lines.forEach(line=>{
+        const wrapped=doc.splitTextToSize(String(line||'—'),178);
+        if(y+wrapped.length*5.2>H-22){doc.addPage();y=18;}
+        doc.text(wrapped,16,y); y+=wrapped.length*5.2+2;
+      }); y+=3;
+    });
+    doc.setFillColor(...green); doc.rect(0,H-12,W,12,'F');
+    doc.setTextColor(210,210,210); doc.setFontSize(7); doc.text('Generated from Greenhouse Studio Client Portal',14,H-5);
+    doc.save(filename);
+  }catch(e){alert('PDF generation error: '+e.message);}
+}
+
+function cpDownloadPaymentReport(pid){
+  const p=gp(pid); if(!p)return;
+  const c=gc(p.clientId); const pays=ppays(pid).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const paid=ppaid(pid), bal=pbal(pid);
+  cpPdfDownload('Payment_Report_'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.pdf','PAYMENT REPORT',[{
+    heading:'Project Information',lines:['Project: '+p.name,'Client: '+(c?.name||'—'),'Site Address: '+(p.address||'—'),'Report Date: '+new Date().toLocaleDateString('en-IN')]},{
+    heading:'Payment Summary',lines:['Contract Amount: ₹'+Number(p.total||0).toLocaleString('en-IN'),'Total Paid: ₹'+Number(paid||0).toLocaleString('en-IN'),'Balance: ₹'+Number(bal||0).toLocaleString('en-IN')]},{
+    heading:'Payment History',lines:pays.length?pays.map((x,i)=>(i+1)+'. '+(x.date||'—')+' | '+(x.stage||'Payment')+' | '+(x.mode||'—')+' | ₹'+Number(x.amount||0).toLocaleString('en-IN')):['No payments recorded.']
+  }]);
+}
+
+function cpDownloadSiteVisitReport(pid){
+  const p=gp(pid); if(!p)return;
+  const visits=(db.siteVisits||[]).filter(v=>v.projId===pid).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const c=gc(p.clientId);
+  const lines=[]; visits.forEach((v,i)=>{lines.push('Visit '+(i+1)+' — '+(v.date||'—')+(v.timeIn?' | '+v.timeIn+(v.timeOut?' - '+v.timeOut:''):'')+(v.weather?' | '+v.weather:'')); if(v.checklist?.length)lines.push('Inspected: '+v.checklist.join(', ')); if(v.instructions)lines.push('Instructions: '+v.instructions); if(v.notes)lines.push('Notes: '+v.notes); lines.push('');});
+  cpPdfDownload('Site_Visit_Report_'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.pdf','SITE VISIT REPORT',[{heading:'Project Information',lines:['Project: '+p.name,'Client: '+(c?.name||'—'),'Site Address: '+(p.address||'—'),'Total Visits: '+visits.length]},{heading:'Visit Details',lines:lines.length?lines:['No site visits recorded.']}]);
+}
+
+function cpDownloadDrawingReport(pid){
+  const p=gp(pid); if(!p)return;
+  const c=gc(p.clientId); const files=(p.files||[]).filter(f=>f.clientVisible); const pays=ppays(pid); const released=[...new Set(pays.flatMap(x=>x.drawings||[]))];
+  const lines=[...files.map((f,i)=>(i+1)+'. '+f.name+' | '+(f.cat||'Drawing')+' | '+(f.date||'')),...released.map((d,i)=>(files.length+i+1)+'. '+d+' | Released')];
+  cpPdfDownload('Drawing_Report_'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.pdf','DRAWING / DOCUMENT REPORT',[{heading:'Project Information',lines:['Project: '+p.name,'Client: '+(c?.name||'—'),'Stage: '+(p.stage||'Concept')]},{heading:'Available Drawings & Documents',lines:lines.length?lines:['No client-visible drawings/documents available yet.']}]);
+}
+
+function cpDownloadAgreementPDF(pid){
+  const p=gp(pid); if(!p || !p.agreement){alert('Agreement available नाही.');return;}
+  const a=p.agreement,c=gc(p.clientId); const total=Number(a.total||0)*(1+Number(a.gst||0)/100);
+  const stages=(a.stages||[]).map((x,i)=>(i+1)+'. '+x.label+' — '+x.pct+'% — '+(x.status==='done'?'Completed':'Pending'));
+  cpPdfDownload('Agreement_'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.pdf','ARCHITECTURAL SERVICES AGREEMENT',[{heading:'Parties & Project',lines:['Client: '+(c?.name||'—'),'Project: '+p.name,'Site Address: '+(p.address||'—'),'Agreement Date: '+(a.date||'—'),'Status: '+(a.status||'Draft')]},{heading:'Professional Fee',lines:['Base Fee: ₹'+Number(a.total||0).toLocaleString('en-IN'),'GST: '+Number(a.gst||0)+'%','Total including GST: ₹'+Math.round(total).toLocaleString('en-IN')]},{heading:'Scope Included',lines:a.scopeIn?.length?a.scopeIn:['—']},{heading:'Scope Excluded',lines:a.scopeOut?.length?a.scopeOut:['—']},{heading:'Payment Stages',lines:stages.length?stages:['—']},{heading:'Terms & Conditions',lines:a.terms||'Terms not entered.'}]);
+}
+
+function renderCpProject(c, projs){
+  const p=projs.find(x=>x.id===cpOpenProjectId)||projs[0];
+  if(!p) return `<div style="text-align:center;padding:50px;color:var(--mut)">Project उपलब्ध नाही.</div>`;
+  const visits=(db.siteVisits||[]).filter(v=>v.projId===p.id); const pays=ppays(p.id); const files=(p.files||[]).filter(f=>f.clientVisible);
+  return `<div style="max-width:760px;margin:0 auto">
+    <div style="background:linear-gradient(135deg,var(--grn),#2d5a3d);color:#fff;border-radius:18px;padding:20px;margin-bottom:14px">
+      <div style="font-size:11px;opacity:.7">PROJECT</div><div style="font-size:22px;font-weight:800;color:var(--gold);margin:4px 0">${p.name}</div><div style="font-size:12px;opacity:.8">📍 ${p.address||'—'} · ${p.stage||'Concept'}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button onclick="cpTab('agreement')" class="cp-action">📜 Agreement</button><button onclick="cpTab('payments')" class="cp-action">💰 Payments</button><button onclick="cpTab('sitevisits')" class="cp-action">🏗️ Visits</button><button onclick="cpTab('drawings')" class="cp-action">📐 Drawings</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
+      <div class="cp-stat"><div class="cp-sl">Payments</div><div class="cp-sv">${pays.length}</div></div><div class="cp-stat"><div class="cp-sl">Site Visits</div><div class="cp-sv">${visits.length}</div></div><div class="cp-stat"><div class="cp-sl">Files</div><div class="cp-sv">${files.length}</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:16px">
+      <div style="font-weight:800;color:var(--grn);margin-bottom:10px">Quick Downloads</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="cpDownloadAgreementPDF('${p.id}')" class="cp-dl-btn">⬇ Agreement PDF</button><button onclick="cpDownloadPaymentReport('${p.id}')" class="cp-dl-btn">⬇ Payment Report</button><button onclick="cpDownloadSiteVisitReport('${p.id}')" class="cp-dl-btn">⬇ Site Visit Report</button><button onclick="cpDownloadDrawingReport('${p.id}')" class="cp-dl-btn">⬇ Drawing Report</button></div>
+    </div>
+  </div>`;
+}
+
 // ── PAYMENTS TAB ──
 function renderCpPayments(c, projs) {
-  let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">💰 Payment History</div>';
+  let html = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap"><div style="font-size:13px;font-weight:700;color:var(--grn)">💰 Payment History</div><button onclick="cpDownloadPaymentReport(cpOpenProjectId||'+(projs[0]?.id?JSON.stringify(projs[0].id):"''")+')" class="cp-dl-btn">⬇ Payment Report PDF</button></div>'; 
   let anyPays = false;
   projs.forEach(p => {
     const pays = ppays(p.id).sort((a, b) => b.date.localeCompare(a.date));
@@ -11844,7 +11957,7 @@ function renderCpPayments(c, projs) {
 
 // ── SITE VISITS TAB ──
 function renderCpSiteVisits(c, projs) {
-  let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">🏗️ Site Visit Reports</div>';
+  let html = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap"><div style="font-size:13px;font-weight:700;color:var(--grn)">🏗️ Site Visit Reports</div><button onclick="cpDownloadSiteVisitReport(cpOpenProjectId||'+(projs[0]?.id?JSON.stringify(projs[0].id):"''")+')" class="cp-dl-btn">⬇ Site Visit Report PDF</button></div>'; 
   let anyVisits = false;
   projs.forEach(p => {
     const visits = (db.siteVisits || []).filter(v => v.projId === p.id).sort((a, b) => b.date.localeCompare(a.date));
@@ -11912,7 +12025,7 @@ function renderCpAgreement(c, projs) {
           <div style="font-weight:700;font-size:15px">${p.name}</div>
           <div style="font-size:11px;color:var(--mut);margin-top:2px">${a.date ? 'दिनांक: ' + a.date : 'Draft agreement'}</div>
         </div>
-        <span style="font-size:10px;padding:4px 11px;border-radius:20px;font-weight:700;background:${a.status === 'signed' ? '#e8f4ee' : '#fff4e0'};color:${a.status === 'signed' ? '#1a7a44' : '#b36b00'}">
+        <button onclick="cpDownloadAgreementPDF('${p.id}')" style="background:var(--grn);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer">⬇ PDF</button><span style="font-size:10px;padding:4px 11px;border-radius:20px;font-weight:700;background:${a.status === 'signed' ? '#e8f4ee' : '#fff4e0'};color:${a.status === 'signed' ? '#1a7a44' : '#b36b00'}">
           ${a.status === 'signed' ? '✅ Signed' : '📝 Draft'}
         </span>
       </div>
@@ -12010,7 +12123,7 @@ function renderCpAgreement(c, projs) {
 }
 
 function renderCpDrawings(c, projs) {
-  let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">📐 Drawings & Files</div>';
+  let html = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap"><div style="font-size:13px;font-weight:700;color:var(--grn)">📐 Drawings & Files</div><button onclick="cpDownloadDrawingReport(cpOpenProjectId||'+(projs[0]?.id?JSON.stringify(projs[0].id):"''")+')" class="cp-dl-btn">⬇ Drawing Report PDF</button></div>'; 
   let anyFiles = false;
 
   // FILE_CATEGORIES may not exist in this scope — use simplified icons
