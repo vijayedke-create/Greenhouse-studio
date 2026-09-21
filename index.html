@@ -3716,6 +3716,88 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:#1a1a18;background:#fff;-w
   document.addEventListener('DOMContentLoaded',()=>{setTimeout(bind,50);});
 })();
 </script>
+<style>
+.gs-perm-wrap{padding:4px 0 30px}.gs-perm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.gs-perm-card{background:#fff;border:1px solid #e7e4dc;border-radius:16px;padding:20px;box-shadow:0 6px 20px rgba(20,45,30,.06);display:flex;gap:16px;align-items:flex-start;transition:.2s}.gs-perm-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(20,45,30,.1)}.gs-perm-icon{width:52px;height:52px;border-radius:14px;background:#edf5ee;display:grid;place-items:center;font-size:26px;flex:0 0 auto}.gs-perm-card h3{margin:0 0 6px;font-size:16px;color:#193522}.gs-perm-card p{margin:0 0 14px;color:#777;font-size:13px;line-height:1.55}.gs-perm-actions{display:flex;gap:8px;flex-wrap:wrap}.gs-perm-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}.gs-perm-head h2{margin:0;color:#193522}.gs-perm-head p{margin:4px 0 0;color:#777;font-size:13px}.gs-perm-back{display:none;margin-bottom:14px}.gs-perm-doc{background:#fff;border:1px solid #e7e4dc;border-radius:16px;padding:20px}.gs-perm-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gs-perm-form .full{grid-column:1/-1}.gs-perm-form label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px}.gs-perm-form input,.gs-perm-form textarea{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:9px;padding:10px;font:inherit}.gs-perm-form textarea{min-height:90px;resize:vertical}.gs-perm-preview{margin-top:18px;border:1px solid #ddd;background:#fafafa;padding:20px;min-height:260px}.gs-perm-paper{background:#fff;max-width:210mm;min-height:297mm;margin:auto;padding:22mm 18mm;box-sizing:border-box;font-family:'Noto Sans Devanagari',Arial,sans-serif;color:#222;box-shadow:0 2px 12px rgba(0,0,0,.08)}.gs-perm-paper h1{text-align:center;font-size:22px;margin:0 0 22px}.gs-perm-paper .to{line-height:1.7}.gs-perm-paper .body{margin-top:20px;line-height:1.9;text-align:justify}.gs-perm-paper .sig{margin-top:55px;text-align:right}.gs-perm-paper .subject{font-weight:700;margin-top:15px}
+@media(max-width:800px){.gs-perm-grid{grid-template-columns:1fr}.gs-perm-form{grid-template-columns:1fr}}
+</style>
+<script>
+(function(){
+  const docs=[
+    {id:'noc',icon:'🏛️',title:'ना हरकत प्रमाणपत्र (NOC)',desc:'मालकांची संमती / बांधकाम परवानगीसाठी NOC तयार करा.',action:'noc'},
+    {id:'projection',icon:'📐',title:'Architectural Projection – हमीपत्र',desc:'Architectural projection बाबत हमीपत्र तयार करा.',action:'generic'},
+    {id:'declaration',icon:'📝',title:'Client Self Declaration – स्वयंघोषणापत्र',desc:'मालकाचे स्वयंघोषणापत्र तयार व Print/PDF करा.',action:'generic'},
+    {id:'area',icon:'📏',title:'क्षेत्रफळाबाबत हमीपत्र',desc:'मोजणी नकाशानुसार क्षेत्रफळ योग्य असल्याचे हमीपत्र.',action:'generic'},
+    {id:'tp',icon:'🏛️',title:'TP अभिप्राय पत्र',desc:'बांधकाम परवानगीसाठी नगर रचना अभिप्राय अर्ज.',action:'generic'}
+  ];
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function shell(){return document.getElementById('noc-body');}
+  function landing(){
+    const b=shell();if(!b)return;
+    b.innerHTML=`<div class="gs-perm-wrap"><div class="gs-perm-head"><div><h2>🏛️ Permission Documents</h2><p>बांधकाम परवानगीसाठी आवश्यक पत्रे, हमीपत्रे व अभिप्राय एकाच ठिकाणी तयार करा.</p></div></div><div class="gs-perm-grid">${docs.map(d=>`<div class="gs-perm-card"><div class="gs-perm-icon">${d.icon}</div><div style="flex:1"><h3>${d.title}</h3><p>${d.desc}</p><div class="gs-perm-actions"><button class="btn btn-gold" onclick="gsOpenPerm('${d.id}')">Open Document</button>${d.id==='noc'?'<button class="btn btn-sm" onclick="gsOpenPerm(\'noc\')">Create New</button>':''}</div></div></div>`).join('')}</div></div>`;
+  }
+  window.gsOpenPerm=function(id){
+    if(id==='noc'){ if(typeof window.renderNocViewOriginal==='function') window.renderNocViewOriginal(); else if(typeof window.renderNocView==='function') window.renderNocView(); return; }
+    generic(id);
+  };
+  function generic(id){
+    const b=shell();if(!b)return; const d=docs.find(x=>x.id===id); if(!d)return;
+    b.innerHTML=`<div class="gs-perm-back"><button class="btn btn-sm" onclick="renderNocView()">← Permission Documents</button></div><div class="gs-perm-doc"><div class="sec-head"><div class="sec-title">${d.icon} ${d.title}</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="gsPermPreview('${id}')">Preview</button><button class="btn btn-gold" onclick="gsPermPrint('${id}')">🖨 Print / PDF</button></div></div><div class="gs-perm-form">
+      <div><label>दिनांक</label><input id="gp-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div><label>अर्जदार / मालकाचे नाव</label><input id="gp-owner" placeholder="पूर्ण नाव"></div>
+      <div class="full"><label>जागेचा पत्ता / Plot Details</label><textarea id="gp-site" placeholder="Plot No., Gat No., CTS No., TP Scheme, Final Plot, Village, Taluka, District"></textarea></div>
+      <div><label>Architect / LTP</label><input id="gp-arch" value="श्री. विजयकुमार प्रकाश एडके"></div>
+      <div><label>संपर्क क्रमांक</label><input id="gp-phone"></div>
+      <div class="full"><label>अतिरिक्त माहिती</label><textarea id="gp-note" placeholder="आवश्यक असल्यास अतिरिक्त माहिती लिहा"></textarea></div>
+    </div><div class="gs-perm-preview" id="gp-preview"></div></div>`;
+    gsPermPreview(id);
+  }
+  window.gsPermPreview=function(id){
+    const d=docs.find(x=>x.id===id);if(!d)return;
+    const owner=document.getElementById('gp-owner')?.value||'________________'; const site=document.getElementById('gp-site')?.value||'________________'; const arch=document.getElementById('gp-arch')?.value||'________________'; const note=document.getElementById('gp-note')?.value||''; const date=document.getElementById('gp-date')?.value||'';
+    let body='';
+    if(id==='projection') body=`सदर प्रस्तावातील Architectural Projection / बांधकाम projection हे मंजूर नकाशानुसार ठेवण्यात येईल. कोणतेही अनधिकृत कायमस्वरूपी बंदिस्त बांधकाम projection मध्ये करण्यात येणार नाही. मंजूर नकाशा व लागू UDCPR मधील तरतुदींचे पालन करण्यात येईल.`;
+    if(id==='declaration') body=`मी/आम्ही वरील जागेवर करण्यात येणारे बांधकाम मंजूर नकाशा, लागू UDCPR व संबंधित प्राधिकरणाच्या नियमांनुसार करण्याची घोषणा करीत आहे/आहोत. तांत्रिक मार्गदर्शन व देखरेख संबंधित Architect/LTP मार्फत करण्यात येईल. अनधिकृत बदलांची जबाबदारी मालकाची राहील.`;
+    if(id==='area') body=`सदर प्रस्तावात दाखविलेले जागेचे क्षेत्रफळ हे उपलब्ध मोजणी नकाशा / अभिलेखानुसार योग्य आहे, याची मी/आम्ही या हमीपत्राद्वारे हमी देत आहे/आहोत. चुकीची माहिती आढळल्यास संबंधित प्राधिकरणास नियमानुसार कारवाई करण्याचा अधिकार राहील.`;
+    if(id==='tp') body=`वरील विषयांकित जागेवरील बांधकाम परवानगी घेणेकरीता नकाशेसोबत जोडलेले आहेत. तरी उपरोक्त जागेबाबत विकास योजना, नगर रचना योजनेनुसार आरक्षण, झोन व रस्त्याबाबत आपला सविस्तर अभिप्राय मिळणेची विनंती आहे.`;
+    const title=d.title;
+    document.getElementById('gp-preview').innerHTML=`<div class="gs-perm-paper"><h1>${esc(title)}</h1><div class="to">प्रति,<br><b>मा. आयुक्त महोदय,</b><br>सोलापूर महानगरपालिका, सोलापूर.</div><div class="subject">विषय – बांधकाम परवानगी संदर्भात.</div><div class="body"><b>अर्जदार / मालक:</b> ${esc(owner)}<br><b>जागेचा पत्ता:</b> ${esc(site)}<br><br>${body}${note?'<br><br>'+esc(note):''}</div><div class="sig">आपला विश्वासू,<br><br><b>${esc(arch)}</b><br>Architect / LTP<br><br>दिनांक: ${esc(date)}</div></div>`;
+  };
+  window.gsPermPrint=function(id){
+    gsPermPreview(id);const pv=document.getElementById('gp-preview')?.innerHTML;if(!pv)return;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups.');w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Permission Document</title><style>@page{size:A4 portrait;margin:0}body{margin:0;background:#fff}.gs-perm-paper{width:210mm;min-height:297mm;margin:0;padding:22mm 18mm;box-sizing:border-box;font-family:"Noto Sans Devanagari",Arial,sans-serif;color:#222}.gs-perm-paper h1{text-align:center;font-size:22px;margin:0 0 22px}.gs-perm-paper .to{line-height:1.7}.gs-perm-paper .body{margin-top:20px;line-height:1.9;text-align:justify}.gs-perm-paper .sig{margin-top:55px;text-align:right}.gs-perm-paper .subject{font-weight:700;margin-top:15px}</style></head><body>'+pv+'<script>
+(function(){
+  const originalNoc=window.renderNocView;
+  if(typeof originalNoc==='function') window.renderNocViewOriginal=originalNoc;
+  window.renderNocView=function(){
+    const b=document.getElementById('noc-body');if(!b)return;
+    const docs=[
+      ['noc','🏛️','ना हरकत प्रमाणपत्र (NOC)','मालकांची संमती / बांधकाम परवानगीसाठी NOC तयार करा.'],
+      ['projection','📐','Architectural Projection – हमीपत्र','Architectural projection बाबत हमीपत्र तयार करा.'],
+      ['declaration','📝','Client Self Declaration – स्वयंघोषणापत्र','मालकाचे स्वयंघोषणापत्र तयार करा.'],
+      ['area','📏','क्षेत्रफळाबाबत हमीपत्र','मोजणी नकाशानुसार क्षेत्रफळाबाबत हमीपत्र.'],
+      ['tp','🏛️','TP अभिप्राय पत्र','नगर रचना विभागासाठी अभिप्राय अर्ज.']
+    ];
+    b.innerHTML='<div class="gs-perm-wrap"><div class="gs-perm-head"><div><h2>🏛️ Permission Documents</h2><p>बांधकाम परवानगीसाठी आवश्यक सर्व पत्रे व हमीपत्रे.</p></div></div><div class="gs-perm-grid">'+docs.map(d=>'<div class="gs-perm-card"><div class="gs-perm-icon">'+d[1]+'</div><div style="flex:1"><h3>'+d[2]+'</h3><p>'+d[3]+'</p><div class="gs-perm-actions"><button class="btn btn-gold" onclick="gsOpenPerm(\''+d[0]+'\')">Open Document</button></div></div></div>').join('')+'</div></div>';
+  };
+  window.gsOpenPerm=function(id){
+    if(id==='noc'){if(typeof window.renderNocViewOriginal==='function')window.renderNocViewOriginal();return;}
+    if(typeof window.generic==='function')return window.generic(id);
+    const b=document.getElementById('noc-body');if(!b)return;
+    const data={projection:['📐','Architectural Projection – हमीपत्र','सदर प्रस्तावातील Architectural Projection / बांधकाम projection हे मंजूर नकाशानुसार ठेवण्यात येईल. कोणतेही अनधिकृत कायमस्वरूपी बंदिस्त बांधकाम projection मध्ये करण्यात येणार नाही.'],declaration:['📝','Client Self Declaration – स्वयंघोषणापत्र','मी/आम्ही वरील जागेवरील बांधकाम मंजूर नकाशा, लागू UDCPR व संबंधित प्राधिकरणाच्या नियमांनुसार करण्याची घोषणा करीत आहे/आहोत.'],area:['📏','क्षेत्रफळाबाबत हमीपत्र','सदर प्रस्तावात दाखविलेले जागेचे क्षेत्रफळ उपलब्ध मोजणी नकाशा / अभिलेखानुसार योग्य आहे, याची मी/आम्ही हमी देत आहे/आहोत.'],tp:['🏛️','TP अभिप्राय पत्र','वरील विषयांकित जागेबाबत विकास योजना, नगर रचना योजनेनुसार आरक्षण, झोन व रस्त्याबाबत आपला सविस्तर अभिप्राय मिळणेची विनंती आहे.']}[id];
+    if(!data)return;
+    b.innerHTML='<div style="margin-bottom:14px"><button class="btn btn-sm" onclick="renderNocView()">← Permission Documents</button></div><div class="gs-perm-doc"><div class="sec-head"><div class="sec-title">'+data[0]+' '+data[1]+'</div><button class="btn btn-gold" onclick="gsGenericPrint()">🖨 Print / PDF</button></div><div class="gs-perm-form"><div><label>दिनांक</label><input id="gx-date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>अर्जदार / मालकाचे नाव</label><input id="gx-owner" placeholder="पूर्ण नाव"></div><div class="full"><label>जागेचा पत्ता / Plot Details</label><textarea id="gx-site" placeholder="Plot No., Gat No., CTS No., TP Scheme, Final Plot, Village, Taluka, District"></textarea></div><div class="full"><label>अतिरिक्त माहिती</label><textarea id="gx-note"></textarea></div></div><div class="gs-perm-preview" id="gx-preview"></div></div>';
+    window.gsGenericData=data; gsGenericPreview();
+  };
+  window.gsGenericPreview=function(){const d=window.gsGenericData;if(!d)return;const o=document.getElementById('gx-owner')?.value||'________________';const s=document.getElementById('gx-site')?.value||'________________';const n=document.getElementById('gx-note')?.value||'';const dt=document.getElementById('gx-date')?.value||'';document.getElementById('gx-preview').innerHTML='<div class="gs-perm-paper"><h1>'+d[1]+'</h1><div class="to">प्रति,<br><b>मा. आयुक्त महोदय,</b><br>सोलापूर महानगरपालिका, सोलापूर.</div><div class="subject">विषय – बांधकाम परवानगी संदर्भात.</div><div class="body"><b>अर्जदार / मालक:</b> '+o+'<br><b>जागेचा पत्ता:</b> '+s+'<br><br>'+d[2]+(n?'<br><br>'+n:'')+'</div><div class="sig">आपला विश्वासू,<br><br><b>श्री. विजयकुमार प्रकाश एडके</b><br>Architect / LTP<br><br>दिनांक: '+dt+'</div></div>';};
+  window.gsGenericPrint=function(){gsGenericPreview();const h=document.getElementById('gx-preview')?.innerHTML;if(!h)return;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups.');w.document.write('<html><head><meta charset="utf-8"><style>@page{size:A4 portrait;margin:0}body{margin:0}.gs-perm-paper{width:210mm;min-height:297mm;padding:22mm 18mm;box-sizing:border-box;font-family:Arial,"Noto Sans Devanagari",sans-serif}.gs-perm-paper h1{text-align:center}.gs-perm-paper .body{margin-top:20px;line-height:1.9;text-align:justify}.gs-perm-paper .sig{margin-top:55px;text-align:right}</style></head><body>'+h+'</body></html>');w.document.close();setTimeout(()=>w.print(),500);};
+})();
+</script>
+</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},500);
+  };
+  // Preserve existing NOC renderer and expose it under a stable name.
+  if(typeof window.renderNocView==='function' && !window.renderNocViewOriginal) window.renderNocViewOriginal=window.renderNocView;
+  window.renderNocView=function(){landing();};
+})();
+</script>
 </body></html>`;
 
   const w = window.open('','_blank');
