@@ -13721,6 +13721,184 @@ window.renderClientSelfDeclarationPreview=function(){
 window.saveClientSelfDeclaration=function(){['cs-owner1','cs-owner2','cs-site','cs-phone','cs-arch','cs-date','cs-place'].forEach(id=>localStorage.setItem('gs_'+id,docv(id)));showOk('✅ Client Self Declaration saved');};
 window.printClientSelfDeclaration=function(){saveClientSelfDeclaration();const el=document.getElementById('cs-preview');docPrint('Client Self Declaration – स्वयंघोषणापत्र',el?el.innerHTML:'');};
 
+
+window.renderAreaMeasurementUndertakingView=function(){
+  const box=document.getElementById('noc-body');if(!box)return;
+  box.innerHTML=`
+  <div class="sec-head"><div class="sec-title">📄 क्षेत्रफळाबाबत हमीपत्र</div>
+    <div class="doc-toolbar">
+      <button class="btn btn-sm" onclick="docBack()">← Permission Docs</button>
+      <button class="btn btn-sm" onclick="saveAreaMeasurementUndertaking()">Save</button>
+      <button class="btn btn-gold" onclick="printAreaMeasurementUndertaking()">🖨 Print / PDF</button>
+    </div>
+  </div>
+  <div class="doc-grid" style="display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start">
+    <div>
+      <div class="noc-card"><h4>📋 जागा / अर्जदार माहिती <span class="ar">▼</span></h4><div class="eb"><div class="noc-f">
+        <label>अर्जदाराचे नाव</label><input id="am-owner" placeholder="श्री./सौ. ...">
+        <label>पत्ता</label><textarea id="am-address" style="min-height:80px"></textarea>
+        <label>संपर्क क्र.</label><input id="am-phone" placeholder="9XXXXXXXXX">
+        <label>जागेचा तपशील / विषय</label><textarea id="am-subject" style="min-height:100px"></textarea>
+        <label>जुना स. नं.</label><input id="am-oldsn" placeholder="________">
+        <label>नवा स. नं.</label><input id="am-newsn" placeholder="________">
+        <label>C.T.S. नं.</label><input id="am-cts">
+        <label>टी. पी. स्कीम नं.</label><input id="am-tp">
+        <label>अंतिम भूखंड नं.</label><input id="am-finalplot">
+        <label>उपभूखंड नं.</label><input id="am-subplot">
+        <label>दिनांक</label><input type="date" id="am-date">
+        <label>ठिकाण</label><input id="am-place" value="सोलापूर">
+        <div class="noc-hint">साधा A4 format. मजकूर दिलेल्या हमीपत्राच्या नमुन्यानुसार ठेवला आहे.</div>
+      </div></div></div>
+    </div>
+    <div class="doc-sheet-wrap"><div class="pvbar"><span>Live Preview</span></div><div id="am-preview"></div></div>
+  </div>`;
+
+  const vals={
+    owner:localStorage.getItem('gs_am_owner')||'श्री. हनमंतुकोमरय्या बुरा',
+    address:localStorage.getItem('gs_am_address')||'34/A, न्यूपच्छा पेठ, अशोक चौक, उत्तर सोलापूर, सोलापूर – 413005',
+    phone:localStorage.getItem('gs_am_phone')||'9970825000',
+    subject:localStorage.getItem('gs_am_subject')||'शहर सोलापूर येथील न्यू पच्छा पेठ, जुना स. नं. ________, नवा स. नं. ________, C.T.S. नं. 10388, टी. पी. स्कीम नं. 1, अंतिम भूखंड नं. 34/A, उपभूखंड नं. 39 या जागेतील बांधकाम परवानगी / एकत्रीकरण / विभागणी बाबत.',
+    oldsn:localStorage.getItem('gs_am_oldsn')||'',
+    newsn:localStorage.getItem('gs_am_newsn')||'',
+    cts:localStorage.getItem('gs_am_cts')||'10388',
+    tp:localStorage.getItem('gs_am_tp')||'1',
+    finalplot:localStorage.getItem('gs_am_finalplot')||'34/A',
+    subplot:localStorage.getItem('gs_am_subplot')||'39',
+    date:localStorage.getItem('gs_am_date')||'2025-10-14',
+    place:localStorage.getItem('gs_am_place')||'सोलापूर'
+  };
+  Object.entries(vals).forEach(([k,v])=>docSet('am-'+k,v));
+  ['am-owner','am-address','am-phone','am-subject','am-oldsn','am-newsn','am-cts','am-tp','am-finalplot','am-subplot','am-date','am-place']
+    .forEach(id=>document.getElementById(id)?.addEventListener('input',renderAreaMeasurementUndertakingPreview));
+  renderAreaMeasurementUndertakingPreview();
+};
+window.renderAreaMeasurementUndertakingPreview=function(){
+  const owner=docEsc(docv('am-owner')||'श्री./सौ. ______________________________');
+  const address=docEsc(docv('am-address')||'______________________________');
+  const phone=docEsc(docv('am-phone')||'________________');
+  const subject=docEsc(docv('am-subject')||'शहर सोलापूर येथील ______________________________ या जागेतील बांधकाम परवानगी / एकत्रीकरण / विभागणी बाबत.');
+  const date=docDmy(docv('am-date'));
+  const place=docEsc(docv('am-place')||'सोलापूर');
+  document.getElementById('am-preview').innerHTML=`<div class="doc-paper">
+    <h1>हमीपत्र</h1>
+    <div class="to"><b>प्रति,</b><br>मा. आयुक्त,<br>सोलापूर महानगरपालिका, सोलापूर.</div>
+    <div class="subject"><b>विषय:</b> ${subject}</div>
+    <p><b>अर्जदार:</b> ${owner}</p>
+    <p><b>पत्ता:</b> ${address}</p>
+    <p><b>संपर्क क्र.:</b> ${phone}</p>
+    <p>महोदय,</p>
+    <p>मी, ${owner}, विषयांतर्गत नमूद जागेतील बांधकाम परवानगी मिळविण्याकरिता सोलापूर महानगरपालिकेकडे प्रस्ताव सादर केला आहे.</p>
+    <p>सदर प्रस्तावात दाखविलेले जागेचे क्षेत्रफळ हे मोजणी नकाशानुसार योग्य आहे, याची मी या हमीपत्राद्वारे हमी देत आहे.</p>
+    <p>तसेच, चुकीची / खोटी अथवा दिशाभूल करणारी माहिती दिल्यास, भारतीय दंड संहिता 1860 मधील कलम 199/200 अन्वये माझ्यावर कारवाई करण्यात यावी, यास मी पात्र असेन.</p>
+    <p>याव्यतिरिक्त, अशा चुकीमुळे मला देण्यात आलेली बांधकाम परवानगी UDCPR मधील तरतूद क्र. 2.15 नुसार रद्द करण्याचे अधिकार महानगरपालिकेस राहतील, याची मला पूर्ण जाणीव आहे.</p>
+    <p>वरीलप्रमाणे हमीपत्र मी विषयांकित जागेच्या बांधकाम परवानगीसाठी सादर केलेल्या प्रस्तावाकरिता लिहून देत आहे.</p>
+    <div class="signature"><div class="sigbox"><b>आपला नम्र,</b><br><br>अर्जदार:<br>${owner}<br><br>दिनांक: ${date}<br>ठिकाण: ${place}</div></div>
+  </div>`;
+};
+window.saveAreaMeasurementUndertaking=function(){
+  ['am-owner','am-address','am-phone','am-subject','am-oldsn','am-newsn','am-cts','am-tp','am-finalplot','am-subplot','am-date','am-place']
+    .forEach(id=>localStorage.setItem('gs_'+id,docv(id)));
+  showOk('✅ क्षेत्रफळाबाबत हमीपत्र saved');
+};
+window.printAreaMeasurementUndertaking=function(){
+  saveAreaMeasurementUndertaking();
+  const el=document.getElementById('am-preview');
+  docPrint('हमीपत्र – क्षेत्रफळाबाबत',el?el.innerHTML:'');
+};
+
+
+window.renderTPOpinionView=function(){
+  const box=document.getElementById('noc-body');if(!box)return;
+  box.innerHTML=`
+  <div class="sec-head"><div class="sec-title">📄 टी.पी. अभिप्राय — बांधकाम परवानगी / सुधारित बांधकाम परवानगी</div>
+    <div class="doc-toolbar">
+      <button class="btn btn-sm" onclick="docBack()">← Permission Docs</button>
+      <button class="btn btn-sm" onclick="saveTPOpinion()">Save</button>
+      <button class="btn btn-gold" onclick="printTPOpinion()">🖨 Print / PDF</button>
+    </div>
+  </div>
+  <div class="doc-grid" style="display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start">
+    <div>
+      <div class="noc-card"><h4>📋 टी.पी. / अर्जदार माहिती <span class="ar">▼</span></h4><div class="eb"><div class="noc-f">
+        <div class="doc-form-grid">
+          <div><label>आवक नंबर</label><input id="tp-inward" placeholder="________"></div>
+          <div><label>दिनांक</label><input type="date" id="tp-date"></div>
+        </div>
+        <label>अर्जदार</label><input id="tp-applicant" placeholder="श्री./सी. __________">
+        <label>टी.पी.</label><input id="tp-tp" placeholder="________________">
+        <div class="doc-form-grid">
+          <div><label>फा. प्लॉट नं.</label><input id="tp-finalplot" placeholder="________"></div>
+          <div><label>सब प्लॉट नं.</label><input id="tp-subplot" placeholder="________"></div>
+        </div>
+        <div class="doc-form-grid">
+          <div><label>पेठ</label><input id="tp-peth" placeholder="________"></div>
+          <div><label>नगर</label><input id="tp-nagar" placeholder="________"></div>
+        </div>
+        <label>सि.स. नं.</label><input id="tp-cssn" placeholder="________">
+        <label>विषय / बांधकाम परवानगीचा प्रकार</label><textarea id="tp-subject" style="min-height:72px">बांधकाम परवानगी / सुधारीत बांधकाम परवानगी करीता अभिप्राय मिळणेबाबत.</textarea>
+        <div class="noc-hint">मजकूर दिलेल्या “टी.पी. अभिप्राय” नमुन्यानुसार ठेवला आहे. साधा A4 format.</div>
+      </div></div></div>
+    </div>
+    <div class="doc-sheet-wrap"><div class="pvbar"><span>Live Preview</span></div><div id="tp-preview"></div></div>
+  </div>`;
+
+  const vals={
+    inward:localStorage.getItem('gs_tp_inward')||'',
+    date:localStorage.getItem('gs_tp_date')||docToday(),
+    applicant:localStorage.getItem('gs_tp_applicant')||'',
+    tp:localStorage.getItem('gs_tp_tp')||'',
+    finalplot:localStorage.getItem('gs_tp_finalplot')||'',
+    subplot:localStorage.getItem('gs_tp_subplot')||'',
+    peth:localStorage.getItem('gs_tp_peth')||'',
+    nagar:localStorage.getItem('gs_tp_nagar')||'',
+    cssn:localStorage.getItem('gs_tp_cssn')||'',
+    subject:localStorage.getItem('gs_tp_subject')||'बांधकाम परवानगी / सुधारीत बांधकाम परवानगी करीता अभिप्राय मिळणेबाबत.'
+  };
+  Object.entries(vals).forEach(([k,v])=>docSet('tp-'+k,v));
+  ['tp-inward','tp-date','tp-applicant','tp-tp','tp-finalplot','tp-subplot','tp-peth','tp-nagar','tp-cssn','tp-subject']
+    .forEach(id=>document.getElementById(id)?.addEventListener('input',renderTPOpinionPreview));
+  renderTPOpinionPreview();
+};
+
+window.renderTPOpinionPreview=function(){
+  const inward=docEsc(docv('tp-inward')||'________________');
+  const date=docDmy(docv('tp-date'));
+  const applicant=docEsc(docv('tp-applicant')||'श्री./सी. __________________');
+  const tp=docEsc(docv('tp-tp')||'________________');
+  const finalplot=docEsc(docv('tp-finalplot')||'________________');
+  const subplot=docEsc(docv('tp-subplot')||'________________');
+  const peth=docEsc(docv('tp-peth')||'________________');
+  const nagar=docEsc(docv('tp-nagar')||'________________');
+  const cssn=docEsc(docv('tp-cssn')||'________________');
+  const subject=docEsc(docv('tp-subject')||'बांधकाम परवानगी / सुधारीत बांधकाम परवानगी करीता अभिप्राय मिळणेबाबत.');
+  document.getElementById('tp-preview').innerHTML=`<div class="doc-paper">
+    <div style="text-align:right;margin-bottom:8px">आवक नंबर / ${inward}<br>दि. ${date}</div>
+    <div class="center" style="font-weight:700;margin-bottom:24px">सोलापूर महानगरपालिका, सोलापूर.</div>
+    <div class="to"><b>सहा. अभियंता, (नगर रचना) यांचेकडे,</b></div>
+    <div class="subject">विषय :- ${subject}</div>
+    <p><b>अर्जदार :-</b> ${applicant}</p>
+    <p><b>टी.पी. :-</b> ${tp} &nbsp;&nbsp; <b>फा. प्लॉट नं. :-</b> ${finalplot} &nbsp;&nbsp; <b>सब प्लॉट नं. :-</b> ${subplot}</p>
+    <p><b>पेठ :-</b> ${peth} &nbsp;&nbsp; <b>नगर :-</b> ${nagar} &nbsp;&nbsp; <b>सि.स.नं. :-</b> ${cssn}</p>
+    <p>वरील विषयांकित जागेवरील बांधकाम परवानगी घेणेकरीता नकाशेसोबत जोडले आहेत. तरी उपरोक्त जागेबाबत विकास योजना, नगर रचना योजनेनुसार आरक्षण, झोन व रस्तेबाबत आपला सविस्तर अभिप्राय मिळणेची विनंती आहे.</p>
+    <p><b>सोबत :-</b> संपूर्ण प्रकरण.</p>
+    <div class="signature" style="margin-top:44px">
+      <div class="sigbox"></div>
+      <div class="sigbox" style="text-align:right"><b>आपला विश्वासू,</b><br><br>____________________________</div>
+    </div>
+  </div>`;
+};
+
+window.saveTPOpinion=function(){
+  ['tp-inward','tp-date','tp-applicant','tp-tp','tp-finalplot','tp-subplot','tp-peth','tp-nagar','tp-cssn','tp-subject']
+    .forEach(id=>localStorage.setItem('gs_'+id,docv(id)));
+  showOk('✅ टी.पी. अभिप्राय saved');
+};
+window.printTPOpinion=function(){
+  saveTPOpinion();
+  const el=document.getElementById('tp-preview');
+  docPrint('टी.पी. अभिप्राय – बांधकाम परवानगी',el?el.innerHTML:'');
+};
+
 window.renderNocView=function(){
   const box=document.getElementById('noc-body');
   if(!box)return;
@@ -13733,7 +13911,7 @@ window.renderNocView=function(){
       <button class="btn btn-sm" onclick="nocStore()">Save</button>
       <button class="btn btn-gold" onclick="nocPrint()">🖨 Print / PDF</button>
       <button class="btn btn-sm" onclick="renderArchitecturalProjectionView()">📐 Architectural Projection</button>
-      <button class="btn btn-sm" onclick="renderClientSelfDeclarationView()">📄 Client Self Declaration</button>
+      <button class="btn btn-sm" onclick="renderClientSelfDeclarationView()">📄 Client Self Declaration</button><button class="btn btn-sm" onclick="renderAreaMeasurementUndertakingView()">📄 क्षेत्रफळाबाबत हमीपत्र</button><button class="btn btn-sm" onclick="renderTPOpinionView()">📄 टी.पी. अभिप्राय</button>
     </div>
   </div>
   <div class="noc-grid">
