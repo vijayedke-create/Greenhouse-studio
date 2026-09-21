@@ -3519,10 +3519,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:#1a1a18;background:#fff;-w
 </div>
 
 <script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500));<\/script>
-
-<style>
-.cp-action{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff;border-radius:9px;padding:7px 11px;font-size:11px;font-weight:700;cursor:pointer}.cp-dl-btn{border:1px solid var(--grn);background:#fff;color:var(--grn);border-radius:9px;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer}.cp-dl-btn:hover{background:var(--grn);color:#fff}
-</style>
 </body></html>`;
 
   const w = window.open('','_blank');
@@ -10980,13 +10976,14 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
     <!-- Tab bar -->
     <div style="background:#fff;border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch" id="cp-tabs">
       <button class="cp-tab active" onclick="cpTab('overview')">📊 Overview</button>
-      <button class="cp-tab" onclick="cpTab('project')">🏗️ Project</button>
       <button class="cp-tab" onclick="cpTab('agreement')">📜 Agreement</button>
         <button class="cp-tab" onclick="cpTab('payments')">💰 Payments</button>
       <button class="cp-tab" onclick="cpTab('sitevisits')">🏗️ Site Visits</button>
       <button class="cp-tab" onclick="cpTab('drawings')">📐 Drawings</button>
       <button class="cp-tab" onclick="cpTab('brief')">➕ Add New Project</button>
       <button class="cp-tab" onclick="cpTab('request')">✏️ Drawing Request</button>
+      <button class="cp-tab" onclick="cpTab('uploads')">📥 Upload Files</button>
+      <button class="cp-tab" onclick="cpTab('activity')">🔔 Activity</button>
     </div>
 
     <!-- Content area -->
@@ -11031,7 +11028,6 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
 let cpPin = '';
 let cpCurrentClient = null;
 let cpCurrentTab = 'overview';
-let cpOpenProjectId = null;
 
 // ── OPEN: Launch client portal overlay ──
 function openClientPortal() {
@@ -11196,11 +11192,13 @@ async function cpSubmit() {
     document.getElementById('cp-dashboard-screen').style.display='none';
   };
 
+  document.querySelectorAll('.cp-tab').forEach(btn=>{ const m=btn.getAttribute('onclick')?.match(/cpTab\('([^']+)'\)/); if(m) btn.style.display=cpHasAccess(m[1])?'':'none'; });
   cpTab('overview');
 }
 
 // ── TAB SWITCHING ──
 function cpTab(tab) {
+  if(cpCurrentClient && !cpHasAccess(tab)){ showErr('या section साठी access बंद आहे.'); return; }
   cpCurrentTab = tab;
   document.querySelectorAll('.cp-tab').forEach(t => t.classList.remove('active'));
   const activeTab = document.querySelector('.cp-tab[onclick*="' + tab + '"]');
@@ -11215,13 +11213,14 @@ function renderCpContent() {
   const c = cpCurrentClient;
   const projs = (db.projects || []).filter(p => p.clientId === c.id);
   if (cpCurrentTab === 'overview') el.innerHTML = renderCpOverview(c, projs);
-  else if (cpCurrentTab === 'project') el.innerHTML = renderCpProject(c, projs);
   else if (cpCurrentTab === 'payments') el.innerHTML = renderCpPayments(c, projs);
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
   else if (cpCurrentTab === 'agreement') el.innerHTML = renderCpAgreement(c, projs);
   else if (cpCurrentTab === 'drawings') el.innerHTML = renderCpDrawings(c, projs);
   else if (cpCurrentTab === 'brief') { el.innerHTML = renderCpBrief(c, projs); initCpBrief(); }
   else if (cpCurrentTab === 'request') { el.innerHTML = renderCpRequest(c, projs); }
+  else if (cpCurrentTab === 'uploads') { el.innerHTML = renderCpUploads(c, projs); initCpUploads(); }
+  else if (cpCurrentTab === 'activity') { el.innerHTML = renderCpActivity(c, projs); }
 }
 
 function fmtCp(n) { return '₹' + Number(n || 0).toLocaleString('en-IN'); }
@@ -11517,16 +11516,8 @@ function submitBrief() {
     notes: document.getElementById('brief-notes').value,
   };
 
-  // Save brief to existing project or create a project-request record
-  if(p){
-    p.clientBrief = brief;
-  } else {
-    brief.requestId = 'BRIEF' + Date.now();
-    db.clientProjectRequests = db.clientProjectRequests || [];
-    db.clientProjectRequests.unshift(brief);
-  }
-  db.activities = db.activities || [];
-  db.activities.unshift({text:'New Project Request — '+brief.clientName,sub:(brief.projectType||'New Project')+' · '+brief.siteAddress,time:'Just now',color:'#c9a84c'});
+  // Save brief to project
+  p.clientBrief = brief;
 
   // Save to Firebase
   try {
@@ -11535,15 +11526,10 @@ function submitBrief() {
     if(fbUrl){
       fetch(fbUrl+'/db/projects.json', {method:'PATCH',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(proj ? {[proj]: p} : {})
+        body: JSON.stringify({[proj]: p})
       });
     }
   } catch(e){}
-  try{
-    const fbUrl = localStorage.getItem('gs_fb_url') || '';
-    if(fbUrl && !proj){ fetch(fbUrl+'/db/clientProjectRequests.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(brief)}); }
-  }catch(e){}
-  try{ saveAll(); }catch(e){}
 
   // Show success
   document.getElementById('cp-content').innerHTML = `
@@ -11729,200 +11715,109 @@ function submitDrawingRequest() {
 
 // ── OVERVIEW TAB ──
 function renderCpOverview(c, projs) {
-  const totalContract = projs.reduce((a, p) => a + (p.total || 0), 0);
-  const totalPaid = projs.reduce((a, p) => a + ppaid(p.id), 0);
-  const totalBal = totalContract - totalPaid;
-  const pct = totalContract > 0 ? Math.min(100, Math.round(totalPaid / totalContract * 100)) : 0;
-  const STAGES = ['Concept', 'Layout', '3D', 'Working Drawing', 'Submission', 'Completed'];
+  const totalContract = projs.reduce((a,p)=>a+(p.total||0),0);
+  const totalPaid = projs.reduce((a,p)=>a+ppaid(p.id),0);
+  const totalBal = Math.max(0,totalContract-totalPaid);
+  const pct = totalContract>0 ? Math.min(100,Math.round(totalPaid/totalContract*100)) : 0;
+  const STAGES=['Concept','Layout','3D','Working Drawing','Submission','Completed'];
+  const visits=(db.siteVisits||[]).filter(v=>projs.some(p=>p.id===v.projId)).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const drawings=(db.drawings||[]).filter(d=>projs.some(p=>p.id===d.projId));
+  const approved=drawings.filter(d=>String(d.status||'').toLowerCase()==='approved').length;
+  const pendingDrawings=drawings.filter(d=>['under review','revision requested','revised'].includes(String(d.status||'').toLowerCase())).length;
+  const lastVisit=visits[0];
+  const nextVisit=visits.find(v=>String(v.date||'')>=new Date().toISOString().slice(0,10));
+  const initials=(c.name||'Client').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const esc=x=>String(x??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-  let html = `
-    <!-- Client header -->
-    <div style="background:var(--grn);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">
-      <div style="display:flex;align-items:center;gap:14px">
-        <div style="width:52px;height:52px;border-radius:50%;background:var(--gold);color:var(--grn);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:'Playfair Display',serif">${c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
-        <div>
-          <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold)">${c.name}</div>
-          <div style="color:rgba(255,255,255,.55);font-size:12px">${c.phone||c.wa||''} · ${projs.length} Project${projs.length!==1?'s':''}</div>
+  let html=`
+  <div style="max-width:760px;margin:0 auto">
+    <!-- Premium welcome hero -->
+    <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,var(--grn) 0%,#244d37 58%,#315f46 100%);border-radius:20px;padding:22px;margin-bottom:14px;color:#fff;box-shadow:0 10px 28px rgba(26,58,42,.16)">
+      <div style="position:absolute;right:-28px;top:-45px;width:150px;height:150px;border-radius:50%;border:1px solid rgba(255,255,255,.10)"></div>
+      <div style="position:absolute;right:20px;bottom:-55px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(201,168,76,.18)"></div>
+      <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
+        <div style="width:58px;height:58px;border-radius:18px;background:var(--gold);color:var(--grn);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;font-family:'Playfair Display',serif;box-shadow:0 5px 15px rgba(0,0,0,.12)">${esc(initials)}</div>
+        <div style="flex:1">
+          <div style="font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:700">Client Portal</div>
+          <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);margin-top:2px">Welcome, ${esc(c.name||'Client')} 👋</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:3px">तुमच्या projects, payments आणि drawings एकाच ठिकाणी.</div>
         </div>
+      </div>
+      <div style="position:relative;z-index:1;margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div style="font-size:10px;color:rgba(255,255,255,.55)">LIVE PROJECT STATUS</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:#b8f5c9"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,.12)"></span> Updated now</div>
       </div>
     </div>
 
-    <!-- Stats -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+    <!-- Quick actions -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+      ${[
+        ['📐','Drawings','drawings'],['💰','Payments','payments'],['🏗️','Site Visits','sitevisits'],['📜','Agreement','agreement']
+      ].map(x=>`<button onclick="cpTab('${x[2]}')" style="border:1px solid var(--bdr);background:#fff;border-radius:13px;padding:11px 6px;cursor:pointer;text-align:center;transition:.15s"><div style="font-size:19px">${x[0]}</div><div style="font-size:10px;font-weight:700;color:var(--grn);margin-top:4px">${x[1]}</div></button>`).join('')}
+    </div>
+
+    <!-- Financial snapshot -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px">
       <div class="cp-stat"><div class="cp-sl">Contract</div><div class="cp-sv" style="font-size:15px">${fmtCp(totalContract)}</div></div>
       <div class="cp-stat"><div class="cp-sl">Paid</div><div class="cp-sv" style="font-size:15px;color:var(--grn)">${fmtCp(totalPaid)}</div></div>
       <div class="cp-stat red-stat"><div class="cp-sl">Balance</div><div class="cp-sv" style="font-size:15px">${fmtCp(totalBal)}</div></div>
     </div>
 
-    <!-- Payment progress -->
-    <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--bdr)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--grn)">Payment Progress</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--grn)">${pct}%</div>
-      </div>
-      <div class="cp-progress-wrap"><div class="cp-progress-bar" style="width:${pct}%"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-top:4px">
-        <span>Paid: ${fmtCp(totalPaid)}</span><span>Remaining: ${fmtCp(totalBal)}</span>
-      </div>
+    <div style="background:#fff;border:1px solid var(--bdr);border-radius:15px;padding:15px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:12px;font-weight:800;color:var(--grn)">💳 Payment Progress</div><strong style="font-family:'JetBrains Mono',monospace;color:var(--grn);font-size:13px">${pct}%</strong></div>
+      <div class="cp-progress-wrap" style="height:9px;margin:9px 0"><div class="cp-progress-bar" style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>${fmtCp(totalPaid)} paid</span><span>${fmtCp(totalBal)} remaining</span></div>
+    </div>
+
+    <!-- At a glance -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
+      <div style="background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:13px"><div style="font-size:19px">📐</div><div style="font-size:19px;font-weight:800;color:var(--grn);margin-top:4px">${drawings.length}</div><div style="font-size:10px;color:var(--mut)">Total Drawings</div><div style="font-size:9px;color:var(--grn);margin-top:3px">${approved} approved · ${pendingDrawings} active</div></div>
+      <div style="background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:13px"><div style="font-size:19px">🏗️</div><div style="font-size:19px;font-weight:800;color:var(--grn);margin-top:4px">${visits.length}</div><div style="font-size:10px;color:var(--mut)">Site Visits</div><div style="font-size:9px;color:var(--mut);margin-top:3px">${lastVisit?'Last: '+esc(lastVisit.date):'No visit recorded'}</div></div>
+      <div style="background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:13px"><div style="font-size:19px">🏠</div><div style="font-size:19px;font-weight:800;color:var(--grn);margin-top:4px">${projs.length}</div><div style="font-size:10px;color:var(--mut)">Active Projects</div><div style="font-size:9px;color:var(--mut);margin-top:3px">${projs.filter(p=>p.stage==='Completed').length} completed</div></div>
     </div>`;
 
-  // Each project card
-  projs.forEach(p => {
-    const paid = ppaid(p.id);
-    const bal = pbal(p.id);
-    const stageIdx = STAGES.indexOf(p.stage || 'Concept');
-    const stagePct = Math.round(((stageIdx + 1) / STAGES.length) * 100);
-    const visits = (db.siteVisits || []).filter(v => v.projId === p.id);
-    html += `
-      <div onclick="cpOpenProject('${p.id}')" style="background:#fff;border:1.5px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;transition:transform .18s,box-shadow .18s" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(26,58,42,.10)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          <div>
-            <div style="font-weight:700;font-size:15px;color:var(--txt)">${p.name}</div>
-            <div style="font-size:11px;color:var(--mut);margin-top:2px">📍 ${p.address||'—'}</div>
-          </div>
-          <span style="background:${p.stage==='Completed'?'var(--grn)':'var(--surf2)'};color:${p.stage==='Completed'?'#fff':'var(--mut)'};font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap">${p.stage||'Concept'}</span>
-        </div>
-
-        <!-- Stage track -->
-        <div style="margin-bottom:12px">
-          <div style="font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Project Stage</div>
-          <div style="display:flex;gap:3px">
-            ${STAGES.map((s,i)=>`<div style="flex:1;height:5px;border-radius:3px;background:${i<=stageIdx?'var(--grn)':'var(--bdr)'}"></div>`).join('')}
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mut);margin-top:3px">
-            <span>Concept</span><span>Completed</span>
-          </div>
-        </div>
-
-        <!-- Payment mini summary -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
-          <div style="background:var(--surf2);border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--mut)">Contract</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--txt)">${fmtCp(p.total)}</div>
-          </div>
-          <div style="background:#e8f4ee;border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--mut)">Paid</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--grn)">${fmtCp(paid)}</div>
-          </div>
-          <div style="background:${bal>0?'#fde8e6':'#e8f4ee'};border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--mut)">Balance</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${bal>0?'var(--red)':'var(--grn)'}">${fmtCp(bal)}</div>
-          </div>
-        </div>
-
-        ${visits.length>0?`<div style="font-size:11px;color:var(--mut);margin-top:6px">🏗️ ${visits.length} site visit${visits.length!==1?'s':''} completed · Last: ${visits[visits.length-1]?.date||'—'}</div>`:''}
-        ${p.services&&p.services.length?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${p.services.map(s=>`<span style="background:rgba(26,58,42,.08);color:var(--grn);font-size:10px;padding:3px 8px;border-radius:20px">${s}</span>`).join('')}</div>`:''}
-      </div>`;
+  // Projects become interactive cards
+  projs.forEach(p=>{
+    const paid=ppaid(p.id), bal=pbal(p.id), stageIdx=Math.max(0,STAGES.indexOf(p.stage||'Concept'));
+    const pd=(db.drawings||[]).filter(d=>d.projId===p.id).length;
+    const pv=(db.siteVisits||[]).filter(v=>v.projId===p.id).length;
+    html+=`<div onclick="cpOpenProject('${esc(p.id)}')" style="background:#fff;border:1.5px solid var(--bdr);border-radius:17px;padding:17px;margin-bottom:11px;cursor:pointer;transition:.16s;box-shadow:0 3px 10px rgba(0,0,0,.025)">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="min-width:0"><div style="font-size:15px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div><div style="font-size:10px;color:var(--mut);margin-top:3px">📍 ${esc(p.address||'Address not added')}</div></div>
+        <span style="background:${p.stage==='Completed'?'var(--grn)':'var(--surf2)'};color:${p.stage==='Completed'?'#fff':'var(--grn)'};font-size:9px;font-weight:800;padding:5px 9px;border-radius:20px;white-space:nowrap;height:max-content">${esc(p.stage||'Concept')}</span>
+      </div>
+      <div style="margin:14px 0 11px"><div style="display:flex;gap:3px">${STAGES.map((s,i)=>`<div style="height:6px;flex:1;border-radius:5px;background:${i<=stageIdx?'var(--grn)':'var(--bdr)'}"></div>`).join('')}</div><div style="display:flex;justify-content:space-between;font-size:8px;color:var(--mut);margin-top:4px"><span>Concept</span><span>Completed</span></div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+        <div style="background:var(--surf2);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;color:var(--mut)">Paid</div><div style="font-size:11px;font-weight:800;color:var(--grn)">${fmtCp(paid)}</div></div>
+        <div style="background:${bal>0?'#fff3f1':'#edf8f1'};border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;color:var(--mut)">Balance</div><div style="font-size:11px;font-weight:800;color:${bal>0?'var(--red)':'var(--grn)'}">${fmtCp(bal)}</div></div>
+        <div style="background:var(--surf2);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;color:var(--mut)">Drawings</div><div style="font-size:11px;font-weight:800;color:var(--grn)">${pd}</div></div>
+        <div style="background:var(--surf2);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;color:var(--mut)">Visits</div><div style="font-size:11px;font-weight:800;color:var(--grn)">${pv}</div></div>
+      </div>
+      <div style="margin-top:10px;text-align:right;font-size:10px;font-weight:700;color:var(--grn)">Open Project →</div>
+    </div>`;
   });
 
-  if (!projs.length) {
-    html += `<div style="text-align:center;padding:40px;color:var(--mut)"><div style="font-size:36px;margin-bottom:8px">🏗️</div><p>No projects found</p></div>`;
-  }
-
-  html += `<div style="text-align:center;font-size:10px;color:var(--mut);margin-top:16px;padding:12px;background:#fff;border-radius:10px;border:1px solid var(--bdr)">
-    <b>${officeInfo.name||'Greenhouse Studio'}</b> · ${officeInfo.arch||''} · ${officeInfo.phone||''}<br>
-    <span style="color:var(--mut)">Data is live — refreshes every time you open</span>
+  // Recent activity / timeline
+  html+=`<div style="background:#fff;border:1px solid var(--bdr);border-radius:15px;padding:15px;margin-top:14px">
+    <div style="font-size:12px;font-weight:800;color:var(--grn);margin-bottom:12px">🕘 Recent Activity</div>
+    ${visits.slice(0,3).map(v=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr)"><div style="width:28px;height:28px;border-radius:9px;background:#edf6f0;display:flex;align-items:center;justify-content:center">🏗️</div><div><div style="font-size:11px;font-weight:700">Site visit recorded</div><div style="font-size:9px;color:var(--mut)">${esc(v.date||'—')} · ${esc(v.title||v.notes||'Site visit')}</div></div></div>`).join('') || '<div style="font-size:11px;color:var(--mut);padding:10px 0">No recent activity yet.</div>'}
+    ${drawings.slice(-3).reverse().map(d=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr)"><div style="width:28px;height:28px;border-radius:9px;background:#f4f0e4;display:flex;align-items:center;justify-content:center">📐</div><div><div style="font-size:11px;font-weight:700">${esc(d.name||'Drawing')} · ${esc(d.revision||'R01')}</div><div style="font-size:9px;color:var(--mut)">${esc(d.status||'Draft')} · ${esc(d.date||'')}</div></div></div>`).join('')}
   </div>`;
 
+  if(!projs.length) html+=`<div style="text-align:center;padding:42px 20px;background:#fff;border:1px solid var(--bdr);border-radius:16px"><div style="font-size:42px">🏗️</div><div style="font-size:15px;font-weight:800;color:var(--grn);margin-top:8px">No projects yet</div><div style="font-size:11px;color:var(--mut);margin:5px 0 14px">Start by sending a new project brief to your architect.</div><button onclick="cpTab('brief')" style="background:var(--grn);color:#fff;border:0;border-radius:9px;padding:9px 14px;font-weight:700;cursor:pointer">＋ Add New Project</button></div>`;
+
+  html+=`<div style="text-align:center;font-size:9px;color:var(--mut);margin-top:15px;padding:12px;background:#fff;border-radius:10px;border:1px solid var(--bdr)"><b>${esc(officeInfo.name||'Greenhouse Studio')}</b> · ${esc(officeInfo.arch||'')} · ${esc(officeInfo.phone||'')}<br><span>Client Portal · Live project information</span></div></div>`;
   return html;
 }
 
-
-function cpOpenProject(pid){
-  cpOpenProjectId = pid;
-  cpCurrentTab = 'project';
-  renderCpContent();
-}
-
-function cpPdfDownload(filename, title, sections){
-  try{
-    const {jsPDF}=window.jspdf;
-    if(!jsPDF) throw new Error('jsPDF library not loaded');
-    const doc=new jsPDF('p','mm','a4');
-    const W=210, H=297;
-    const green=[26,58,42], gold=[201,168,76];
-    let y=18;
-    doc.setFillColor(...green); doc.rect(0,0,W,30,'F');
-    doc.setTextColor(...gold); doc.setFont('helvetica','bold'); doc.setFontSize(18);
-    doc.text((officeInfo.name||'Greenhouse Studio').toUpperCase(),14,13);
-    doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','normal');
-    doc.text((officeInfo.arch||'Principal Architect')+'  |  '+(officeInfo.phone||''),14,21);
-    doc.setTextColor(...green); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(title,14,40); y=48;
-    sections.forEach(sec=>{
-      if(y>H-35){doc.addPage();y=18;}
-      doc.setFillColor(246,243,237); doc.roundedRect(12,y-5,186,9,2,2,'F');
-      doc.setTextColor(...green); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text(sec.heading,16,y+1); y+=10;
-      doc.setTextColor(55,55,55); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-      const lines=Array.isArray(sec.lines)?sec.lines:[String(sec.lines||'')];
-      lines.forEach(line=>{
-        const wrapped=doc.splitTextToSize(String(line||'—'),178);
-        if(y+wrapped.length*5.2>H-22){doc.addPage();y=18;}
-        doc.text(wrapped,16,y); y+=wrapped.length*5.2+2;
-      }); y+=3;
-    });
-    doc.setFillColor(...green); doc.rect(0,H-12,W,12,'F');
-    doc.setTextColor(210,210,210); doc.setFontSize(7); doc.text('Generated from Greenhouse Studio Client Portal',14,H-5);
-    doc.save(filename);
-  }catch(e){alert('PDF generation error: '+e.message);}
-}
-
-function cpDownloadPaymentReport(pid){
-  const p=gp(pid); if(!p)return;
-  const c=gc(p.clientId); const pays=ppays(pid).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-  const paid=ppaid(pid), bal=pbal(pid);
-  cpPdfDownload('Payment_Report_'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.pdf','PAYMENT REPORT',[{
-    heading:'Project Information',lines:['Project: '+p.name,'Client: '+(c?.name||'—'),'Site Address: '+(p.address||'—'),'Report Date: '+new Date().toLocaleDateString('en-IN')]},{
-    heading:'Payment Summary',lines:['Contract Amount: ₹'+Number(p.total||0).toLocaleString('en-IN'),'Total Paid: ₹'+Number(paid||0).toLocaleString('en-IN'),'Balance: ₹'+Number(bal||0).toLocaleString('en-IN')]},{
-    heading:'Payment History',lines:pays.length?pays.map((x,i)=>(i+1)+'. '+(x.date||'—')+' | '+(x.stage||'Payment')+' | '+(x.mode||'—')+' | ₹'+Number(x.amount||0).toLocaleString('en-IN')):['No payments recorded.']
-  }]);
-}
-
-function cpDownloadSiteVisitReport(pid){
-  const p=gp(pid); if(!p)return;
-  const visits=(db.siteVisits||[]).filter(v=>v.projId===pid).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-  const c=gc(p.clientId);
-  const lines=[]; visits.forEach((v,i)=>{lines.push('Visit '+(i+1)+' — '+(v.date||'—')+(v.timeIn?' | '+v.timeIn+(v.timeOut?' - '+v.timeOut:''):'')+(v.weather?' | '+v.weather:'')); if(v.checklist?.length)lines.push('Inspected: '+v.checklist.join(', ')); if(v.instructions)lines.push('Instructions: '+v.instructions); if(v.notes)lines.push('Notes: '+v.notes); lines.push('');});
-  cpPdfDownload('Site_Visit_Report_'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.pdf','SITE VISIT REPORT',[{heading:'Project Information',lines:['Project: '+p.name,'Client: '+(c?.name||'—'),'Site Address: '+(p.address||'—'),'Total Visits: '+visits.length]},{heading:'Visit Details',lines:lines.length?lines:['No site visits recorded.']}]);
-}
-
-function cpDownloadDrawingReport(pid){
-  const p=gp(pid); if(!p)return;
-  const c=gc(p.clientId); const files=(p.files||[]).filter(f=>f.clientVisible); const pays=ppays(pid); const released=[...new Set(pays.flatMap(x=>x.drawings||[]))];
-  const lines=[...files.map((f,i)=>(i+1)+'. '+f.name+' | '+(f.cat||'Drawing')+' | '+(f.date||'')),...released.map((d,i)=>(files.length+i+1)+'. '+d+' | Released')];
-  cpPdfDownload('Drawing_Report_'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.pdf','DRAWING / DOCUMENT REPORT',[{heading:'Project Information',lines:['Project: '+p.name,'Client: '+(c?.name||'—'),'Stage: '+(p.stage||'Concept')]},{heading:'Available Drawings & Documents',lines:lines.length?lines:['No client-visible drawings/documents available yet.']}]);
-}
-
-function cpDownloadAgreementPDF(pid){
-  const p=gp(pid); if(!p || !p.agreement){alert('Agreement available नाही.');return;}
-  const a=p.agreement,c=gc(p.clientId); const total=Number(a.total||0)*(1+Number(a.gst||0)/100);
-  const stages=(a.stages||[]).map((x,i)=>(i+1)+'. '+x.label+' — '+x.pct+'% — '+(x.status==='done'?'Completed':'Pending'));
-  cpPdfDownload('Agreement_'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.pdf','ARCHITECTURAL SERVICES AGREEMENT',[{heading:'Parties & Project',lines:['Client: '+(c?.name||'—'),'Project: '+p.name,'Site Address: '+(p.address||'—'),'Agreement Date: '+(a.date||'—'),'Status: '+(a.status||'Draft')]},{heading:'Professional Fee',lines:['Base Fee: ₹'+Number(a.total||0).toLocaleString('en-IN'),'GST: '+Number(a.gst||0)+'%','Total including GST: ₹'+Math.round(total).toLocaleString('en-IN')]},{heading:'Scope Included',lines:a.scopeIn?.length?a.scopeIn:['—']},{heading:'Scope Excluded',lines:a.scopeOut?.length?a.scopeOut:['—']},{heading:'Payment Stages',lines:stages.length?stages:['—']},{heading:'Terms & Conditions',lines:a.terms||'Terms not entered.'}]);
-}
-
-function renderCpProject(c, projs){
-  const p=projs.find(x=>x.id===cpOpenProjectId)||projs[0];
-  if(!p) return `<div style="text-align:center;padding:50px;color:var(--mut)">Project उपलब्ध नाही.</div>`;
-  const visits=(db.siteVisits||[]).filter(v=>v.projId===p.id); const pays=ppays(p.id); const files=(p.files||[]).filter(f=>f.clientVisible);
-  return `<div style="max-width:760px;margin:0 auto">
-    <div style="background:linear-gradient(135deg,var(--grn),#2d5a3d);color:#fff;border-radius:18px;padding:20px;margin-bottom:14px">
-      <div style="font-size:11px;opacity:.7">PROJECT</div><div style="font-size:22px;font-weight:800;color:var(--gold);margin:4px 0">${p.name}</div><div style="font-size:12px;opacity:.8">📍 ${p.address||'—'} · ${p.stage||'Concept'}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-        <button onclick="cpTab('agreement')" class="cp-action">📜 Agreement</button><button onclick="cpTab('payments')" class="cp-action">💰 Payments</button><button onclick="cpTab('sitevisits')" class="cp-action">🏗️ Visits</button><button onclick="cpTab('drawings')" class="cp-action">📐 Drawings</button>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
-      <div class="cp-stat"><div class="cp-sl">Payments</div><div class="cp-sv">${pays.length}</div></div><div class="cp-stat"><div class="cp-sl">Site Visits</div><div class="cp-sv">${visits.length}</div></div><div class="cp-stat"><div class="cp-sl">Files</div><div class="cp-sv">${files.length}</div></div>
-    </div>
-    <div style="background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:16px">
-      <div style="font-weight:800;color:var(--grn);margin-bottom:10px">Quick Downloads</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="cpDownloadAgreementPDF('${p.id}')" class="cp-dl-btn">⬇ Agreement PDF</button><button onclick="cpDownloadPaymentReport('${p.id}')" class="cp-dl-btn">⬇ Payment Report</button><button onclick="cpDownloadSiteVisitReport('${p.id}')" class="cp-dl-btn">⬇ Site Visit Report</button><button onclick="cpDownloadDrawingReport('${p.id}')" class="cp-dl-btn">⬇ Drawing Report</button></div>
-    </div>
-  </div>`;
+function cpOpenProject(projId){
+  window.cpSelectedProjectId=projId;
+  cpTab('drawings');
 }
 
 // ── PAYMENTS TAB ──
 function renderCpPayments(c, projs) {
-  let html = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap"><div style="font-size:13px;font-weight:700;color:var(--grn)">💰 Payment History</div><button onclick="cpDownloadPaymentReport(cpOpenProjectId||'+(projs[0]?.id?JSON.stringify(projs[0].id):"''")+')" class="cp-dl-btn">⬇ Payment Report PDF</button></div>'; 
+  let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">💰 Payment History</div>';
   let anyPays = false;
   projs.forEach(p => {
     const pays = ppays(p.id).sort((a, b) => b.date.localeCompare(a.date));
@@ -11957,7 +11852,7 @@ function renderCpPayments(c, projs) {
 
 // ── SITE VISITS TAB ──
 function renderCpSiteVisits(c, projs) {
-  let html = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap"><div style="font-size:13px;font-weight:700;color:var(--grn)">🏗️ Site Visit Reports</div><button onclick="cpDownloadSiteVisitReport(cpOpenProjectId||'+(projs[0]?.id?JSON.stringify(projs[0].id):"''")+')" class="cp-dl-btn">⬇ Site Visit Report PDF</button></div>'; 
+  let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">🏗️ Site Visit Reports</div>';
   let anyVisits = false;
   projs.forEach(p => {
     const visits = (db.siteVisits || []).filter(v => v.projId === p.id).sort((a, b) => b.date.localeCompare(a.date));
@@ -12025,7 +11920,7 @@ function renderCpAgreement(c, projs) {
           <div style="font-weight:700;font-size:15px">${p.name}</div>
           <div style="font-size:11px;color:var(--mut);margin-top:2px">${a.date ? 'दिनांक: ' + a.date : 'Draft agreement'}</div>
         </div>
-        <button onclick="cpDownloadAgreementPDF('${p.id}')" style="background:var(--grn);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer">⬇ PDF</button><span style="font-size:10px;padding:4px 11px;border-radius:20px;font-weight:700;background:${a.status === 'signed' ? '#e8f4ee' : '#fff4e0'};color:${a.status === 'signed' ? '#1a7a44' : '#b36b00'}">
+        <span style="font-size:10px;padding:4px 11px;border-radius:20px;font-weight:700;background:${a.status === 'signed' ? '#e8f4ee' : '#fff4e0'};color:${a.status === 'signed' ? '#1a7a44' : '#b36b00'}">
           ${a.status === 'signed' ? '✅ Signed' : '📝 Draft'}
         </span>
       </div>
@@ -12122,88 +12017,60 @@ function renderCpAgreement(c, projs) {
   }).join('');
 }
 
+function escCpDraw(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function cpDrawingStore(){if(!db.drawings)db.drawings=[];return db.drawings;}
+function cpDrawingStatusStyle(st){const m={Draft:['#7a7568','#f3f1ec'],['Under Review']:['#2c5f8a','#eaf2f8'],['Revision Requested']:['#d35400','#fff0e6'],Revised:['#8e44ad','#f4eafd'],Approved:['#1a7a44','#e8f4ee'],Superseded:['#777','#eee']};return m[st]||m.Draft;}
+function cpRenderDrawingActions(d){
+  const s=d.status||'Draft';
+  let x='';
+  if(d.fileData)x+=`<a href="${d.fileData}" download="${escCpDraw(d.fileName||d.name)}" style="background:var(--grn);color:#fff;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;text-decoration:none">⬇️ Download</a>`;
+  if(d.fileData && /^(pdf|jpg|jpeg|png|webp)$/i.test(d.fileExt||''))x+=`<a href="${d.fileData}" target="_blank" style="background:#fff;color:var(--grn);border:1px solid var(--grn);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;text-decoration:none">👁 View</a>`;
+  if(d.url&&!d.fileData)x+=`<a href="${escCpDraw(d.url)}" target="_blank" style="background:var(--grn);color:#fff;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;text-decoration:none">↗ Open</a>`;
+  if(s!=='Approved'&&s!=='Superseded')x+=`<button onclick="cpApproveDrawing('${d.id}')" style="background:#e8f4ee;color:#1a7a44;border:1px solid #b8dec8;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer">✓ Approve</button><button onclick="cpRequestDrawingChange('${d.id}')" style="background:#fff0e6;color:#d35400;border:1px solid #f0c6a8;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer">↻ Changes</button>`;
+  return x;
+}
+function cpDrawingReport(projectId){
+  const p=(db.projects||[]).find(x=>x.id===projectId);if(!p)return;
+  const ds=cpDrawingStore().filter(d=>d.projectId===projectId);
+  const rows=ds.map(d=>`<tr><td>${escCpDraw(d.number)}</td><td>${escCpDraw(d.name)}</td><td>${escCpDraw(d.category)}</td><td>${escCpDraw(d.revision||'R01')}</td><td>${escCpDraw(d.date||'')}</td><td>${escCpDraw(d.status||'Draft')}</td></tr>`).join('');
+  const w=window.open('','_blank'); if(!w)return;
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Drawing Transmittal - ${escCpDraw(p.name)}</title><style>@page{size:A4 portrait;margin:14mm}body{font-family:Arial,sans-serif;color:#222}h1{font-size:22px;color:#1a3a2a;margin-bottom:4px}h2{font-size:13px;margin:0 0 18px;color:#666}table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #ccc;padding:7px;text-align:left}th{background:#f1f3f0}.foot{margin-top:30px;font-size:10px;color:#777}</style></head><body><h1>GREENHOUSE STUDIO</h1><h2>Drawing Transmittal / Issue Report</h2><p><b>Project:</b> ${escCpDraw(p.name)}<br><b>Client:</b> ${escCpDraw((db.contacts||[]).find(c=>c.id===p.clientId)?.name||'')}<br><b>Generated:</b> ${new Date().toLocaleDateString('en-IN')}</p><table><thead><tr><th>Drawing No.</th><th>Drawing Name</th><th>Category</th><th>Revision</th><th>Date</th><th>Status</th></tr></thead><tbody>${rows||'<tr><td colspan="6">No drawings</td></tr>'}</tbody></table><div class="foot">This report was generated from GreenHouse Studio.</div><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`);w.document.close();
+}
+function cpOpenDrawingFile(input){const id=input.dataset.did;const d=cpDrawingStore().find(x=>x.id===id);const f=input.files&&input.files[0];if(!d||!f)return;if(f.size>8*1024*1024){alert('File 8 MB पेक्षा मोठी आहे. कृपया smaller file वापरा.');input.value='';return;}const r=new FileReader();r.onload=()=>{d.fileData=r.result;d.fileName=f.name;d.fileExt=(f.name.split('.').pop()||'').toLowerCase();d.mime=f.type||'';d.updatedAt=new Date().toISOString();d.status='Under Review';saveAll();renderCpContent();showOk('Drawing upload झाली');};r.readAsDataURL(f);}
+function cpAddDrawing(projectId){
+ const p=(db.projects||[]).find(x=>x.id===projectId);if(!p)return;
+ const n=prompt('Drawing Number (उदा. AR-01):','AR-01');if(n===null||!n.trim())return;
+ const name=prompt('Drawing Name:','Ground Floor Plan');if(name===null||!name.trim())return;
+ const cat=prompt('Category:','Architectural');if(cat===null)return;
+ const rev=prompt('Revision:','R01')||'R01';
+ const d={id:'DRW-'+Date.now(),projectId,number:n.trim(),name:name.trim(),category:cat.trim()||'Architectural',revision:rev,date:new Date().toLocaleDateString('en-IN'),description:'',status:'Under Review',createdAt:new Date().toISOString()};
+ cpDrawingStore().push(d);saveAll();renderCpContent();showOk('New drawing added');
+}
+function cpAddDrawingRevision(id){const old=cpDrawingStore().find(x=>x.id===id);if(!old)return;const nr=prompt('New revision:',old.revision&&/^R\d+$/i.test(old.revision)?'R'+String(Number(old.revision.slice(1))+1):'R02');if(nr===null||!nr.trim())return;old.status='Superseded';const d={...old,id:'DRW-'+Date.now(),revision:nr.trim(),date:new Date().toLocaleDateString('en-IN'),status:'Under Review',fileData:'',fileName:'',createdAt:new Date().toISOString(),supersedes:old.id};cpDrawingStore().push(d);saveAll();renderCpContent();showOk('Revision '+nr+' तयार झाली');}
+function cpApproveDrawing(id){const d=cpDrawingStore().find(x=>x.id===id);if(!d)return;d.status='Approved';d.approvedAt=new Date().toISOString();d.approvedBy=cpCurrentClient?.name||'Client';if(!db.activities)db.activities=[];db.activities.unshift({text:'Drawing Approved — '+d.name,sub:(db.projects||[]).find(p=>p.id===d.projectId)?.name||'',time:'Just now',color:'#27ae60',type:'drawing_approval',drawingId:d.id});saveAll();renderCpContent();showOk('Drawing approved — Architect ला notification मिळेल');}
+function cpRequestDrawingChange(id){const d=cpDrawingStore().find(x=>x.id===id);if(!d)return;const msg=prompt('Revision / change comment लिहा:','Please revise this drawing.');if(msg===null||!msg.trim())return;d.status='Revision Requested';d.clientComment=msg.trim();d.requestedAt=new Date().toISOString();if(!db.activities)db.activities=[];db.activities.unshift({text:'Drawing Revision Requested — '+d.name,sub:msg.trim(),time:'Just now',color:'#d35400',type:'drawing_revision_request',drawingId:d.id});saveAll();renderCpContent();showOk('Revision request Architect ला पाठवली');}
+function cpDrawingRevisionHistory(id){const d=cpDrawingStore().find(x=>x.id===id);if(!d)return;const chain=cpDrawingStore().filter(x=>x.projectId===d.projectId&&((x.number===d.number)||x.supersedes===d.id));alert(chain.map(x=>`${x.revision||'R01'} — ${x.status} — ${x.date||''}`).join('\n')||'No revision history');}
+
 function renderCpDrawings(c, projs) {
-  let html = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap"><div style="font-size:13px;font-weight:700;color:var(--grn)">📐 Drawings & Files</div><button onclick="cpDownloadDrawingReport(cpOpenProjectId||'+(projs[0]?.id?JSON.stringify(projs[0].id):"''")+')" class="cp-dl-btn">⬇ Drawing Report PDF</button></div>'; 
-  let anyFiles = false;
-
-  // FILE_CATEGORIES may not exist in this scope — use simplified icons
-  const catIcons = {floor_plan:'🏠',elevation:'🏛',section:'✂️','3d_view':'🎨',structural:'⚙️',electrical:'⚡',plumbing:'🔧',site_photo:'📷',contract:'📋',other:'📄'};
-  const catLabels = {floor_plan:'Floor Plan',elevation:'Elevation',section:'Section','3d_view':'3D View',structural:'Structural',electrical:'Electrical',plumbing:'Plumbing',site_photo:'Site Photo',contract:'Contract',other:'Other'};
-
-  projs.forEach(p => {
-    // Drive-linked files visible to client
-    const driveFiles = (p.files || []).filter(f => f.clientVisible);
-    // Legacy: drawings from payments
-    const pays = ppays(p.id);
-    const legacyDrawings = [...new Set(pays.flatMap(pay => pay.drawings || []))];
-
-    if (!driveFiles.length && !legacyDrawings.length) return;
-    anyFiles = true;
-
-    const STAGES_LIST = ['Concept','Layout','3D','Working Drawing','Submission','Completed'];
-    const stageIdx = STAGES_LIST.indexOf(p.stage || 'Concept');
-
-    html += `<div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px">${p.name}</div>
-        <span style="font-size:10px;background:var(--surf2);color:var(--mut);padding:3px 9px;border-radius:20px">Stage: ${p.stage||'Concept'}</span>
-      </div>
-      <!-- Stage bar -->
-      <div style="display:flex;gap:3px;margin-bottom:14px">
-        ${STAGES_LIST.map((s,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<=stageIdx?'var(--grn)':'var(--bdr)'}"></div>`).join('')}
-      </div>`;
-
-    // Google Drive files
-    if (driveFiles.length) {
-      // Group by category
-      const grouped = {};
-      driveFiles.forEach(f => { grouped[f.cat] = grouped[f.cat] || []; grouped[f.cat].push(f); });
-      Object.entries(grouped).forEach(([catId, files]) => {
-        const icon = catIcons[catId] || '📄';
-        const label = catLabels[catId] || catId;
-        html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:6px">${icon} ${label}</div>`;
-        files.forEach(f => {
-          html += `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surf2);border-radius:10px;margin-bottom:6px">
-            <div style="font-size:20px;flex-shrink:0">${icon}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div>
-              ${f.notes ? `<div style="font-size:10px;color:var(--mut)">${f.notes}</div>` : ''}
-              <div style="font-size:10px;color:var(--mut)">${f.date||''}</div>
-            </div>
-            ${f.type==='direct' && f.fileData
-              ? `<a href="${f.fileData}" download="${f.fileName||f.name}" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block">⬇️ Download</a>
-                 ${['jpg','jpeg','png','pdf'].includes(f.fileExt||'') ? `<a href="${f.fileData}" target="_blank" style="background:var(--surf2);color:var(--grn);border:1px solid var(--grn);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block;margin-left:6px">👁 View</a>` : ''}`
-              : `<a href="${f.url}" target="_blank" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block">↗ Open</a>`
-            }
-          </div>`;
-        });
-      });
-    }
-
-    // Legacy released drawings (from payments)
-    if (legacyDrawings.length) {
-      html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:10px 0 6px">📋 Released Drawings</div>`;
-      legacyDrawings.forEach(d => {
-        html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)">
-          <div style="font-size:14px">📄</div>
-          <div style="flex:1;font-size:13px;font-weight:500">${d}</div>
-          <div style="font-size:10px;color:var(--grn);font-weight:700">✓ Released</div>
-        </div>`;
-      });
-    }
-
-    html += '</div>';
+  const all=cpDrawingStore(); let html=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px"><div><div style="font-size:18px;font-weight:800;color:var(--grn)">📐 Drawing Management</div><div style="font-size:11px;color:var(--mut)">Revision • Approval • Download • Client Feedback</div></div><div style="display:flex;gap:7px"><button onclick="cpDrawingReport('${projs[0]?.id||''}')" style="padding:8px 11px;border:1px solid var(--bdr);background:#fff;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🧾 Issue Report</button></div></div>`;
+  let total=0,approved=0,pending=0,requested=0;
+  projs.forEach(p=>{const ds=all.filter(d=>d.projectId===p.id);total+=ds.length;approved+=ds.filter(d=>d.status==='Approved').length;pending+=ds.filter(d=>['Draft','Under Review','Revised'].includes(d.status)).length;requested+=ds.filter(d=>d.status==='Revision Requested').length;});
+  html+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px"><div class="cp-stat"><div class="cp-sv">${total}</div><div class="cp-sl">Drawings</div></div><div class="cp-stat"><div class="cp-sv" style="color:#1a7a44">${approved}</div><div class="cp-sl">Approved</div></div><div class="cp-stat"><div class="cp-sv" style="color:#2c5f8a">${pending}</div><div class="cp-sl">Under Review</div></div><div class="cp-stat"><div class="cp-sv" style="color:#d35400">${requested}</div><div class="cp-sl">Revision Requests</div></div></div>`;
+  projs.forEach(p=>{
+    const ds=all.filter(d=>d.projectId===p.id).sort((a,b)=>String(a.number).localeCompare(String(b.number))||String(a.revision).localeCompare(String(b.revision)));
+    const legacy=[...new Set(ppays(p.id).flatMap(x=>x.drawings||[]))];
+    html+=`<div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px"><div><div style="font-weight:800;font-size:15px">${escCpDraw(p.name)}</div><div style="font-size:10px;color:var(--mut)">📍 ${escCpDraw(p.address||'')}</div></div><button onclick="cpAddDrawing('${p.id}')" style="background:var(--grn);color:#fff;border:0;border-radius:8px;padding:8px 11px;font-size:11px;font-weight:700;cursor:pointer">+ Add Drawing</button></div>`;
+    if(ds.length){html+=`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--surf2);color:var(--mut)"><th style="padding:9px;text-align:left">No.</th><th style="padding:9px;text-align:left">Drawing</th><th style="padding:9px;text-align:left">Rev.</th><th style="padding:9px;text-align:left">Date</th><th style="padding:9px;text-align:left">Status</th><th style="padding:9px;text-align:right">Action</th></tr></thead><tbody>`;
+      ds.forEach(d=>{const [fg,bg]=cpDrawingStatusStyle(d.status);html+=`<tr style="border-bottom:1px solid var(--bdr)"><td style="padding:9px;font-weight:700">${escCpDraw(d.number)}</td><td style="padding:9px"><b>${escCpDraw(d.name)}</b><div style="font-size:9px;color:var(--mut)">${escCpDraw(d.category)}${d.clientComment?' · 💬 '+escCpDraw(d.clientComment):''}</div></td><td style="padding:9px;font-weight:800">${escCpDraw(d.revision||'R01')}</td><td style="padding:9px;color:var(--mut)">${escCpDraw(d.date||'')}</td><td style="padding:9px"><span style="padding:4px 7px;border-radius:15px;background:${bg};color:${fg};font-size:9px;font-weight:800">${escCpDraw(d.status||'Draft')}</span></td><td style="padding:9px;text-align:right"><div style="display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap">${cpRenderDrawingActions(d)}<button onclick="cpAddDrawingRevision('${d.id}')" style="background:#f4eafd;color:#8e44ad;border:1px solid #d9c0ea;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:700;cursor:pointer">R+</button><button onclick="cpDrawingRevisionHistory('${d.id}')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:7px 9px;font-size:10px;cursor:pointer">History</button><label style="background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:7px 9px;font-size:10px;font-weight:700;cursor:pointer">📎 Upload<input type="file" data-did="${d.id}" onchange="cpOpenDrawingFile(this)" style="display:none" accept=".pdf,.dwg,.dxf,.jpg,.jpeg,.png,.webp"></label></div></td></tr>`;});
+      html+='</tbody></table></div>';
+    } else html+=`<div style="text-align:center;padding:22px;color:var(--mut);font-size:11px">No drawings added yet. Click <b>+ Add Drawing</b>.</div>`;
+    if(legacy.length)html+=`<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bdr);font-size:10px;color:var(--mut)">📋 Previously released: ${legacy.map(escCpDraw).join(', ')}</div>`;
+    html+='</div>';
   });
-
-  if (!anyFiles) {
-    html += `<div style="text-align:center;padding:40px;color:var(--mut)">
-      <div style="font-size:36px;margin-bottom:8px">📐</div>
-      <p style="font-size:13px">No files shared yet</p>
-      <p style="font-size:11px;margin-top:6px">Architect files add केल्यावर इथे दिसतील</p>
-    </div>`;
-  }
+  if(!projs.length)html+=`<div style="text-align:center;padding:40px;color:var(--mut)">No projects found.</div>`;
   return html;
 }
+
 
 // ════════════════════════════════════════════════
 // CLIENT PORTAL MANAGER (Architect view)
@@ -12264,7 +12131,9 @@ function renderClientPortalMgr() {
         <div style="display:flex;align-items:center;gap:8px">
           ${c.pin ? `
             <div style="background:#e8f4ee;border:1.5px solid var(--grn);border-radius:8px;padding:6px 12px;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--grn);letter-spacing:6px">${c.pin}</div>
+            <button onclick="cpManageClientDrawings('${c.id}')" style="background:#2c5f8a;color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer">📐 Drawings</button>
             <button onclick="cpWhatsApp('${c.id}')" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer">📱 Send</button>
+            <button onclick="cpManageAccess('${c.id}')" style="background:#fff7df;color:#7a5a00;border:1px solid #d9bd65;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer">🔐 Access</button>
             <button onclick="cpSetPin('${c.id}')" style="background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;font-size:11px;cursor:pointer">✏️</button>
             <button onclick="cpRemovePin('${c.id}')" style="background:none;color:var(--red);border:1px solid var(--red);border-radius:8px;padding:7px 10px;font-size:11px;cursor:pointer">✕</button>
           ` : `
@@ -12281,6 +12150,66 @@ function renderClientPortalMgr() {
 
   html += '</div>';
   el.innerHTML = html;
+}
+
+
+// ════════════════════════════════════════════════
+// 🔐 CLIENT ACCESS CONTROL + 📥 CLIENT UPLOADS + 🔔 ACTIVITY CENTER
+// ════════════════════════════════════════════════
+const CP_ACCESS_DEFAULT={overview:true,agreement:true,payments:true,sitevisits:true,drawings:true,brief:true,request:true,uploads:true,activity:true};
+function cpAccessFor(c){ c.portalAccess=Object.assign({},CP_ACCESS_DEFAULT,c.portalAccess||{}); return c.portalAccess; }
+function cpHasAccess(tab){ const a=cpAccessFor(cpCurrentClient||{}); const exp=cpCurrentClient?.portalAccess?.expiresAt; if(exp && new Date(exp)<new Date()) return false; return a[tab]!==false; }
+function cpAccessLabel(tab){return ({overview:'Overview',agreement:'Agreement',payments:'Payments',sitevisits:'Site Visits',drawings:'Drawings',brief:'New Project',request:'Drawing Request',uploads:'Client Uploads',activity:'Activity'})[tab]||tab;}
+function cpManageAccess(cid){
+ const c=(db.contacts||[]).find(x=>x.id===cid); if(!c)return;
+ const a=cpAccessFor(c);
+ const keys=Object.keys(CP_ACCESS_DEFAULT);
+ const lines=keys.map((k,i)=>`${i+1}. ${cpAccessLabel(k)}: ${a[k]?'ON':'OFF'}`).join('\n');
+ const input=prompt(`Client Access Control\n\n${lines}\n\nEnter numbers to toggle, comma separated (उदा. 2,5,8):`, '');
+ if(input===null)return;
+ input.split(',').map(x=>parseInt(x.trim(),10)).filter(n=>n>=1&&n<=keys.length).forEach(n=>{a[keys[n-1]]=!a[keys[n-1]];});
+ const exp=prompt('Access expiry date (YYYY-MM-DD). Blank = no expiry:', c.portalAccess.expiresAt?c.portalAccess.expiresAt.slice(0,10):'');
+ if(exp!==null){ c.portalAccess.expiresAt=exp.trim()?exp.trim()+'T23:59:59':'', c.portalAccess.updatedAt=new Date().toISOString(); }
+ saveAll(); renderClientPortalMgr(); showOk('🔐 Client access updated');
+}
+function cpAddActivity(text,sub,type='client_activity',color='#2c5f8a',clientId=cpCurrentClient?.id){
+ if(!db.activities)db.activities=[]; db.activities.unshift({text,sub:sub||'',time:'Just now',color,type,clientId,createdAt:new Date().toISOString()}); db.activities=db.activities.slice(0,300); saveAll();
+}
+function cpUploadFile(input){
+ const f=input.files&&input.files[0]; if(!f)return;
+ const pid=document.getElementById('cp-upload-project')?.value||'';
+ const cat=document.getElementById('cp-upload-category')?.value||'Reference';
+ const note=document.getElementById('cp-upload-note')?.value.trim()||'';
+ if(f.size>8*1024*1024){alert('File 8 MB पेक्षा मोठी आहे.');input.value='';return;}
+ if(!pid){alert('Project select करा.');input.value='';return;}
+ const r=new FileReader(); r.onload=()=>{
+   if(!db.clientUploads)db.clientUploads=[];
+   const item={id:'UP-'+Date.now(),clientId:cpCurrentClient.id,projectId:pid,name:f.name,size:f.size,mime:f.type||'',category:cat,note,fileData:r.result,uploadedAt:new Date().toISOString(),status:'New'};
+   db.clientUploads.push(item);
+   cpAddActivity('Client uploaded file — '+f.name,(db.projects||[]).find(p=>p.id===pid)?.name||'','client_upload','#2c5f8a');
+   saveAll(); renderCpContent(); showOk('📥 File uploaded — Architect ला notification मिळाले');
+ }; r.readAsDataURL(f);
+}
+function cpDownloadUpload(id){const u=(db.clientUploads||[]).find(x=>x.id===id);if(!u?.fileData)return;const a=document.createElement('a');a.href=u.fileData;a.download=u.name||'client-file';a.click();}
+function cpDeleteUpload(id){if(!confirm('हा uploaded file delete करायचा?'))return;db.clientUploads=(db.clientUploads||[]).filter(x=>x.id!==id);saveAll();renderCpContent();}
+function renderCpUploads(c,projs){
+ const uploads=(db.clientUploads||[]).filter(u=>u.clientId===c.id);
+ return `<div style="max-width:900px;margin:auto"><div style="background:linear-gradient(135deg,var(--grn),#2d5a3d);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px"><div style="font-size:19px;font-weight:800">📥 Upload Files to Architect</div><div style="font-size:11px;opacity:.75;margin-top:4px">Plans, site photos, documents, measurements, reference images आणि इतर files.</div></div>
+ <div style="background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:16px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><select id="cp-upload-project" class="fi">${projs.map(p=>`<option value="${p.id}">${escCpDraw(p.name)}</option>`).join('')}</select><select id="cp-upload-category" class="fi"><option>Reference</option><option>Site Photo</option><option>Document</option><option>Measurement</option><option>Drawing Reference</option><option>Other</option></select></div><textarea id="cp-upload-note" class="fi fi-ta" style="margin-top:10px;min-height:65px" placeholder="Message / note for Architect (optional)"></textarea><label style="display:flex;align-items:center;justify-content:center;min-height:110px;margin-top:10px;border:2px dashed var(--grn);border-radius:12px;background:#f7fbf8;cursor:pointer"><input id="cp-upload-input" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.dwg,.dxf" style="display:none" onchange="cpUploadFile(this)"><span style="font-weight:800;color:var(--grn)">📎 Choose File & Upload<br><small style="font-weight:500;color:var(--mut)">Maximum 8 MB per file</small></span></label></div>
+ <div style="font-weight:800;color:var(--grn);margin-bottom:8px">Uploaded Files (${uploads.length})</div>${uploads.length?uploads.slice().reverse().map(u=>`<div style="display:flex;align-items:center;gap:10px;padding:12px;background:#fff;border:1px solid var(--bdr);border-radius:11px;margin-bottom:8px"><div style="font-size:22px">📄</div><div style="flex:1;min-width:0"><b style="font-size:12px">${escCpDraw(u.name)}</b><div style="font-size:10px;color:var(--mut)">${escCpDraw(u.category)} · ${new Date(u.uploadedAt).toLocaleString('en-IN')} ${u.note?'· '+escCpDraw(u.note):''}</div></div><button onclick="cpDownloadUpload('${u.id}')" style="border:1px solid var(--grn);background:#e8f4ee;color:var(--grn);border-radius:7px;padding:7px 9px;font-size:11px;font-weight:700">⬇️</button></div>`).join(''):'<div style="padding:25px;text-align:center;color:var(--mut);background:#fff;border:1px dashed var(--bdr);border-radius:12px">No files uploaded yet.</div>'}</div>`;
+}
+function initCpUploads(){}
+function renderCpActivity(c,projs){
+ const ids=new Set(projs.map(p=>p.id)); const acts=(db.activities||[]).filter(a=>!a.clientId||a.clientId===c.id || ids.has(a.projectId)).slice(0,60);
+ return `<div style="max-width:820px;margin:auto"><div style="background:linear-gradient(135deg,#1a3a2a,#315e43);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px"><div style="font-size:19px;font-weight:800">🔔 Activity Center</div><div style="font-size:11px;opacity:.75">Project updates, drawing approvals, requests, uploads आणि important notifications.</div></div>${acts.length?acts.map(a=>`<div style="display:flex;gap:12px;padding:14px;background:#fff;border:1px solid var(--bdr);border-radius:12px;margin-bottom:8px"><div style="width:10px;height:10px;border-radius:50%;background:${a.color||'#2c5f8a'};margin-top:5px;flex:none"></div><div><b style="font-size:12px">${escCpDraw(a.text||'Activity')}</b><div style="font-size:10px;color:var(--mut);margin-top:3px">${escCpDraw(a.sub||'')} · ${escCpDraw(a.time||'')}</div></div></div>`).join(''):'<div style="text-align:center;padding:40px;color:var(--mut)">No recent activity.</div>'}</div>`;
+}
+
+function cpManageClientDrawings(cid){
+ const c=(db.contacts||[]).find(x=>x.id===cid);if(!c)return;
+ cpCurrentClient=c;cpCurrentTab='drawings';
+ document.getElementById('cp-login-screen').style.display='none';document.getElementById('cp-dashboard-screen').style.display='block';document.getElementById('client-portal-overlay').style.display='block';document.body.style.overflow='hidden';
+ const nb=document.getElementById('cp-client-name-bar');if(nb)nb.textContent='Architect View · '+c.name;
+ renderCpContent();
 }
 
 function cpSetPin(cid) {
@@ -13443,24 +13372,6 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.bankest='📐 Bank Loan Estimate';
 #noc-body .pvbox{background:var(--bdr);border-radius:12px;padding:14px;overflow:auto;max-height:calc(100vh - 190px)}
 #noc-body .pvbar{display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600}
 #noc-body .pvbar label{display:flex;align-items:center;gap:4px;cursor:pointer}
-#noc-body .doc-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:700px){#noc-body .doc-form-grid{grid-template-columns:1fr}}
-#noc-body .doc-sheet-wrap{background:var(--bdr);border-radius:12px;padding:14px;overflow:auto;max-height:calc(100vh - 190px)}
-#noc-body .doc-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
-#noc-body .doc-paper{width:210mm;min-height:297mm;background:#fff;color:#111;margin:0 auto;padding:18mm 18mm 18mm 18mm;box-sizing:border-box;font-family:'Noto Sans Devanagari','Plus Jakarta Sans',Arial,sans-serif;line-height:1.75;box-shadow:0 3px 14px rgba(0,0,0,.12);font-size:12pt}
-#noc-body .doc-paper h1{text-align:center;font-size:17pt;margin:0 0 20px;font-weight:700}
-#noc-body .doc-paper .to{margin-bottom:16px}
-#noc-body .doc-paper .subject{font-weight:700;margin:14px 0}
-#noc-body .doc-paper p{margin:0 0 12px;text-align:justify}
-#noc-body .doc-paper .signature{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:30px}
-#noc-body .doc-paper .sigbox{min-height:90px}
-#noc-body .doc-paper .line{border-bottom:1px solid #555;display:inline-block;min-width:190px;height:22px}
-#noc-body .doc-paper .center{text-align:center}
-#noc-body .doc-paper .numbered{margin:0 0 9px 0}
-#noc-body .doc-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}
-#noc-body .doc-tabs button.active{background:var(--grn);color:#fff;border-color:var(--grn)}
-@media print{body>*:not(#doc-print-root){display:none!important}#doc-print-root{display:block!important}}
-
 
 /* ── NOC sheet: sample-style ₹100 bond first page + continuation on page 2 ── */
 .cmp-sheet.noc{font-size:11.2pt;line-height:1.85}
@@ -13617,288 +13528,6 @@ function nocDrawSaved(){
 }
 
 /* ══════════════════ main view ══════════════════ */
-/* ══════════════════════════════════════════════════════════════
-   ADDITIONAL BUILDING-PERMISSION DOCUMENTS
-   Simple A4 page format — not bond/stamp-paper format.
-   ══════════════════════════════════════════════════════════════ */
-function docv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
-function docSet(id,v){const e=document.getElementById(id);if(e)e.value=v||'';}
-function docEsc(v){return nce(v||'');}
-function docToday(){return new Date().toISOString().slice(0,10);}
-function docDmy(v){if(!v)return '________________';const a=v.split('-');return a.length===3?a[2]+' / '+a[1]+' / '+a[0]:v;}
-function docPrint(title, html){
-  const w=window.open('','_blank');
-  if(!w)return alert('Pop-up blocked — allow pop-ups to print.');
-  const css=`@page{size:A4 portrait;margin:0}@media print{body{margin:0}.doc-paper{page-break-after:auto;box-shadow:none!important}}body{margin:0;background:#fff;color:#111;font-family:'Noto Sans Devanagari','Plus Jakarta Sans',Arial,sans-serif}.doc-paper{width:210mm;min-height:297mm;box-sizing:border-box;padding:18mm;font-size:12pt;line-height:1.75}.doc-paper h1{text-align:center;font-size:17pt;margin:0 0 20px}.doc-paper p{margin:0 0 12px;text-align:justify}.to{margin-bottom:16px}.subject{font-weight:700;margin:14px 0}.signature{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:30px}.sigbox{min-height:90px}`;
-  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+docEsc(title)+'</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>'+css+'</style></head><body>'+html+'</body></html>');
-  w.document.close();setTimeout(()=>{w.focus();w.print();},500);
-}
-window.docBack=function(){
-  nocDrawn=false;
-  if(typeof window.renderNocView==='function') window.renderNocView();
-};
-
-window.renderArchitecturalProjectionView=function(){
-  const box=document.getElementById('noc-body');if(!box)return;
-  box.innerHTML=`
-  <div class="sec-head"><div class="sec-title">📐 Architectural Projection — हमीपत्र</div>
-    <div class="doc-toolbar"><button class="btn btn-sm" onclick="docBack()">← Permission Docs</button><button class="btn btn-sm" onclick="saveArchitecturalProjection()">Save</button><button class="btn btn-gold" onclick="printArchitecturalProjection()">🖨 Print / PDF</button></div></div>
-  <div class="doc-grid" style="display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start">
-    <div><div class="noc-card"><h4>📋 माहिती भरा <span class="ar">▼</span></h4><div class="eb"><div class="noc-f">
-      <div class="doc-form-grid"><div><label>दिनांक</label><input type="date" id="ap-date"></div><div><label>अर्जदार / मालकाचे नाव</label><input id="ap-owner" placeholder="श्री./सौ. ..."></div></div>
-      <label>बांधकामाचा पत्ता</label><textarea id="ap-site" style="min-height:92px"></textarea>
-      <label>संपर्क क्र.</label><input id="ap-phone" placeholder="9XXXXXXXXX">
-      <label>Architect / Licensed Technical Person</label><input id="ap-arch" value="श्री. विजयकुमार प्रकाश एडके">
-      <div class="noc-hint">हा फॉर्म साध्या A4 पेजसाठी आहे. Bond / Stamp Paper format वापरलेला नाही.</div>
-    </div></div></div></div>
-    <div class="doc-sheet-wrap"><div class="pvbar"><span>Live Preview</span></div><div id="ap-preview"></div></div>
-  </div>`;
-  docSet('ap-date',localStorage.getItem('gs_ap_date')||docToday());
-  docSet('ap-owner',localStorage.getItem('gs_ap_owner')||'');
-  docSet('ap-site',localStorage.getItem('gs_ap_site')||'प्लॉट क्र. १९, विश्वनाथ पार्क, गट नं. ५१४/४, मौजे कुंभारी, ता. दक्षिण सोलापूर, जि. सोलापूर, महाराष्ट्र.');
-  docSet('ap-phone',localStorage.getItem('gs_ap_phone')||'');
-  docSet('ap-arch',localStorage.getItem('gs_ap_arch')||'श्री. विजयकुमार प्रकाश एडके');
-  ['ap-date','ap-owner','ap-site','ap-phone','ap-arch'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderArchitecturalProjectionPreview));
-  renderArchitecturalProjectionPreview();
-};
-window.renderArchitecturalProjectionPreview=function(){
-  const owner=docEsc(docv('ap-owner')||'श्री./सौ. ______________________________');
-  const site=docEsc(docv('ap-site')||'______________________________');
-  const phone=docEsc(docv('ap-phone')||'________________');
-  const arch=docEsc(docv('ap-arch')||'श्री. विजयकुमार प्रकाश एडके');
-  const date=docDmy(docv('ap-date'));
-  document.getElementById('ap-preview').innerHTML=`<div class="doc-paper"><h1>हमीपत्र</h1>
-    <div class="to"><b>प्रति,</b><br>मा. आयुक्त महोदय,<br>सोलापूर महानगरपालिका, सोलापूर.</div>
-    <div class="subject">विषय : शहर सोलापूर येथील ${site} या जागेवरील बांधकाम परवानगी / एकत्रीकरण / विभाजन बाबत.</div>
-    <p><b>अर्जदार :</b> ${owner}</p><p><b>रा. संपूर्ण पत्ता :</b> ${site}</p><p><b>संपर्क क्र. :</b> ${phone}</p>
-    <p>महोदय,</p>
-    <p>मी / आम्ही, वरील नमूद जागेचा/बांधकामाचा कायदेशीर मालक/मालक असून, सदर जागेवर बांधकाम परवानगी मिळविण्याकरिता सादर केलेल्या नकाशामध्ये दर्शविण्यात आलेले Architectural Projection हे मंजूर नकाशानुसारच राहतील. सदर Architectural Projection च्या जागेवर कोणतेही कायमस्वरूपी बंदिस्त बांधकाम (Enclosure) करणार नाही, याची मी / आम्ही हमी देत आहोत.</p>
-    <p>तसेच, चुकीची / खोटी अथवा दिशाभूल करणारी माहिती दिल्यास, भारतीय दंड संहिता, 1860 मधील कलम 199 व 200 अन्वये होणाऱ्या कारवाईस मी / आम्ही पात्र राहू. तसेच अशा चुकीच्या माहितीमुळे अथवा नियमबाह्य बाबींमुळे देण्यात आलेली बांधकाम परवानगी UDCPR मधील लागू तरतुदीनुसार रद्द करण्याचे अधिकार महानगरपालिकेस राहतील, याची मला / आम्हाला पूर्ण जाणीव आहे.</p>
-    <p>वरीलप्रमाणे हमीपत्र मी / आम्ही स्वखुशीने व कोणत्याही दबावाशिवाय, बांधकाम परवानगी मिळविण्याच्या उद्देशाने सादर करीत आहे / आहोत.</p>
-    <div class="signature"><div class="sigbox"><b>आपला / आपली,</b><br><br>अर्जदाराची सही : ______________________<br>नाव : ${owner}<br>दिनांक : ${date}<br>ठिकाण : सोलापूर</div><div class="sigbox"><br>Architect / Licensed Technical Person<br>${arch}</div></div>
-  </div>`;
-};
-window.saveArchitecturalProjection=function(){['ap-date','ap-owner','ap-site','ap-phone','ap-arch'].forEach(id=>localStorage.setItem('gs_'+id,docv(id)));showOk('✅ Architectural Projection हमीपत्र saved');};
-window.printArchitecturalProjection=function(){saveArchitecturalProjection();const el=document.getElementById('ap-preview');docPrint('Architectural Projection – हमीपत्र',el?el.innerHTML:'');};
-
-window.renderClientSelfDeclarationView=function(){
-  const box=document.getElementById('noc-body');if(!box)return;
-  box.innerHTML=`
-  <div class="sec-head"><div class="sec-title">📄 Client Self Declaration — स्वयंघोषणापत्र</div>
-    <div class="doc-toolbar"><button class="btn btn-sm" onclick="docBack()">← Permission Docs</button><button class="btn btn-sm" onclick="saveClientSelfDeclaration()">Save</button><button class="btn btn-gold" onclick="printClientSelfDeclaration()">🖨 Print / PDF</button></div></div>
-  <div style="display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start">
-    <div><div class="noc-card"><h4>👤 मालक / बांधकाम माहिती <span class="ar">▼</span></h4><div class="eb"><div class="noc-f">
-      <div class="doc-form-grid"><div><label>मालक १</label><input id="cs-owner1" placeholder="श्री./सौ. ..."></div><div><label>मालक २</label><input id="cs-owner2" placeholder="श्री./सौ. ..."></div></div>
-      <label>बांधकामाचा पत्ता</label><textarea id="cs-site" style="min-height:92px"></textarea><label>संपर्क क्र.</label><input id="cs-phone" placeholder="9XXXXXXXXX"><label>Architect / Licensed Technical Person</label><input id="cs-arch" value="श्री. विजयकुमार प्रकाश एडके"><div class="doc-form-grid"><div><label>दिनांक</label><input type="date" id="cs-date"></div><div><label>ठिकाण</label><input id="cs-place" value="सोलापूर"></div></div>
-      <div class="noc-hint">स्वयंघोषणापत्र साध्या A4 पेजवर तयार केले आहे; Bond / Stamp Paper format नाही.</div>
-    </div></div></div></div>
-    <div class="doc-sheet-wrap"><div class="pvbar"><span>Live Preview</span></div><div id="cs-preview"></div></div>
-  </div>`;
-  docSet('cs-owner1',localStorage.getItem('gs_cs_owner1')||'');docSet('cs-owner2',localStorage.getItem('gs_cs_owner2')||'');
-  docSet('cs-site',localStorage.getItem('gs_cs_site')||'प्लॉट क्र. १९, विश्वनाथ पार्क, गट नं. ५१४/४, मौजे कुंभारी, ता. दक्षिण सोलापूर, जि. सोलापूर, महाराष्ट्र.');
-  docSet('cs-phone',localStorage.getItem('gs_cs_phone')||'');docSet('cs-arch',localStorage.getItem('gs_cs_arch')||'श्री. विजयकुमार प्रकाश एडके');docSet('cs-date',localStorage.getItem('gs_cs_date')||docToday());docSet('cs-place',localStorage.getItem('gs_cs_place')||'सोलापूर');
-  ['cs-owner1','cs-owner2','cs-site','cs-phone','cs-arch','cs-date','cs-place'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderClientSelfDeclarationPreview));
-  renderClientSelfDeclarationPreview();
-};
-window.renderClientSelfDeclarationPreview=function(){
-  const o1=docv('cs-owner1'),o2=docv('cs-owner2');
-  const owners=o1&&o2?o1+' व '+o2:(o1||o2||'श्री./सौ. ______________________________');
-  const site=docEsc(docv('cs-site')||'______________________________');const phone=docEsc(docv('cs-phone')||'________________');const arch=docEsc(docv('cs-arch')||'श्री. विजयकुमार प्रकाश एडके');const date=docDmy(docv('cs-date'));const place=docEsc(docv('cs-place')||'सोलापूर');
-  document.getElementById('cs-preview').innerHTML=`<div class="doc-paper"><h1>स्वयं - घोषणापत्र (मालकाकडून)</h1>
-    <div class="to"><b>प्रति,</b><br>मा. आयुक्त महोदय,<br>सोलापूर महानगरपालिका, सोलापूर.</div>
-    <div class="subject">विषय : मंजूर नकाशानुसार बांधकाम करण्याबाबत स्वयंघोषणा.</div>
-    <p><b>मालकाचे नाव :</b> ${docEsc(owners)}</p><p><b>बांधकामाचा पत्ता :</b> ${site}</p><p><b>संपर्क क्र. :</b> ${phone}</p>
-    <div class="center"><b>घोषणा</b></div>
-    <p>मी / आम्ही, खाली सही करणारा / करणारी, वरील नमूद बांधकामाचा / जागेचा कायदेशीर मालक असून खालीलप्रमाणे जाहीर करतो / करते –</p>
-    <p class="numbered"><b>1.</b> सोलापूर महानगरपालिकेकडून मंजूर करण्यात आलेला बांधकाम नकाशा तसेच लागू UDCPR नियम वाचलेले असून, मंजूर नकाशा व लागू नियमांनुसारच बांधकाम करण्यास मी / आम्ही सहमत आहे / आहोत.</p>
-    <p class="numbered"><b>2.</b> सदर बांधकामाचे तांत्रिक पर्यवेक्षण परवानाधारक तांत्रिक व्यक्ती (Licensed Technical Person) आर्किटेक्ट / इंजिनिअर ${arch} यांच्यामार्फत करण्यात येत असून, मंजूर नकाशानुसार आवश्यक तांत्रिक देखरेख व प्रमाणनाची जबाबदारी लागू नियमांनुसार पार पाडण्यात येईल.</p>
-    <p class="numbered"><b>3.</b> माझ्याकडून / आमच्याकडून मंजूर नकाशापासून कोणताही फरक करून किंवा कोणतेही अनधिकृत बांधकाम केल्यास, त्याची संपूर्ण जबाबदारी माझी / आमची राहील.</p>
-    <p class="numbered"><b>4.</b> माझ्याकडून / आमच्याकडून किंवा माझ्या / आमच्या आदेशाने मंजूर बांधकामामध्ये कोणताही बदल अथवा अनधिकृत बांधकाम झाल्यास, त्याबाबत परवानाधारक तांत्रिक व्यक्तीस जबाबदार धरले जाणार नाही.</p>
-    <p class="numbered"><b>5.</b> अशा परिस्थितीत सक्षम प्राधिकरणास लागू कायदे व नियमांनुसार बांधकाम थांबविणे, अनधिकृत बांधकामावर कारवाई करणे, ते पाडणे तसेच त्यासाठी झालेला खर्च माझ्याकडून / आमच्याकडून वसूल करण्याचे अधिकार राहतील, हे मी / आम्ही मान्य करतो / करते.</p>
-    <div class="signature"><div class="sigbox"><b>मालकाची सही :</b> ______________________<br>नाव : ${docEsc(o1||'______________________________')}<br><br><b>मालकाची सही :</b> ______________________<br>नाव : ${docEsc(o2||'______________________________')}</div><div class="sigbox">दिनांक : ${date}<br>ठिकाण : ${place}<br><br>Architect / Licensed Technical Person<br>${arch}</div></div>
-  </div>`;
-};
-window.saveClientSelfDeclaration=function(){['cs-owner1','cs-owner2','cs-site','cs-phone','cs-arch','cs-date','cs-place'].forEach(id=>localStorage.setItem('gs_'+id,docv(id)));showOk('✅ Client Self Declaration saved');};
-window.printClientSelfDeclaration=function(){saveClientSelfDeclaration();const el=document.getElementById('cs-preview');docPrint('Client Self Declaration – स्वयंघोषणापत्र',el?el.innerHTML:'');};
-
-
-window.renderAreaMeasurementUndertakingView=function(){
-  const box=document.getElementById('noc-body');if(!box)return;
-  box.innerHTML=`
-  <div class="sec-head"><div class="sec-title">📄 क्षेत्रफळाबाबत हमीपत्र</div>
-    <div class="doc-toolbar">
-      <button class="btn btn-sm" onclick="docBack()">← Permission Docs</button>
-      <button class="btn btn-sm" onclick="saveAreaMeasurementUndertaking()">Save</button>
-      <button class="btn btn-gold" onclick="printAreaMeasurementUndertaking()">🖨 Print / PDF</button>
-    </div>
-  </div>
-  <div class="doc-grid" style="display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start">
-    <div>
-      <div class="noc-card"><h4>📋 जागा / अर्जदार माहिती <span class="ar">▼</span></h4><div class="eb"><div class="noc-f">
-        <label>अर्जदाराचे नाव</label><input id="am-owner" placeholder="श्री./सौ. ...">
-        <label>पत्ता</label><textarea id="am-address" style="min-height:80px"></textarea>
-        <label>संपर्क क्र.</label><input id="am-phone" placeholder="9XXXXXXXXX">
-        <label>जागेचा तपशील / विषय</label><textarea id="am-subject" style="min-height:100px"></textarea>
-        <label>जुना स. नं.</label><input id="am-oldsn" placeholder="________">
-        <label>नवा स. नं.</label><input id="am-newsn" placeholder="________">
-        <label>C.T.S. नं.</label><input id="am-cts">
-        <label>टी. पी. स्कीम नं.</label><input id="am-tp">
-        <label>अंतिम भूखंड नं.</label><input id="am-finalplot">
-        <label>उपभूखंड नं.</label><input id="am-subplot">
-        <label>दिनांक</label><input type="date" id="am-date">
-        <label>ठिकाण</label><input id="am-place" value="सोलापूर">
-        <div class="noc-hint">साधा A4 format. मजकूर दिलेल्या हमीपत्राच्या नमुन्यानुसार ठेवला आहे.</div>
-      </div></div></div>
-    </div>
-    <div class="doc-sheet-wrap"><div class="pvbar"><span>Live Preview</span></div><div id="am-preview"></div></div>
-  </div>`;
-
-  const vals={
-    owner:localStorage.getItem('gs_am_owner')||'श्री. हनमंतुकोमरय्या बुरा',
-    address:localStorage.getItem('gs_am_address')||'34/A, न्यूपच्छा पेठ, अशोक चौक, उत्तर सोलापूर, सोलापूर – 413005',
-    phone:localStorage.getItem('gs_am_phone')||'9970825000',
-    subject:localStorage.getItem('gs_am_subject')||'शहर सोलापूर येथील न्यू पच्छा पेठ, जुना स. नं. ________, नवा स. नं. ________, C.T.S. नं. 10388, टी. पी. स्कीम नं. 1, अंतिम भूखंड नं. 34/A, उपभूखंड नं. 39 या जागेतील बांधकाम परवानगी / एकत्रीकरण / विभागणी बाबत.',
-    oldsn:localStorage.getItem('gs_am_oldsn')||'',
-    newsn:localStorage.getItem('gs_am_newsn')||'',
-    cts:localStorage.getItem('gs_am_cts')||'10388',
-    tp:localStorage.getItem('gs_am_tp')||'1',
-    finalplot:localStorage.getItem('gs_am_finalplot')||'34/A',
-    subplot:localStorage.getItem('gs_am_subplot')||'39',
-    date:localStorage.getItem('gs_am_date')||'2025-10-14',
-    place:localStorage.getItem('gs_am_place')||'सोलापूर'
-  };
-  Object.entries(vals).forEach(([k,v])=>docSet('am-'+k,v));
-  ['am-owner','am-address','am-phone','am-subject','am-oldsn','am-newsn','am-cts','am-tp','am-finalplot','am-subplot','am-date','am-place']
-    .forEach(id=>document.getElementById(id)?.addEventListener('input',renderAreaMeasurementUndertakingPreview));
-  renderAreaMeasurementUndertakingPreview();
-};
-window.renderAreaMeasurementUndertakingPreview=function(){
-  const owner=docEsc(docv('am-owner')||'श्री./सौ. ______________________________');
-  const address=docEsc(docv('am-address')||'______________________________');
-  const phone=docEsc(docv('am-phone')||'________________');
-  const subject=docEsc(docv('am-subject')||'शहर सोलापूर येथील ______________________________ या जागेतील बांधकाम परवानगी / एकत्रीकरण / विभागणी बाबत.');
-  const date=docDmy(docv('am-date'));
-  const place=docEsc(docv('am-place')||'सोलापूर');
-  document.getElementById('am-preview').innerHTML=`<div class="doc-paper">
-    <h1>हमीपत्र</h1>
-    <div class="to"><b>प्रति,</b><br>मा. आयुक्त,<br>सोलापूर महानगरपालिका, सोलापूर.</div>
-    <div class="subject"><b>विषय:</b> ${subject}</div>
-    <p><b>अर्जदार:</b> ${owner}</p>
-    <p><b>पत्ता:</b> ${address}</p>
-    <p><b>संपर्क क्र.:</b> ${phone}</p>
-    <p>महोदय,</p>
-    <p>मी, ${owner}, विषयांतर्गत नमूद जागेतील बांधकाम परवानगी मिळविण्याकरिता सोलापूर महानगरपालिकेकडे प्रस्ताव सादर केला आहे.</p>
-    <p>सदर प्रस्तावात दाखविलेले जागेचे क्षेत्रफळ हे मोजणी नकाशानुसार योग्य आहे, याची मी या हमीपत्राद्वारे हमी देत आहे.</p>
-    <p>तसेच, चुकीची / खोटी अथवा दिशाभूल करणारी माहिती दिल्यास, भारतीय दंड संहिता 1860 मधील कलम 199/200 अन्वये माझ्यावर कारवाई करण्यात यावी, यास मी पात्र असेन.</p>
-    <p>याव्यतिरिक्त, अशा चुकीमुळे मला देण्यात आलेली बांधकाम परवानगी UDCPR मधील तरतूद क्र. 2.15 नुसार रद्द करण्याचे अधिकार महानगरपालिकेस राहतील, याची मला पूर्ण जाणीव आहे.</p>
-    <p>वरीलप्रमाणे हमीपत्र मी विषयांकित जागेच्या बांधकाम परवानगीसाठी सादर केलेल्या प्रस्तावाकरिता लिहून देत आहे.</p>
-    <div class="signature"><div class="sigbox"><b>आपला नम्र,</b><br><br>अर्जदार:<br>${owner}<br><br>दिनांक: ${date}<br>ठिकाण: ${place}</div></div>
-  </div>`;
-};
-window.saveAreaMeasurementUndertaking=function(){
-  ['am-owner','am-address','am-phone','am-subject','am-oldsn','am-newsn','am-cts','am-tp','am-finalplot','am-subplot','am-date','am-place']
-    .forEach(id=>localStorage.setItem('gs_'+id,docv(id)));
-  showOk('✅ क्षेत्रफळाबाबत हमीपत्र saved');
-};
-window.printAreaMeasurementUndertaking=function(){
-  saveAreaMeasurementUndertaking();
-  const el=document.getElementById('am-preview');
-  docPrint('हमीपत्र – क्षेत्रफळाबाबत',el?el.innerHTML:'');
-};
-
-
-window.renderTPOpinionView=function(){
-  const box=document.getElementById('noc-body');if(!box)return;
-  box.innerHTML=`
-  <div class="sec-head"><div class="sec-title">📄 टी.पी. अभिप्राय — बांधकाम परवानगी / सुधारित बांधकाम परवानगी</div>
-    <div class="doc-toolbar">
-      <button class="btn btn-sm" onclick="docBack()">← Permission Docs</button>
-      <button class="btn btn-sm" onclick="saveTPOpinion()">Save</button>
-      <button class="btn btn-gold" onclick="printTPOpinion()">🖨 Print / PDF</button>
-    </div>
-  </div>
-  <div class="doc-grid" style="display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:16px;align-items:start">
-    <div>
-      <div class="noc-card"><h4>📋 टी.पी. / अर्जदार माहिती <span class="ar">▼</span></h4><div class="eb"><div class="noc-f">
-        <div class="doc-form-grid">
-          <div><label>आवक नंबर</label><input id="tp-inward" placeholder="________"></div>
-          <div><label>दिनांक</label><input type="date" id="tp-date"></div>
-        </div>
-        <label>अर्जदार</label><input id="tp-applicant" placeholder="श्री./सी. __________">
-        <label>टी.पी.</label><input id="tp-tp" placeholder="________________">
-        <div class="doc-form-grid">
-          <div><label>फा. प्लॉट नं.</label><input id="tp-finalplot" placeholder="________"></div>
-          <div><label>सब प्लॉट नं.</label><input id="tp-subplot" placeholder="________"></div>
-        </div>
-        <div class="doc-form-grid">
-          <div><label>पेठ</label><input id="tp-peth" placeholder="________"></div>
-          <div><label>नगर</label><input id="tp-nagar" placeholder="________"></div>
-        </div>
-        <label>सि.स. नं.</label><input id="tp-cssn" placeholder="________">
-        <label>विषय / बांधकाम परवानगीचा प्रकार</label><textarea id="tp-subject" style="min-height:72px">बांधकाम परवानगी / सुधारीत बांधकाम परवानगी करीता अभिप्राय मिळणेबाबत.</textarea>
-        <div class="noc-hint">मजकूर दिलेल्या “टी.पी. अभिप्राय” नमुन्यानुसार ठेवला आहे. साधा A4 format.</div>
-      </div></div></div>
-    </div>
-    <div class="doc-sheet-wrap"><div class="pvbar"><span>Live Preview</span></div><div id="tp-preview"></div></div>
-  </div>`;
-
-  const vals={
-    inward:localStorage.getItem('gs_tp_inward')||'',
-    date:localStorage.getItem('gs_tp_date')||docToday(),
-    applicant:localStorage.getItem('gs_tp_applicant')||'',
-    tp:localStorage.getItem('gs_tp_tp')||'',
-    finalplot:localStorage.getItem('gs_tp_finalplot')||'',
-    subplot:localStorage.getItem('gs_tp_subplot')||'',
-    peth:localStorage.getItem('gs_tp_peth')||'',
-    nagar:localStorage.getItem('gs_tp_nagar')||'',
-    cssn:localStorage.getItem('gs_tp_cssn')||'',
-    subject:localStorage.getItem('gs_tp_subject')||'बांधकाम परवानगी / सुधारीत बांधकाम परवानगी करीता अभिप्राय मिळणेबाबत.'
-  };
-  Object.entries(vals).forEach(([k,v])=>docSet('tp-'+k,v));
-  ['tp-inward','tp-date','tp-applicant','tp-tp','tp-finalplot','tp-subplot','tp-peth','tp-nagar','tp-cssn','tp-subject']
-    .forEach(id=>document.getElementById(id)?.addEventListener('input',renderTPOpinionPreview));
-  renderTPOpinionPreview();
-};
-
-window.renderTPOpinionPreview=function(){
-  const inward=docEsc(docv('tp-inward')||'________________');
-  const date=docDmy(docv('tp-date'));
-  const applicant=docEsc(docv('tp-applicant')||'श्री./सी. __________________');
-  const tp=docEsc(docv('tp-tp')||'________________');
-  const finalplot=docEsc(docv('tp-finalplot')||'________________');
-  const subplot=docEsc(docv('tp-subplot')||'________________');
-  const peth=docEsc(docv('tp-peth')||'________________');
-  const nagar=docEsc(docv('tp-nagar')||'________________');
-  const cssn=docEsc(docv('tp-cssn')||'________________');
-  const subject=docEsc(docv('tp-subject')||'बांधकाम परवानगी / सुधारीत बांधकाम परवानगी करीता अभिप्राय मिळणेबाबत.');
-  document.getElementById('tp-preview').innerHTML=`<div class="doc-paper">
-    <div style="text-align:right;margin-bottom:8px">आवक नंबर / ${inward}<br>दि. ${date}</div>
-    <div class="center" style="font-weight:700;margin-bottom:24px">सोलापूर महानगरपालिका, सोलापूर.</div>
-    <div class="to"><b>सहा. अभियंता, (नगर रचना) यांचेकडे,</b></div>
-    <div class="subject">विषय :- ${subject}</div>
-    <p><b>अर्जदार :-</b> ${applicant}</p>
-    <p><b>टी.पी. :-</b> ${tp} &nbsp;&nbsp; <b>फा. प्लॉट नं. :-</b> ${finalplot} &nbsp;&nbsp; <b>सब प्लॉट नं. :-</b> ${subplot}</p>
-    <p><b>पेठ :-</b> ${peth} &nbsp;&nbsp; <b>नगर :-</b> ${nagar} &nbsp;&nbsp; <b>सि.स.नं. :-</b> ${cssn}</p>
-    <p>वरील विषयांकित जागेवरील बांधकाम परवानगी घेणेकरीता नकाशेसोबत जोडले आहेत. तरी उपरोक्त जागेबाबत विकास योजना, नगर रचना योजनेनुसार आरक्षण, झोन व रस्तेबाबत आपला सविस्तर अभिप्राय मिळणेची विनंती आहे.</p>
-    <p><b>सोबत :-</b> संपूर्ण प्रकरण.</p>
-    <div class="signature" style="margin-top:44px">
-      <div class="sigbox"></div>
-      <div class="sigbox" style="text-align:right"><b>आपला विश्वासू,</b><br><br>____________________________</div>
-    </div>
-  </div>`;
-};
-
-window.saveTPOpinion=function(){
-  ['tp-inward','tp-date','tp-applicant','tp-tp','tp-finalplot','tp-subplot','tp-peth','tp-nagar','tp-cssn','tp-subject']
-    .forEach(id=>localStorage.setItem('gs_'+id,docv(id)));
-  showOk('✅ टी.पी. अभिप्राय saved');
-};
-window.printTPOpinion=function(){
-  saveTPOpinion();
-  const el=document.getElementById('tp-preview');
-  docPrint('टी.पी. अभिप्राय – बांधकाम परवानगी',el?el.innerHTML:'');
-};
-
 window.renderNocView=function(){
   const box=document.getElementById('noc-body');
   if(!box)return;
@@ -13910,8 +13539,6 @@ window.renderNocView=function(){
       <button class="btn btn-sm" onclick="nocNew()">New</button>
       <button class="btn btn-sm" onclick="nocStore()">Save</button>
       <button class="btn btn-gold" onclick="nocPrint()">🖨 Print / PDF</button>
-      <button class="btn btn-sm" onclick="renderArchitecturalProjectionView()">📐 Architectural Projection</button>
-      <button class="btn btn-sm" onclick="renderClientSelfDeclarationView()">📄 Client Self Declaration</button><button class="btn btn-sm" onclick="renderAreaMeasurementUndertakingView()">📄 क्षेत्रफळाबाबत हमीपत्र</button><button class="btn btn-sm" onclick="renderTPOpinionView()">📄 टी.पी. अभिप्राय</button>
     </div>
   </div>
   <div class="noc-grid">
