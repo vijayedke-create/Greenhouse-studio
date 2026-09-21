@@ -3547,263 +3547,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:#1a1a18;background:#fff;-w
   </div>
 </div>
 
-<script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500));<\/script>
-
-<style>
-.gs-rev-modal{position:fixed;inset:0;background:rgba(15,25,20,.58);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px}
-.gs-rev-card{width:min(760px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.25);padding:22px}
-.gs-rev-head{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #e8e5dc;padding-bottom:14px;margin-bottom:14px}
-.gs-rev-title{font-size:18px;font-weight:800;color:#1a3a2a}.gs-rev-sub{font-size:11px;color:#777;margin-top:3px}
-.gs-rev-item{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #eee}
-.gs-rev-badge{font-weight:800;color:#8e44ad;background:#f4eafd;border:1px solid #dec9ec;border-radius:10px;padding:7px 9px;text-align:center}
-.gs-rev-note{font-size:11px;color:#555;line-height:1.45}.gs-rev-meta{font-size:9px;color:#888;margin-top:4px}
-.gs-rev-current{font-size:9px;font-weight:800;color:#1a7a44;background:#e8f4ee;border-radius:12px;padding:4px 7px}
-@media(max-width:600px){.gs-rev-item{grid-template-columns:60px 1fr}.gs-rev-item>div:last-child{grid-column:2}}
-</style>
-<script>
-// ════════════════════════════════════════════════
-// ENHANCED DRAWING REVISION SYSTEM
-// ════════════════════════════════════════════════
-(function(){
-  function store(){if(!db.drawings)db.drawings=[];return db.drawings;}
-  function esc(v){return typeof escCpDraw==='function'?escCpDraw(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-  function nextRev(r){const m=String(r||'R00').match(/^(?:R|REV[- ]?)(\d+)$/i);return m?'R'+String(Number(m[1])+1).padStart(2,'0'):'R01';}
-  function ensureGroup(d){
-    if(!d.revisionGroupId)d.revisionGroupId='REVGRP-'+(d.projectId||'P')+'-'+(d.number||'D')+'-'+Date.now();
-    if(!d.revisionNo)d.revisionNo=Number(String(d.revision||'R01').replace(/\D/g,''))||1;
-    return d.revisionGroupId;
-  }
-  function chain(id){
-    const d=store().find(x=>x.id===id);if(!d)return [];
-    const g=ensureGroup(d);
-    return store().filter(x=>x.revisionGroupId===g || (x.projectId===d.projectId&&x.number===d.number&&(!x.revisionGroupId||x.revisionGroupId===g)))
-      .sort((a,b)=>(Number(a.revisionNo)||0)-(Number(b.revisionNo)||0));
-  }
-  window.cpAddDrawingRevision=function(id){
-    const all=store(), old=all.find(x=>x.id===id); if(!old)return;
-    ensureGroup(old);
-    const history=chain(id), latest=history[history.length-1]||old;
-    if(latest.id!==old.id){ old=latest; }
-    const nr=nextRev(old.revision);
-    const note=prompt('Revision note / change description:', old.clientComment||'Design revision as requested.');
-    if(note===null)return;
-    if(!note.trim()){alert('Revision note आवश्यक आहे.');return;}
-    old.status='Superseded'; old.supersededAt=new Date().toISOString();
-    const now=new Date();
-    const d={...old,id:'DRW-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),revision:nr,revisionNo:(Number(old.revisionNo)||1)+1,date:now.toLocaleDateString('en-IN'),status:'Revised',fileData:'',fileName:'',fileExt:'',mime:'',clientComment:'',revisionNote:note.trim(),parentRevisionId:old.id,createdAt:now.toISOString(),updatedAt:now.toISOString(),approvedAt:null,approvedBy:null,requestedAt:null,supersededAt:null};
-    ensureGroup(d); all.push(d);
-    if(!db.activities)db.activities=[];
-    db.activities.unshift({text:'New Drawing Revision '+nr+' — '+d.name,sub:note.trim(),time:'Just now',color:'#8e44ad',type:'drawing_revision_created',drawingId:d.id,projectId:d.projectId});
-    saveAll();renderCpContent();showOk('Revision '+nr+' तयार झाली');
-  };
-  window.cpDrawingRevisionHistory=function(id){
-    const d=store().find(x=>x.id===id);if(!d)return;ensureGroup(d);const hs=chain(id);if(!hs.length)return;
-    const p=(db.projects||[]).find(x=>x.id===d.projectId);
-    const rows=hs.slice().reverse().map((x,i)=>{const current=i===0;const status=x.status||'Draft';return '<div class="gs-rev-item"><div class="gs-rev-badge">'+esc(x.revision||'R01')+'</div><div><div style="font-size:12px;font-weight:800">'+esc(x.name||'Drawing')+'</div><div class="gs-rev-note">'+esc(x.revisionNote||x.clientComment||'No revision note recorded.')+'</div><div class="gs-rev-meta">'+esc(x.date||'')+' · '+esc(status)+(x.approvedBy?' · Approved by '+esc(x.approvedBy):'')+'</div></div><div>'+(current?'<span class="gs-rev-current">CURRENT</span>':'')+'</div></div>';}).join('');
-    const m=document.createElement('div');m.className='gs-rev-modal';m.id='gs-rev-modal';m.innerHTML='<div class="gs-rev-card"><div class="gs-rev-head"><div><div class="gs-rev-title">🔄 Revision History</div><div class="gs-rev-sub">'+esc(d.number)+' · '+esc(d.name)+' · '+esc(p?.name||'')+'</div></div><button onclick="document.getElementById('gs-rev-modal')?.remove()" style="border:0;background:#f2f1ed;border-radius:9px;padding:8px 11px;cursor:pointer;font-weight:800">✕</button></div><div style="font-size:10px;color:#777;margin-bottom:10px">Each revision is stored separately. Superseded revisions remain available for audit/history.</div>'+rows+'</div>';
-    document.body.appendChild(m);
-  };
-  window.cpDrawingRevisionCompare=function(id){
-    const d=store().find(x=>x.id===id);if(!d)return;ensureGroup(d);const hs=chain(id);const idx=hs.findIndex(x=>x.id===d.id);const prev=hs[idx-1];
-    if(!prev){alert('This is the first revision. Compare उपलब्ध नाही.');return;}
-    alert('REVISION COMPARISON\n\n'+prev.revision+' → '+d.revision+'\n\nPrevious note:
-'+(prev.revisionNote||'—')+'\n\nCurrent note:
-'+(d.revisionNote||'—')+'\n\nFile: '+(d.fileName||'Not uploaded'));
-  };
-  // Show only the latest revision in the main list; history keeps every revision.
-  const oldRender=window.renderCpDrawings;
-  window.renderCpDrawings=function(c,projs){
-    const all=store(); let html='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px"><div><div style="font-size:18px;font-weight:800;color:var(--grn)">📐 Drawing Management</div><div style="font-size:11px;color:var(--mut)">🔄 Revision Control · Approval · Audit History · Client Feedback</div></div></div>';
-    let total=0,approved=0,pending=0,requested=0;
-    projs.forEach(p=>{
-      const groups={};all.filter(d=>d.projectId===p.id).forEach(d=>{ensureGroup(d);const g=d.revisionGroupId;if(!groups[g]||(Number(d.revisionNo)||0)>(Number(groups[g].revisionNo)||0))groups[g]=d;});
-      const ds=Object.values(groups);total+=ds.length;approved+=ds.filter(d=>d.status==='Approved').length;pending+=ds.filter(d=>['Draft','Under Review','Revised'].includes(d.status)).length;requested+=ds.filter(d=>d.status==='Revision Requested').length;
-    });
-    html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px"><div class="cp-stat"><div class="cp-sv">'+total+'</div><div class="cp-sl">Current Drawings</div></div><div class="cp-stat"><div class="cp-sv" style="color:#1a7a44">'+approved+'</div><div class="cp-sl">Approved</div></div><div class="cp-stat"><div class="cp-sv" style="color:#2c5f8a">'+pending+'</div><div class="cp-sl">In Progress</div></div><div class="cp-stat"><div class="cp-sv" style="color:#d35400">'+requested+'</div><div class="cp-sl">Revision Requests</div></div></div>';
-    projs.forEach(p=>{
-      const groups={};all.filter(d=>d.projectId===p.id).forEach(d=>{ensureGroup(d);const g=d.revisionGroupId;if(!groups[g]||(Number(d.revisionNo)||0)>(Number(groups[g].revisionNo)||0))groups[g]=d;});
-      const ds=Object.values(groups).sort((a,b)=>String(a.number).localeCompare(String(b.number)));
-      html+='<div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div><div style="font-weight:800;font-size:15px">'+esc(p.name)+'</div><div style="font-size:10px;color:var(--mut)">📍 '+esc(p.address||'')+'</div></div><button onclick="cpAddDrawing(''+p.id+'')" style="background:var(--grn);color:#fff;border:0;border-radius:8px;padding:8px 11px;font-size:11px;font-weight:700;cursor:pointer">+ Add Drawing</button></div>';
-      if(ds.length){html+='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--surf2);color:var(--mut)"><th style="padding:9px;text-align:left">No.</th><th style="padding:9px;text-align:left">Drawing</th><th style="padding:9px;text-align:left">Current Rev.</th><th style="padding:9px;text-align:left">Status</th><th style="padding:9px;text-align:left">History</th><th style="padding:9px;text-align:right">Action</th></tr></thead><tbody>';
-        ds.forEach(d=>{const hist=chain(d.id);const [fg,bg]=cpDrawingStatusStyle(d.status);html+='<tr style="border-bottom:1px solid var(--bdr)"><td style="padding:9px;font-weight:700">'+esc(d.number)+'</td><td style="padding:9px"><b>'+esc(d.name)+'</b><div style="font-size:9px;color:var(--mut)">'+esc(d.category)+(d.revisionNote?' · 📝 '+esc(d.revisionNote):'')+'</div></td><td style="padding:9px;font-weight:800;color:#8e44ad">'+esc(d.revision||'R01')+'</td><td style="padding:9px"><span style="padding:4px 7px;border-radius:15px;background:'+bg+';color:'+fg+';font-size:9px;font-weight:800">'+esc(d.status||'Draft')+'</span></td><td style="padding:9px"><button onclick="cpDrawingRevisionHistory(''+d.id+'')" style="border:1px solid #dec9ec;background:#f4eafd;color:#8e44ad;border-radius:8px;padding:6px 8px;font-size:10px;font-weight:700;cursor:pointer">'+hist.length+' revision'+(hist.length!==1?'s':'')+'</button></td><td style="padding:9px;text-align:right"><div style="display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap">'+cpRenderDrawingActions(d)+'<button onclick="cpAddDrawingRevision(''+d.id+'')" style="background:#f4eafd;color:#8e44ad;border:1px solid #d9c0ea;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:700;cursor:pointer">+ Revision</button><button onclick="cpDrawingRevisionCompare(''+d.id+'')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:7px 9px;font-size:10px;cursor:pointer">Compare</button></div></td></tr>';});
-        html+='</tbody></table></div>';
-      }else html+='<div style="text-align:center;padding:22px;color:var(--mut);font-size:11px">No drawings added yet. Click <b>+ Add Drawing</b>.</div>';
-      html+='</div>';
-    });
-    if(!projs.length)html+='<div style="text-align:center;padding:40px;color:var(--mut)">No projects found.</div>';
-    return html;
-  };
-})();
-</script>
-
-
-<style>
-.gs-ai-shell{margin:0 0 20px;border:1px solid rgba(31,92,58,.18);border-radius:20px;overflow:hidden;background:linear-gradient(135deg,#fbfdfb,#f4f8f4);box-shadow:0 8px 28px rgba(26,58,42,.06)}
-.gs-ai-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;background:linear-gradient(135deg,#183d29,#285d3e);color:#fff}
-.gs-ai-brand{display:flex;align-items:center;gap:12px;min-width:0}.gs-ai-icon{width:40px;height:40px;border-radius:12px;background:rgba(201,168,76,.18);border:1px solid rgba(201,168,76,.4);display:flex;align-items:center;justify-content:center;color:#e6c86a;font-size:21px}.gs-ai-title{font-size:15px;font-weight:800;letter-spacing:.1px}.gs-ai-sub{font-size:10px;color:rgba(255,255,255,.62);margin-top:3px}.gs-ai-local{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#d8eddf;border:1px solid rgba(216,237,223,.2);padding:6px 9px;border-radius:20px;white-space:nowrap}.gs-ai-body{padding:15px 18px}.gs-ai-prompt-row{display:flex;gap:8px}.gs-ai-input{flex:1;min-width:0;height:42px;border:1px solid var(--bdr);border-radius:11px;background:var(--surf);color:var(--ink);padding:0 13px;font:500 12px 'Plus Jakarta Sans',sans-serif;outline:none}.gs-ai-input:focus{border-color:var(--grn);box-shadow:0 0 0 3px rgba(31,92,58,.08)}.gs-ai-ask{height:42px;padding:0 17px;white-space:nowrap}.gs-ai-quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.gs-ai-quick button{border:1px solid var(--bdr);background:var(--surf);color:var(--ink);border-radius:20px;padding:6px 10px;font:600 10px 'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:.15s}.gs-ai-quick button:hover{border-color:var(--grn);transform:translateY(-1px)}.gs-ai-answer{margin-top:12px;border:1px solid var(--bdr);background:var(--surf);border-radius:14px;min-height:62px;padding:12px}.gs-ai-welcome{display:flex;gap:9px;color:var(--mut);font-size:11px;line-height:1.5}.gs-ai-welcome>span{color:#b18a2e;font-size:17px}.gs-ai-result-title{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:8px}.gs-ai-result-note{font-size:10px;color:var(--mut);margin-top:9px}.gs-ai-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:9px}.gs-ai-stat{border:1px solid var(--bdr);border-radius:10px;padding:9px;background:var(--surf2)}.gs-ai-stat b{display:block;font:800 16px 'JetBrains Mono',monospace;color:var(--ink)}.gs-ai-stat span{font-size:9px;color:var(--mut)}.gs-ai-list{display:grid;gap:6px}.gs-ai-item{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bdr);padding:7px 0}.gs-ai-item:last-child{border-bottom:0}.gs-ai-dot{width:7px;height:7px;border-radius:50%;background:var(--grn);flex:0 0 7px}.gs-ai-item-main{flex:1;min-width:0}.gs-ai-item-main b{display:block;font-size:11px;color:var(--ink)}.gs-ai-item-main small{display:block;font-size:9px;color:var(--mut);margin-top:2px}.gs-ai-item-value{font:800 11px 'JetBrains Mono',monospace;color:var(--red);white-space:nowrap}.gs-ai-action{border:1px solid var(--bdr);background:var(--surf2);color:var(--ink);border-radius:7px;padding:5px 7px;font:700 9px 'Plus Jakarta Sans',sans-serif;cursor:pointer}.gs-ai-empty{padding:12px;text-align:center;font-size:11px;color:var(--mut)}
-@media(max-width:700px){.gs-ai-head{align-items:flex-start}.gs-ai-local{display:none}.gs-ai-prompt-row{flex-direction:column}.gs-ai-ask{width:100%}.gs-ai-stat-grid{grid-template-columns:repeat(2,1fr)}}
-</style>
-<script>
-(function(){
-  const money=n=>'₹'+Number(n||0).toLocaleString('en-IN');
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const pname=p=>p?.name||'Untitled Project';
-  const clientName=p=>{const c=(db.contacts||[]).find(x=>x.id===p?.clientId);return c?.name||'No client linked';};
-  const drawings=()=>Array.isArray(db.drawings)?db.drawings:[];
-  const latestDrawings=()=>{
-    const a=drawings(), map=new Map();
-    a.forEach(d=>{const key=d.revisionGroupId||`${d.projectId||''}::${d.number||d.name||d.id}`;const old=map.get(key);const n=Number(d.revisionNo)||Number(String(d.revision||'R01').replace(/\D/g,''))||1;if(!old||n>(Number(old.revisionNo)||Number(String(old.revision||'R01').replace(/\D/g,''))||1))map.set(key,d);});
-    return [...map.values()];
-  };
-  function activeProjects(){return (db.projects||[]).filter(p=>String(p.stage||'').toLowerCase()!=='completed');}
-  function pendingPayments(){return (db.projects||[]).map(p=>({p,b:Number(typeof pbal==='function'?pbal(p.id):0)})).filter(x=>x.b>0).sort((a,b)=>b.b-a.b);}
-  function pendingDrawingApprovals(){return latestDrawings().filter(d=>['Under Review','Revision Requested','Revised'].includes(d.status));}
-  function permissionItems(){
-    const out=[];(db.projects||[]).forEach(p=>{
-      const s=String(p.permissionStatus||p.approvalStatus||'').trim();
-      if(s && !/approved|completed|sanctioned/i.test(s)) out.push({p,s});
-      else if(Array.isArray(p.permissionPending)&&p.permissionPending.length) out.push({p,s:p.permissionPending.join(', ')});
-    });
-    return out;
-  }
-  function dueProjects(){const now=new Date();return activeProjects().filter(p=>p.deadline&&new Date(p.deadline)<now).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));}
-  function renderAnswer(html){const el=document.getElementById('gs-ai-answer');if(el)el.innerHTML=html;}
-  function list(items, valueFn){
-    if(!items.length)return '<div class="gs-ai-empty">✓ Nothing matching this query right now.</div>';
-    return '<div class="gs-ai-list">'+items.slice(0,8).map(x=>`<div class="gs-ai-item"><span class="gs-ai-dot"></span><div class="gs-ai-item-main"><b>${esc(x.title)}</b><small>${esc(x.sub||'')}</small></div>${valueFn?valueFn(x):''}</div>`).join('')+'</div>'+(items.length>8?`<div class="gs-ai-result-note">Showing 8 of ${items.length} items.</div>`:'');
-  }
-  function briefing(){
-    const ps=activeProjects(), pp=pendingPayments(), da=pendingDrawingApprovals(), due=dueProjects();
-    const visits=(db.siteVisits||[]).filter(v=>{const d=new Date(v.date||v.visitDate);const n=new Date();return d.toDateString()===n.toDateString();});
-    const acts=(db.activities||[]).slice(0,3);
-    return `<div class="gs-ai-result-title">☀️ Today's Office Briefing</div><div class="gs-ai-stat-grid"><div class="gs-ai-stat"><b>${ps.length}</b><span>Active Projects</span></div><div class="gs-ai-stat"><b>${pp.length}</b><span>Payments Pending</span></div><div class="gs-ai-stat"><b>${da.length}</b><span>Drawing Actions</span></div><div class="gs-ai-stat"><b>${visits.length}</b><span>Site Visits Today</span></div></div>${due.length?'<div class="gs-ai-result-note">🔴 Overdue projects</div>'+list(due.map(p=>({title:pname(p),sub:`Deadline ${p.deadline} · ${clientName(p)}`}))):''}${acts.length?'<div class="gs-ai-result-note">Recent activity</div>'+list(acts.map(a=>({title:a.text,sub:`${a.sub||''} · ${a.time||''}`}))):''}`;
-  }
-  function answer(q){
-    const x=String(q||'').toLowerCase().trim();
-    if(!x)return briefing();
-    if(/today|briefing|आज|office/.test(x)&&/brief|today|आज|office/.test(x))return briefing();
-    if(/payment|fee|fees|पैसे|पेमेंट|outstanding|balance|due/.test(x)){
-      const pp=pendingPayments(), total=pp.reduce((a,x)=>a+x.b,0);
-      return `<div class="gs-ai-result-title">💰 Pending Payments</div><div class="gs-ai-stat-grid"><div class="gs-ai-stat"><b>${pp.length}</b><span>Projects Due</span></div><div class="gs-ai-stat"><b>${money(total)}</b><span>Total Outstanding</span></div></div>`+list(pp.map(x=>({title:pname(x.p),sub:`${clientName(x.p)} · ${x.p.deadline?'Deadline '+x.p.deadline:''}`,b:x.b})),x=>`<span class="gs-ai-item-value">${money(x.b)}</span>`)+`<div class="gs-ai-result-note">Source: current project/payment records.</div>`;
-    }
-    if(/drawing|revision|approval|approve|ड्रॉइंग|रेव्हिजन|अप्रूव्ह/.test(x)){
-      const da=pendingDrawingApprovals();
-      return `<div class="gs-ai-result-title">📐 Drawing Actions</div>`+list(da.map(d=>({id:d.id,title:`${d.number||''} ${d.name||'Drawing'} — ${d.revision||'R01'}`,sub:`${d.status||'Draft'} · ${(db.projects||[]).find(p=>p.id===d.projectId)?.name||'Project'}`})),x=>`<button class="gs-ai-action" onclick="gsAiOpenDrawing('${esc(x.id||'')}')">Open</button>`)+`<div class="gs-ai-result-note">Includes current revisions requiring review, approval or rework.</div>`;
-    }
-    if(/project|projects|प्रोजेक्ट|काम/.test(x)){
-      const ps=activeProjects();
-      return `<div class="gs-ai-result-title">🏗️ Active Projects</div>`+list(ps.map(p=>({id:p.id,title:pname(p),sub:`${clientName(p)} · ${p.stage||'Concept'}${p.deadline?' · Due '+p.deadline:''}`})),x=>`<button class="gs-ai-action" onclick="gsAiOpenProject('${esc(x.p?.id||'')}')">Open</button>`);
-    }
-    if(/permission|permit|sanction|approval|noc|परवानगी|मंजुरी|n.o.c/.test(x)&&!/drawing|revision/.test(x)){
-      const pi=permissionItems();
-      return `<div class="gs-ai-result-title">🏛️ Permission / Approval Follow-up</div>`+list(pi.map(x=>({title:pname(x.p),sub:x.s||'Pending status'})))+`<div class="gs-ai-result-note">If a project has no permission-status field, the assistant will not invent one.</div>`;
-    }
-    if(/site|visit|साईट|साइट/.test(x)){
-      const sv=(db.siteVisits||[]).slice().sort((a,b)=>new Date(a.date||a.visitDate)-new Date(b.date||b.visitDate));
-      return `<div class="gs-ai-result-title">🏗️ Site Visits</div>`+list(sv.slice(-8).reverse().map(v=>({title:v.projectName||((db.projects||[]).find(p=>p.id===v.projectId)?.name)||'Site Visit',sub:`${v.date||v.visitDate||''} · ${v.notes||v.note||'No note'}`})));
-    }
-    if(/contact|client|क्लायंट|कस्टमर/.test(x))return `<div class="gs-ai-result-title">👥 Client / Contact Summary</div><div class="gs-ai-stat-grid"><div class="gs-ai-stat"><b>${(db.contacts||[]).length}</b><span>Contacts</span></div><div class="gs-ai-stat"><b>${(db.projects||[]).length}</b><span>Projects</span></div></div>`+list((db.contacts||[]).slice(0,8).map(c=>({title:c.name,sub:`${c.cat||'Contact'} · ${c.phone||c.wa||'No phone'}`})));
-    if(/activity|recent|अ‍ॅक्टिव्हिटी|updates|update/.test(x))return `<div class="gs-ai-result-title">⚡ Recent Activity</div>`+list((db.activities||[]).slice(0,10).map(a=>({title:a.text,sub:`${a.sub||''} · ${a.time||''}`})));
-    return `<div class="gs-ai-result-title">✦ I can search your office records</div><div class="gs-ai-welcome"><span>💡</span><div>Try <b>“pending payments”</b>, <b>“drawing approvals”</b>, <b>“active projects”</b>, <b>“today’s briefing”</b>, <b>“site visits”</b> or <b>“permission pending”</b>.</div></div>`;
-  }
-  window.gsAiAsk=function(){const i=document.getElementById('gs-ai-input');if(!i)return;renderAnswer(answer(i.value));};
-  window.gsAiQuick=function(q){const i=document.getElementById('gs-ai-input');if(i)i.value=q;renderAnswer(answer(q));};
-  window.gsAiOpenProject=function(id){if(!id)return;try{if(typeof switchView==='function')switchView('projects');setTimeout(()=>{if(typeof openPD==='function')openPD(id);},120);}catch(e){console.warn(e);}};
-  window.gsAiOpenDrawing=function(id){if(!id)return;try{const d=(db.drawings||[]).find(x=>x.id===id);if(d&&typeof switchView==='function')switchView('projects');if(d&&typeof showOk==='function')showOk(`${d.name||'Drawing'} ${d.revision||'R01'} — ${d.status||'Draft'}`);else if(d)alert(`${d.name||'Drawing'}\nRevision: ${d.revision||'R01'}\nStatus: ${d.status||'Draft'}`);}catch(e){console.warn(e);}};
-  function bind(){const i=document.getElementById('gs-ai-input');if(i&&!i._aiBound){i._aiBound=true;i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();gsAiAsk();}});}}
-  const original=window.renderDashboard;
-  if(typeof original==='function'&&!window.__gsAiWrapped){window.__gsAiWrapped=true;window.renderDashboard=function(){const r=original.apply(this,arguments);bind();return r;};}
-  document.addEventListener('DOMContentLoaded',()=>{setTimeout(bind,50);});
-})();
-</script>
-<style>
-.gs-perm-wrap{padding:4px 0 30px}.gs-perm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.gs-perm-card{background:#fff;border:1px solid #e7e4dc;border-radius:16px;padding:20px;box-shadow:0 6px 20px rgba(20,45,30,.06);display:flex;gap:16px;align-items:flex-start;transition:.2s}.gs-perm-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(20,45,30,.1)}.gs-perm-icon{width:52px;height:52px;border-radius:14px;background:#edf5ee;display:grid;place-items:center;font-size:26px;flex:0 0 auto}.gs-perm-card h3{margin:0 0 6px;font-size:16px;color:#193522}.gs-perm-card p{margin:0 0 14px;color:#777;font-size:13px;line-height:1.55}.gs-perm-actions{display:flex;gap:8px;flex-wrap:wrap}.gs-perm-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}.gs-perm-head h2{margin:0;color:#193522}.gs-perm-head p{margin:4px 0 0;color:#777;font-size:13px}.gs-perm-back{display:none;margin-bottom:14px}.gs-perm-doc{background:#fff;border:1px solid #e7e4dc;border-radius:16px;padding:20px}.gs-perm-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gs-perm-form .full{grid-column:1/-1}.gs-perm-form label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px}.gs-perm-form input,.gs-perm-form textarea{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:9px;padding:10px;font:inherit}.gs-perm-form textarea{min-height:90px;resize:vertical}.gs-perm-preview{margin-top:18px;border:1px solid #ddd;background:#fafafa;padding:20px;min-height:260px}.gs-perm-paper{background:#fff;max-width:210mm;min-height:297mm;margin:auto;padding:22mm 18mm;box-sizing:border-box;font-family:'Noto Sans Devanagari',Arial,sans-serif;color:#222;box-shadow:0 2px 12px rgba(0,0,0,.08)}.gs-perm-paper h1{text-align:center;font-size:22px;margin:0 0 22px}.gs-perm-paper .to{line-height:1.7}.gs-perm-paper .body{margin-top:20px;line-height:1.9;text-align:justify}.gs-perm-paper .sig{margin-top:55px;text-align:right}.gs-perm-paper .subject{font-weight:700;margin-top:15px}
-@media(max-width:800px){.gs-perm-grid{grid-template-columns:1fr}.gs-perm-form{grid-template-columns:1fr}}
-</style>
-<script>
-(function(){
-  const docs=[
-    {id:'noc',icon:'🏛️',title:'ना हरकत प्रमाणपत्र (NOC)',desc:'मालकांची संमती / बांधकाम परवानगीसाठी NOC तयार करा.',action:'noc'},
-    {id:'projection',icon:'📐',title:'Architectural Projection – हमीपत्र',desc:'Architectural projection बाबत हमीपत्र तयार करा.',action:'generic'},
-    {id:'declaration',icon:'📝',title:'Client Self Declaration – स्वयंघोषणापत्र',desc:'मालकाचे स्वयंघोषणापत्र तयार व Print/PDF करा.',action:'generic'},
-    {id:'area',icon:'📏',title:'क्षेत्रफळाबाबत हमीपत्र',desc:'मोजणी नकाशानुसार क्षेत्रफळ योग्य असल्याचे हमीपत्र.',action:'generic'},
-    {id:'tp',icon:'🏛️',title:'TP अभिप्राय पत्र',desc:'बांधकाम परवानगीसाठी नगर रचना अभिप्राय अर्ज.',action:'generic'}
-  ];
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  function shell(){return document.getElementById('noc-body');}
-  function landing(){
-    const b=shell();if(!b)return;
-    b.innerHTML=`<div class="gs-perm-wrap"><div class="gs-perm-head"><div><h2>🏛️ Permission Documents</h2><p>बांधकाम परवानगीसाठी आवश्यक पत्रे, हमीपत्रे व अभिप्राय एकाच ठिकाणी तयार करा.</p></div></div><div class="gs-perm-grid">${docs.map(d=>`<div class="gs-perm-card"><div class="gs-perm-icon">${d.icon}</div><div style="flex:1"><h3>${d.title}</h3><p>${d.desc}</p><div class="gs-perm-actions"><button class="btn btn-gold" onclick="gsOpenPerm('${d.id}')">Open Document</button>${d.id==='noc'?'<button class="btn btn-sm" onclick="gsOpenPerm(\'noc\')">Create New</button>':''}</div></div></div>`).join('')}</div></div>`;
-  }
-  window.gsOpenPerm=function(id){
-    if(id==='noc'){ if(typeof window.renderNocViewOriginal==='function') window.renderNocViewOriginal(); else if(typeof window.renderNocView==='function') window.renderNocView(); return; }
-    generic(id);
-  };
-  function generic(id){
-    const b=shell();if(!b)return; const d=docs.find(x=>x.id===id); if(!d)return;
-    b.innerHTML=`<div class="gs-perm-back"><button class="btn btn-sm" onclick="renderNocView()">← Permission Documents</button></div><div class="gs-perm-doc"><div class="sec-head"><div class="sec-title">${d.icon} ${d.title}</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="gsPermPreview('${id}')">Preview</button><button class="btn btn-gold" onclick="gsPermPrint('${id}')">🖨 Print / PDF</button></div></div><div class="gs-perm-form">
-      <div><label>दिनांक</label><input id="gp-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
-      <div><label>अर्जदार / मालकाचे नाव</label><input id="gp-owner" placeholder="पूर्ण नाव"></div>
-      <div class="full"><label>जागेचा पत्ता / Plot Details</label><textarea id="gp-site" placeholder="Plot No., Gat No., CTS No., TP Scheme, Final Plot, Village, Taluka, District"></textarea></div>
-      <div><label>Architect / LTP</label><input id="gp-arch" value="श्री. विजयकुमार प्रकाश एडके"></div>
-      <div><label>संपर्क क्रमांक</label><input id="gp-phone"></div>
-      <div class="full"><label>अतिरिक्त माहिती</label><textarea id="gp-note" placeholder="आवश्यक असल्यास अतिरिक्त माहिती लिहा"></textarea></div>
-    </div><div class="gs-perm-preview" id="gp-preview"></div></div>`;
-    gsPermPreview(id);
-  }
-  window.gsPermPreview=function(id){
-    const d=docs.find(x=>x.id===id);if(!d)return;
-    const owner=document.getElementById('gp-owner')?.value||'________________'; const site=document.getElementById('gp-site')?.value||'________________'; const arch=document.getElementById('gp-arch')?.value||'________________'; const note=document.getElementById('gp-note')?.value||''; const date=document.getElementById('gp-date')?.value||'';
-    let body='';
-    if(id==='projection') body=`सदर प्रस्तावातील Architectural Projection / बांधकाम projection हे मंजूर नकाशानुसार ठेवण्यात येईल. कोणतेही अनधिकृत कायमस्वरूपी बंदिस्त बांधकाम projection मध्ये करण्यात येणार नाही. मंजूर नकाशा व लागू UDCPR मधील तरतुदींचे पालन करण्यात येईल.`;
-    if(id==='declaration') body=`मी/आम्ही वरील जागेवर करण्यात येणारे बांधकाम मंजूर नकाशा, लागू UDCPR व संबंधित प्राधिकरणाच्या नियमांनुसार करण्याची घोषणा करीत आहे/आहोत. तांत्रिक मार्गदर्शन व देखरेख संबंधित Architect/LTP मार्फत करण्यात येईल. अनधिकृत बदलांची जबाबदारी मालकाची राहील.`;
-    if(id==='area') body=`सदर प्रस्तावात दाखविलेले जागेचे क्षेत्रफळ हे उपलब्ध मोजणी नकाशा / अभिलेखानुसार योग्य आहे, याची मी/आम्ही या हमीपत्राद्वारे हमी देत आहे/आहोत. चुकीची माहिती आढळल्यास संबंधित प्राधिकरणास नियमानुसार कारवाई करण्याचा अधिकार राहील.`;
-    if(id==='tp') body=`वरील विषयांकित जागेवरील बांधकाम परवानगी घेणेकरीता नकाशेसोबत जोडलेले आहेत. तरी उपरोक्त जागेबाबत विकास योजना, नगर रचना योजनेनुसार आरक्षण, झोन व रस्त्याबाबत आपला सविस्तर अभिप्राय मिळणेची विनंती आहे.`;
-    const title=d.title;
-    document.getElementById('gp-preview').innerHTML=`<div class="gs-perm-paper"><h1>${esc(title)}</h1><div class="to">प्रति,<br><b>मा. आयुक्त महोदय,</b><br>सोलापूर महानगरपालिका, सोलापूर.</div><div class="subject">विषय – बांधकाम परवानगी संदर्भात.</div><div class="body"><b>अर्जदार / मालक:</b> ${esc(owner)}<br><b>जागेचा पत्ता:</b> ${esc(site)}<br><br>${body}${note?'<br><br>'+esc(note):''}</div><div class="sig">आपला विश्वासू,<br><br><b>${esc(arch)}</b><br>Architect / LTP<br><br>दिनांक: ${esc(date)}</div></div>`;
-  };
-  window.gsPermPrint=function(id){
-    gsPermPreview(id);const pv=document.getElementById('gp-preview')?.innerHTML;if(!pv)return;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups.');w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Permission Document</title><style>@page{size:A4 portrait;margin:0}body{margin:0;background:#fff}.gs-perm-paper{width:210mm;min-height:297mm;margin:0;padding:22mm 18mm;box-sizing:border-box;font-family:"Noto Sans Devanagari",Arial,sans-serif;color:#222}.gs-perm-paper h1{text-align:center;font-size:22px;margin:0 0 22px}.gs-perm-paper .to{line-height:1.7}.gs-perm-paper .body{margin-top:20px;line-height:1.9;text-align:justify}.gs-perm-paper .sig{margin-top:55px;text-align:right}.gs-perm-paper .subject{font-weight:700;margin-top:15px}</style></head><body>'+pv+'<script>
-(function(){
-  const originalNoc=window.renderNocView;
-  if(typeof originalNoc==='function') window.renderNocViewOriginal=originalNoc;
-  window.renderNocView=function(){
-    const b=document.getElementById('noc-body');if(!b)return;
-    const docs=[
-      ['noc','🏛️','ना हरकत प्रमाणपत्र (NOC)','मालकांची संमती / बांधकाम परवानगीसाठी NOC तयार करा.'],
-      ['projection','📐','Architectural Projection – हमीपत्र','Architectural projection बाबत हमीपत्र तयार करा.'],
-      ['declaration','📝','Client Self Declaration – स्वयंघोषणापत्र','मालकाचे स्वयंघोषणापत्र तयार करा.'],
-      ['area','📏','क्षेत्रफळाबाबत हमीपत्र','मोजणी नकाशानुसार क्षेत्रफळाबाबत हमीपत्र.'],
-      ['tp','🏛️','TP अभिप्राय पत्र','नगर रचना विभागासाठी अभिप्राय अर्ज.']
-    ];
-    b.innerHTML='<div class="gs-perm-wrap"><div class="gs-perm-head"><div><h2>🏛️ Permission Documents</h2><p>बांधकाम परवानगीसाठी आवश्यक सर्व पत्रे व हमीपत्रे.</p></div></div><div class="gs-perm-grid">'+docs.map(d=>'<div class="gs-perm-card"><div class="gs-perm-icon">'+d[1]+'</div><div style="flex:1"><h3>'+d[2]+'</h3><p>'+d[3]+'</p><div class="gs-perm-actions"><button class="btn btn-gold" onclick="gsOpenPerm(\''+d[0]+'\')">Open Document</button></div></div></div>').join('')+'</div></div>';
-  };
-  window.gsOpenPerm=function(id){
-    if(id==='noc'){if(typeof window.renderNocViewOriginal==='function')window.renderNocViewOriginal();return;}
-    if(typeof window.generic==='function')return window.generic(id);
-    const b=document.getElementById('noc-body');if(!b)return;
-    const data={projection:['📐','Architectural Projection – हमीपत्र','सदर प्रस्तावातील Architectural Projection / बांधकाम projection हे मंजूर नकाशानुसार ठेवण्यात येईल. कोणतेही अनधिकृत कायमस्वरूपी बंदिस्त बांधकाम projection मध्ये करण्यात येणार नाही.'],declaration:['📝','Client Self Declaration – स्वयंघोषणापत्र','मी/आम्ही वरील जागेवरील बांधकाम मंजूर नकाशा, लागू UDCPR व संबंधित प्राधिकरणाच्या नियमांनुसार करण्याची घोषणा करीत आहे/आहोत.'],area:['📏','क्षेत्रफळाबाबत हमीपत्र','सदर प्रस्तावात दाखविलेले जागेचे क्षेत्रफळ उपलब्ध मोजणी नकाशा / अभिलेखानुसार योग्य आहे, याची मी/आम्ही हमी देत आहे/आहोत.'],tp:['🏛️','TP अभिप्राय पत्र','वरील विषयांकित जागेबाबत विकास योजना, नगर रचना योजनेनुसार आरक्षण, झोन व रस्त्याबाबत आपला सविस्तर अभिप्राय मिळणेची विनंती आहे.']}[id];
-    if(!data)return;
-    b.innerHTML='<div style="margin-bottom:14px"><button class="btn btn-sm" onclick="renderNocView()">← Permission Documents</button></div><div class="gs-perm-doc"><div class="sec-head"><div class="sec-title">'+data[0]+' '+data[1]+'</div><button class="btn btn-gold" onclick="gsGenericPrint()">🖨 Print / PDF</button></div><div class="gs-perm-form"><div><label>दिनांक</label><input id="gx-date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>अर्जदार / मालकाचे नाव</label><input id="gx-owner" placeholder="पूर्ण नाव"></div><div class="full"><label>जागेचा पत्ता / Plot Details</label><textarea id="gx-site" placeholder="Plot No., Gat No., CTS No., TP Scheme, Final Plot, Village, Taluka, District"></textarea></div><div class="full"><label>अतिरिक्त माहिती</label><textarea id="gx-note"></textarea></div></div><div class="gs-perm-preview" id="gx-preview"></div></div>';
-    window.gsGenericData=data; gsGenericPreview();
-  };
-  window.gsGenericPreview=function(){const d=window.gsGenericData;if(!d)return;const o=document.getElementById('gx-owner')?.value||'________________';const s=document.getElementById('gx-site')?.value||'________________';const n=document.getElementById('gx-note')?.value||'';const dt=document.getElementById('gx-date')?.value||'';document.getElementById('gx-preview').innerHTML='<div class="gs-perm-paper"><h1>'+d[1]+'</h1><div class="to">प्रति,<br><b>मा. आयुक्त महोदय,</b><br>सोलापूर महानगरपालिका, सोलापूर.</div><div class="subject">विषय – बांधकाम परवानगी संदर्भात.</div><div class="body"><b>अर्जदार / मालक:</b> '+o+'<br><b>जागेचा पत्ता:</b> '+s+'<br><br>'+d[2]+(n?'<br><br>'+n:'')+'</div><div class="sig">आपला विश्वासू,<br><br><b>श्री. विजयकुमार प्रकाश एडके</b><br>Architect / LTP<br><br>दिनांक: '+dt+'</div></div>';};
-  window.gsGenericPrint=function(){gsGenericPreview();const h=document.getElementById('gx-preview')?.innerHTML;if(!h)return;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups.');w.document.write('<html><head><meta charset="utf-8"><style>@page{size:A4 portrait;margin:0}body{margin:0}.gs-perm-paper{width:210mm;min-height:297mm;padding:22mm 18mm;box-sizing:border-box;font-family:Arial,"Noto Sans Devanagari",sans-serif}.gs-perm-paper h1{text-align:center}.gs-perm-paper .body{margin-top:20px;line-height:1.9;text-align:justify}.gs-perm-paper .sig{margin-top:55px;text-align:right}</style></head><body>'+h+'</body></html>');w.document.close();setTimeout(()=>w.print(),500);};
-})();
-<\/script>
-</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},500);
-  };
-  // Preserve existing NOC renderer and expose it under a stable name.
-  if(typeof window.renderNocView==='function' && !window.renderNocViewOriginal) window.renderNocViewOriginal=window.renderNocView;
-  window.renderNocView=function(){landing();};
-})();
-</script>
+\x3Cscript>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500));\x3C/script>
 </body></html>`;
-
   const w = window.open('','_blank');
+  if(!w) return;
   w.document.write(html);
   w.document.close();
 }
+
+
 
 function renderBulkAdvances(){
   const el = document.getElementById('bulk-advance-list');
@@ -5939,7 +5691,7 @@ ${!pendingProjs.length?'<tr><td colspan="6" style="text-align:center;color:#6b72
 </div>
 </div>
 <div class="footer"><span>${officeInfo.name||'Greenhouse Studio'} · Analytics Report · ${date}</span><span>Confidential</span></div>
-<script>window.onload=()=>window.print()<\/script>
+\x3Cscript>window.onload=()=>window.print()\x3C/script>
 </body></html>`);
   w.document.close();
 }
@@ -6347,7 +6099,7 @@ ${fpLastResult.html}
   <span>${officeInfo.name||'Greenhouse Studio'} · AI Floor Plan Advisory · ${date}</span>
   <span>Powered by Claude Sonnet · For reference only</span>
 </div>
-<script>window.onload=()=>window.print()<\/script>
+\x3Cscript>window.onload=()=>window.print()\x3C/script>
 </body></html>`);
   w.document.close();
 }
@@ -6993,7 +6745,7 @@ ${aiBit?`<div style="background:#f0f8f4;border:1px solid #1a3a2a;border-radius:8
 <div class="disc"><b>Disclaimer:</b> This report is for reference only, based on UDCPR 2020 data. Final development permission is subject to verification by the concerned Planning Authority. Consult your Architect / Town Planner before proceeding.</div>
 </div>
 <div class="footer"><span>${officeInfo.name||'Greenhouse Studio'} · UDCPR 2020 Report · ${date}</span><span>For reference only</span></div>
-<script>window.onload=()=>window.print()<\/script></body></html>`);
+\x3Cscript>window.onload=()=>window.print()\x3C/script></body></html>`);
   w.document.close();
 }
 
@@ -9512,7 +9264,7 @@ ${est.notes?`<div style="padding:0 32px 20px">
   </div>
 </div>
 
-<script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),400));<\/script>
+\x3Cscript>document.fonts.ready.then(()=>setTimeout(()=>window.print(),400));\x3C/script>
 </body></html>`;
 
   const w = window.open('','_blank');
@@ -10686,6 +10438,180 @@ document.addEventListener('DOMContentLoaded',async ()=>{
     setInterval(pollRemote,6000);
   },500);
 });
+</script>
+
+<style>
+.gs-rev-modal{position:fixed;inset:0;background:rgba(15,25,20,.58);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px}
+.gs-rev-card{width:min(760px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.25);padding:22px}
+.gs-rev-head{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #e8e5dc;padding-bottom:14px;margin-bottom:14px}
+.gs-rev-title{font-size:18px;font-weight:800;color:#1a3a2a}.gs-rev-sub{font-size:11px;color:#777;margin-top:3px}
+.gs-rev-item{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #eee}
+.gs-rev-badge{font-weight:800;color:#8e44ad;background:#f4eafd;border:1px solid #dec9ec;border-radius:10px;padding:7px 9px;text-align:center}
+.gs-rev-note{font-size:11px;color:#555;line-height:1.45}.gs-rev-meta{font-size:9px;color:#888;margin-top:4px}
+.gs-rev-current{font-size:9px;font-weight:800;color:#1a7a44;background:#e8f4ee;border-radius:12px;padding:4px 7px}
+@media(max-width:600px){.gs-rev-item{grid-template-columns:60px 1fr}.gs-rev-item>div:last-child{grid-column:2}}
+</style>
+<script>
+// ════════════════════════════════════════════════
+// ENHANCED DRAWING REVISION SYSTEM
+// ════════════════════════════════════════════════
+(function(){
+  function store(){if(!db.drawings)db.drawings=[];return db.drawings;}
+  function esc(v){return typeof escCpDraw==='function'?escCpDraw(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function nextRev(r){const m=String(r||'R00').match(/^(?:R|REV[- ]?)(\d+)$/i);return m?'R'+String(Number(m[1])+1).padStart(2,'0'):'R01';}
+  function ensureGroup(d){
+    if(!d.revisionGroupId)d.revisionGroupId='REVGRP-'+(d.projectId||'P')+'-'+(d.number||'D')+'-'+Date.now();
+    if(!d.revisionNo)d.revisionNo=Number(String(d.revision||'R01').replace(/\D/g,''))||1;
+    return d.revisionGroupId;
+  }
+  function chain(id){
+    const d=store().find(x=>x.id===id);if(!d)return [];
+    const g=ensureGroup(d);
+    return store().filter(x=>x.revisionGroupId===g || (x.projectId===d.projectId&&x.number===d.number&&(!x.revisionGroupId||x.revisionGroupId===g)))
+      .sort((a,b)=>(Number(a.revisionNo)||0)-(Number(b.revisionNo)||0));
+  }
+  window.cpAddDrawingRevision=function(id){
+    const all=store(), old=all.find(x=>x.id===id); if(!old)return;
+    ensureGroup(old);
+    const history=chain(id), latest=history[history.length-1]||old;
+    if(latest.id!==old.id){ old=latest; }
+    const nr=nextRev(old.revision);
+    const note=prompt('Revision note / change description:', old.clientComment||'Design revision as requested.');
+    if(note===null)return;
+    if(!note.trim()){alert('Revision note आवश्यक आहे.');return;}
+    old.status='Superseded'; old.supersededAt=new Date().toISOString();
+    const now=new Date();
+    const d={...old,id:'DRW-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),revision:nr,revisionNo:(Number(old.revisionNo)||1)+1,date:now.toLocaleDateString('en-IN'),status:'Revised',fileData:'',fileName:'',fileExt:'',mime:'',clientComment:'',revisionNote:note.trim(),parentRevisionId:old.id,createdAt:now.toISOString(),updatedAt:now.toISOString(),approvedAt:null,approvedBy:null,requestedAt:null,supersededAt:null};
+    ensureGroup(d); all.push(d);
+    if(!db.activities)db.activities=[];
+    db.activities.unshift({text:'New Drawing Revision '+nr+' — '+d.name,sub:note.trim(),time:'Just now',color:'#8e44ad',type:'drawing_revision_created',drawingId:d.id,projectId:d.projectId});
+    saveAll();renderCpContent();showOk('Revision '+nr+' तयार झाली');
+  };
+  window.cpDrawingRevisionHistory=function(id){
+    const d=store().find(x=>x.id===id);if(!d)return;ensureGroup(d);const hs=chain(id);if(!hs.length)return;
+    const p=(db.projects||[]).find(x=>x.id===d.projectId);
+    const rows=hs.slice().reverse().map((x,i)=>{const current=i===0;const status=x.status||'Draft';return '<div class="gs-rev-item"><div class="gs-rev-badge">'+esc(x.revision||'R01')+'</div><div><div style="font-size:12px;font-weight:800">'+esc(x.name||'Drawing')+'</div><div class="gs-rev-note">'+esc(x.revisionNote||x.clientComment||'No revision note recorded.')+'</div><div class="gs-rev-meta">'+esc(x.date||'')+' · '+esc(status)+(x.approvedBy?' · Approved by '+esc(x.approvedBy):'')+'</div></div><div>'+(current?'<span class="gs-rev-current">CURRENT</span>':'')+'</div></div>';}).join('');
+    const m=document.createElement('div');m.className='gs-rev-modal';m.id='gs-rev-modal';m.innerHTML=`<div class="gs-rev-card"><div class="gs-rev-head"><div><div class="gs-rev-title">🔄 Revision History</div><div class="gs-rev-sub">${esc(d.number)} · ${esc(d.name)} · ${esc(p?.name||'')}</div></div><button onclick="document.getElementById('gs-rev-modal')?.remove()" style="border:0;background:#f2f1ed;border-radius:9px;padding:8px 11px;cursor:pointer;font-weight:800">✕</button></div><div style="font-size:10px;color:#777;margin-bottom:10px">Each revision is stored separately. Superseded revisions remain available for audit/history.</div>${rows}</div>`;
+    document.body.appendChild(m);
+  };
+  window.cpDrawingRevisionCompare=function(id){
+    const d=store().find(x=>x.id===id);if(!d)return;ensureGroup(d);const hs=chain(id);const idx=hs.findIndex(x=>x.id===d.id);const prev=hs[idx-1];
+    if(!prev){alert('This is the first revision. Compare उपलब्ध नाही.');return;}
+    alert('REVISION COMPARISON\n\n'+prev.revision+' → '+d.revision+'\n\nPrevious note:\n'+(prev.revisionNote||'—')+'\n\nCurrent note:\n'+(d.revisionNote||'—')+'\n\nFile: '+(d.fileName||'Not uploaded'));
+  };
+  // Show only the latest revision in the main list; history keeps every revision.
+  const oldRender=window.renderCpDrawings;
+  window.renderCpDrawings=function(c,projs){
+    const all=store();
+    let html='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px"><div><div style="font-size:18px;font-weight:800;color:var(--grn)">📐 Drawing Management</div><div style="font-size:11px;color:var(--mut)">🔄 Revision Control · Approval · Audit History · Client Feedback</div></div></div>';
+    let total=0,approved=0,pending=0,requested=0;
+    projs.forEach(p=>{
+      const groups={};
+      all.filter(d=>d.projectId===p.id).forEach(d=>{ensureGroup(d);const g=d.revisionGroupId;if(!groups[g]||(Number(d.revisionNo)||0)>(Number(groups[g].revisionNo)||0))groups[g]=d;});
+      const ds=Object.values(groups);total+=ds.length;approved+=ds.filter(d=>d.status==='Approved').length;pending+=ds.filter(d=>['Draft','Under Review','Revised'].includes(d.status)).length;requested+=ds.filter(d=>d.status==='Revision Requested').length;
+    });
+    html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px"><div class="cp-stat"><div class="cp-sv">'+total+'</div><div class="cp-sl">Current Drawings</div></div><div class="cp-stat"><div class="cp-sv" style="color:#1a7a44">'+approved+'</div><div class="cp-sl">Approved</div></div><div class="cp-stat"><div class="cp-sv" style="color:#2c5f8a">'+pending+'</div><div class="cp-sl">In Progress</div></div><div class="cp-stat"><div class="cp-sv" style="color:#d35400">'+requested+'</div><div class="cp-sl">Revision Requests</div></div></div>';
+    projs.forEach(p=>{
+      const groups={};
+      all.filter(d=>d.projectId===p.id).forEach(d=>{ensureGroup(d);const g=d.revisionGroupId;if(!groups[g]||(Number(d.revisionNo)||0)>(Number(groups[g].revisionNo)||0))groups[g]=d;});
+      const ds=Object.values(groups).sort((a,b)=>String(a.number).localeCompare(String(b.number)));
+      html+='<div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div><div style="font-weight:800;font-size:15px">'+esc(p.name)+'</div><div style="font-size:10px;color:var(--mut)">📍 '+esc(p.address||'')+'</div></div><button onclick="cpAddDrawing(\''+p.id+'\')" style="background:var(--grn);color:#fff;border:0;border-radius:8px;padding:8px 11px;font-size:11px;font-weight:700;cursor:pointer">+ Add Drawing</button></div>';
+      if(ds.length){
+        html+='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--surf2);color:var(--mut)"><th style="padding:9px;text-align:left">No.</th><th style="padding:9px;text-align:left">Drawing</th><th style="padding:9px;text-align:left">Current Rev.</th><th style="padding:9px;text-align:left">Status</th><th style="padding:9px;text-align:left">History</th><th style="padding:9px;text-align:right">Action</th></tr></thead><tbody>';
+        ds.forEach(d=>{
+          const hist=chain(d.id),[fg,bg]=cpDrawingStatusStyle(d.status);
+          html+='<tr style="border-bottom:1px solid var(--bdr)"><td style="padding:9px;font-weight:700">'+esc(d.number)+'</td><td style="padding:9px"><b>'+esc(d.name)+'</b><div style="font-size:9px;color:var(--mut)">'+esc(d.category)+(d.revisionNote?' · 📝 '+esc(d.revisionNote):'')+'</div></td><td style="padding:9px;font-weight:800;color:#8e44ad">'+esc(d.revision||'R01')+'</td><td style="padding:9px"><span style="padding:4px 7px;border-radius:15px;background:'+bg+';color:'+fg+';font-size:9px;font-weight:800">'+esc(d.status||'Draft')+'</span></td><td style="padding:9px"><button onclick="cpDrawingRevisionHistory(\''+d.id+'\')" style="border:1px solid #dec9ec;background:#f4eafd;color:#8e44ad;border-radius:8px;padding:6px 8px;font-size:10px;font-weight:700;cursor:pointer">'+hist.length+' revision'+(hist.length!==1?'s':'')+'</button></td><td style="padding:9px;text-align:right"><div style="display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap">'+cpRenderDrawingActions(d)+'<button onclick="cpAddDrawingRevision(\''+d.id+'\')" style="background:#f4eafd;color:#8e44ad;border:1px solid #d9c0ea;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:700;cursor:pointer">+ Revision</button><button onclick="cpDrawingRevisionCompare(\''+d.id+'\')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:7px 9px;font-size:10px;cursor:pointer">Compare</button></div></td></tr>';
+        });
+        html+='</tbody></table></div>';
+      }else html+='<div style="text-align:center;padding:22px;color:var(--mut);font-size:11px">No drawings added yet. Click <b>+ Add Drawing</b>.</div>';
+      html+='</div>';
+    });
+    if(!projs.length)html+='<div style="text-align:center;padding:40px;color:var(--mut)">No projects found.</div>';
+    return html;
+  };
+})();
+</script>
+
+
+
+<style>
+.gs-ai-shell{margin:0 0 20px;border:1px solid rgba(31,92,58,.18);border-radius:20px;overflow:hidden;background:linear-gradient(135deg,#fbfdfb,#f4f8f4);box-shadow:0 8px 28px rgba(26,58,42,.06)}
+.gs-ai-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;background:linear-gradient(135deg,#183d29,#285d3e);color:#fff}
+.gs-ai-brand{display:flex;align-items:center;gap:12px;min-width:0}.gs-ai-icon{width:40px;height:40px;border-radius:12px;background:rgba(201,168,76,.18);border:1px solid rgba(201,168,76,.4);display:flex;align-items:center;justify-content:center;color:#e6c86a;font-size:21px}.gs-ai-title{font-size:15px;font-weight:800;letter-spacing:.1px}.gs-ai-sub{font-size:10px;color:rgba(255,255,255,.62);margin-top:3px}.gs-ai-local{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#d8eddf;border:1px solid rgba(216,237,223,.2);padding:6px 9px;border-radius:20px;white-space:nowrap}.gs-ai-body{padding:15px 18px}.gs-ai-prompt-row{display:flex;gap:8px}.gs-ai-input{flex:1;min-width:0;height:42px;border:1px solid var(--bdr);border-radius:11px;background:var(--surf);color:var(--ink);padding:0 13px;font:500 12px 'Plus Jakarta Sans',sans-serif;outline:none}.gs-ai-input:focus{border-color:var(--grn);box-shadow:0 0 0 3px rgba(31,92,58,.08)}.gs-ai-ask{height:42px;padding:0 17px;white-space:nowrap}.gs-ai-quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.gs-ai-quick button{border:1px solid var(--bdr);background:var(--surf);color:var(--ink);border-radius:20px;padding:6px 10px;font:600 10px 'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:.15s}.gs-ai-quick button:hover{border-color:var(--grn);transform:translateY(-1px)}.gs-ai-answer{margin-top:12px;border:1px solid var(--bdr);background:var(--surf);border-radius:14px;min-height:62px;padding:12px}.gs-ai-welcome{display:flex;gap:9px;color:var(--mut);font-size:11px;line-height:1.5}.gs-ai-welcome>span{color:#b18a2e;font-size:17px}.gs-ai-result-title{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:8px}.gs-ai-result-note{font-size:10px;color:var(--mut);margin-top:9px}.gs-ai-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:9px}.gs-ai-stat{border:1px solid var(--bdr);border-radius:10px;padding:9px;background:var(--surf2)}.gs-ai-stat b{display:block;font:800 16px 'JetBrains Mono',monospace;color:var(--ink)}.gs-ai-stat span{font-size:9px;color:var(--mut)}.gs-ai-list{display:grid;gap:6px}.gs-ai-item{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bdr);padding:7px 0}.gs-ai-item:last-child{border-bottom:0}.gs-ai-dot{width:7px;height:7px;border-radius:50%;background:var(--grn);flex:0 0 7px}.gs-ai-item-main{flex:1;min-width:0}.gs-ai-item-main b{display:block;font-size:11px;color:var(--ink)}.gs-ai-item-main small{display:block;font-size:9px;color:var(--mut);margin-top:2px}.gs-ai-item-value{font:800 11px 'JetBrains Mono',monospace;color:var(--red);white-space:nowrap}.gs-ai-action{border:1px solid var(--bdr);background:var(--surf2);color:var(--ink);border-radius:7px;padding:5px 7px;font:700 9px 'Plus Jakarta Sans',sans-serif;cursor:pointer}.gs-ai-empty{padding:12px;text-align:center;font-size:11px;color:var(--mut)}
+@media(max-width:700px){.gs-ai-head{align-items:flex-start}.gs-ai-local{display:none}.gs-ai-prompt-row{flex-direction:column}.gs-ai-ask{width:100%}.gs-ai-stat-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+<script>
+(function(){
+  const money=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const pname=p=>p?.name||'Untitled Project';
+  const clientName=p=>{const c=(db.contacts||[]).find(x=>x.id===p?.clientId);return c?.name||'No client linked';};
+  const drawings=()=>Array.isArray(db.drawings)?db.drawings:[];
+  const latestDrawings=()=>{
+    const a=drawings(), map=new Map();
+    a.forEach(d=>{const key=d.revisionGroupId||`${d.projectId||''}::${d.number||d.name||d.id}`;const old=map.get(key);const n=Number(d.revisionNo)||Number(String(d.revision||'R01').replace(/\D/g,''))||1;if(!old||n>(Number(old.revisionNo)||Number(String(old.revision||'R01').replace(/\D/g,''))||1))map.set(key,d);});
+    return [...map.values()];
+  };
+  function activeProjects(){return (db.projects||[]).filter(p=>String(p.stage||'').toLowerCase()!=='completed');}
+  function pendingPayments(){return (db.projects||[]).map(p=>({p,b:Number(typeof pbal==='function'?pbal(p.id):0)})).filter(x=>x.b>0).sort((a,b)=>b.b-a.b);}
+  function pendingDrawingApprovals(){return latestDrawings().filter(d=>['Under Review','Revision Requested','Revised'].includes(d.status));}
+  function permissionItems(){
+    const out=[];(db.projects||[]).forEach(p=>{
+      const s=String(p.permissionStatus||p.approvalStatus||'').trim();
+      if(s && !/approved|completed|sanctioned/i.test(s)) out.push({p,s});
+      else if(Array.isArray(p.permissionPending)&&p.permissionPending.length) out.push({p,s:p.permissionPending.join(', ')});
+    });
+    return out;
+  }
+  function dueProjects(){const now=new Date();return activeProjects().filter(p=>p.deadline&&new Date(p.deadline)<now).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));}
+  function renderAnswer(html){const el=document.getElementById('gs-ai-answer');if(el)el.innerHTML=html;}
+  function list(items, valueFn){
+    if(!items.length)return '<div class="gs-ai-empty">✓ Nothing matching this query right now.</div>';
+    return '<div class="gs-ai-list">'+items.slice(0,8).map(x=>`<div class="gs-ai-item"><span class="gs-ai-dot"></span><div class="gs-ai-item-main"><b>${esc(x.title)}</b><small>${esc(x.sub||'')}</small></div>${valueFn?valueFn(x):''}</div>`).join('')+'</div>'+(items.length>8?`<div class="gs-ai-result-note">Showing 8 of ${items.length} items.</div>`:'');
+  }
+  function briefing(){
+    const ps=activeProjects(), pp=pendingPayments(), da=pendingDrawingApprovals(), due=dueProjects();
+    const visits=(db.siteVisits||[]).filter(v=>{const d=new Date(v.date||v.visitDate);const n=new Date();return d.toDateString()===n.toDateString();});
+    const acts=(db.activities||[]).slice(0,3);
+    return `<div class="gs-ai-result-title">☀️ Today's Office Briefing</div><div class="gs-ai-stat-grid"><div class="gs-ai-stat"><b>${ps.length}</b><span>Active Projects</span></div><div class="gs-ai-stat"><b>${pp.length}</b><span>Payments Pending</span></div><div class="gs-ai-stat"><b>${da.length}</b><span>Drawing Actions</span></div><div class="gs-ai-stat"><b>${visits.length}</b><span>Site Visits Today</span></div></div>${due.length?'<div class="gs-ai-result-note">🔴 Overdue projects</div>'+list(due.map(p=>({title:pname(p),sub:`Deadline ${p.deadline} · ${clientName(p)}`}))):''}${acts.length?'<div class="gs-ai-result-note">Recent activity</div>'+list(acts.map(a=>({title:a.text,sub:`${a.sub||''} · ${a.time||''}`}))):''}`;
+  }
+  function answer(q){
+    const x=String(q||'').toLowerCase().trim();
+    if(!x)return briefing();
+    if(/today|briefing|आज|office/.test(x)&&/brief|today|आज|office/.test(x))return briefing();
+    if(/payment|fee|fees|पैसे|पेमेंट|outstanding|balance|due/.test(x)){
+      const pp=pendingPayments(), total=pp.reduce((a,x)=>a+x.b,0);
+      return `<div class="gs-ai-result-title">💰 Pending Payments</div><div class="gs-ai-stat-grid"><div class="gs-ai-stat"><b>${pp.length}</b><span>Projects Due</span></div><div class="gs-ai-stat"><b>${money(total)}</b><span>Total Outstanding</span></div></div>`+list(pp.map(x=>({title:pname(x.p),sub:`${clientName(x.p)} · ${x.p.deadline?'Deadline '+x.p.deadline:''}`,b:x.b})),x=>`<span class="gs-ai-item-value">${money(x.b)}</span>`)+`<div class="gs-ai-result-note">Source: current project/payment records.</div>`;
+    }
+    if(/drawing|revision|approval|approve|ड्रॉइंग|रेव्हिजन|अप्रूव्ह/.test(x)){
+      const da=pendingDrawingApprovals();
+      return `<div class="gs-ai-result-title">📐 Drawing Actions</div>`+list(da.map(d=>({id:d.id,title:`${d.number||''} ${d.name||'Drawing'} — ${d.revision||'R01'}`,sub:`${d.status||'Draft'} · ${(db.projects||[]).find(p=>p.id===d.projectId)?.name||'Project'}`})),x=>`<button class="gs-ai-action" onclick="gsAiOpenDrawing('${esc(x.id||'')}')">Open</button>`)+`<div class="gs-ai-result-note">Includes current revisions requiring review, approval or rework.</div>`;
+    }
+    if(/project|projects|प्रोजेक्ट|काम/.test(x)){
+      const ps=activeProjects();
+      return `<div class="gs-ai-result-title">🏗️ Active Projects</div>`+list(ps.map(p=>({id:p.id,title:pname(p),sub:`${clientName(p)} · ${p.stage||'Concept'}${p.deadline?' · Due '+p.deadline:''}`})),x=>`<button class="gs-ai-action" onclick="gsAiOpenProject('${esc(x.p?.id||'')}')">Open</button>`);
+    }
+    if(/permission|permit|sanction|approval|noc|परवानगी|मंजुरी|n.o.c/.test(x)&&!/drawing|revision/.test(x)){
+      const pi=permissionItems();
+      return `<div class="gs-ai-result-title">🏛️ Permission / Approval Follow-up</div>`+list(pi.map(x=>({title:pname(x.p),sub:x.s||'Pending status'})))+`<div class="gs-ai-result-note">If a project has no permission-status field, the assistant will not invent one.</div>`;
+    }
+    if(/site|visit|साईट|साइट/.test(x)){
+      const sv=(db.siteVisits||[]).slice().sort((a,b)=>new Date(a.date||a.visitDate)-new Date(b.date||b.visitDate));
+      return `<div class="gs-ai-result-title">🏗️ Site Visits</div>`+list(sv.slice(-8).reverse().map(v=>({title:v.projectName||((db.projects||[]).find(p=>p.id===v.projectId)?.name)||'Site Visit',sub:`${v.date||v.visitDate||''} · ${v.notes||v.note||'No note'}`})));
+    }
+    if(/contact|client|क्लायंट|कस्टमर/.test(x))return `<div class="gs-ai-result-title">👥 Client / Contact Summary</div><div class="gs-ai-stat-grid"><div class="gs-ai-stat"><b>${(db.contacts||[]).length}</b><span>Contacts</span></div><div class="gs-ai-stat"><b>${(db.projects||[]).length}</b><span>Projects</span></div></div>`+list((db.contacts||[]).slice(0,8).map(c=>({title:c.name,sub:`${c.cat||'Contact'} · ${c.phone||c.wa||'No phone'}`})));
+    if(/activity|recent|अ‍ॅक्टिव्हिटी|updates|update/.test(x))return `<div class="gs-ai-result-title">⚡ Recent Activity</div>`+list((db.activities||[]).slice(0,10).map(a=>({title:a.text,sub:`${a.sub||''} · ${a.time||''}`})));
+    return `<div class="gs-ai-result-title">✦ I can search your office records</div><div class="gs-ai-welcome"><span>💡</span><div>Try <b>“pending payments”</b>, <b>“drawing approvals”</b>, <b>“active projects”</b>, <b>“today’s briefing”</b>, <b>“site visits”</b> or <b>“permission pending”</b>.</div></div>`;
+  }
+  window.gsAiAsk=function(){const i=document.getElementById('gs-ai-input');if(!i)return;renderAnswer(answer(i.value));};
+  window.gsAiQuick=function(q){const i=document.getElementById('gs-ai-input');if(i)i.value=q;renderAnswer(answer(q));};
+  window.gsAiOpenProject=function(id){if(!id)return;try{if(typeof switchView==='function')switchView('projects');setTimeout(()=>{if(typeof openPD==='function')openPD(id);},120);}catch(e){console.warn(e);}};
+  window.gsAiOpenDrawing=function(id){if(!id)return;try{const d=(db.drawings||[]).find(x=>x.id===id);if(d&&typeof switchView==='function')switchView('projects');if(d&&typeof showOk==='function')showOk(`${d.name||'Drawing'} ${d.revision||'R01'} — ${d.status||'Draft'}`);else if(d)alert(`${d.name||'Drawing'}\nRevision: ${d.revision||'R01'}\nStatus: ${d.status||'Draft'}`);}catch(e){console.warn(e);}};
+  function bind(){const i=document.getElementById('gs-ai-input');if(i&&!i._aiBound){i._aiBound=true;i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();gsAiAsk();}});}}
+  const original=window.renderDashboard;
+  if(typeof original==='function'&&!window.__gsAiWrapped){window.__gsAiWrapped=true;window.renderDashboard=function(){const r=original.apply(this,arguments);bind();return r;};}
+  document.addEventListener('DOMContentLoaded',()=>{setTimeout(bind,50);});
+})();
 </script>
 
 <!-- FAB Quick Add -->
@@ -12313,7 +12239,7 @@ function cpDrawingReport(projectId){
   const ds=cpDrawingStore().filter(d=>d.projectId===projectId);
   const rows=ds.map(d=>`<tr><td>${escCpDraw(d.number)}</td><td>${escCpDraw(d.name)}</td><td>${escCpDraw(d.category)}</td><td>${escCpDraw(d.revision||'R01')}</td><td>${escCpDraw(d.date||'')}</td><td>${escCpDraw(d.status||'Draft')}</td></tr>`).join('');
   const w=window.open('','_blank'); if(!w)return;
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Drawing Transmittal - ${escCpDraw(p.name)}</title><style>@page{size:A4 portrait;margin:14mm}body{font-family:Arial,sans-serif;color:#222}h1{font-size:22px;color:#1a3a2a;margin-bottom:4px}h2{font-size:13px;margin:0 0 18px;color:#666}table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #ccc;padding:7px;text-align:left}th{background:#f1f3f0}.foot{margin-top:30px;font-size:10px;color:#777}</style></head><body><h1>GREENHOUSE STUDIO</h1><h2>Drawing Transmittal / Issue Report</h2><p><b>Project:</b> ${escCpDraw(p.name)}<br><b>Client:</b> ${escCpDraw((db.contacts||[]).find(c=>c.id===p.clientId)?.name||'')}<br><b>Generated:</b> ${new Date().toLocaleDateString('en-IN')}</p><table><thead><tr><th>Drawing No.</th><th>Drawing Name</th><th>Category</th><th>Revision</th><th>Date</th><th>Status</th></tr></thead><tbody>${rows||'<tr><td colspan="6">No drawings</td></tr>'}</tbody></table><div class="foot">This report was generated from GreenHouse Studio.</div><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`);w.document.close();
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Drawing Transmittal - ${escCpDraw(p.name)}</title><style>@page{size:A4 portrait;margin:14mm}body{font-family:Arial,sans-serif;color:#222}h1{font-size:22px;color:#1a3a2a;margin-bottom:4px}h2{font-size:13px;margin:0 0 18px;color:#666}table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #ccc;padding:7px;text-align:left}th{background:#f1f3f0}.foot{margin-top:30px;font-size:10px;color:#777}</style></head><body><h1>GREENHOUSE STUDIO</h1><h2>Drawing Transmittal / Issue Report</h2><p><b>Project:</b> ${escCpDraw(p.name)}<br><b>Client:</b> ${escCpDraw((db.contacts||[]).find(c=>c.id===p.clientId)?.name||'')}<br><b>Generated:</b> ${new Date().toLocaleDateString('en-IN')}</p><table><thead><tr><th>Drawing No.</th><th>Drawing Name</th><th>Category</th><th>Revision</th><th>Date</th><th>Status</th></tr></thead><tbody>${rows||'<tr><td colspan="6">No drawings</td></tr>'}</tbody></table><div class="foot">This report was generated from GreenHouse Studio.</div>\x3Cscript>window.onload=()=>setTimeout(()=>window.print(),300)\x3C/script></body></html>`);w.document.close();
 }
 function cpOpenDrawingFile(input){const id=input.dataset.did;const d=cpDrawingStore().find(x=>x.id===id);const f=input.files&&input.files[0];if(!d||!f)return;if(f.size>8*1024*1024){alert('File 8 MB पेक्षा मोठी आहे. कृपया smaller file वापरा.');input.value='';return;}const r=new FileReader();r.onload=()=>{d.fileData=r.result;d.fileName=f.name;d.fileExt=(f.name.split('.').pop()||'').toLowerCase();d.mime=f.type||'';d.updatedAt=new Date().toISOString();d.status='Under Review';saveAll();renderCpContent();showOk('Drawing upload झाली');};r.readAsDataURL(f);}
 function cpAddDrawing(projectId){
@@ -12985,7 +12911,7 @@ window.cmpPrint=function(){
   @page{size:A4 portrait;margin:0}
   @media print{.cmp-sheet{page-break-after:always}.cmp-sheet:last-child{page-break-after:auto}}
   </style></head><body>${cmpSheets().html}
-  <script>${CMP_FIT_SRC}\ncmpFitDoc(document);<\/script></body></html>`);
+  \x3Cscript>${CMP_FIT_SRC}\ncmpFitDoc(document);\x3C/script></body></html>`);
   w.document.close();
   setTimeout(()=>{try{w.cmpFitDoc(w.document);}catch(e){}w.focus();w.print();},900);
 };
@@ -13870,6 +13796,59 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.nocletter='🏛️ Permission Docs'
 })();
 </script>
 
+
+<style>
+.gs-perm-wrap{padding:4px 0 30px}.gs-perm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.gs-perm-card{background:#fff;border:1px solid #e7e4dc;border-radius:16px;padding:20px;box-shadow:0 6px 20px rgba(20,45,30,.06);display:flex;gap:16px;align-items:flex-start;transition:.2s}.gs-perm-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(20,45,30,.1)}.gs-perm-icon{width:52px;height:52px;border-radius:14px;background:#edf5ee;display:grid;place-items:center;font-size:26px;flex:0 0 auto}.gs-perm-card h3{margin:0 0 6px;font-size:16px;color:#193522}.gs-perm-card p{margin:0 0 14px;color:#777;font-size:13px;line-height:1.55}.gs-perm-actions{display:flex;gap:8px;flex-wrap:wrap}.gs-perm-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}.gs-perm-head h2{margin:0;color:#193522}.gs-perm-head p{margin:4px 0 0;color:#777;font-size:13px}.gs-perm-back{display:none;margin-bottom:14px}.gs-perm-doc{background:#fff;border:1px solid #e7e4dc;border-radius:16px;padding:20px}.gs-perm-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gs-perm-form .full{grid-column:1/-1}.gs-perm-form label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px}.gs-perm-form input,.gs-perm-form textarea{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:9px;padding:10px;font:inherit}.gs-perm-form textarea{min-height:90px;resize:vertical}.gs-perm-preview{margin-top:18px;border:1px solid #ddd;background:#fafafa;padding:20px;min-height:260px}.gs-perm-paper{background:#fff;max-width:210mm;min-height:297mm;margin:auto;padding:22mm 18mm;box-sizing:border-box;font-family:'Noto Sans Devanagari',Arial,sans-serif;color:#222;box-shadow:0 2px 12px rgba(0,0,0,.08)}.gs-perm-paper h1{text-align:center;font-size:22px;margin:0 0 22px}.gs-perm-paper .to{line-height:1.7}.gs-perm-paper .body{margin-top:20px;line-height:1.9;text-align:justify}.gs-perm-paper .sig{margin-top:55px;text-align:right}.gs-perm-paper .subject{font-weight:700;margin-top:15px}
+@media(max-width:800px){.gs-perm-grid{grid-template-columns:1fr}.gs-perm-form{grid-template-columns:1fr}}
+</style>
+<script>
+(function(){
+  const docs=[
+    {id:'noc',icon:'🏛️',title:'ना हरकत प्रमाणपत्र (NOC)',desc:'मालकांची संमती / बांधकाम परवानगीसाठी NOC तयार करा.'},
+    {id:'projection',icon:'📐',title:'Architectural Projection – हमीपत्र',desc:'Architectural projection बाबत हमीपत्र तयार करा.'},
+    {id:'declaration',icon:'📝',title:'Client Self Declaration – स्वयंघोषणापत्र',desc:'मालकाचे स्वयंघोषणापत्र तयार करा.'},
+    {id:'area',icon:'📏',title:'क्षेत्रफळाबाबत हमीपत्र',desc:'मोजणी नकाशानुसार क्षेत्रफळाबाबत हमीपत्र.'},
+    {id:'tp',icon:'🏛️',title:'TP अभिप्राय पत्र',desc:'नगर रचना विभागासाठी अभिप्राय अर्ज.'}
+  ];
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const bodyFor={
+    projection:'सदर प्रस्तावातील Architectural Projection / बांधकाम projection हे मंजूर नकाशानुसार ठेवण्यात येईल. कोणतेही अनधिकृत कायमस्वरूपी बंदिस्त बांधकाम projection मध्ये करण्यात येणार नाही. मंजूर नकाशा व लागू UDCPR मधील तरतुदींचे पालन करण्यात येईल.',
+    declaration:'मी/आम्ही वरील जागेवर करण्यात येणारे बांधकाम मंजूर नकाशा, लागू UDCPR व संबंधित प्राधिकरणाच्या नियमांनुसार करण्याची घोषणा करीत आहे/आहोत. तांत्रिक मार्गदर्शन व देखरेख संबंधित Architect/LTP मार्फत करण्यात येईल. अनधिकृत बदलांची जबाबदारी मालकाची राहील.',
+    area:'सदर प्रस्तावात दाखविलेले जागेचे क्षेत्रफळ हे उपलब्ध मोजणी नकाशा / अभिलेखानुसार योग्य आहे, याची मी/आम्ही या हमीपत्राद्वारे हमी देत आहे/आहोत. चुकीची माहिती आढळल्यास संबंधित प्राधिकरणास नियमानुसार कारवाई करण्याचा अधिकार राहील.',
+    tp:'वरील विषयांकित जागेवरील बांधकाम परवानगी घेणेकरीता नकाशेसोबत जोडलेले आहेत. तरी उपरोक्त जागेबाबत विकास योजना, नगर रचना योजनेनुसार आरक्षण, झोन व रस्त्याबाबत आपला सविस्तर अभिप्राय मिळणेची विनंती आहे.'
+  };
+  function shell(){return document.getElementById('noc-body');}
+  function landing(){
+    const b=shell();if(!b)return;
+    b.innerHTML='<div class="gs-perm-wrap"><div class="gs-perm-head"><div><h2>🏛️ Permission Documents</h2><p>बांधकाम परवानगीसाठी आवश्यक सर्व पत्रे व हमीपत्रे.</p></div></div><div class="gs-perm-grid">'+docs.map(d=>'<div class="gs-perm-card"><div class="gs-perm-icon">'+d.icon+'</div><div style="flex:1"><h3>'+d.title+'</h3><p>'+d.desc+'</p><div class="gs-perm-actions"><button class="btn btn-gold" onclick="gsOpenPerm(\''+d.id+'\')">Open Document</button></div></div></div>').join('')+'</div></div>';
+  }
+  const originalNoc=window.renderNocView;
+  if(typeof originalNoc==='function' && !window.renderNocViewOriginal) window.renderNocViewOriginal=originalNoc;
+  window.renderNocView=function(){landing();};
+  window.gsOpenPerm=function(id){
+    if(id==='noc'){
+      if(typeof window.renderNocViewOriginal==='function') return window.renderNocViewOriginal();
+      return;
+    }
+    const b=shell();if(!b)return;const d=docs.find(x=>x.id===id);if(!d)return;
+    b.innerHTML='<div style="margin-bottom:14px"><button class="btn btn-sm" onclick="renderNocView()">← Permission Documents</button></div><div class="gs-perm-doc"><div class="sec-head"><div class="sec-title">'+d.icon+' '+d.title+'</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="gsPermPreview(\''+id+'\')">Preview</button><button class="btn btn-gold" onclick="gsPermPrint(\''+id+'\')">🖨 Print / PDF</button></div></div><div class="gs-perm-form"><div><label>दिनांक</label><input id="gp-date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>अर्जदार / मालकाचे नाव</label><input id="gp-owner" placeholder="पूर्ण नाव"></div><div class="full"><label>जागेचा पत्ता / Plot Details</label><textarea id="gp-site" placeholder="Plot No., Gat No., CTS No., TP Scheme, Final Plot, Village, Taluka, District"></textarea></div><div><label>Architect / LTP</label><input id="gp-arch" value="श्री. विजयकुमार प्रकाश एडके"></div><div><label>संपर्क क्रमांक</label><input id="gp-phone"></div><div class="full"><label>अतिरिक्त माहिती</label><textarea id="gp-note" placeholder="आवश्यक असल्यास अतिरिक्त माहिती लिहा"></textarea></div></div><div class="gs-perm-preview" id="gp-preview"></div></div>';
+    gsPermPreview(id);
+  };
+  window.gsPermPreview=function(id){
+    const d=docs.find(x=>x.id===id);if(!d)return;
+    const owner=document.getElementById('gp-owner')?.value||'________________';const site=document.getElementById('gp-site')?.value||'________________';const arch=document.getElementById('gp-arch')?.value||'________________';const note=document.getElementById('gp-note')?.value||'';const date=document.getElementById('gp-date')?.value||'';
+    const b=bodyFor[id]||'';
+    const el=document.getElementById('gp-preview');if(!el)return;
+    el.innerHTML='<div class="gs-perm-paper"><h1>'+esc(d.title)+'</h1><div class="to">प्रति,<br><b>मा. आयुक्त महोदय,</b><br>सोलापूर महानगरपालिका, सोलापूर.</div><div class="subject">विषय – बांधकाम परवानगी संदर्भात.</div><div class="body"><b>अर्जदार / मालक:</b> '+esc(owner)+'<br><b>जागेचा पत्ता:</b> '+esc(site)+'<br><br>'+b+(note?'<br><br>'+esc(note):'')+'</div><div class="sig">आपला विश्वासू,<br><br><b>'+esc(arch)+'</b><br>Architect / LTP<br><br>दिनांक: '+esc(date)+'</div></div>';
+  };
+  window.gsPermPrint=function(id){
+    gsPermPreview(id);const pv=document.getElementById('gp-preview')?.innerHTML;if(!pv)return;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups.');
+    const css='@page{size:A4 portrait;margin:0}body{margin:0;background:#fff}.gs-perm-paper{width:210mm;min-height:297mm;margin:0;padding:22mm 18mm;box-sizing:border-box;font-family:Arial,"Noto Sans Devanagari",sans-serif;color:#222}.gs-perm-paper h1{text-align:center;font-size:22px;margin:0 0 22px}.gs-perm-paper .to{line-height:1.7}.gs-perm-paper .body{margin-top:20px;line-height:1.9;text-align:justify}.gs-perm-paper .sig{margin-top:55px;text-align:right}.gs-perm-paper .subject{font-weight:700;margin-top:15px}';
+    w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Permission Document</title><style>'+css+'</style></head><body>'+pv+'</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print();},500);
+  };
+  document.addEventListener('DOMContentLoaded',()=>{if(document.getElementById('noc-body') && typeof window.renderNocView==='function') window.renderNocView();});
+})();
+</script>
 
 <!-- ══════════════════════════════════════════════════════════════
      ROLE LOGIN GATE — Admin / Engineer / Staff / Client
