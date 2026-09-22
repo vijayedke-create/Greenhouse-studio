@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<title>Greenhouse Studio — Vijay Edke, Solapur</title>
+<title>Greenhouse Studio - Permission Docs — Vijay Edke, Solapur</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <!-- Charts + PDF -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -524,10 +524,9 @@ html{transition:background .3s,color .3s}
 #tpabhipray-body .tp-f2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 #tpabhipray-body .tp-pvbox{background:var(--bdr);border-radius:12px;padding:14px;overflow:auto;max-height:calc(100vh - 190px)}
 #tpabhipray-body .tp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;background:#fff;box-sizing:border-box;color:#111;font-family:"Noto Sans Devanagari","Nirmala UI",Arial,sans-serif}
-#tpabhipray-body .tp-in{padding:18mm 18mm 15mm 18mm;box-sizing:border-box;height:100%;font-size:14px;line-height:1.75}
-#tpabhipray-body .tp-head{text-align:right;font-size:12px;line-height:1.5;margin-bottom:18px}
-#tpabhipray-body .tp-title{text-align:center;font-weight:700;font-size:16pt;text-decoration:underline;margin:0 0 18px}
-#tpabhipray-body .tp-office{text-align:center;font-weight:700;font-size:15px;margin-bottom:22px}
+#tpabhipray-body .tp-in{padding:18mm 18mm 18mm 18mm;box-sizing:border-box;height:100%;font-size:11.5pt;line-height:1.75}
+#tpabhipray-body .tp-head{text-align:right;font-size:10.5pt;line-height:1.5;margin-bottom:18px}
+#tpabhipray-body .tp-office{text-align:center;font-weight:700;font-size:11.5pt;margin-bottom:22px}
 #tpabhipray-body .tp-to{margin-bottom:16px}
 #tpabhipray-body .tp-subject{font-weight:700;margin:12px 0 15px;text-align:justify}
 #tpabhipray-body .tp-meta{margin:3px 0}
@@ -548,6 +547,40 @@ html{transition:background .3s,color .3s}
 .permission-docs-sub .perm-sub-btn:hover{color:#fff;background:rgba(255,255,255,.06)}
 .permission-docs-group.perm-collapsed .permission-docs-sub{display:none}
 .permission-docs-group>.nav-btn.active,.permission-docs-sub .perm-sub-btn.active{background:rgba(255,255,255,.10);color:#fff}
+</style>
+<style id="permission-docs-print-normal-margin-final">
+@media print{
+  @page{size:A4 portrait;margin:10mm 10mm 10mm 25.4mm!important}
+  html,body{margin:0!important;padding:0!important;background:#fff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  .cmp-sheet,.tp-sheet{width:174.6mm!important;height:277mm!important;min-height:277mm!important;max-height:277mm!important;margin:0!important;box-sizing:border-box!important;box-shadow:none!important;transform:none!important;overflow:hidden!important}
+  .cmp-sheet.noc.noc-front,.cmp-sheet.noc.noc-second{width:174.6mm!important;height:277mm!important;min-height:277mm!important;max-height:277mm!important;padding:0!important;overflow:hidden!important}
+  .cmp-sheet.noc .noc-front-content{height:277mm!important;padding:0 0 2mm 0!important}
+  .noc-page-break{break-after:page!important;page-break-after:always!important}
+}
+</style>
+
+<style id="permission-doc-standard-text">
+/* Standard document typography — A4 permission documents */
+.cmp-sheet.noc, .cmp-sheet.aw, .cmp-sheet.csd, .cmp-sheet.tp-sheet {
+  font-size:14pt !important;
+  line-height:1.65 !important;
+}
+.cmp-sheet.noc p, .cmp-sheet.aw p, .cmp-sheet.csd p, .cmp-sheet.tp-sheet p,
+.cmp-sheet.noc .pr, .cmp-sheet.aw .pr, .cmp-sheet.csd .pr, .cmp-sheet.tp-sheet .pr {
+  font-size:14pt !important;
+  line-height:1.65 !important;
+}
+/* Professional form typography and spacing */
+.cmp-sheet.noc .nt, .cmp-sheet.aw .nt, .cmp-sheet.csd .nt, .cmp-sheet.tp-sheet .nt,
+.cmp-sheet.aw .title, .cmp-sheet.csd .title, .cmp-sheet.tp-sheet .title {
+  font-weight:700 !important;
+  text-decoration:underline !important;
+  text-align:center !important;
+}
+.cmp-sheet.noc .npara, .cmp-sheet.aw .pr, .cmp-sheet.csd .pr, .cmp-sheet.tp-sheet .pr {
+  margin-bottom:18pt !important;
+}
+
 </style>
 </head>
 <body>
@@ -5170,47 +5203,388 @@ function delExpense(id){if(!confirm('Delete expense?'))return;db.expenses=db.exp
 // ESTIMATES
 // ════════════════════════════════════════════════
 let estSvcPrices={};
+let estCustomLines=[];
+let estExtraCharges=[];
+
+const EST_DEFAULT_RATES={
+  'Apartment Design':25000,'Ground Floor Plan':8000,'First Floor Plan':6000,
+  'Second Floor Plan':6000,'Third Floor Plan':6000,
+  'G+1 2D Floor Plan':14000,'G+2 2D Floor Plan':20000,'G+3 2D Floor Plan':26000,
+  '2D Elevation':6000,'Plumbing Drawing':5000,'Electrical Drawing':5000,
+  '3D Elevation':12000,'Interior Design':15000,'Structural Design':10000,
+  'Steel Design':8000,'Building Permission':8000,'Central Line Plan':4000,
+  'Blueprint':5000,'Estimate':3000,'Site Visit':2000,'Adhar Work':2000,'Other':5000
+};
+
+const EST_DEFAULT_TERMS=
+`1. This quotation is valid for the period stated above (or 30 days if not specified).
+2. 30% advance is required to commence work; remaining as per payment schedule.
+3. Fees are for design / documentation services only unless stated otherwise.
+4. Government fees, consultant fees, printing and travel beyond city limits are extra.
+5. Additional revisions beyond the included limit will be charged separately.
+6. Site visits beyond the included count will be charged as per rate schedule.
+7. Work will proceed after written / signed acceptance of this estimate.
+8. All disputes subject to Solapur jurisdiction.`;
+
+/* Smart presets — multi-select chips; "Other" unlocks manual textarea */
+const EST_PRESETS={
+  scope:[
+    {id:'res-arch',label:'Residential Architecture',text:'Architectural design for residential building including floor plans, elevations and working drawings as per local DCR / UDCPR.'},
+    {id:'comm-arch',label:'Commercial Design',text:'Architectural design for commercial premises including space planning, floor plans, elevations and services coordination drawings.'},
+    {id:'apt-design',label:'Apartment Design',text:'Complete apartment building design package including typical floor plans, elevations, services layouts and municipal permission drawings.'},
+    {id:'interior',label:'Interior Design',text:'Interior design covering space planning, furniture layout, material guidance and detailed interior drawings for execution.'},
+    {id:'renovation',label:'Renovation / Alteration',text:'Renovation / alteration design including measured survey coordination, proposed plans, elevations and necessary permission documentation.'},
+    {id:'permission',label:'Permission Documentation',text:'Preparation and submission support for building permission / documentation as required by the local planning authority.'},
+    {id:'drawing-only',label:'Drawing Only',text:'Preparation of architectural drawings only (plans, elevations, 3D views) as per client brief — without full design consultancy or permission process.'},
+    {id:'gplus',label:'G+1 / G+2 Residence',text:'Design of G+1 / G+2 residential structure with floor plans, 2D/3D elevations and basic services drawings.'}
+  ],
+  inclusions:[
+    {id:'concept',label:'Concept Design',text:'Concept design and layout planning'},
+    {id:'floor-plans',label:'Floor Plans',text:'Working floor plans'},
+    {id:'elevations',label:'Elevations',text:'2D elevations'},
+    {id:'3d',label:'3D Views',text:'3D elevation / views'},
+    {id:'permission-set',label:'Permission Set',text:'Building permission drawing set'},
+    {id:'services-dwg',label:'Services Drawings',text:'Plumbing & electrical layout drawings'},
+    {id:'revisions',label:'Design Revisions',text:'Design revisions as limited in this estimate'},
+    {id:'site-visits',label:'Site Visits',text:'Site visits as limited in this estimate'},
+    {id:'blueprint',label:'Blueprints',text:'Blueprint / print sets as agreed'}
+  ],
+  exclusions:[
+    {id:'structural',label:'Structural Design',text:'Structural design & RCC detailing'},
+    {id:'govt-fees',label:'Government Fees',text:'Government scrutiny fees, deposits and development charges'},
+    {id:'soil',label:'Soil Testing',text:'Soil testing and geotechnical investigation'},
+    {id:'mep',label:'Detailed MEP',text:'Detailed MEP / HVAC design'},
+    {id:'printing',label:'Extra Printing',text:'Printing beyond agreed sets'},
+    {id:'travel',label:'Outstation Travel',text:'Travel beyond city limits'},
+    {id:'interior-exec',label:'Interior Execution',text:'Interior furniture manufacturing & execution'},
+    {id:'landscape',label:'Landscape Design',text:'Landscape / external development design'},
+    {id:'legal',label:'Legal / Advocate',text:'Legal, advocate and NOC consultancy fees'}
+  ],
+  payment:[
+    {id:'30-40-30',label:'30% · 40% · 30%',text:'30% advance on acceptance · 40% on working drawings approval · 30% on final submission.'},
+    {id:'40-30-30',label:'40% · 30% · 30%',text:'40% advance · 30% on design approval · 30% on final drawings / permission submission.'},
+    {id:'50-50',label:'50% · 50%',text:'50% advance on acceptance · 50% on delivery of final drawings / submission.'},
+    {id:'30-35-20-15',label:'4 Installments',text:'30% advance · 35% on floor plan freeze · 20% on elevation / services · 15% on permission drawings.'},
+    {id:'40-40-20',label:'40% · 40% · 20%',text:'40% advance · 40% on detailed drawings · 20% on final handover of drawings.'},
+    {id:'full-advance',label:'Full Advance',text:'100% advance before commencement of work.'}
+  ],
+  notes:[
+    {id:'validity-30',label:'30 Days Validity',text:'This quotation is valid for 30 days from the date of issue.'},
+    {id:'site-extra',label:'Extra Site Visit Charge',text:'Additional site visits beyond the included count will be charged separately.'},
+    {id:'revision-extra',label:'Extra Revision Charge',text:'Revisions beyond the included limit will be charged extra.'},
+    {id:'client-materials',label:'Client Materials',text:'Client shall provide all existing drawings, survey data and required documents in time.'},
+    {id:'no-execution',label:'Design Only',text:'This estimate is for design / documentation only — execution and supervision are not included unless stated.'},
+    {id:'gst-extra',label:'GST Extra',text:'GST as applicable will be charged extra on the quoted fees.'},
+    {id:'solapur',label:'Solapur Jurisdiction',text:'All disputes subject to Solapur jurisdiction.'}
+  ]
+};
+
+const EST_PRESET_FIELDS=['scope','inclusions','exclusions','payment','notes'];
+const estPresetState={}; // field -> {selected:Set, other:bool}
+
+function estEnsurePresetState(field){
+  if(!estPresetState[field])estPresetState[field]={selected:new Set(),other:false};
+  return estPresetState[field];
+}
+
+function estBuildPresetChips(field){
+  const box=document.getElementById('est-'+field+'-chips');
+  const ta=document.getElementById('est-'+field);
+  if(!box||!ta)return;
+  const presets=EST_PRESETS[field]||[];
+  const st=estEnsurePresetState(field);
+  box.innerHTML='';
+  presets.forEach(p=>{
+    const chip=document.createElement('button');
+    chip.type='button';
+    chip.className='est-chip'+(st.selected.has(p.id)?' on':'');
+    chip.textContent=p.label;
+    chip.dataset.presetId=p.id;
+    chip.style.cssText='padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--bdr);background:var(--surf2);color:var(--mut);transition:all .15s';
+    if(st.selected.has(p.id)){chip.style.background='rgba(26,58,42,.1)';chip.style.color='var(--grn)';chip.style.borderColor='rgba(26,58,42,.35)';chip.style.fontWeight='700';}
+    chip.onclick=function(){estTogglePreset(field,p.id);};
+    box.appendChild(chip);
+  });
+  const other=document.createElement('button');
+  other.type='button';
+  other.className='est-chip est-chip-other'+(st.other?' on':'');
+  other.textContent='Other / Manual';
+  other.style.cssText='padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px dashed var(--gold);background:'+(st.other?'rgba(201,168,76,.15)':'var(--surf2)')+';color:'+(st.other?'#a07a20':'var(--mut)')+';transition:all .15s';
+  other.onclick=function(){estToggleOther(field);};
+  box.appendChild(other);
+  estSyncPresetText(field);
+}
+
+function estTogglePreset(field,id){
+  const st=estEnsurePresetState(field);
+  if(st.selected.has(id))st.selected.delete(id);else st.selected.add(id);
+  // turning on a preset turns off pure-other-only mode visually but keeps other text if any
+  estBuildPresetChips(field);
+}
+
+function estToggleOther(field){
+  const st=estEnsurePresetState(field);
+  st.other=!st.other;
+  const ta=document.getElementById('est-'+field);
+  if(ta){
+    ta.style.display=st.other?'block':'none';
+    if(st.other){ta.focus();if(!ta.value.trim()&&st.selected.size){/* keep composed text for editing */} }
+  }
+  estBuildPresetChips(field);
+  if(st.other&&ta){
+    // show current composed + allow manual edit
+    ta.style.display='block';
+  }
+}
+
+function estSyncPresetText(field){
+  const st=estEnsurePresetState(field);
+  const ta=document.getElementById('est-'+field);
+  if(!ta)return;
+  const presets=EST_PRESETS[field]||[];
+  const parts=[];
+  presets.forEach(p=>{if(st.selected.has(p.id))parts.push(p.text);});
+  if(st.other){
+    ta.style.display='block';
+    // If user already typed custom content starting with composed parts, don't wipe
+    if(!ta.dataset.userEdited){
+      ta.value=parts.join(field==='payment'||field==='scope'?' ':' · ');
+    }
+  } else {
+    ta.style.display=parts.length?'block':'none';
+    ta.dataset.userEdited='';
+    ta.value=parts.join(field==='payment'||field==='scope'?' ':' · ');
+  }
+}
+
+function estOnOtherInput(field){
+  const ta=document.getElementById('est-'+field);
+  if(ta)ta.dataset.userEdited='1';
+  const st=estEnsurePresetState(field);
+  st.other=true;
+}
+
+function estResetPresets(){
+  EST_PRESET_FIELDS.forEach(f=>{
+    estPresetState[f]={selected:new Set(),other:false};
+    const ta=document.getElementById('est-'+f);
+    if(ta){ta.value='';ta.style.display='none';ta.dataset.userEdited='';}
+    estBuildPresetChips(f);
+  });
+}
+
+function estApplyTextToPresets(field,text){
+  // When template fills a textarea, mark as Other so user can edit, and show the box
+  const st=estEnsurePresetState(field);
+  st.selected=new Set();
+  st.other=true;
+  const ta=document.getElementById('est-'+field);
+  if(ta){ta.value=text||'';ta.style.display='block';ta.dataset.userEdited='1';}
+  estBuildPresetChips(field);
+}
+
+const EST_TEMPLATES={
+  residential:{
+    category:'Architectural',
+    services:['Ground Floor Plan','First Floor Plan','2D Elevation','3D Elevation','Building Permission','Site Visit'],
+    scope:'Architectural design for residential building including floor plans, elevations, and building permission drawings as per local development control regulations.',
+    inclusions:'Concept layout, working drawings (floor plans & elevations), building permission set, design revisions as limited below, site visits as limited below.',
+    exclusions:'Structural design & RCC detailing, soil testing, government scrutiny fees, municipal deposits, printing beyond 2 sets, interior furniture design.',
+    payment:'30% advance on acceptance · 40% on working drawings approval · 30% on final submission / permission drawings.',
+    revisions:2,visits:3
+  },
+  commercial:{
+    category:'Commercial',
+    services:['G+1 2D Floor Plan','2D Elevation','3D Elevation','Plumbing Drawing','Electrical Drawing','Building Permission','Site Visit'],
+    scope:'Architectural design and documentation for commercial premises including layout planning, elevations, services coordination drawings and permission set.',
+    inclusions:'Space planning, floor plans, elevations, basic services drawings, permission documentation, limited revisions and site visits.',
+    exclusions:'MEP detailed design, fire NOC consultancy, structural design, government fees, 3D walkthrough animation, interior fit-out design.',
+    payment:'40% advance · 30% on design approval · 30% on final drawings / permission submission.',
+    revisions:2,visits:3
+  },
+  apartment:{
+    category:'Apartment Design',
+    services:['Apartment Design','G+2 2D Floor Plan','2D Elevation','3D Elevation','Plumbing Drawing','Electrical Drawing','Building Permission','Site Visit'],
+    scope:'Complete apartment building design package including typical floor plans, elevations, services layouts and municipal permission drawings.',
+    inclusions:'Master layout, typical floor plans, elevations, services drawings, permission set, revisions and site visits as limited.',
+    exclusions:'Structural & foundation design, detailed MEP, landscape design, government fees, model making, marketing 3D visuals beyond one elevation set.',
+    payment:'30% advance · 35% on floor plan freeze · 20% on elevation / services · 15% on permission drawings.',
+    revisions:3,visits:4
+  },
+  interior:{
+    category:'Interior',
+    services:['Interior Design','2D Elevation','3D Elevation','Site Visit'],
+    scope:'Interior design services covering space planning, furniture layout, material selection guidance and detailed interior drawings for execution.',
+    inclusions:'Space planning, furniture layouts, wall elevations, material suggestions, limited revisions and site visits for coordination.',
+    exclusions:'Civil demolition / modification works, furniture manufacturing, electrical & plumbing execution, soft furnishings procurement, lighting fixtures supply.',
+    payment:'40% advance · 40% on detailed drawings · 20% on final handover of drawings.',
+    revisions:2,visits:3
+  },
+  renovation:{
+    category:'Renovation',
+    services:['Ground Floor Plan','2D Elevation','Interior Design','Building Permission','Site Visit'],
+    scope:'Renovation / alteration design including measured survey coordination, proposed plans, elevations and necessary permission documentation.',
+    inclusions:'Existing plan coordination, proposed renovation drawings, permission drawings (if required), limited revisions and site visits.',
+    exclusions:'Structural strengthening design, contractor selection, material procurement, government fees, temporary works design.',
+    payment:'40% advance · 40% on proposed drawings · 20% on permission / final set.',
+    revisions:2,visits:4
+  },
+  permission:{
+    category:'Permission / Documentation',
+    services:['Building Permission','Central Line Plan','Blueprint','Estimate','Site Visit'],
+    scope:'Preparation and submission support for building permission / documentation as required by local planning authority.',
+    inclusions:'Permission drawing set, central line plan, blueprint prints as agreed, basic estimate sheet, coordination site visit(s).',
+    exclusions:'Scrutiny fees, development charges, NOC from other departments, structural stability certificate, advocate / legal fees.',
+    payment:'50% advance · 50% on submission / delivery of permission set.',
+    revisions:1,visits:2
+  },
+  drawing:{
+    category:'Drawing Only',
+    services:['G+1 2D Floor Plan','2D Elevation','3D Elevation','Blueprint'],
+    scope:'Preparation of architectural drawings only (plans, elevations, 3D views) as per client brief — without full design consultancy or permission process.',
+    inclusions:'2D floor plans, elevations, one 3D elevation view, blueprint prints as agreed.',
+    exclusions:'Site visits beyond one, revisions beyond limit, permission processing, structural drawings, interior design.',
+    payment:'50% advance · 50% on delivery of final drawings.',
+    revisions:1,visits:1
+  }
+};
+
 function openEstimateModal(){ initEstimateModal(); }
-function buildEstGrid(){
-  const grid = document.getElementById('est-svc-grid');
-  if(!grid) return;
-  grid.innerHTML = '';
-  estSvcPrices = {};
-  const defaults={
-    'Apartment Design':25000,'Ground Floor Plan':8000,'First Floor Plan':6000,
-    'Second Floor Plan':6000,'Third Floor Plan':6000,
-    'G+1 2D Floor Plan':14000,'G+2 2D Floor Plan':20000,'G+3 2D Floor Plan':26000,
-    '2D Elevation':6000,'Plumbing Drawing':5000,'Electrical Drawing':5000,
-    '3D Elevation':12000,'Interior Design':15000,'Structural Design':10000,
-    'Steel Design':8000,'Building Permission':8000,'Central Line Plan':4000,
-    'Blueprint':5000,'Estimate':3000,'Site Visit':2000,'Adhar Work':2000,'Other':5000
-  };
+
+function estSvcId(s){return 'est-svc-'+String(s).replace(/\W+/g,'-');}
+
+function buildEstGrid(preselect){
+  const grid=document.getElementById('est-svc-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+  estSvcPrices={};
+  const selSet=new Set(preselect||[]);
   (SERVICES||[]).forEach(s=>{
-    const def = defaults[s]||5000;
-    estSvcPrices[s] = def;
-    const id = 'est-svc-'+s.replace(/\W+/g,'-');
-    const row = document.createElement('label');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:10px;cursor:pointer;transition:all .2s';
-    row.innerHTML = `<input type="checkbox" id="${id}" data-svc-check="${s}"
-        style="width:15px;height:15px;accent-color:var(--grn);flex-shrink:0">
-      <span style="font-size:12px;font-weight:600;flex:1;color:var(--ink)">${s}</span>
-      <span style="font-size:11px;color:var(--mut);flex-shrink:0">₹</span>
-      <input type="number" value="${def}" min="0" data-svc="${s}"
-        style="width:80px;padding:4px 7px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:700;background:#fff;text-align:right"
-        onclick="event.stopPropagation()" oninput="updateEstimate()">`;
-    const cb = row.querySelector('input[type=checkbox]');
-    cb.onchange = function(){
-      row.style.background = this.checked ? '#e8f4ee' : 'var(--surf2)';
-      row.style.borderColor = this.checked ? 'var(--grn)' : 'var(--bdr)';
+    const def=EST_DEFAULT_RATES[s]||5000;
+    estSvcPrices[s]=def;
+    const id=estSvcId(s);
+    const row=document.createElement('div');
+    row.className='est-svc-row';
+    row.dataset.service=s;
+    row.style.cssText='display:grid;grid-template-columns:28px 1fr 58px 48px 78px 88px;gap:6px;align-items:center;padding:7px 8px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:10px';
+    row.innerHTML=
+      `<input type="checkbox" id="${id}" data-svc-check="${s}" style="width:15px;height:15px;accent-color:var(--grn);justify-self:center">`+
+      `<span style="font-size:12px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s}</span>`+
+      `<input type="number" min="0" step="0.01" value="1" data-qty="${s}" style="width:100%;padding:4px 5px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:600;background:#fff;text-align:right" onclick="event.stopPropagation()" oninput="estRecalcRow(this)">`+
+      `<input type="text" value="LS" data-unit="${s}" style="width:100%;padding:4px 4px;border:1px solid var(--bdr);border-radius:6px;font-size:11px;background:#fff;text-align:center" onclick="event.stopPropagation()">`+
+      `<input type="number" min="0" value="${def}" data-rate="${s}" style="width:100%;padding:4px 5px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:700;background:#fff;text-align:right" onclick="event.stopPropagation()" oninput="estRecalcRow(this)">`+
+      `<input type="number" min="0" value="${def}" data-amt="${s}" readonly style="width:100%;padding:4px 5px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:700;background:var(--surf2);text-align:right;color:var(--grn)">`;
+    const cb=row.querySelector('input[type=checkbox]');
+    cb.onchange=function(){
+      row.style.background=this.checked?'#e8f4ee':'var(--surf2)';
+      row.style.borderColor=this.checked?'var(--grn)':'var(--bdr)';
       updateEstimate();
     };
+    if(selSet.has(s)){cb.checked=true;row.style.background='#e8f4ee';row.style.borderColor='var(--grn)';}
     grid.appendChild(row);
   });
+  // restore custom lines
+  estCustomLines.forEach((cl,idx)=>estAppendCustomRow(cl,idx));
   updateEstimate();
 }
 
+function estRecalcRow(el){
+  const row=el.closest('.est-svc-row')||el.closest('.est-custom-row');
+  if(!row)return;
+  const qty=parseFloat(row.querySelector('[data-qty]')?.value)||0;
+  const rate=parseFloat(row.querySelector('[data-rate]')?.value)||0;
+  const amtEl=row.querySelector('[data-amt]');
+  if(amtEl)amtEl.value=Math.round(qty*rate);
+  updateEstimate();
+}
+
+function estAddCustomLine(){
+  const cl={name:'',qty:1,unit:'LS',rate:0};
+  estCustomLines.push(cl);
+  estAppendCustomRow(cl,estCustomLines.length-1);
+  updateEstimate();
+}
+
+function estAppendCustomRow(cl,idx){
+  const grid=document.getElementById('est-svc-grid');
+  if(!grid)return;
+  const row=document.createElement('div');
+  row.className='est-custom-row';
+  row.dataset.customIdx=idx;
+  row.style.cssText='display:grid;grid-template-columns:28px 1fr 58px 48px 78px 88px;gap:6px;align-items:center;padding:7px 8px;background:#fff8e8;border:1.5px solid rgba(201,168,76,.35);border-radius:10px';
+  row.innerHTML=
+    `<button type="button" onclick="estRemoveCustom(${idx})" style="border:0;background:transparent;color:var(--red);cursor:pointer;font-size:16px;line-height:1" title="Remove">×</button>`+
+    `<input type="text" value="${(cl.name||'').replace(/"/g,'&quot;')}" data-cname placeholder="Custom item name" style="width:100%;padding:4px 6px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:600;background:#fff" oninput="estCustomLines[${idx}].name=this.value;updateEstimate()">`+
+    `<input type="number" min="0" step="0.01" value="${cl.qty||1}" data-qty style="width:100%;padding:4px 5px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:600;background:#fff;text-align:right" oninput="estCustomLines[${idx}].qty=parseFloat(this.value)||0;estRecalcRow(this)">`+
+    `<input type="text" value="${cl.unit||'LS'}" data-unit style="width:100%;padding:4px 4px;border:1px solid var(--bdr);border-radius:6px;font-size:11px;background:#fff;text-align:center" oninput="estCustomLines[${idx}].unit=this.value">`+
+    `<input type="number" min="0" value="${cl.rate||0}" data-rate style="width:100%;padding:4px 5px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:700;background:#fff;text-align:right" oninput="estCustomLines[${idx}].rate=parseFloat(this.value)||0;estRecalcRow(this)">`+
+    `<input type="number" min="0" value="${Math.round((cl.qty||1)*(cl.rate||0))}" data-amt readonly style="width:100%;padding:4px 5px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-weight:700;background:var(--surf2);text-align:right;color:var(--grn)">`;
+  grid.appendChild(row);
+}
+
+function estRemoveCustom(idx){
+  estCustomLines.splice(idx,1);
+  // rebuild only custom portion by full rebuild of selected services
+  const selected=[];
+  document.querySelectorAll('#est-svc-grid [data-svc-check]').forEach(cb=>{if(cb.checked)selected.push(cb.getAttribute('data-svc-check'));});
+  const rates={};
+  document.querySelectorAll('#est-svc-grid .est-svc-row').forEach(row=>{
+    const s=row.dataset.service;
+    const q=row.querySelector('[data-qty]')?.value;
+    const u=row.querySelector('[data-unit]')?.value;
+    const r=row.querySelector('[data-rate]')?.value;
+    rates[s]={qty:q,unit:u,rate:r};
+  });
+  buildEstGrid(selected);
+  document.querySelectorAll('#est-svc-grid .est-svc-row').forEach(row=>{
+    const s=row.dataset.service;
+    if(rates[s]){
+      if(row.querySelector('[data-qty]'))row.querySelector('[data-qty]').value=rates[s].qty;
+      if(row.querySelector('[data-unit]'))row.querySelector('[data-unit]').value=rates[s].unit;
+      if(row.querySelector('[data-rate]'))row.querySelector('[data-rate]').value=rates[s].rate;
+      estRecalcRow(row.querySelector('[data-rate]'));
+    }
+  });
+}
+
+function estAddExtraCharge(){
+  estExtraCharges.push({name:'',amount:0});
+  estRenderExtras();
+  updateEstimate();
+}
+
+function estRenderExtras(){
+  const box=document.getElementById('est-extra-rows');
+  if(!box)return;
+  box.innerHTML=estExtraCharges.map((x,i)=>
+    `<div style="display:grid;grid-template-columns:1fr 110px 28px;gap:6px;align-items:center">
+      <input class="fi" placeholder="Charge description" value="${(x.name||'').replace(/"/g,'&quot;')}" oninput="estExtraCharges[${i}].name=this.value;updateEstimate()">
+      <input class="fi" type="number" min="0" placeholder="Amount" value="${x.amount||''}" style="text-align:right" oninput="estExtraCharges[${i}].amount=parseFloat(this.value)||0;updateEstimate()">
+      <button type="button" onclick="estExtraCharges.splice(${i},1);estRenderExtras();updateEstimate()" style="border:0;background:transparent;color:var(--red);cursor:pointer;font-size:16px">×</button>
+    </div>`
+  ).join('');
+}
+
+function applyEstTemplate(key){
+  if(!key||!EST_TEMPLATES[key])return;
+  const t=EST_TEMPLATES[key];
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  set('est-category',t.category);
+  set('est-revisions',t.revisions);
+  set('est-visits',t.visits);
+  set('est-terms',EST_DEFAULT_TERMS);
+  // Template text → show as editable Other content (smart chips still available to refine)
+  estApplyTextToPresets('scope',t.scope);
+  estApplyTextToPresets('inclusions',t.inclusions);
+  estApplyTextToPresets('exclusions',t.exclusions);
+  estApplyTextToPresets('payment',t.payment);
+  estCustomLines=[];
+  estExtraCharges=[];
+  estRenderExtras();
+  buildEstGrid(t.services);
+}
+
 function initEstimateModal(){
-  // Populate client dropdown
   const sel=document.getElementById('est-client');
   if(sel){
     sel.innerHTML='<option value="">Select Client</option>';
@@ -5221,54 +5595,120 @@ function initEstimateModal(){
       sel.appendChild(o);
     });
   }
-  // Clear previous fields
-  ['est-proj','est-area','est-notes'].forEach(id=>{
+  ['est-proj','est-area','est-address'].forEach(id=>{
     const e=document.getElementById(id);if(e)e.value='';
   });
+  const tpl=document.getElementById('est-template');if(tpl)tpl.value='';
   const gst=document.getElementById('est-gst');if(gst)gst.value='18';
+  const rev=document.getElementById('est-revisions');if(rev)rev.value='2';
+  const visits=document.getElementById('est-visits');if(visits)visits.value='2';
+  const cat=document.getElementById('est-category');if(cat)cat.value='Architectural';
+  const today=new Date().toISOString().split('T')[0];
+  const dt=document.getElementById('est-date');if(dt)dt.value=today;
+  const valid=document.getElementById('est-valid');if(valid){const d=new Date();d.setDate(d.getDate()+30);valid.value=d.toISOString().split('T')[0];}
+  const eno=document.getElementById('est-no');if(eno)eno.value='EST-'+Date.now().toString().slice(-6);
+  const terms=document.getElementById('est-terms');if(terms)terms.value=EST_DEFAULT_TERMS;
+  const acc=document.getElementById('est-acceptance');if(acc)acc.checked=true;
+  estCustomLines=[];
+  estExtraCharges=[];
+  estRenderExtras();
+  estResetPresets();
 
-  // Directly show modal (avoid circular call via openModal)
-  const modalEl = document.getElementById('m-estimate');
-  if(modalEl) modalEl.classList.add('open');
-
-  // Build grid after modal is visible
-  setTimeout(buildEstGrid, 80);
+  const modalEl=document.getElementById('m-estimate');
+  if(modalEl)modalEl.classList.add('open');
+  setTimeout(()=>{
+    buildEstGrid([]);
+    EST_PRESET_FIELDS.forEach(estBuildPresetChips);
+  },80);
 }
-function updateEstimate(){
-  let sub=0;
-  SERVICES.forEach(s=>{
-    const cb=document.getElementById('est-svc-'+s.replace(/[\s+]/g,'-'));
-    const inp=document.querySelector('input[data-svc="'+s+'"]');
-    if(cb&&cb.checked&&inp) sub+=parseInt(inp.value)||0;
+
+function collectEstItems(){
+  const items=[];
+  document.querySelectorAll('#est-svc-grid .est-svc-row').forEach(row=>{
+    const cb=row.querySelector('[data-svc-check]');
+    if(!cb||!cb.checked)return;
+    const s=cb.getAttribute('data-svc-check');
+    const qty=parseFloat(row.querySelector('[data-qty]')?.value)||0;
+    const unit=row.querySelector('[data-unit]')?.value||'LS';
+    const rate=parseFloat(row.querySelector('[data-rate]')?.value)||0;
+    const amount=Math.round(qty*rate);
+    items.push({service:s,qty,unit,rate,amount});
   });
-  const gst=parseInt(document.getElementById('est-gst').value)||0;
+  document.querySelectorAll('#est-svc-grid .est-custom-row').forEach(row=>{
+    const name=(row.querySelector('[data-cname]')?.value||'').trim();
+    if(!name)return;
+    const qty=parseFloat(row.querySelector('[data-qty]')?.value)||0;
+    const unit=row.querySelector('[data-unit]')?.value||'LS';
+    const rate=parseFloat(row.querySelector('[data-rate]')?.value)||0;
+    items.push({service:name,qty,unit,rate,amount:Math.round(qty*rate),custom:true});
+  });
+  return items;
+}
+
+function updateEstimate(){
+  const items=collectEstItems();
+  let sub=items.reduce((a,x)=>a+x.amount,0);
+  const extras=estExtraCharges.reduce((a,x)=>a+(parseFloat(x.amount)||0),0);
+  sub+=extras;
+  const gstEl=document.getElementById('est-gst');
+  const gst=gstEl?parseInt(gstEl.value)||0:0;
   const gstAmt=Math.round(sub*gst/100);
   const total=sub+gstAmt;
-  document.getElementById('est-summary').innerHTML=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Sub Total</span><span style="font-weight:700">${fmt(sub)}</span></div>
-    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>GST (${gst}%)</span><span style="font-weight:700;color:var(--orange)">${fmt(gstAmt)}</span></div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;font-weight:800"><span>Total Estimate</span><span style="color:var(--grn)">${fmt(total)}</span></div>`;
+  const sum=document.getElementById('est-summary');
+  if(!sum)return;
+  sum.innerHTML=
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Services Subtotal</span><span style="font-weight:700">${fmt(items.reduce((a,x)=>a+x.amount,0))}</span></div>`+
+    (extras?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Additional Charges</span><span style="font-weight:700">${fmt(extras)}</span></div>`:'')+
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Sub Total</span><span style="font-weight:700">${fmt(sub)}</span></div>`+
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>GST (${gst}%)</span><span style="font-weight:700;color:var(--orange)">${fmt(gstAmt)}</span></div>`+
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;font-weight:800"><span>Grand Total</span><span style="color:var(--grn)">${fmt(total)}</span></div>`;
 }
+
 function saveEstimate(){
   const cid=document.getElementById('est-client').value;
   const pname=document.getElementById('est-proj').value.trim();
   if(!cid){alert('Select client');return;}
-  const items=[];
-  SERVICES.forEach(s=>{
-    const cb=document.getElementById('est-svc-'+s.replace(/[\s+]/g,'-'));
-    const inp=document.querySelector(`input[data-svc="${s}"]`);
-    if(cb&&cb.checked&&inp) items.push({service:s,amount:parseInt(inp.value)||0});
-  });
-  if(!items.length){alert('Select at least one service');return;}
-  const sub=items.reduce((a,x)=>a+x.amount,0);
+  const items=collectEstItems();
+  if(!items.length&&!estExtraCharges.some(x=>x.amount>0)){alert('Select at least one service or add a charge');return;}
+  const servicesSub=items.reduce((a,x)=>a+x.amount,0);
+  const extras=estExtraCharges.filter(x=>(x.name||'').trim()||x.amount).map(x=>({name:x.name||'Additional charge',amount:parseFloat(x.amount)||0}));
+  const extrasSum=extras.reduce((a,x)=>a+x.amount,0);
+  const sub=servicesSub+extrasSum;
   const gst=parseInt(document.getElementById('est-gst').value)||0;
   const gstAmt=Math.round(sub*gst/100);
-  const est={id:uid('EST'),clientId:cid,projName:pname,items,sub,gst,gstAmt,total:sub+gstAmt,notes:document.getElementById('est-notes').value.trim(),date:new Date().toISOString().split('T')[0]};
+  const est={
+    id:uid('EST'),
+    clientId:cid,
+    projName:pname,
+    items,
+    extras,
+    sub,
+    gst,
+    gstAmt,
+    total:sub+gstAmt,
+    notes:document.getElementById('est-notes').value.trim(),
+    date:document.getElementById('est-date')?.value||new Date().toISOString().split('T')[0],
+    address:document.getElementById('est-address').value.trim(),
+    estimateNo:document.getElementById('est-no').value.trim(),
+    area:document.getElementById('est-area').value.trim(),
+    validUntil:document.getElementById('est-valid').value,
+    revisions:parseInt(document.getElementById('est-revisions').value)||0,
+    visits:parseInt(document.getElementById('est-visits').value)||0,
+    category:document.getElementById('est-category').value,
+    scope:document.getElementById('est-scope').value.trim(),
+    inclusions:document.getElementById('est-inclusions')?.value.trim()||'',
+    exclusions:document.getElementById('est-exclusions').value.trim(),
+    paymentSchedule:document.getElementById('est-payment').value.trim(),
+    terms:document.getElementById('est-terms')?.value.trim()||'',
+    acceptance:!!(document.getElementById('est-acceptance')?.checked),
+    template:document.getElementById('est-template')?.value||''
+  };
   if(!db.estimates)db.estimates=[];
   db.estimates.push(est);
   saveAll();closeModal('m-estimate');renderEstimates();
-  // Generate PDF immediately
   generateEstimatePDF(est.id);
 }
+
 function renderEstimates(){
   const list=document.getElementById('estimates-list');
   if(!(db.estimates&&db.estimates.length)){list.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No estimates yet</p></div>';return;}
@@ -5278,8 +5718,8 @@ function renderEstimates(){
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div>
           <div style="font-family:'Playfair Display',serif;font-size:15px">${e.projName||'Estimate'} — ${c?c.name:'—'}</div>
-          <div style="font-size:11px;color:var(--mut)">${e.date} · ${e.items.length} services · GST ${e.gst}%</div>
-          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${e.items.map(i=>`<span class="svc-chip">${i.service}: ${fmt(i.amount)}</span>`).join('')}</div>
+          <div style="font-size:11px;color:var(--mut)">${e.estimateNo?e.estimateNo+' · ':''}${e.date}${e.validUntil?' · Valid till '+e.validUntil:''} · ${(e.items||[]).length} items · GST ${e.gst}%${e.category?' · '+e.category:''}</div>
+          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${(e.items||[]).map(i=>`<span class="svc-chip">${i.service}: ${fmt(i.amount)}</span>`).join('')}</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--grn)">${fmt(e.total)}</div>
@@ -5302,73 +5742,130 @@ function generateEstimatePDF(id){
     const est=db.estimates.find(e=>e.id===id);if(!est)return;
     const c=gc(est.clientId);
     const doc=new jsPDF('p','mm','a4');
-    // Header
     doc.setFillColor(26,58,42);doc.rect(0,0,210,38,'F');
     doc.setFillColor(201,168,76);doc.rect(0,36,210,2.5,'F');
-    doc.setTextColor(201,168,76);doc.setFont('helvetica','bold');doc.setFontSize(20);
-    doc.text((officeInfo.name||'GREENHOUSE STUDIO').toUpperCase(),14,17);
-    doc.setTextColor(255,255,255);doc.setFont('helvetica','normal');doc.setFontSize(8.5);
-    doc.text('Architect: '+(officeInfo.arch||'Vijay Edke')+'  |  '+(officeInfo.addr||'497, Sakhar Peth, Solapur'),14,26);
-    doc.setTextColor(201,168,76);doc.setFont('helvetica','bold');doc.setFontSize(13);
-    doc.text('QUOTATION / ESTIMATE',210-14,18,{align:'right'});
+    doc.setTextColor(201,168,76);doc.setFont('helvetica','bold');doc.setFontSize(18);
+    doc.text((officeInfo.name||'GREENHOUSE STUDIO').toUpperCase(),14,16);
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','normal');doc.setFontSize(8);
+    doc.text('Architect: '+(officeInfo.arch||'Vijay Edke')+'  |  '+(officeInfo.addr||'497, Sakhar Peth, Solapur'),14,24);
+    if(officeInfo.phone||officeInfo.email)doc.text([officeInfo.phone,officeInfo.email].filter(Boolean).join('  |  '),14,30);
+    doc.setTextColor(201,168,76);doc.setFont('helvetica','bold');doc.setFontSize(12);
+    doc.text('QUOTATION / ESTIMATE',196,16,{align:'right'});
     doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(210,210,210);
-    doc.text('Date: '+est.date,210-14,26,{align:'right'});
-    doc.text('Ref: '+est.id,210-14,32,{align:'right'});
-    let y=50;
-    // Client info
-    doc.setFillColor(246,243,237);doc.roundedRect(12,y-4,186,22,3,3,'F');
-    doc.setTextColor(26,58,42);doc.setFont('helvetica','bold');doc.setFontSize(11);
+    doc.text('No: '+(est.estimateNo||est.id),196,24,{align:'right'});
+    doc.text('Date: '+(est.date||''),196,30,{align:'right'});
+    if(est.validUntil)doc.text('Valid until: '+est.validUntil,196,35,{align:'right'});
+    let y=48;
+    // Client & project block
+    doc.setFillColor(246,243,237);doc.roundedRect(12,y-3,186,28,3,3,'F');
+    doc.setTextColor(26,58,42);doc.setFont('helvetica','bold');doc.setFontSize(10);
     doc.text('Prepared For: '+(c?c.name:'—'),17,y+4);
-    doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(80,80,80);
-    doc.text('Project: '+(est.projName||'—')+'   |   Category: '+(c?c.cat:'—')+'   |   Phone: '+(c?c.wa:'—'),17,y+12);
-    y+=28;
-    // Services table
-    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(26,58,42);doc.text('SERVICE COST BREAKUP',14,y);y+=3;
-    doc.autoTable({startY:y,head:[['#','Service','Amount (Rs.)']],
-      body:est.items.map((item,i)=>[String(i+1),item.service,fmt(item.amount)]),
-      headStyles:{fillColor:[26,58,42],textColor:[201,168,76],fontStyle:'bold',fontSize:9,cellPadding:3},
-      bodyStyles:{fontSize:9,cellPadding:3},alternateRowStyles:{fillColor:[250,248,243]},
-      columnStyles:{0:{cellWidth:12,halign:'center'},2:{halign:'right',fontStyle:'bold',cellWidth:36}},
-      styles:{lineColor:[220,215,205],lineWidth:0.3}});
-    y=doc.lastAutoTable.finalY+5;
-    // GST summary
-    doc.autoTable({startY:y,body:[['Sub Total',fmt(est.sub)],['GST ('+est.gst+'%)',fmt(est.gstAmt)],['TOTAL AMOUNT',fmt(est.total)]],
-      bodyStyles:{fontSize:10,cellPadding:4},
-      columnStyles:{0:{fontStyle:'bold'},1:{halign:'right',fontStyle:'bold',cellWidth:50,textColor:[26,58,42]}},
-      didParseCell:d=>{if(d.row.index===2){d.cell.styles.fillColor=[26,58,42];d.cell.styles.textColor=[201,168,76];d.cell.styles.fontSize=12;}},
-      styles:{lineColor:[220,215,205],lineWidth:0.3},tableWidth:'auto',margin:{left:110}});
-    y=doc.lastAutoTable.finalY+10;
-    // Terms
-    doc.setFillColor(255,252,240);doc.roundedRect(12,y,186,52,3,3,'F');doc.setDrawColor(201,168,76);doc.setLineWidth(0.4);doc.roundedRect(12,y,186,52,3,3,'S');
-    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,58,42);doc.text('TERMS & CONDITIONS',17,y+8);
-    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(55,55,55);
-    ['1. This estimate is valid for 30 days from the date of issue.',
-     '2. 30% advance required to commence work.',
-     '3. Site visit charges Rs. 2,000/- per visit, billed separately.',
-     '4. Only ONE revision included. Additional changes charged extra.',
-     '5. Final drawings released upon receipt of full payment.',
-     '6. GST as applicable included above. TDS deductible at source.'
-    ].forEach((t,i)=>doc.text(t,17,y+15+i*5.5));
-    // Note: Point 7 (Dispute/Jurisdiction) removed as per office preference
-    if(est.notes){
-      y+=44;
-      // Notes box
-      doc.setFillColor(255,251,238);doc.roundedRect(12,y,186,8+Math.ceil(est.notes.length/80)*5,'F');
-      doc.setDrawColor(201,168,76);doc.setLineWidth(0.5);doc.roundedRect(12,y,186,8+Math.ceil(est.notes.length/80)*5,2,2,'S');
-      doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(122,90,0);
-      doc.text('📝 Notes / Special Terms:',17,y+5.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(70,70,70);
+    doc.text('Project: '+(est.projName||'—')+(est.category?'  |  Category: '+est.category:''),17,y+11);
+    doc.text('Site: '+(est.address||'—')+(est.area?'  |  Area: '+est.area+' sq.ft':''),17,y+17);
+    doc.text('Phone: '+(c?(c.wa||c.phone||'—'):'—')+(c&&c.email?'  |  Email: '+c.email:''),17,y+23);
+    y+=32;
+    // Line items table
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(26,58,42);doc.text('SERVICE / COST BREAKUP',14,y);y+=2;
+    const body=(est.items||[]).map((item,i)=>[
+      String(i+1),
+      item.service+(item.custom?' (custom)':''),
+      String(item.qty!=null?item.qty:1),
+      item.unit||'LS',
+      fmt(item.rate!=null?item.rate:item.amount),
+      fmt(item.amount)
+    ]);
+    (est.extras||[]).forEach((x,i)=>{
+      body.push([String((est.items||[]).length+i+1),x.name,'1','LS',fmt(x.amount),fmt(x.amount)]);
+    });
+    doc.autoTable({
+      startY:y,
+      head:[['#','Description','Qty','Unit','Rate (Rs.)','Amount (Rs.)']],
+      body,
+      headStyles:{fillColor:[26,58,42],textColor:[201,168,76],fontStyle:'bold',fontSize:8,cellPadding:2.5},
+      bodyStyles:{fontSize:8,cellPadding:2.5},
+      alternateRowStyles:{fillColor:[250,248,243]},
+      columnStyles:{
+        0:{cellWidth:10,halign:'center'},
+        2:{cellWidth:14,halign:'center'},
+        3:{cellWidth:16,halign:'center'},
+        4:{cellWidth:28,halign:'right'},
+        5:{cellWidth:30,halign:'right',fontStyle:'bold'}
+      },
+      styles:{lineColor:[220,215,205],lineWidth:0.3}
+    });
+    y=doc.lastAutoTable.finalY+4;
+    // Totals
+    doc.autoTable({
+      startY:y,
+      body:[
+        ['Sub Total',fmt(est.sub)],
+        ['GST ('+est.gst+'%)',fmt(est.gstAmt)],
+        ['GRAND TOTAL',fmt(est.total)]
+      ],
+      bodyStyles:{fontSize:9.5,cellPadding:3.5},
+      columnStyles:{0:{fontStyle:'bold'},1:{halign:'right',fontStyle:'bold',cellWidth:40,textColor:[26,58,42]}},
+      didParseCell:d=>{if(d.row.index===2){d.cell.styles.fillColor=[26,58,42];d.cell.styles.textColor=[201,168,76];d.cell.styles.fontSize=11;}},
+      styles:{lineColor:[220,215,205],lineWidth:0.3},
+      tableWidth:'auto',
+      margin:{left:110}
+    });
+    y=doc.lastAutoTable.finalY+8;
+    const addSection=(title,text)=>{
+      if(!text)return;
+      const lines=doc.splitTextToSize(text,176);
+      const h=Math.max(16,10+lines.length*4.2);
+      if(y+h>275){doc.addPage();y=16;}
+      doc.setFillColor(250,248,243);doc.roundedRect(12,y,186,h,2,2,'F');
+      doc.setDrawColor(220,215,205);doc.setLineWidth(0.3);doc.roundedRect(12,y,186,h,2,2,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(26,58,42);doc.text(title,17,y+6);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(50,50,50);
+      lines.forEach((l,i)=>doc.text(l,17,y+11+i*4.2));
+      y+=h+5;
+    };
+    if(est.scope)addSection('SCOPE OF WORK',est.scope);
+    const inclParts=[];
+    if(est.inclusions)inclParts.push(est.inclusions);
+    inclParts.push('Revisions included: '+(est.revisions||0)+'. Site visits included: '+(est.visits||0)+'.');
+    addSection('INCLUDED SERVICES',inclParts.join(' '));
+    if(est.exclusions)addSection('EXCLUDED SERVICES',est.exclusions);
+    if(est.paymentSchedule)addSection('PAYMENT SCHEDULE',est.paymentSchedule);
+    if(est.terms)addSection('TERMS & CONDITIONS',est.terms);
+    if(est.notes)addSection('SPECIAL NOTES',est.notes);
+    // Client acceptance block
+    if(est.acceptance!==false){
+      if(y>230){doc.addPage();y=16;}
+      doc.setDrawColor(26,58,42);doc.setLineWidth(0.4);
+      doc.roundedRect(12,y,186,48,2,2,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,58,42);
+      doc.text('CLIENT ACCEPTANCE',17,y+8);
       doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(60,60,60);
-      const nl=doc.splitTextToSize(est.notes,175);
-      nl.forEach((l,i)=>doc.text(l,17,y+11+i*4.5));
+      const accTxt=doc.splitTextToSize('I / We have read and understood the above quotation including scope, inclusions, exclusions, payment schedule and terms. I / We accept this estimate and authorize '+((officeInfo.name)||'Greenhouse Studio')+' to proceed with the work.',172);
+      accTxt.forEach((l,i)=>doc.text(l,17,y+15+i*4));
+      const sigY=y+36;
+      doc.setFont('helvetica','normal');doc.setFontSize(8);
+      doc.text('Client Signature: ____________________',17,sigY);
+      doc.text('Name: ____________________',17,sigY+7);
+      doc.text('Date: ______________',100,sigY);
+      doc.text('Place: ______________',100,sigY+7);
+      // Office sign
+      doc.text('For '+(officeInfo.name||'Greenhouse Studio'),145,sigY);
+      doc.text(officeInfo.arch||'Architect',145,sigY+7);
+      y+=54;
     }
-    // Footer
-    doc.setFillColor(26,58,42);doc.rect(0,287,210,10,'F');
-    doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(180,180,180);
-    doc.text('Thank you for considering '+(officeInfo.name||'Greenhouse Studio'),14,293);
-    doc.text('Page 1',196,293,{align:'right'});
-    doc.save('Estimate_'+(est.projName||'quote')+'_'+est.date+'.pdf');
+    // Footer on all pages
+    const totalPages=doc.getNumberOfPages();
+    for(let pg=1;pg<=totalPages;pg++){
+      doc.setPage(pg);
+      doc.setFillColor(26,58,42);doc.rect(0,287,210,10,'F');
+      doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(180,180,180);
+      doc.text('Thank you for considering '+(officeInfo.name||'Greenhouse Studio'),14,293);
+      doc.text('Page '+pg+' of '+totalPages,196,293,{align:'right'});
+    }
+    doc.save('Estimate_'+(est.estimateNo||est.projName||'quote')+'_'+(est.date||'')+'.pdf');
   }catch(err){alert('PDF error: '+err.message);}
 }
+
 function sendEstimateWA(id){
   const est=db.estimates.find(e=>e.id===id);if(!est)return;
   const c=gc(est.clientId);if(!c||!c.wa){alert('No WhatsApp number');return;}
@@ -5376,21 +5873,26 @@ function sendEstimateWA(id){
   let m=`📋 *${officeInfo.name||'GREENHOUSE STUDIO'}*
 *QUOTATION / ESTIMATE*
 ━━━━━━━━━━━━━━━━
+No: *${est.estimateNo||est.id}*
 Project: *${est.projName||'—'}*
 Prepared for: *${c.name}*
-Date: ${est.date}
+Date: ${est.date}${est.validUntil?'\nValid until: '+est.validUntil:''}
 
 *Service Breakup:*
 `;
-  est.items.forEach(i=>m+=`  • ${i.service}: *${fmt2(i.amount)}*
-`);
+  (est.items||[]).forEach(i=>{
+    const q=i.qty!=null?i.qty:1;
+    const u=i.unit||'LS';
+    m+=`  • ${i.service} (${q} ${u}): *${fmt2(i.amount)}*\n`;
+  });
+  (est.extras||[]).forEach(x=>{m+=`  • ${x.name}: *${fmt2(x.amount)}*\n`;});
   m+=`━━━━━━━━━━━━━━━━
 Sub Total: ${fmt2(est.sub)}
 GST (${est.gst}%): ${fmt2(est.gstAmt)}
-*TOTAL: ${fmt2(est.total)}*
+*GRAND TOTAL: ${fmt2(est.total)}*
 ━━━━━━━━━━━━━━━━
-📌 Note: 30% advance to start. Site visit Rs.2,000/visit.
-_${officeInfo.arch||'Vijay Edke'} | ${officeInfo.name}_`;
+📌 Revisions: ${est.revisions||0} | Site visits: ${est.visits||0}
+${est.paymentSchedule?'Payment: '+est.paymentSchedule+'\n':''}_${officeInfo.arch||'Vijay Edke'} | ${officeInfo.name}_`;
   generateEstimatePDF(id);
   setTimeout(()=>window.open('https://wa.me/'+formatWA(c.wa)+'?text='+encodeURIComponent(m),'_blank'),600);
 }
@@ -10485,26 +10987,99 @@ document.addEventListener('DOMContentLoaded',async ()=>{
 
 <!-- ESTIMATE MODAL -->
 <div class="modal-bg" id="m-estimate">
-  <div class="modal-box" style="width:700px;max-width:98vw">
+  <div class="modal-box" style="width:760px;max-width:98vw">
     <div class="modal-head"><div class="modal-title">📋 Create Estimate</div><button class="modal-close" onclick="closeModal('m-estimate')">✕</button></div>
     <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div class="fg" style="margin-bottom:12px">
+        <label>Estimate Template</label>
+        <select class="fi fi-sel" id="est-template" onchange="applyEstTemplate(this.value)">
+          <option value="">— Select template (optional) —</option>
+          <option value="residential">Residential Building</option>
+          <option value="commercial">Commercial Project</option>
+          <option value="apartment">Apartment Design</option>
+          <option value="interior">Interior Design</option>
+          <option value="renovation">Renovation / Alteration</option>
+          <option value="permission">Permission &amp; Documentation</option>
+          <option value="drawing">Drawing Only (2D / 3D)</option>
+        </select>
+      </div>
       <div class="form-row c2">
         <div class="fg"><label>Client *</label><select class="fi fi-sel" id="est-client"></select></div>
         <div class="fg"><label>Project Name</label><input class="fi" id="est-proj" placeholder="e.g. Sharma Residence"></div>
       </div>
       <div class="form-row c2">
-        <div class="fg"><label>Site Area (sq.ft)</label><input class="fi" id="est-area" type="number" placeholder="1200"></div>
-        <div class="fg"><label>GST %</label><select class="fi fi-sel" id="est-gst"><option value="0">No GST</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option></select></div>
+        <div class="fg"><label>Site Address</label><input class="fi" id="est-address" placeholder="Project / Site Address"></div>
+        <div class="fg"><label>Estimate Category</label><select class="fi fi-sel" id="est-category">
+          <option>Architectural</option><option>Apartment Design</option><option>Commercial</option><option>Interior</option><option>Renovation</option><option>Permission / Documentation</option><option>3D / Rendering</option><option>Drawing Only</option><option>Other</option>
+        </select></div>
+      </div>
+      <div class="form-row c3">
+        <div class="fg"><label>Estimate No.</label><input class="fi" id="est-no" placeholder="Auto / GS-001"></div>
+        <div class="fg"><label>Estimate Date</label><input class="fi" id="est-date" type="date"></div>
+        <div class="fg"><label>Valid Until</label><input class="fi" id="est-valid" type="date"></div>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>Site Area (sq.ft)</label><input class="fi" id="est-area" type="number" placeholder="1200" oninput="updateEstimate()"></div>
+        <div class="fg"><label>GST %</label><select class="fi fi-sel" id="est-gst" onchange="updateEstimate()"><option value="0">No GST</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option></select></div>
       </div>
       <div class="fg" style="margin-bottom:12px">
         <label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--grn)">
-          ✅ Services & Charges — Select करा आणि Price set करा
+          ✅ Services — Qty × Rate = Amount
         </label>
-        <div id="est-svc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;min-height:40px">
-          <div style="grid-column:1/-1;text-align:center;padding:12px;color:var(--mut);font-size:12px" id="est-svc-loading">⏳ Loading services...</div>
+        <div style="display:grid;grid-template-columns:28px 1fr 58px 48px 78px 88px;gap:6px;padding:6px 8px;margin-top:8px;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">
+          <div></div><div>Service</div><div>Qty</div><div>Unit</div><div>Rate ₹</div><div style="text-align:right">Amount ₹</div>
         </div>
+        <div id="est-svc-grid" style="display:flex;flex-direction:column;gap:5px;min-height:40px">
+          <div style="text-align:center;padding:12px;color:var(--mut);font-size:12px" id="est-svc-loading">⏳ Loading services...</div>
+        </div>
+        <button type="button" class="btn btn-s btn-sm" style="margin-top:8px" onclick="estAddCustomLine()">+ Custom Line Item</button>
       </div>
-      <div class="fg" style="margin-bottom:12px"><label>Notes / Special Terms</label><textarea class="fi fi-ta" id="est-notes" placeholder="Additional conditions..."></textarea></div>
+      <div class="fg" style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--grn)">Additional Charges</label>
+        <div id="est-extra-rows" style="display:flex;flex-direction:column;gap:5px;margin-top:6px"></div>
+        <button type="button" class="btn btn-s btn-sm" style="margin-top:6px" onclick="estAddExtraCharge()">+ Add Charge</button>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>Revisions Included</label><input class="fi" id="est-revisions" type="number" min="0" value="2" oninput="updateEstimate()"></div>
+        <div class="fg"><label>Site Visits Included</label><input class="fi" id="est-visits" type="number" min="0" value="2" oninput="updateEstimate()"></div>
+      </div>
+      <!-- Scope of Work — smart presets + Other -->
+      <div class="fg" style="margin-bottom:12px">
+        <label>Scope of Work</label>
+        <div id="est-scope-chips" class="est-preset-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px"></div>
+        <textarea class="fi fi-ta" id="est-scope" rows="2" placeholder="Selected scope will appear here. Or choose Other to type manually..." style="display:none" oninput="estOnOtherInput('scope')"></textarea>
+      </div>
+      <!-- Included Services -->
+      <div class="fg" style="margin-bottom:12px">
+        <label>Included Services</label>
+        <div id="est-inclusions-chips" class="est-preset-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px"></div>
+        <textarea class="fi fi-ta" id="est-inclusions" rows="2" placeholder="Selected inclusions will appear here. Or choose Other to type manually..." style="display:none" oninput="estOnOtherInput('inclusions')"></textarea>
+      </div>
+      <!-- Excluded Services -->
+      <div class="fg" style="margin-bottom:12px">
+        <label>Excluded Services</label>
+        <div id="est-exclusions-chips" class="est-preset-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px"></div>
+        <textarea class="fi fi-ta" id="est-exclusions" rows="2" placeholder="Selected exclusions will appear here. Or choose Other to type manually..." style="display:none" oninput="estOnOtherInput('exclusions')"></textarea>
+      </div>
+      <!-- Payment Schedule -->
+      <div class="fg" style="margin-bottom:12px">
+        <label>Payment Schedule</label>
+        <div id="est-payment-chips" class="est-preset-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px"></div>
+        <textarea class="fi fi-ta" id="est-payment" rows="2" placeholder="Selected schedule will appear here. Or choose Other to type manually..." style="display:none" oninput="estOnOtherInput('payment')"></textarea>
+      </div>
+      <div class="fg" style="margin-bottom:12px"><label>Terms &amp; Conditions</label><textarea class="fi fi-ta" id="est-terms" rows="4" placeholder="Standard terms..."></textarea></div>
+      <!-- Notes / Special Terms -->
+      <div class="fg" style="margin-bottom:12px">
+        <label>Notes / Special Terms</label>
+        <div id="est-notes-chips" class="est-preset-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px"></div>
+        <textarea class="fi fi-ta" id="est-notes" rows="2" placeholder="Selected notes will appear here. Or choose Other to type manually..." style="display:none" oninput="estOnOtherInput('notes')"></textarea>
+      </div>
+      <div class="fg" style="margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;font-size:12px">
+          <input type="checkbox" id="est-acceptance" style="width:15px;height:15px;accent-color:var(--grn)" checked>
+          Include Client Acceptance &amp; Signature block on PDF
+        </label>
+      </div>
       <div id="est-summary" style="background:var(--surf2);border-radius:10px;padding:12px;font-size:13px;margin-bottom:4px"></div>
       <div class="form-actions">
         <button class="btn-full" style="background:var(--gold);color:var(--grn)" onclick="saveEstimate()">Generate Estimate</button>
@@ -13304,12 +13879,9 @@ window.estPrint=function(){
   '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">'+
   '<style>'+css+
   "body{margin:0;background:#fff;font-family:'Plus Jakarta Sans','Noto Sans Devanagari',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}"+
-  '.cmp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;box-sizing:border-box;overflow:hidden;box-shadow:none;margin:0 auto;transform:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
-  '.cmp-sheet.noc{box-sizing:border-box!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;overflow:hidden!important}'+
-  '.cmp-sheet.noc.noc-bond-front{page-break-after:always!important;break-after:page!important;page-break-inside:avoid!important;break-inside:avoid!important}'+
-  '.cmp-sheet.noc.noc-matter-page{page-break-before:always!important;break-before:page!important;page-break-inside:avoid!important;break-inside:avoid!important}'+
+  '.cmp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;box-shadow:none;margin:0 auto;transform:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
   '@page{size:A4 portrait;margin:0}'+
-  '@media print{.cmp-sheet{page-break-after:always;break-after:page}.cmp-sheet:last-child{page-break-after:auto;break-after:auto}}'+
+  '@media print{.cmp-sheet{page-break-after:always}.cmp-sheet:last-child{page-break-after:auto}}'+
   '</style></head><body>'+body+'</body></html>');
   w.document.close();
   setTimeout(function(){w.focus();w.print();},900);
@@ -13399,18 +13971,11 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.bankest='📐 Bank Loan Estimate';
 #noc-body .pvbar label{display:flex;align-items:center;gap:4px;cursor:pointer}
 
 /* ── NOC sheet: Architectural Projection undertaking style ── */
-.cmp-sheet.noc{font-size:11.5pt;line-height:1.75;background:#fff!important;color:#111}
-.cmp-sheet.noc.noc-single{width:210mm;height:297mm;min-height:297mm;max-height:297mm;padding:10mm 10mm 10mm 25.4mm;box-sizing:border-box}
-.cmp-sheet.noc.noc-bond-front{padding:10mm 10mm 10mm 25.4mm;display:flex;flex-direction:column;justify-content:flex-end}
-.cmp-sheet.noc.noc-matter-page{padding:10mm 10mm 10mm 25.4mm}
-.cmp-sheet.noc .noc-front-block{padding-bottom:4mm}
-.cmp-sheet.noc .noc-front-to{font-size:14pt;font-weight:700;margin-bottom:4mm}
-.cmp-sheet.noc .noc-front-office{font-size:14pt;font-weight:700;margin-bottom:7mm}
-.cmp-sheet.noc .noc-front-subject{font-size:14pt;font-weight:700;line-height:1.6}
-.cmp-sheet.noc .noc-page-title{text-align:center;font-weight:700;font-size:16pt;text-decoration:underline;margin:0 0 18px}
-.cmp-sheet.noc .noc-frame{border:0 solid #ddd;min-height:260mm}
-.cmp-sheet.noc .nt{text-align:center;font-weight:700;font-size:15pt;text-decoration:none;margin:0 0 16px}
-.cmp-sheet.noc .nh{display:block;margin-bottom:10px}
+.cmp-sheet.noc{font-size:14pt;line-height:1.65;background:#fff!important;color:#111}
+.cmp-sheet.noc.noc-front,.cmp-sheet.noc.noc-second{width:210mm;height:297mm;min-height:297mm;max-height:297mm;padding:10mm 10mm 10mm 25.4mm;box-sizing:border-box}
+.cmp-sheet.noc .noc-frame{border:0 solid #ddd;min-height:277mm}
+.cmp-sheet.noc .nt{text-align:center;font-weight:700;font-size:16pt;text-decoration:underline;margin:0 0 16px}
+.cmp-sheet.noc .nh{display:block;margin-bottom:10px;font-weight:700}
 .cmp-sheet.noc .ndate{text-align:right;margin-top:-24px;margin-bottom:12px}
 .cmp-sheet.noc .naddr{margin-bottom:18px}
 .cmp-sheet.noc .nsub{font-weight:700;margin:14px 0 18px;text-align:left}
@@ -13420,6 +13985,11 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.bankest='📐 Bank Loan Estimate';
 .cmp-sheet.noc .nsig{margin-top:28px;text-align:right;padding-right:8mm}
 .cmp-sheet.noc .nsig .lbl{margin-bottom:24px}
 .cmp-sheet.noc .nsig .nm{margin-bottom:12px;font-weight:600}
+.cmp-sheet.noc .noc-front-content{height:277mm;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:2mm}
+.cmp-sheet.noc .noc-front-content .nh{margin-bottom:5px}
+.cmp-sheet.noc .noc-front-content .naddr{margin-bottom:8px}
+.cmp-sheet.noc .noc-front-content .nsub{margin:0;font-weight:700}
+.cmp-sheet.noc .noc-page-break{break-after:page;page-break-after:always}
 </style>
 
 <script>
@@ -13472,23 +14042,23 @@ function nocBuild(){
   const site=nce(ngv('site'))||'___________';
   const sigBlock=nocSigNames().map(n=>`<div class="nm">${nce(n)||'&nbsp;'}</div>`).join('');
   return `
-  <div class="cmp-sheet noc noc-single noc-bond-front">
-    <div class="noc-front-block">
-      <div class="noc-front-to">मा. आयुक्त,</div>
-      <div class="noc-front-office">${corp}, ${city}.</div>
-      <div class="noc-front-subject">विषय – बांधकाम परवानगी साठी संमती देणेबाबत.</div>
+  <div class="cmp-sheet noc noc-front noc-page-break"><div class="in noc-frame">
+    <div class="noc-front-content">
+      <div class="nh">मा. आयुक्त,</div>
+      <div class="naddr">${corp},<br>${city}.</div>
+      <div class="nsub">विषय :- बांधकाम परवानगीसाठी संमती देणेबाबत.</div>
     </div>
-  </div>
-  <div class="cmp-sheet noc noc-single noc-matter-page">
-    <div class="in noc-frame">
-      <div class="npara">${nocOwnerOpening()} <span class="noc-res-phrase">${nocOwners.length>1 ? 'सर्व राहणार – ' : 'राहणार – '}</span>${resaddr}. आमच्या मालकीचा <b>${site}</b> हा प्लॉट असून, सदर प्लॉटवर प्रस्तावित बांधकामासाठी बांधकाम परवानगी मिळणेकामी अर्ज सादर करण्यात आलेला आहे.</div>
-      <div class="npara">सदर प्रस्तावित बांधकाम तसेच त्यासाठी आवश्यक असलेल्या बांधकाम परवानगीच्या कार्यवाहीस आम्ही पूर्णपणे संमती देत असून, सदर बाबतीत आमची कोणतीही हरकत नाही. संबंधित महानगरपालिका कार्यालयामार्फत बांधकाम परवानगी देण्यात यावी, यास आमची संपूर्ण संमती आहे.</div>
-      <div class="npara">वरील माहिती आमच्या माहितीनुसार खरी व बरोबर असून, सदर संमती पत्र आम्ही आमच्या स्वेच्छेने देत आहोत.</div>
-      <div class="nsig"><div class="lbl">आपला विश्वासू,</div>${sigBlock}</div>
-    </div>
-  </div>`;
+  </div></div>
+  <div class="cmp-sheet noc noc-second"><div class="in noc-frame">
+    <div class="nt">// ना हरकत प्रमाणपत्र //</div>
+    <div class="ndate">दिनांक – ${ndmy(ngv('date'))}</div>
+    <div class="naddr">${corp},<br>${city}.</div>
+    <div class="nsub">विषय – बांधकाम परवानगी साठी संमती देणेबाबत.</div>
+    <div class="npara">${nocOwnerOpening()} राहणार – ${resaddr}. आमच्या नावे ${site} हा प्लॉट खरेदी झाला आहे. तरी या प्लॉट वर बांधकाम परवानगी साठी अर्ज सादर केले आहे.</div>
+    <div class="npara">तरी आता आम्हाला बांधकाम परवानगी लवकरात लवकर मिळावी ही विनंती. यासाठी आमच्या पैकी कोणाचेही हरकत नाही.</div>
+    <div class="nsig"><div class="lbl">आपला विश्वासू,</div>${sigBlock}</div>
+  </div></div>`;
 }
-
 window.nocRender=function(){
   if(!nocDrawn)return;
   nocHTML=nocBuild();
@@ -13499,33 +14069,22 @@ window.nocTog=function(h){h.parentElement.classList.toggle('cl');};
 
 /* ══════════════════ print ══════════════════ */
 window.nocPrint=function(){
-  const body=nocHTML||nocBuild();
+  const css=[].slice.call(document.querySelectorAll('style')).map(s=>s.textContent).filter(t=>t.indexOf('.cmp-sheet')>-1).join('\n');
   const w=window.open('','_blank');
   if(!w)return alert('Pop-up blocked — allow pop-ups to print.');
-  const css=`
-    @page{size:A4 portrait;margin:0}
-    html,body{margin:0!important;padding:0!important;width:210mm;background:#fff}
-    body{font-family:'Noto Sans Devanagari','Plus Jakarta Sans',sans-serif;color:#111;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    .cmp-sheet.noc{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important;padding-left:25.4mm!important;padding-right:10mm!important;padding-top:10mm!important;padding-bottom:10mm!important;box-sizing:border-box!important;background:#fff!important;color:#111!important;overflow:hidden!important;transform:none!important;box-shadow:none!important}
-    .cmp-sheet.noc.noc-bond-front{display:flex!important;flex-direction:column!important;justify-content:flex-end!important;page-break-after:always!important;break-after:page!important}
-    .cmp-sheet.noc.noc-matter-page{display:block!important;page-break-after:auto!important;break-after:auto!important}
-    .cmp-sheet.noc .noc-front-block{padding-bottom:4mm!important}
-    .cmp-sheet.noc .noc-front-to{font-size:14pt!important;font-weight:700!important;margin-bottom:4mm!important}
-    .cmp-sheet.noc .noc-front-office{font-size:14pt!important;font-weight:700!important;margin-bottom:7mm!important}
-    .cmp-sheet.noc .noc-front-subject{font-size:14pt!important;font-weight:700!important;line-height:1.6!important}
-    .cmp-sheet.noc .noc-page-title{text-align:center!important;font-weight:700!important;font-size:16pt!important;text-decoration:underline!important;margin:0 0 18px!important}
-    .cmp-sheet.noc .ndate{text-align:right!important;margin-top:0!important;margin-bottom:12px!important;font-size:14pt!important}
-    .cmp-sheet.noc .naddr{margin-bottom:18px!important;font-size:14pt!important;line-height:1.6!important}
-    .cmp-sheet.noc .npara{text-align:justify!important;margin:0 0 16px!important;text-indent:12mm!important;font-size:14pt!important;line-height:1.65!important}
-    .cmp-sheet.noc .nsig{margin-top:28px!important;text-align:right!important;padding-right:8mm!important;font-size:14pt!important}
-    .cmp-sheet.noc .nsig .lbl{margin-bottom:24px!important}
-    .cmp-sheet.noc .nsig .nm{margin-bottom:12px!important;font-weight:600!important}
-    @media print{.cmp-sheet.noc.noc-bond-front{page-break-after:always!important;break-after:page!important}.cmp-sheet.noc.noc-matter-page{page-break-before:always!important;break-before:page!important}}
-  `;
-  w.document.open();
-  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>ना हरकत प्रमाणपत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>'+css+'</style></head><body>'+body+'</body></html>');
+  const body=nocHTML||nocBuild();
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>ना हरकत प्रमाणपत्र</title>'+
+  '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">'+
+  '<style>'+css+
+  "html,body{margin:0;padding:0;background:#fff;font-family:'Noto Sans Devanagari','Plus Jakarta Sans',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}"+
+  '.cmp-sheet{width:174.6mm!important;min-height:277mm!important;height:auto!important;max-height:none!important;margin:0!important;padding:0!important;box-sizing:border-box;box-shadow:none;transform:none!important;overflow:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '.cmp-sheet.noc.noc-front,.cmp-sheet.noc.noc-second{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;overflow:hidden!important}'+
+  '.cmp-sheet.noc .noc-front-content{height:277mm!important}'+
+  '@page{size:A4 portrait;margin:0!important}'+
+  '@media print{.cmp-sheet{break-after:page;page-break-after:always}.cmp-sheet:last-child{break-after:auto;page-break-after:auto}}'+
+  '</style></head><body>'+body+'</body></html>');
   w.document.close();
-  w.onload=function(){setTimeout(function(){w.focus();w.print();},500);};
+  setTimeout(function(){w.focus();w.print();},700);
 };
 
 /* ══════════════════ save / load ══════════════════ */
@@ -13755,7 +14314,7 @@ window.awNew=()=>{
 window.awPrint=()=>{
   const body=aq('pv').innerHTML;const w=window.open('','_blank');
   if(!w)return alert('Pop-up blocked — allow pop-ups to print.');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>क्षेत्रफळाबाबत हमीपत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>body{margin:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif}.cmp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;margin:0 auto;box-sizing:border-box}@page{size:A4 portrait;margin:0}@media print{.cmp-sheet{page-break-after:auto}}</style></head><body>'+body+'</body></html>');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>क्षेत्रफळाबाबत हमीपत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>html,body{width:210mm;height:297mm;min-height:297mm;margin:0;padding:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}.cmp-sheet,.tp-sheet{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important;box-sizing:border-box;box-shadow:none;transform:none!important;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4 portrait;margin:0!important}@media print{html,body{width:159.2mm;height:246.2mm;margin:0!important;padding:0!important}.cmp-sheet,.tp-sheet{break-after:auto;page-break-after:auto}}</style></head><body>'+body+'</body></html>');
   w.document.close();setTimeout(()=>{w.focus();w.print()},700);
 };
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.areawarranty='📐 क्षेत्रफळाबाबत हमीपत्र';
@@ -13830,7 +14389,7 @@ function drawOwners(){const box=q('owners');if(!box)return;box.innerHTML=csOwner
 window.csOwner=(i,v)=>{csOwners[i]=v;render()};window.csAdd=()=>{csOwners.push('');drawOwners();render()};window.csRemove=i=>{if(csOwners.length<=1)return;csOwners.splice(i,1);drawOwners();render()};window.csTog=h=>h.parentElement.classList.toggle('cl');
 window.csNew=()=>{q('date').value=today();q('city').value='सोलापूर';q('site').value='';q('addr').value='';q('contact').value='';q('ltp').value='';csOwners=[''];drawOwners();render()};
 window.csToggleLH=v=>{csLH=!!v;localStorage.setItem('gs_cs_lh',v?'1':'0');render()};
-window.csPrint=()=>{const body=q('pv').innerHTML;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups to print.');w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>स्वयं-घोषणापत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>body{margin:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif}.cmp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;margin:0 auto;box-sizing:border-box}@page{size:A4 portrait;margin:0}@media print{.cmp-sheet{page-break-after:auto}}</style></head><body>'+body+'</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},700)};
+window.csPrint=()=>{const body=q('pv').innerHTML;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups to print.');w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>स्वयं-घोषणापत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>html,body{width:210mm;height:297mm;min-height:297mm;margin:0;padding:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}.cmp-sheet,.tp-sheet{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important;box-sizing:border-box;box-shadow:none;transform:none!important;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4 portrait;margin:0!important}@media print{html,body{width:159.2mm;height:246.2mm;margin:0!important;padding:0!important}.cmp-sheet,.tp-sheet{break-after:auto;page-break-after:auto}}</style></head><body>'+body+'</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},700)};
 window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){render();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="render()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="render()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="render()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="render()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="render()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="render()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.clientself='📄 Client Self Declaration';
 })();
@@ -13862,7 +14421,6 @@ function tpRender(){
   const purpose=te(tv('purpose')||'बांधकाम परवानगी / सुधारीत बांधकाम परवानगी');
   const extra=te(tv('extra')||'');
   tq('pv').innerHTML=`<div class="tp-sheet"><div class="tp-in">
-    <div class="tp-title">// TP अभिप्राय पत्र //</div>
     <div class="tp-head">आवक नंबर / ${incoming}<br>दि. ${date}</div>
     <div class="tp-office">सोलापूर महानगरपालिका, सोलापूर.</div>
     <div class="tp-to">सहा. अभियंता, (नगर रचना) यांचेकडे,</div>
@@ -13910,13 +14468,21 @@ window.tpNew=()=>{
 };
 window.tpPrint=()=>{
   const body=tq('pv').innerHTML;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups to print.');
-  const tpCss=(document.getElementById('tp-abhipray-css')||{}).textContent||'';
-  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>TP अभिप्राय पत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>'+tpCss+'body{margin:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.tp-sheet{width:210mm;height:297mm;min-height:297mm;max-height:297mm;margin:0 auto;box-sizing:border-box}@page{size:A4 portrait;margin:0}@media print{.tp-sheet{page-break-after:auto}}</style></head><body><div id="tpabhipray-body">'+body+'</div></body></html>');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>TP अभिप्राय पत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>html,body{width:210mm;height:297mm;min-height:297mm;margin:0;padding:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}.cmp-sheet,.tp-sheet{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important;box-sizing:border-box;box-shadow:none;transform:none!important;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4 portrait;margin:0!important}@media print{html,body{width:159.2mm;height:246.2mm;margin:0!important;padding:0!important}.cmp-sheet,.tp-sheet{break-after:auto;page-break-after:auto}}</style></head><body>'+body+'</body></html>');
   w.document.close();setTimeout(()=>{w.focus();w.print()},700);
 };
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.tpabhipray='🏛️ TP अभिप्राय पत्र';
 })();
 </script>
+
+<style id="permission-docs-print-normalization">
+@media print{
+  @page{size:A4 portrait;margin:0!important}
+  html,body{width:210mm!important;height:297mm!important;margin:0!important;padding:0!important;background:#fff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  .cmp-sheet,.tp-sheet{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important;box-sizing:border-box!important;box-shadow:none!important;transform:none!important;overflow:visible!important}
+  .cmp-sheet.noc.noc-front,.cmp-sheet.noc.noc-second{overflow:hidden!important}
+}
+</style>
 
 <!-- ══════════════════════════════════════════════════════════════
      ROLE LOGIN GATE — Admin / Engineer / Staff / Client
@@ -14145,10 +14711,3 @@ window.switchView=function(v){
 
 </body>
 </html>
-<!-- ████████████████████████████████████████████████████
-     CLIENT PORTAL — PIN-BASED LOGIN SYSTEM
-     Injected below main app
-     ████████████████████████████████████████████████████ -->
-
-
-
