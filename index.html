@@ -5763,7 +5763,7 @@ function estSyncPaymentText(){
   const fee=estGetFeeBaseOnly();
   const lines=estPayRows.filter(r=>(r.name||'').trim()||r.pct).map(r=>{
     const amt=Math.round(fee*((parseFloat(r.pct)||0)/100));
-    return (r.name||'Installment')+' — '+(r.pct||0)+'% = ₹ '+amt.toLocaleString('en-IN');
+    return (r.name||'Installment')+' — '+(r.pct||0)+'% = Rs.'+amt.toLocaleString('en-IN');
   });
   const ta=document.getElementById('est-payment');
   if(ta){ta.value=lines.join('\n');ta.dataset.userEdited='';}
@@ -6345,44 +6345,72 @@ function generateProposalPDF(est,c){
   const introLines=doc.splitTextToSize(intro,182);
   introLines.forEach(l=>{doc.text(l,14,y);y+=5;});
   y+=4;
-  // Total fees box
-  doc.setFillColor(246,243,237);doc.roundedRect(12,y,186,22,2,2,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(26,58,42);
-  doc.text('Total Architectural Design Fees',17,y+8);
-  let feeTxt=fmt(est.feeBase!=null?est.feeBase:est.sub);
-  if(est.pricingMode==='sqft'&&est.area&&est.sqftRate){
-    feeTxt=fmt(est.feeBase)+'  ('+est.area+' sq.ft × ₹'+est.sqftRate+')';
-  }
-  doc.setFontSize(13);doc.text(feeTxt,17,y+17);
-  y+=28;
-  // Payment schedule
+  // Fee summary box
+  const feeBase = est.feeBase!=null?est.feeBase:est.sub;
+  let boxH = 22;
+  if(est.pricingMode==='sqft') boxH = 36;
+  doc.setFillColor(246,243,237);doc.roundedRect(12,y,186,boxH,2,2,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
-  doc.text('Payment Schedule',14,y);y+=6;
-  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
-  const pay=est.paymentSchedule||'As mutually agreed.';
-  doc.splitTextToSize(pay,182).forEach(l=>{doc.text(l,14,y);y+=4.5;});
-  y+=3;
-  doc.setFontSize(8.5);doc.setTextColor(80,80,80);
-  doc.text('• Taxes: GST'+(est.gst?(' @ '+est.gst+'%'):' as applicable')+' will be charged extra.  Grand Total incl. GST: '+fmt(est.total),14,y);y+=5;
-  doc.text('• Site Visits: '+(est.visits||0)+' Site Visits included. Additional visits: ₹'+(est.visitRate||3000)+'/- per visit.',14,y);y+=5;
-  doc.text('• Revisions included: '+(est.revisions||0),14,y);y+=8;
-  // Scope
+  doc.text('Total Architectural Design Fees',17,y+7);
+  doc.setFontSize(14);doc.text(fmt(feeBase),17,y+15);
+  if(est.pricingMode==='sqft'){
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(70,70,70);
+    let line2 = 'Chargeable Area: '+(est.area||0)+' sq.ft  |  Rate: Rs.'+Number(est.sqftRate||0).toLocaleString('en-IN')+'/sq.ft';
+    if(est.builtup) line2 = 'Built-up: '+est.builtup+' sq.ft  |  '+line2;
+    if(est.slabArea) line2 += '  |  Slab: '+est.slabArea+' sq.ft';
+    doc.text(line2,17,y+22);
+    doc.text('GST ('+est.gst+'%): '+fmt(est.gstAmt)+'   |   Grand Total: '+fmt(est.total),17,y+29);
+  } else {
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(70,70,70);
+    doc.text('GST ('+est.gst+'%): '+fmt(est.gstAmt)+'   |   Grand Total: '+fmt(est.total),17,y+20);
+  }
+  y += boxH + 8;
+  // Payment schedule — table
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
+  doc.text('Payment Schedule',14,y);y+=3;
+  const payBody = (est.paymentRows&&est.paymentRows.length)
+    ? est.paymentRows.map((r,i)=>[String(i+1), r.name||('Installment '+(i+1)), (r.pct||0)+'%', fmt(r.amount!=null?r.amount:Math.round(feeBase*((r.pct||0)/100)))])
+    : null;
+  if(payBody){
+    doc.autoTable({
+      startY:y,
+      head:[['#','Stage','%','Amount (Rs.)']],
+      body:payBody,
+      headStyles:{fillColor:[26,58,42],textColor:[201,168,76],fontStyle:'bold',fontSize:8,cellPadding:2.5},
+      bodyStyles:{fontSize:9,cellPadding:2.5},
+      alternateRowStyles:{fillColor:[250,248,243]},
+      columnStyles:{0:{cellWidth:10,halign:'center'},2:{cellWidth:22,halign:'center'},3:{cellWidth:36,halign:'right',fontStyle:'bold'}},
+      styles:{lineColor:[220,215,205],lineWidth:0.3}
+    });
+    y=doc.lastAutoTable.finalY+5;
+  } else {
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
+    const pay=est.paymentSchedule||'As mutually agreed.';
+    doc.splitTextToSize(pay,182).forEach(l=>{doc.text(l,14,y);y+=4.5;});
+    y+=3;
+  }
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(80,80,80);
+  doc.text('Taxes: GST'+(est.gst?(' @ '+est.gst+'%'):' as applicable')+' extra. Grand Total incl. GST: '+fmt(est.total),14,y);y+=4.5;
+  doc.text('Site Visits: '+(est.visits||0)+' included. Additional: Rs.'+Number(est.visitRate||3000).toLocaleString('en-IN')+' per visit.  Revisions: '+(est.revisions||0),14,y);y+=8;
+  // Scope — descriptions only (no amounts)
   doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
   doc.text('Scope of Work',14,y);y+=6;
   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
   const scopeParts=[];
-  if(est.inclusions)scopeParts.push(est.inclusions);
-  else if(est.scope)scopeParts.push(est.scope);
-  (est.items||[]).forEach(it=>{if(it.service)scopeParts.push(it.service);});
-  // unique-ish bullets
+  if(est.scope) scopeParts.push(est.scope);
+  if(est.inclusions) scopeParts.push(est.inclusions);
+  (est.items||[]).forEach(it=>{if(it.service) scopeParts.push(it.service);});
   const seen=new Set();
-  scopeParts.join(' · ').split(/[·;]|\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>{
-    if(seen.has(s))return;seen.add(s);
-    const lines=doc.splitTextToSize('• '+s,180);
-    lines.forEach(l=>{if(y>270){doc.addPage();y=20;}doc.text(l,14,y);y+=4.5;});
+  scopeParts.forEach(raw=>{
+    String(raw).split(/[·;]|\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>{
+      if(seen.has(s))return;seen.add(s);
+      const lines=doc.splitTextToSize('- '+s,180);
+      lines.forEach(l=>{if(y>270){doc.addPage();y=20;}doc.text(l,14,y);y+=4.5;});
+    });
   });
   y+=4;
   if(est.stages){
+
     if(y>250){doc.addPage();y=20;}
     doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
     doc.text('Deliverables & Stages',14,y);y+=6;
@@ -6468,52 +6496,103 @@ function generateEstimatePDF(id){
     doc.text('Site: '+(est.address||'—')+(est.area?'  |  Area: '+est.area+' sq.ft':''),17,y+17);
     doc.text('Phone: '+(c?(c.wa||c.phone||'—'):'—')+(c&&c.email?'  |  Email: '+c.email:''),17,y+23);
     y+=32;
-    // Line items table
-    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(26,58,42);doc.text('SERVICE / COST BREAKUP',14,y);y+=2;
-    const body=(est.items||[]).map((item,i)=>[
-      String(i+1),
-      item.service+(item.custom?' (custom)':''),
-      String(item.qty!=null?item.qty:1),
-      item.unit||'LS',
-      fmt(item.rate!=null?item.rate:item.amount),
-      fmt(item.amount)
-    ]);
-    (est.extras||[]).forEach((x,i)=>{
-      body.push([String((est.items||[]).length+i+1),x.name,'1','LS',fmt(x.amount),fmt(x.amount)]);
-    });
-    doc.autoTable({
-      startY:y,
-      head:[['#','Description','Qty','Unit','Rate (Rs.)','Amount (Rs.)']],
-      body,
-      headStyles:{fillColor:[26,58,42],textColor:[201,168,76],fontStyle:'bold',fontSize:8,cellPadding:2.5},
-      bodyStyles:{fontSize:8,cellPadding:2.5},
-      alternateRowStyles:{fillColor:[250,248,243]},
-      columnStyles:{
-        0:{cellWidth:10,halign:'center'},
-        2:{cellWidth:14,halign:'center'},
-        3:{cellWidth:16,halign:'center'},
-        4:{cellWidth:28,halign:'right'},
-        5:{cellWidth:30,halign:'right',fontStyle:'bold'}
-      },
-      styles:{lineColor:[220,215,205],lineWidth:0.3}
-    });
-    y=doc.lastAutoTable.finalY+4;
-    // Totals
-    doc.autoTable({
-      startY:y,
-      body:[
-        ['Sub Total',fmt(est.sub)],
-        ['GST ('+est.gst+'%)',fmt(est.gstAmt)],
-        ['GRAND TOTAL',fmt(est.total)]
-      ],
-      bodyStyles:{fontSize:9.5,cellPadding:3.5},
-      columnStyles:{0:{fontStyle:'bold'},1:{halign:'right',fontStyle:'bold',cellWidth:40,textColor:[26,58,42]}},
-      didParseCell:d=>{if(d.row.index===2){d.cell.styles.fillColor=[26,58,42];d.cell.styles.textColor=[201,168,76];d.cell.styles.fontSize=11;}},
-      styles:{lineColor:[220,215,205],lineWidth:0.3},
-      tableWidth:'auto',
-      margin:{left:110}
-    });
-    y=doc.lastAutoTable.finalY+8;
+    // Line items / scope
+    const isSqft = est.pricingMode==='sqft';
+    const isLump = est.pricingMode==='lumpsum';
+    const descOnly = isSqft || isLump;
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(26,58,42);
+    doc.text(descOnly?'SCOPE / DRAWINGS INCLUDED':'SERVICE / COST BREAKUP',14,y);y+=2;
+    if(descOnly){
+      const body=(est.items||[]).map((item,i)=>[String(i+1), item.service+(item.custom?' (custom)':'')]);
+      if(body.length){
+        doc.autoTable({
+          startY:y,
+          head:[['#','Description']],
+          body,
+          headStyles:{fillColor:[26,58,42],textColor:[201,168,76],fontStyle:'bold',fontSize:8,cellPadding:2.5},
+          bodyStyles:{fontSize:9,cellPadding:2.5},
+          alternateRowStyles:{fillColor:[250,248,243]},
+          columnStyles:{0:{cellWidth:12,halign:'center'}},
+          styles:{lineColor:[220,215,205],lineWidth:0.3}
+        });
+        y=doc.lastAutoTable.finalY+6;
+      } else { y+=4; }
+      // Area × Rate summary (matches on-screen estimate summary)
+      const feeRows=[];
+      if(isSqft){
+        if(est.builtup) feeRows.push(['Built-up Area', String(est.builtup)+' sq.ft']);
+        if(est.slabArea) feeRows.push(['Slab Area', String(est.slabArea)+' sq.ft']);
+        feeRows.push(['Chargeable Area', (est.area||'0')+' sq.ft']);
+        feeRows.push(['Rate per Sq.Ft', 'Rs.'+Number(est.sqftRate||0).toLocaleString('en-IN')]);
+        feeRows.push(['Area x Rate', fmt(est.feeBase!=null?est.feeBase:est.sub)]);
+      } else {
+        feeRows.push(['Design Fee (Lump Sum)', fmt(est.feeBase!=null?est.feeBase:est.sub)]);
+      }
+      (est.extras||[]).forEach(x=>feeRows.push([x.name||'Additional charge', fmt(x.amount)]));
+      feeRows.push(['Sub Total', fmt(est.sub)]);
+      feeRows.push(['GST ('+est.gst+'%)', fmt(est.gstAmt)]);
+      feeRows.push(['GRAND TOTAL', fmt(est.total)]);
+      doc.autoTable({
+        startY:y,
+        body:feeRows,
+        bodyStyles:{fontSize:9,cellPadding:3},
+        columnStyles:{0:{fontStyle:'bold',cellWidth:70},1:{halign:'right',fontStyle:'bold',cellWidth:50}},
+        didParseCell:d=>{
+          const last=feeRows.length-1;
+          if(d.row.index===last){d.cell.styles.fillColor=[26,58,42];d.cell.styles.textColor=[201,168,76];d.cell.styles.fontSize=11;}
+          if(isSqft && d.row.index===feeRows.length-4){d.cell.styles.textColor=[26,58,42];}
+        },
+        styles:{lineColor:[220,215,205],lineWidth:0.3},
+        tableWidth:'auto',
+        margin:{left:90}
+      });
+      y=doc.lastAutoTable.finalY+8;
+    } else {
+      const body=(est.items||[]).map((item,i)=>[
+        String(i+1),
+        item.service+(item.custom?' (custom)':''),
+        String(item.qty!=null?item.qty:1),
+        item.unit||'LS',
+        fmt(item.rate!=null?item.rate:item.amount),
+        fmt(item.amount)
+      ]);
+      (est.extras||[]).forEach((x,i)=>{
+        body.push([String((est.items||[]).length+i+1),x.name,'1','LS',fmt(x.amount),fmt(x.amount)]);
+      });
+      doc.autoTable({
+        startY:y,
+        head:[['#','Description','Qty','Unit','Rate (Rs.)','Amount (Rs.)']],
+        body,
+        headStyles:{fillColor:[26,58,42],textColor:[201,168,76],fontStyle:'bold',fontSize:8,cellPadding:2.5},
+        bodyStyles:{fontSize:8,cellPadding:2.5},
+        alternateRowStyles:{fillColor:[250,248,243]},
+        columnStyles:{
+          0:{cellWidth:10,halign:'center'},
+          2:{cellWidth:14,halign:'center'},
+          3:{cellWidth:16,halign:'center'},
+          4:{cellWidth:28,halign:'right'},
+          5:{cellWidth:30,halign:'right',fontStyle:'bold'}
+        },
+        styles:{lineColor:[220,215,205],lineWidth:0.3}
+      });
+      y=doc.lastAutoTable.finalY+4;
+      doc.autoTable({
+        startY:y,
+        body:[
+          ['Sub Total',fmt(est.sub)],
+          ['GST ('+est.gst+'%)',fmt(est.gstAmt)],
+          ['GRAND TOTAL',fmt(est.total)]
+        ],
+        bodyStyles:{fontSize:9.5,cellPadding:3.5},
+        columnStyles:{0:{fontStyle:'bold'},1:{halign:'right',fontStyle:'bold',cellWidth:40,textColor:[26,58,42]}},
+        didParseCell:d=>{if(d.row.index===2){d.cell.styles.fillColor=[26,58,42];d.cell.styles.textColor=[201,168,76];d.cell.styles.fontSize=11;}},
+        styles:{lineColor:[220,215,205],lineWidth:0.3},
+        tableWidth:'auto',
+        margin:{left:110}
+      });
+      y=doc.lastAutoTable.finalY+8;
+    }
+
     const addSection=(title,text)=>{
       if(!text)return;
       const lines=doc.splitTextToSize(text,176);
@@ -6532,7 +6611,22 @@ function generateEstimatePDF(id){
     inclParts.push('Revisions included: '+(est.revisions||0)+'. Site visits included: '+(est.visits||0)+'.');
     addSection('INCLUDED SERVICES',inclParts.join(' '));
     if(est.exclusions)addSection('EXCLUDED SERVICES',est.exclusions);
-    if(est.paymentSchedule)addSection('PAYMENT SCHEDULE',est.paymentSchedule);
+    if(est.paymentRows&&est.paymentRows.length){
+      if(y>250){doc.addPage();y=16;}
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,58,42);doc.text('PAYMENT SCHEDULE',14,y);y+=2;
+      const feeB=est.feeBase!=null?est.feeBase:est.sub;
+      doc.autoTable({
+        startY:y,
+        head:[['#','Stage','%','Amount (Rs.)']],
+        body:est.paymentRows.map((r,i)=>[String(i+1),r.name||('Installment '+(i+1)),(r.pct||0)+'%',fmt(r.amount!=null?r.amount:Math.round(feeB*((r.pct||0)/100)))]),
+        headStyles:{fillColor:[26,58,42],textColor:[201,168,76],fontStyle:'bold',fontSize:8,cellPadding:2.5},
+        bodyStyles:{fontSize:8.5,cellPadding:2.5},
+        alternateRowStyles:{fillColor:[250,248,243]},
+        columnStyles:{0:{cellWidth:10,halign:'center'},2:{cellWidth:22,halign:'center'},3:{cellWidth:36,halign:'right',fontStyle:'bold'}},
+        styles:{lineColor:[220,215,205],lineWidth:0.3}
+      });
+      y=doc.lastAutoTable.finalY+8;
+    } else if(est.paymentSchedule)addSection('PAYMENT SCHEDULE',est.paymentSchedule);
     if(est.terms)addSection('TERMS & CONDITIONS',est.terms);
     if(est.notes)addSection('SPECIAL NOTES',est.notes);
     // Client acceptance block
