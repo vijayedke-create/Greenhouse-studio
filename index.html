@@ -548,6 +548,16 @@ html{transition:background .3s,color .3s}
 .permission-docs-group.perm-collapsed .permission-docs-sub{display:none}
 .permission-docs-group>.nav-btn.active,.permission-docs-sub .perm-sub-btn.active{background:rgba(255,255,255,.10);color:#fff}
 </style>
+<style id="udcpr-ask-css">
+/* UDCPR Ask chat bubbles */
+.udcpr-msg{max-width:92%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.65}
+.udcpr-msg.bot{background:var(--surf);border:1px solid var(--bdr);align-self:flex-start;color:var(--ink)}
+.udcpr-msg.user{background:var(--grn);color:#fff;align-self:flex-end;border-radius:12px 12px 4px 12px}
+.udcpr-msg b{color:var(--grn2)}
+[data-theme="dark"] .udcpr-msg.bot b{color:var(--gold)}
+.chip{padding:5px 11px;background:var(--surf2);border:1px solid var(--bdr);border-radius:20px;font-size:11px;font-weight:600;color:var(--mut);cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--grn);color:var(--grn)}
+</style>
 <style id="permission-docs-print-normal-margin-final">
 /* Shared print rules for all 4 permission docs */
 @media print{
@@ -626,7 +636,7 @@ html{transition:background .3s,color .3s}
     <button class="nav-btn" data-view="settings" onclick="switchView('settings')"><span class="nav-icon">⚙</span>Settings & Sync</button>
     <div style="height:1px;background:rgba(255,255,255,.1);margin:8px 14px"></div>
     <button class="nav-btn" data-view="clientportal" style="color:var(--gold2);font-weight:700" onclick="openClientPortalMgr()"><span class="nav-icon">👥</span>Client Portal</button>
-    <button class="nav-btn" data-view="udcpr" onclick="switchView('udcpr')"><span class="nav-icon">📏</span>UDCPR 2020</button>
+    <button class="nav-btn" data-view="udcpr" onclick="switchView('udcpr')"><span class="nav-icon">📏</span>UDCPR Q&A</button>
     <button class="nav-btn" data-view="agreement" onclick="switchView('agreement')"><span class="nav-icon">📝</span>Agreement</button>
     <button class="nav-btn" data-view="invoice" onclick="switchView('invoice')"><span class="nav-icon">🧾</span>GST Invoice</button>
     <button class="nav-btn" data-view="timeline" onclick="switchView('timeline')"><span class="nav-icon">📅</span>Timeline</button>
@@ -7509,6 +7519,74 @@ function renderUDCPR(){
   const el=document.getElementById('udcpr-body');
   if(!el)return;
   el.innerHTML=`
+  <div class="sec-head" style="margin-bottom:12px">
+    <div class="sec-title">📏 UDCPR 2020 <span style="font-size:12px;font-weight:600;color:var(--mut);font-family:'Plus Jakarta Sans',sans-serif">· Updated 30 Jan 2025</span></div>
+    <div class="tab-row">
+      <button class="tab-btn active" id="udcpr-tab-ask" onclick="udcprShowTab('ask')">💬 Ask UDCPR</button>
+      <button class="tab-btn" id="udcpr-tab-calc" onclick="udcprShowTab('calc')">📐 Calculator</button>
+    </div>
+  </div>
+
+  <!-- ASK TAB -->
+  <div id="udcpr-ask-pane">
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;min-height:520px">
+      <div class="card" style="display:flex;flex-direction:column;min-height:520px">
+        <div class="card-head" style="background:linear-gradient(135deg,var(--grn),var(--grn2));padding:12px 16px">
+          <span style="font-family:'Playfair Display',serif;color:var(--gold);font-size:14px">💬 UDCPR Assistant</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.55);margin-left:auto">Instant · Local KB + AI</span>
+        </div>
+        <div id="udcpr-chat" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--surf2);max-height:420px">
+          <div class="udcpr-msg bot">नमस्कार! <b>UDCPR-2020 (30 Jan 2025)</b> — Ch.1–15 + Appendices सारांश ready.<br><br><b>उदा.:</b> 2.15 · ownership 2.2.3 · Table 6-G FSI · parking 8-B · Appendix B · Solapur apply?<br><span style="font-size:11px;opacity:.85">पूर्ण ५७६-page PDF शब्दशः नाही — मुख्य नियम + Calculator tables आहेत. Exact table figure → Calculator टॅब.</span></div>
+        </div>
+        <div style="padding:12px 14px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-wrap:wrap;background:var(--surf)">
+          <input id="udcpr-q" class="fi" style="flex:1;min-width:180px" placeholder="प्रश्न टाइप करा... (Marathi / English)" onkeydown="if(event.key==='Enter')udcprAsk()">
+          <button class="btn btn-gold" onclick="udcprAsk()">उत्तर →</button>
+        </div>
+        <div style="padding:0 14px 12px;display:flex;flex-wrap:wrap;gap:6px;background:var(--surf)">
+          <button class="chip" onclick="udcprQuick('Reg 2.15 revocation of permission काय आहे?')">2.15 Revocation</button>
+          <button class="chip" onclick="udcprQuick('Ownership title documents काय लागतात?')">Ownership 2.2.3</button>
+          <button class="chip" onclick="udcprQuick('Non-congested residential front side rear margin')">Margins</button>
+          <button class="chip" onclick="udcprQuick('Appendix B supervision certificate')">Appendix B</button>
+          <button class="chip" onclick="udcprQuick('Basic FSI premium FSI TDR काय फरक')">FSI / TDR</button>
+          <button class="chip" onclick="udcprQuick('Occupancy certificate प्रक्रिया')">Occupancy</button>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-head"><span class="card-title">📚 All Chapters</span></div>
+          <div class="card-body" style="padding:8px 10px;font-size:11px;line-height:1.5;color:var(--ink2);max-height:340px;overflow-y:auto">
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('1.0 1.1 extent jurisdiction solapur')">Ch.1 Administration</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('2.1 2.2 permission procedure')">Ch.2 Permission</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('2.2.3 ownership title area')">· Ownership 2.2.3</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('2.15 revocation')">· 2.15 Revocation</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('3.1 3.3 3.4 site layout road ROS')">Ch.3 Land Development</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('chapter 4 residential commercial industrial zone')">Ch.4 Land Use Zones</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('chapter 5 regional plan solapur 5.8')">Ch.5 Regional Plan</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('6.1 6.2 6.3 FSI margin table')">Ch.6 FSI & Margins</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('chapter 7 higher additional FSI table 7a')">Ch.7 Higher FSI</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('chapter 8 parking table 8b')">Ch.8 Parking</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('chapter 9 staircase height ventilation')">Ch.9 Building Req.</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('chapter 11 reservation TDR')">Ch.11 Reservations</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('chapter 12 sanitation water supply')">Ch.12 Sanitation</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('chapter 14 township ITP slum')">Ch.14 Special Schemes</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;margin-bottom:3px;background:var(--surf2)" onclick="udcprQuick('all appendices forms list A1 B C')">All Appendices</div>
+            <div style="cursor:pointer;padding:5px 7px;border-radius:6px;background:var(--gold-bg);border:1px solid var(--gold);color:var(--grn);font-weight:700" onclick="udcprQuick('solapur apply')">★ Solapur</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">ℹ️ Source</span></div>
+          <div class="card-body" style="font-size:11px;color:var(--mut);line-height:1.6">
+            UDCPR-2020 · Govt. of Maharashtra<br>
+            Updated <b>30 January 2025</b><br>
+            Local knowledge base + optional Claude AI (Settings → API key)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALC TAB (hidden by default) -->
+  <div id="udcpr-calc-pane" style="display:none">
   <div style="display:grid;grid-template-columns:360px 1fr;gap:16px;min-height:600px">
 
     <!-- LEFT INPUT PANEL -->
@@ -7584,10 +7662,31 @@ function renderUDCPR(){
             <div class="fg" style="margin-bottom:0"><label>Road Width (m)</label><input class="fi" type="number" id="u-road" placeholder="12" step="0.5" min="3"></div>
             <div class="fg" style="margin-bottom:0"><label>Plot Area (sq.m.)</label><input class="fi" type="number" id="u-area-sqm" placeholder="250" min="20"></div>
           </div>
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;padding:6px 10px;background:var(--surf2);border-radius:8px;border:1px solid var(--bdr)">
-            <input type="checkbox" id="u-corner" style="width:16px;height:16px;accent-color:var(--grn);cursor:pointer">
-            <span>Corner Plot <span style="font-size:10px;color:var(--mut);font-weight:400">— दोन रस्त्यांवर plot आहे</span></span>
-          </label>
+          <div style="font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-top:4px">Road Frontage (रस्त्याची स्थिती)</div>
+          <div class="fg" style="margin-bottom:0">
+            <label>Plot Road Type</label>
+            <select class="fi fi-sel" id="u-frontage" onchange="udcprFrontageChange()">
+              <option value="single">Single Front — फक्त समोर रस्ता</option>
+              <option value="corner">Corner — समोर + बाजूला रस्ता</option>
+              <option value="through">Through / Front+Back — समोर + मागे रस्ता</option>
+              <option value="three">Three Side — तीन बाजूंना रस्ता</option>
+            </select>
+          </div>
+          <div class="form-row c2" style="margin-bottom:0" id="u-road2-wrap" style="display:none">
+            <div class="fg" style="margin-bottom:0">
+              <label id="u-road2-label">2nd Road Width (m)</label>
+              <input class="fi" type="number" id="u-road2" placeholder="9" step="0.5" min="3">
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label>Wider road = FSI basis?</label>
+              <select class="fi fi-sel" id="u-road-basis">
+                <option value="wider">Wider road (recommended)</option>
+                <option value="front">Primary (front) road only</option>
+              </select>
+            </div>
+          </div>
+          <div id="u-frontage-hint" style="font-size:11px;color:var(--mut);line-height:1.5;padding:6px 10px;background:var(--surf2);border-radius:8px;border:1px solid var(--bdr)">समोरच्या रस्त्यावर front margin. बाजू / मागे side-rear margins.</div>
+          <input type="checkbox" id="u-corner" style="display:none">
           <div class="form-row c2" style="margin-bottom:0">
             <div class="fg" style="margin-bottom:0"><label>Plot Width (m)</label><input class="fi" type="number" id="u-pw" placeholder="15" step="0.5"></div>
             <div class="fg" style="margin-bottom:0"><label>Plot Depth (m)</label><input class="fi" type="number" id="u-pd" placeholder="20" step="0.5"></div>
@@ -7640,7 +7739,9 @@ function renderUDCPR(){
         </div>
       </div>
     </div>
-  </div>`;
+  </div>
+  </div><!-- end calc pane -->
+`;
 }
 
 function udcprLoadProject(){
@@ -7683,19 +7784,58 @@ function udcprSaveToProject(result){
   showOk('✅ UDCPR calculation saved to project: '+p.name);
 }
 
+function udcprFrontageChange(){
+  const v = document.getElementById('u-frontage')?.value||'single';
+  const wrap = document.getElementById('u-road2-wrap');
+  const hint = document.getElementById('u-frontage-hint');
+  const lab = document.getElementById('u-road2-label');
+  const cornerCb = document.getElementById('u-corner');
+  if(cornerCb) cornerCb.checked = (v==='corner'||v==='three');
+  if(wrap){
+    // show second road for corner / through / three
+    wrap.style.display = (v==='single') ? 'none' : 'grid';
+  }
+  if(lab){
+    if(v==='corner') lab.textContent = 'Side Road Width (m)';
+    else if(v==='through') lab.textContent = 'Rear / Back Road Width (m)';
+    else if(v==='three') lab.textContent = 'Other Road Width (m)';
+    else lab.textContent = '2nd Road Width (m)';
+  }
+  if(hint){
+    const tips = {
+      single: 'समोर → Front margin. बाजू → Side margins. मागे → Rear margin.',
+      corner: '📐 Corner (Reg 6.2.6): दोन्ही रस्त्यांवर Front margin. उरलेल्या बाजूंना Side/Rear. FSI सामान्यतः जास्त रुंद रस्त्यावरून.',
+      through: '🔄 Front+Back: समोर आणि मागे दोन्हीकडे Front margin (दोन्ही roads = front). Side margins बाजूंना. FSI = wider road.',
+      three: '3️⃣ तीन बाजू: तीनही रस्त्यांवर Front margin. एक बाजू Side/Rear. FSI = widest road.'
+    };
+    hint.innerHTML = tips[v]||tips.single;
+  }
+}
+
 function udcprCalculate(){
   const auth   = document.getElementById('u-auth')?.value||'mc_abc';
   const areaT  = document.getElementById('u-area')?.value||'non_cong';
   const use    = document.getElementById('u-use')?.value||'residential';
   const fsiT   = document.getElementById('u-fsi-type')?.value||'basic';
-  const roadW  = parseFloat(document.getElementById('u-road')?.value)||0;
+  const roadW1 = parseFloat(document.getElementById('u-road')?.value)||0;
+  const roadW2 = parseFloat(document.getElementById('u-road2')?.value)||0;
+  const frontage = document.getElementById('u-frontage')?.value||'single';
+  const roadBasis = document.getElementById('u-road-basis')?.value||'wider';
   const plotA  = parseFloat(document.getElementById('u-area-sqm')?.value)||0;
   const plotW  = parseFloat(document.getElementById('u-pw')?.value)||0;
   const plotD  = parseFloat(document.getElementById('u-pd')?.value)||0;
   const bldH   = parseFloat(document.getElementById('u-ht')?.value)||0;
   const asr    = parseFloat(document.getElementById('u-asr')?.value)||0;
 
-  if(!roadW||!plotA){showErr('Road width आणि Plot area आवश्यक');return;}
+  if(!roadW1||!plotA){showErr('Road width आणि Plot area आवश्यक');return;}
+  if(frontage!=='single' && !roadW2){showErr('2nd road width भरा (corner / front+back plot साठी)');return;}
+
+  // Effective road for FSI table: wider of the two (or front only)
+  const roadW = (frontage!=='single' && roadBasis==='wider') ? Math.max(roadW1, roadW2||0) : roadW1;
+  const isCorner = (frontage==='corner'||frontage==='three');
+  const isThrough = (frontage==='through');
+  const isMultiRoad = (frontage!=='single');
+  if(document.getElementById('u-corner')) document.getElementById('u-corner').checked = isCorner;
 
   const isMC  = auth==='mc_abc'||auth==='mc_other';
   const isCong= areaT==='cong';
@@ -7806,13 +7946,31 @@ function udcprCalculate(){
     }
     if(roadW<9) notes.push('⚠️ Road < 9m: TDR not available (Reg 6.3 Note x)');
     if(bldH>=24&&roadW<12) notes.push('❌ Special Building ≥24m needs road ≥12m (Reg 3.3.9)');
-    // Corner plot note for regular buildings (Reg 6.2.6)
+    // Multi-road / front+back / corner bye-laws (Reg 6.2.6 style)
     if(!isRowHouse&&!isRowHouseEWS){
-      const isCornerChk=document.getElementById('u-corner')?.checked;
-      if(isCornerChk){
-        notes.push('📐 Corner Plot (Reg 6.2.6): दोन्ही रस्त्यांवर front margin द्यायचे. Building दोन्ही roads ला face करत असल्यासारखे treat करा. Second road साठी पण तेवढाच front margin (setback) ठेवा.');
-        notes.push('ℹ️ Corner plot साठी plot area जास्त असणे आवश्यक — दोन्ही setbacks नंतर उरलेल्या area वर building येते.');
+      if(isThrough){
+        // Front + Back road: BOTH sides take FRONT margin
+        const fm2 = frontMargin; // same table front margin on rear road too
+        notes.push('🔄 Front+Back Road (Through plot): समोर आणि मागे दोन्हीकडे <b>Front margin</b> = '+frontMargin+' m (Reg 6.2.6 — building treated as fronting each street).');
+        notes.push('ℹ️ Side margins बाजूच्या दोन बाजूंना = '+sideMargin+' m each. Rear margin concept लागू नाही — मागील रस्ता = दुसरा front.');
+        notes.push('ℹ️ FSI / potential: '+(roadBasis==='wider'?'जास्त रुंद रस्ता ('+roadW+' m)':'primary front road ('+roadW1+' m)')+' नुसार Table.');
+        if(roadW1!==roadW2) notes.push('ℹ️ Front road '+roadW1+' m · Back road '+roadW2+' m → effective for FSI = '+roadW+' m');
+        // override rear to equal front margin for footprint
+        rearMargin = frontMargin;
+        marginRef = (marginRef||'')+' + Front+Back dual frontage';
+      } else if(isCorner){
+        notes.push('📐 Corner Plot (Reg 6.2.6): दोन्ही रस्त्यांवर <b>Front margin</b>. Building दोन्ही roads ला face करत असल्यासारखे.');
+        notes.push('ℹ️ Primary road '+roadW1+' m front margin = '+frontMargin+' m · Side road '+(roadW2||'—')+' m → त्या बाजूला पण front margin (side margin ऐवजी).');
+        notes.push('ℹ️ उरलेल्या non-road बाजूंना Side/Rear margin = '+sideMargin+' / '+rearMargin+' m');
+        notes.push('ℹ️ FSI basis: '+(roadBasis==='wider'?'wider road '+roadW+' m':'front road '+roadW1+' m'));
+        marginRef = (marginRef||'')+' + Corner dual frontage';
+      } else if(frontage==='three'){
+        notes.push('3️⃣ Three-side roads: तीनही रस्त्यांवर Front margin. एक बाजू Side/Rear.');
+        rearMargin = frontMargin;
+        marginRef = (marginRef||'')+' + Three-side frontage';
       }
+    } else if(isCorner||isThrough){
+      notes.push('ℹ️ Row/Semi-detached + multi-road: end/corner unit side margin min 1.5 m or building line of adjoining road (Table 6-D notes).');
     }
   }
 
@@ -7828,15 +7986,33 @@ function udcprCalculate(){
   const maxBUA=(maxPot*plotA).toFixed(1);
   const ancBUA=(ancFSI*plotA).toFixed(1);
 
-  // Footprint
+  // Footprint — multi-road aware
   const smNum=parseFloat(sideMargin)||0;
   const rmNum=parseFloat(rearMargin)||0;
   const fmNum=parseFloat(frontMargin)||0;
-  const isCorner=document.getElementById('u-corner')?.checked||false;
-  // Corner plot: side margin applies on road-facing side
-  const effSideMargin = (isCorner&&(use==='row_house'||use==='row_house_ews'))?1.5:smNum;
-  const buildW=plotW>0?Math.max(0,plotW-(isCorner?(smNum+effSideMargin):smNum*2)):null;
-  const buildD=plotD>0?Math.max(0,plotD-fmNum-rmNum):null;
+  // through: depth loses front+front (rear already set = front)
+  // corner: width loses side + front(on side road) ≈ side + frontMargin on one side
+  let deductW, deductD;
+  if(isThrough){
+    deductW = smNum*2;           // sides only
+    deductD = fmNum + rmNum;     // front + back (both front margins)
+  } else if(frontage==='three'){
+    deductW = smNum + fmNum;     // one side margin + one side as front
+    deductD = fmNum + rmNum;     // front + back as front
+  } else if(isCorner){
+    // one side becomes front margin (use max of side table vs front margin of side road)
+    const sideAsFront = fmNum; // approximate: same front margin on side road
+    deductW = smNum + Math.max(sideAsFront, smNum);
+    deductD = fmNum + rmNum;
+  } else {
+    deductW = smNum*2;
+    deductD = fmNum + rmNum;
+  }
+  if(use==='row_house'||use==='row_house_ews'){
+    deductW = isCorner ? 1.5 : 0; // shared walls
+  }
+  const buildW=plotW>0?Math.max(0,plotW-deductW):null;
+  const buildD=plotD>0?Math.max(0,plotD-deductD):null;
   const footprint=buildW&&buildD?(buildW*buildD).toFixed(1):null;
   const coverage=footprint?(footprint/plotA*100).toFixed(1):null;
 
@@ -7850,11 +8026,11 @@ function udcprCalculate(){
   if(bldH>=24) notes.push('🔴 Special Building (≥24m) — Fire NOC mandatory. Reg 3.3.9 applicable.');
   if(roadW<9&&!isCong&&!isInd) notes.push('⚠️ Min road 9m needed for TDR in non-congested area');
 
+  const frontageLabel={single:'Single Front',corner:'Corner (Front+Side)',through:'Through (Front+Back)',three:'Three Side'}[frontage]||frontage;
   const result={basicFSI,premFSI,tdrFSI,maxPot,ancFSI,usedFSI,ancPct,basicBUA,usedBUA,maxBUA,ancBUA,
     frontMargin,sideMargin,rearMargin,footprint,buildW,buildD,coverage,premCost,tableRef,marginRef,notes,
-    roadW,plotA,plotW,plotD,bldH,asr,auth,areaT,use,fsiT,isMC,isCong,isInd,isTOD,isIT,
-    isCorner:document.getElementById('u-corner')?.checked||false,
-    effSideMargin};
+    roadW,roadW1,roadW2,frontage,frontageLabel,plotA,plotW,plotD,bldH,asr,auth,areaT,use,fsiT,isMC,isCong,isInd,isTOD,isIT,
+    isCorner,isThrough,isMultiRoad};
 
   udcprRenderResult(result);
   udcprSaveToProject(result);
@@ -7879,6 +8055,17 @@ function udcprRenderResult(r){
     n.startsWith('🔴')?'background:#fde8e6;border-left:3px solid var(--red);color:#721c24':
     n.startsWith('⚠️')?'background:#fff8e0;border-left:3px solid var(--gold);color:#7a5a00':
     'background:#e8f4ee;border-left:3px solid var(--grn);color:#1a4a2a'}">${n}</div>`).join('')}
+
+  <!-- Frontage summary -->
+  <div style="padding:12px 14px;border-radius:10px;background:linear-gradient(135deg,#f0faf4,#e8f4ee);border:1px solid var(--grn);margin-bottom:12px">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);margin-bottom:6px">Road Frontage · Bye-laws</div>
+    <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px">${r.frontageLabel||'Single Front'}${r.isMultiRoad?` · Roads: ${r.roadW1||r.roadW} m${r.roadW2?` + ${r.roadW2} m`:''} → FSI on <b>${r.roadW} m</b>`:''}</div>
+    <div style="font-size:11px;color:var(--ink2);line-height:1.6">
+      ${r.isThrough?`समोर <b>${r.frontMargin} m</b> + मागे <b>${r.rearMargin} m</b> (दोन्ही Front margin) · बाजू <b>${r.sideMargin} m</b> each`:
+        r.isCorner?`समोर <b>${r.frontMargin} m</b> · Side-road बाजूला Front margin · इतर Side/Rear <b>${r.sideMargin}/${r.rearMargin} m</b>`:
+        `Front <b>${r.frontMargin} m</b> · Side <b>${r.sideMargin} m</b> · Rear <b>${r.rearMargin} m</b>`}
+    </div>
+  </div>
 
   <!-- Header info -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
@@ -8025,6 +8212,223 @@ Short, practical, client-friendly. 150-200 words max.`;
     btn.disabled=false;btn.textContent='✨ Explain in Simple Language';
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   UDCPR ASK — Local Knowledge Base (Jan 2025) + optional AI
+═══════════════════════════════════════════════════════════ */
+window.udcprShowTab=function(t){
+  const ask=document.getElementById('udcpr-ask-pane');
+  const calc=document.getElementById('udcpr-calc-pane');
+  const ta=document.getElementById('udcpr-tab-ask');
+  const tc=document.getElementById('udcpr-tab-calc');
+  if(!ask||!calc)return;
+  if(t==='ask'){
+    ask.style.display='block';calc.style.display='none';
+    if(ta)ta.classList.add('active');if(tc)tc.classList.remove('active');
+  }else{
+    ask.style.display='none';calc.style.display='block';
+    if(tc)tc.classList.add('active');if(ta)ta.classList.remove('active');
+  }
+};
+
+const UDCPR_KB=[
+/* ── CH 1 ADMINISTRATION ── */
+{id:'c1-extent',tags:'1.0 1.1 1.2 title extent jurisdiction commencement solapur apply maharashtra',title:'1.0–1.2 Short Title, Extent, Commencement',
+ a:'<b>UDCPR-2020</b> — Unified Development Control and Promotion Regulations for Maharashtra.\nUpdated <b>30 January 2025</b>.\n\n<b>लागू:</b> सर्व Planning Authorities + Regional Plan areas.\n<b>सोलापूर महानगरपालिका — होय, लागू.</b>\n\n<b>अपवाद:</b> MCGM, MIDC, NAINA, JNPT, Hill Station Councils, Eco-sensitive (MoEF), Lonavala MC.\n\nCommencement: Notification Sec 37(1AA)(c) & 20(4) MRTP Act, 02 Dec 2020 + later modifications.'},
+
+{id:'c1-def',tags:'1.3 definitions fsi tdr balcony special building meaning',title:'1.3 Definitions (key)',
+ a:'<b>Basic FSI</b> — premium/TDR न देता अनुज्ञेय FSI.\n<b>Premium FSI</b> — ASR % भरावून अतिरिक्त FSI.\n<b>TDR</b> — Transferable Development Rights.\n<b>Special Building</b> — height / assembly / hazardous etc. (fire NOC).\n\nअपरिभाषित शब्द → MRTP Act 1966 / MMC Act / NBC 2005.\nMarathi–English conflict → <b>English version prevails</b> (1.9 vii).'},
+
+{id:'c1-save',tags:'1.5 savings erstwhile ongoing transition old permission',title:'1.5 Savings (जुनी परवानगी)',
+ a:'आधीच्या नियमांनुसार दिलेली परवानगी valid राहते.\nValidity 1 year — renew करून max 3 years.\n\nOngoing project: owner option — (a) जुन्या नियमांनुसार पूर्ण करा किंवा (b) नवीन UDCPR नुसार revised permission (premium adjust, refund नाही).\nBalance potential = new potential − retained sanctioned FSI.'},
+
+{id:'c1-other',tags:'1.6 1.7 1.8 1.9 1.10 crz western ghat charges interpretation difficulty',title:'1.6–1.10 Other Rules, Charges, Interpretation',
+ a:'<b>1.6</b> CRZ Notification, Western Ghat Eco-Sensitive, इतर Acts लागू.\n<b>1.7</b> Authority proformas A–M amend करू शकते (Govt approval).\n<b>1.8</b> Premium/charges Government वेळोवेळी बदलू शकते; ASR = permission वर्षाचा.\n<b>1.9</b> Interpretation dispute → State Government final.\n<b>1.10</b> Removal of difficulties — Govt order (1 year from commencement).'},
+
+/* ── CH 2 PERMISSION ── */
+{id:'c2-mand',tags:'2.1 2.1.1 mandatory permission building development commencement',title:'2.1 Permission Mandatory',
+ a:'कोणतेही development / layout / amalgamation / group housing / erect / re-erect / alter / demolish — <b>आधी परवानगी</b> (MRTP Sec 18/46).\nRegional Plan / DP proposals विरुद्ध परवानगी नाही.'},
+
+{id:'c2-notnec',tags:'2.1.2 permission not necessary exemption solar partition temporary',title:'2.1.2 Permission Not Necessary',
+ a:'परवानगी नको:\n• Authority/Government order नुसार काम\n• Agricultural excavation / farm road\n• Marriage pandal (private land)\n• Safety grills\n• Electric substation\n• Solar panels base ≤1.8 m (structural certificate)\n• Internal lightweight partitions (structural cert)\n• Temp site office / godown / labour camp during construction\n• Film sets ≤1 year (intimation)\n• Plot ≤150 sq.m low-risk / 150–300 moderate — <b>Appendix K</b>\n• Agro Tourism ≤8 rooms — Appendix K-2'},
+
+{id:'c2-gov',tags:'2.1.3 2.1.4 2.1.5 government operational construction railway metro',title:'2.1.3–2.1.5 Government / Operational',
+ a:'Government development → Sec 58 intimation + plans (not full private procedure).\n\n<b>Operational (permission नको):</b> Railway, NH, waterway, airport, port, posts/telecom (mobile tower वगळता), power grid, defence, Metro/Mono stations & viaducts, public utilities repair.\n\n<b>Not operational:</b> New railway colony residential (except limited staff), new buildings for other services → intimation required.'},
+
+{id:'c2-temp',tags:'2.1.6 temporary construction 2.1.7 repairs',title:'2.1.6 Temporary & 2.1.7 Repairs',
+ a:'<b>Temporary:</b> 6 months at a time, max aggregate 1 year — monsoon cover, fair pandals, exhibition, quarry ancillary, milk/ATM booth, transit rehab, education/medical temp on site, RMC plant.\n\n<b>Repairs (permission नको — intimation + LTP cert):</b> same-position doors/windows; strengthen existing wall/roof; similar minor items (addition/alteration नव्हे).'},
+
+{id:'c2-proc',tags:'2.2 2.2.1 2.2.2 procedure application notice appendix a1 a2',title:'2.2 Procedure — Application',
+ a:'Archt / TP / Licensed Eng / Supervisor मार्फत <b>Appendix A-1</b> (building) किंवा <b>A-2</b> (layout).\nScrutiny fee + development charges + plans (साधारण 4 copies / electronic).\nOnline submission Authority ठरवू शकते.'},
+
+{id:'c2-own',tags:'2.2.3 ownership title area 7/12 cts measurement affidavit',title:'2.2.3 Ownership Title & Area',
+ a:'1. Latest <b>7/12 / PRC</b> ≤6 months old\n2. POA / lease (लागू असल्यास)\n3. Measurement plan / CTS — Land Records\n4. Area statement (triangulation/CADD) + <b>owner affidavit</b>\n5. RERA third-party consent (revised + registered agreement)\n6. Approved layout/amalgamation copy\n7. Govt/Local lease → NOC if deviation / extra FSI'},
+
+{id:'c2-plans',tags:'2.2.4 2.2.5 2.2.6 2.2.7 2.2.8 key plan layout site building special',title:'2.2.4–2.2.8 Plans Required',
+ a:'• <b>Key plan</b> ≥1:4000, 200 m neighbourhood\n• <b>Layout</b> ≥1:500 (4 ha+ → 1:1000)\n• <b>Amalgamation</b> ≥1:500\n• <b>Site plan</b> ≥1:500 on authenticated measurement\n• <b>Building plan</b> 1:100 — plan, elevation, section\n• Special buildings — extra fire/service details (2.2.8)'},
+
+{id:'c2-super',tags:'2.2.10 2.2.15 2.2.19 appendix b c supervision structural stability competence',title:'2.2.10 Supervision, Structural, Competence',
+ a:'• <b>Appendix B</b> — Supervision certificate (Archt/Eng/Sup/TP)\n• <b>2.2.15</b> Structural Stability Certificate (special buildings)\n• <b>Appendix C</b> — LTP qualification, competence, duties; Architect = COA only'},
+
+{id:'c2-fees',tags:'2.2.12 2.2.13 2.2.14 scrutiny development premium fire charges',title:'2.2.12–2.2.14 Fees & Charges',
+ a:'Scrutiny fee, Development charges, Premium FSI charges, Fire Infrastructure charges — Authority/Govt rates.\nASR = year of granting permission.'},
+
+{id:'c2-grant',tags:'2.6 2.7 grant refusal deemed commencement appendix d e',title:'2.6–2.7 Grant / Refusal / Commencement',
+ a:'Decision → <b>Appendix D-1</b> (sanction+CC) किंवा <b>E-1</b> (refusal).\nDeemed permission rules + Risk-based (Appendix K).\nSanctioned permissions Authority website वर display.\nCommencement within validity; layout/GHS rules 2.7.2.'},
+
+{id:'c2-const',tags:'2.8 2.9 2.10 2.11 plinth completion occupancy appendix f g h i j',title:'2.8–2.11 Construction to Occupancy',
+ a:'• Responsibilities: Owner/Developer/Archt/LTP (2.8.1)\n• <b>Plinth</b> → Appendix <b>F</b>\n• Deviation during construction → report (2.8.5)\n• <b>Completion</b> → Appendix <b>G</b> + as-built plans\n• <b>Occupancy</b> → Appendix <b>H</b> (21 days) / <b>I</b> refusal\n• Part OC → Appendix <b>J</b> indemnity (stamp)'},
+
+{id:'c2-off',tags:'2.14 2.15 offence penalty revocation false statement',title:'2.14 Offences & 2.15 Revocation',
+ a:'<b>2.14:</b> Sec 52 conviction; Sec 53/54 demolition; LTP license cancel + district debar; Architect → COA + Authority debar; Fire Act Sec 36.\n\n<b>2.15:</b> False statement / misrepresentation → after hearing, permission <b>revoked</b>; work = unauthorised; <b>no compensation</b>.'},
+
+/* ── CH 3 LAND ── */
+{id:'c3-site',tags:'3.1 site requirements electric line flood railway highway airport monument',title:'3.1 Site Requirements / Restrictions',
+ a:'Site not eligible cases (3.1.1).\nDistance from electric lines (Table 3).\nBlue/Red flood line, 30 m railway, highways, prison, landfill, airport, ancient monuments, Works of Defense Act, natural lake/dam.'},
+
+{id:'c3-road',tags:'3.2 3.3 means of access layout road internal width table 3a 3b 3c',title:'3.2–3.3 Access & Layout Roads',
+ a:'Internal road widths — <b>Table 3A</b> residential, <b>3B</b> non-res, <b>3C</b> group housing (length-based).\nHighway access restrictions (3.3.8).\nCul-de-sac, intersection, land-locked plot, underpass rules.'},
+
+{id:'c3-ros',tags:'3.4 recreational open space amenity 3.5 10 percent',title:'3.4 ROS & 3.5 Amenity Space',
+ a:'Recreational Open Space % by plot size; owner undertaking; structures permitted in ROS limited.\nAmenity space in Local Authority / SPA / Metro areas (3.5.1) and RP areas (3.5.2).'},
+
+{id:'c3-plot',tags:'3.7 3.8 3.9 minimum plot inclusive housing net plot fsi',title:'3.7–3.9 Plot Area, Inclusive Housing, Net Plot FSI',
+ a:'Min plot area/width — <b>Table 3D</b>.\nInclusive housing (EWS/LIG) where applicable (3.8).\nNet plot area computation for FSI (3.9).'},
+
+/* ── CH 4 ZONES ── */
+{id:'c4-zone',tags:'4.1 4.2 4.3 4.4 residential r1 r2 commercial industrial agricultural zone',title:'Chapter 4 — Land Use Zones',
+ a:'Zones: R-1, R-2, Low Density Residential, Future Urbanisable, Commercial, Industrial, Loom+Residential, PSP, Agricultural, Green Belt, Traffic, Regional Park, Tourism, Afforestation, Hill Top-Slope, Forest, Defense, Mines, Public Utility, SEZ, Airport etc.\n\nUses in each zone Reg 4.3–4.27.\nIndustrial zone मध्ये residential/commercial — 4.8.1 conditions.\nDP reservation uses — 4.27.'},
+
+/* ── CH 5 RP ── */
+{id:'c5-rp',tags:'5.0 5.1 regional plan gaothan solapur 5.8 tourist hill station',title:'Chapter 5 — Regional Plan Areas',
+ a:'Gaothan-adjacent development (5.1.1).\nHill station / tourist resorts (5.1.2).\nStation area, amenity in RP, residential with premium (5.1.9).\n\n<b>5.8 Solapur Regional Plan</b> — agricultural zone मध्ये specific housing provisions.\nइतर RP: Thane-Raigad-Palghar, Ratnagiri-Sindhudurg, Kolhapur, Satara, Pune, Aurangabad…'},
+
+/* ── CH 6 FSI MARGINS ── */
+{id:'c6-cong',tags:'6.1 congested gaothan table 6a 6b 6c front side rear',title:'6.1 Congested / Gaothan — FSI & Margins',
+ a:'<b>Table 6-A</b> — Basic FSI + premium + TDR by road width (MC / Council).\n<b>Table 6-B</b> front setback; <b>6-C</b> side/rear by plot area.\nAncillary area FSI up to 60% of proposed FSI (notes).\nExact numbers → <b>Calculator</b> tab.'},
+
+{id:'c6-non',tags:'6.2 6.2.1 6.3 non-congested table 6d 6g margin fsi potential',title:'6.2–6.3 Non-Congested Margins & FSI',
+ a:'Height ≤15 m (or Table 6-D limits): front/side/rear by road & plot size — <b>Table 6-D</b>.\nOther buildings — <b>Table 6-E</b>.\nHigher height — H/5 step margins (6.2.3).\n\n<b>Table 6-G</b> — Basic / Premium / TDR / Max potential by road width.\nGreen belt FSI (6.5).\nIndustrial — <b>Table 6-H</b>.\n\n→ Calculator tab for numbers.'},
+
+{id:'c6-fsi',tags:'basic fsi premium tdr maximum building potential ancillary',title:'Basic / Premium / TDR / Max Potential',
+ a:'• <b>Basic FSI</b> — free (zone + road)\n• <b>Premium FSI</b> — pay % of ASR land rate\n• <b>TDR</b> — load as per road width caps\n• <b>Max potential</b> = Basic + Premium allowed + TDR allowed\n• <b>Ancillary FSI</b> — staircase/lift etc. % of proposed FSI with premium\n\nUnauthorised sub-divided plots ≤0.4 ha → often 75% basic+premium.'},
+
+/* ── CH 7 HIGHER FSI ── */
+{id:'c7-higher',tags:'7.1 7.3 table 7a educational medical star hotel it higher fsi',title:'Chapter 7 — Higher / Additional FSI',
+ a:'<b>Table 7-A</b> — Educational, Medical, Institutional, Star hotels, IT etc. — additional FSI + premium %.\nMax = road-width potential (6-A/6-G) − Basic.\nIT Park / special schemes separate caps (see Calculator IT/TOD).\nGreen building incentive FSI (GRIHA/IGBC/LEED) 3–7% on basic.'},
+
+/* ── CH 8 PARKING ── */
+{id:'c8-park',tags:'8.1 8.2 parking table 8a 8b 8c off-street',title:'Chapter 8 — Parking',
+ a:'Space sizes — <b>Table 8-A</b>.\nRequirement by occupancy/tenement — <b>Table 8-B</b>.\nCity multiplying factor — <b>Table 8-C</b> (Solapur MC factor apply).\nTwo-wheeler rules; mechanical parking allowed where specified.'},
+
+/* ── CH 9 BUILDING ── */
+{id:'c9-bldg',tags:'9 height habitable room loft ventilation shaft staircase exit travel distance',title:'Chapter 9 — Building Requirements',
+ a:'Habitable room height — <b>Table 9-A</b>.\nLoft coverage — <b>9-B</b>.\nVentilation shaft — <b>9-C</b>.\nTravel distance — <b>9-D</b>; occupant load <b>9-E</b>; exit width <b>9-F</b>.\nStaircase min width — <b>Table 9-G</b> by building use.\nLight & ventilation, sanitary (Ch.12 tables).'},
+
+/* ── CH 10-11 ── */
+{id:'c10',tags:'10 special areas navi mumbai cidco local modifications',title:'Chapter 10 — Special / Local Provisions',
+ a:'Authority-specific modifications (Navi Mumbai, CIDCO, Nagpur etc.).\nBasic FSI variations for certain plot categories.\nUse only if your Authority is listed; else general Ch.6 applies.'},
+
+{id:'c11',tags:'11 reservation tdr development plan manner of development',title:'Chapter 11 — DP Reservations & TDR',
+ a:'Manner of development of reservations — <b>Table 11-A</b> (who may develop, FSI, handing over).\nTDR generation/utilisation rules; restricted areas for TDR loading (11.2.8).'},
+
+/* ── CH 12-13 ── */
+{id:'c12',tags:'12 water supply sanitation drainage toilet table 12',title:'Chapter 12 — Water, Sanitation, Drainage',
+ a:'Water supply storage — Tables 12-A/B.\nSanitation fixtures — Offices 12-C, Factories 12-D, Cinema 12-E, Hospitals 12-G–J, Hotels 12-K, Restaurants 12-L, Schools 12-M, Hostels 12-N, Mercantile 12-O, Airports/Stations 12-P.'},
+
+{id:'c13',tags:'13 fire safety environmental nbc',title:'Chapter 13 — Fire & Environment',
+ a:'Maharashtra Fire Prevention Act + NBC fire provisions.\nSpecial buildings → CFO NOC.\nEnvironmental clearance where applicable (3.1.5 / MoEF).'},
+
+/* ── CH 14-15 ── */
+{id:'c14',tags:'14 township itp logistic park slum srs urban renewal pmay',title:'Chapter 14 — Townships & Special Schemes',
+ a:'ITP, Integrated Logistic Park, Aerospace/Defense township, Integrated Industrial Area.\nSlum Rehabilitation (Pune/PCMC/Nagpur & other MCs).\nUrban Renewal, PMAY-linked FSI, Tourism around wildlife.\nHeritage conservation (14.5).'},
+
+{id:'c15',tags:'15 quarry mobile tower local area plan street design',title:'Chapter 15 — Special Activities',
+ a:'Quarrying operations (15.1).\nMobile towers (15.2).\nLocal Area Plan (15.3).\nStreet design guidelines (15.4).'},
+
+/* ── APPENDICES ── */
+{id:'app-all',tags:'appendix forms a1 a2 b c d e f g h i j k list',title:'All Appendices (Forms) Index',
+ a:'<b>A-1</b> Building/GHS application\n<b>A-2</b> Sub-division/Layout application\n<b>B</b> Supervision certificate\n<b>C</b> LTP qualification & duties\n<b>D-1</b> Sanction + CC\n<b>D-2/D-3</b> Layout tentative/final\n<b>E-1/E-2</b> Refusal\n<b>F</b> Plinth intimation\n<b>G</b> Completion certificate\n<b>H/I</b> Occupancy / refusal\n<b>J</b> Part OC indemnity (stamp)\n<b>K/K-1/K-2</b> Risk-based & small plot / agro tourism\n<b>L</b> Heritage list card\n<b>M</b> Typical road cross-sections'},
+
+{id:'solapur',tags:'solapur municipal corporation regional plan apply 5.8',title:'Solapur — UDCPR लागू आहे का?',
+ a:'<b>होय.</b> Solapur Municipal Corporation = Planning Authority under UDCPR-2020 (30 Jan 2025).\n\nSolapur <b>Regional Plan (5.8)</b> — agricultural zone मध्ये अतिरिक्त/वेगळ्या housing तरतुदी असू शकतात; DP area मध्ये मुख्यतः Ch.2–9 + 6 tables.\n\nMC category Calculator मध्ये: <b>Municipal Corp (A/B/C)</b> निवडा.'}
+];
+
+function udcprScore(q, item){
+  const s=(q||'').toLowerCase();
+  let sc=0;
+  (item.tags||'').split(/\s+/).forEach(t=>{if(t&&s.indexOf(t.toLowerCase())>=0)sc+=2;});
+  (item.title||'').toLowerCase().split(/\s+/).forEach(t=>{if(t.length>2&&s.indexOf(t)>=0)sc+=3;});
+  // number regs
+  const regs=s.match(/\b\d+\.\d+\b/g)||[];
+  regs.forEach(r=>{if((item.tags+item.title+item.a).indexOf(r)>=0)sc+=5;});
+  return sc;
+}
+
+function udcprLocalAnswer(q){
+  const ranked=UDCPR_KB.map(it=>({it,sc:udcprScore(q,it)})).filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc);
+  if(!ranked.length)return null;
+  const top=ranked[0];
+  if(top.sc<2)return null;
+  let ans='<b>'+top.it.title+'</b><br><br>'+top.it.a.replace(/\n/g,'<br>');
+  if(ranked.length>1&&ranked[1].sc>=top.sc-2){
+    ans+='<br><br><span style="color:var(--mut);font-size:11px">संबंधित: '+ranked.slice(1,3).map(x=>x.it.title).join(' · ')+'</span>';
+  }
+  return ans;
+}
+
+window.udcprQuick=function(q){
+  const inp=document.getElementById('udcpr-q');
+  if(inp)inp.value=q;
+  udcprAsk();
+};
+
+window.udcprAsk=async function(){
+  const inp=document.getElementById('udcpr-q');
+  const chat=document.getElementById('udcpr-chat');
+  if(!inp||!chat)return;
+  const q=(inp.value||'').trim();
+  if(!q)return;
+  inp.value='';
+  chat.innerHTML+=`<div class="udcpr-msg user">${q.replace(/</g,'&lt;')}</div>`;
+  chat.innerHTML+=`<div class="udcpr-msg bot" id="udcpr-pending"><span style="opacity:.6">⏳ शोधत आहे...</span></div>`;
+  chat.scrollTop=chat.scrollHeight;
+
+  const local=udcprLocalAnswer(q);
+  let final=local;
+
+  // Optional Claude enhancement if key present
+  const key=(typeof getClaudeKey==='function'?getClaudeKey():localStorage.getItem('gs_claude_key'))||'';
+  if(key&&typeof claudeFetch==='function'){
+    try{
+      const ctx=UDCPR_KB.map(k=>k.title+': '+k.a.replace(/<[^>]+>/g,'')).join('\n\n');
+      const data=await claudeFetch({
+        model:'claude-sonnet-4-20250514',max_tokens:600,
+        messages:[{role:'user',content:
+`You are UDCPR-2020 (Maharashtra, updated 30 Jan 2025) assistant for Solapur architects.
+Answer in simple Marathi+English mix. Be accurate. Cite Regulation numbers.
+If unsure, say so. Keep under 180 words.
+
+Knowledge base excerpts:
+${ctx}
+
+Question: ${q}`}]
+      });
+      const text=data.content?.filter(b=>b.type==='text').map(b=>b.text).join('')||'';
+      if(text) final=text.replace(/\n/g,'<br>');
+    }catch(e){
+      if(!local) final='API error: '+(e.message||e)+'<br><br>Local KB मध्ये थेट match सापडला नाही. Calculator किंवा Topics वापरा.';
+    }
+  } else if(!local){
+    final='या प्रश्नाचे थेट match local KB मध्ये नाही.<br><br>• Topics sidebar वापरा<br>• किंवा Settings मध्ये Claude API key add करा (AI उत्तरेसाठी)<br>• FSI/Margin आकड्यांसाठी <b>Calculator</b> टॅब वापरा';
+  }
+
+  const pend=document.getElementById('udcpr-pending');
+  if(pend)pend.outerHTML=`<div class="udcpr-msg bot">${final}</div>`;
+  chat.scrollTop=chat.scrollHeight;
+};
+
 
 function udcprCopyResult(){
   const r=window._udcprLastResult;
@@ -11594,7 +11998,7 @@ function saveSig(){
 // ════════════════════════════════════════════════
 // VIEW_TITLES update
 // ════════════════════════════════════════════════
-Object.assign(VIEW_TITLES,{estimates:'Estimate Generator',expenses:'Expense Tracker',analytics:'Business Analytics',tools:'Tools & Utilities',udcpr:'📏 UDCPR 2020 Calculator',clientportal:'👥 Client Portal',agreement:'📝 Agreement Generator',invoice:'🧾 GST Invoice',timeline:'📅 Project Timeline',materials:'🧱 Material Estimator'});
+Object.assign(VIEW_TITLES,{estimates:'Estimate Generator',expenses:'Expense Tracker',analytics:'Business Analytics',tools:'Tools & Utilities',udcpr:'📏 UDCPR Ask & Calculator',clientportal:'👥 Client Portal',agreement:'📝 Agreement Generator',invoice:'🧾 GST Invoice',timeline:'📅 Project Timeline',materials:'🧱 Material Estimator'});
 
 // ════════════════════════════════════════════════
 // DARK MODE
