@@ -5449,7 +5449,198 @@ const EST_TEMPLATES={
   }
 };
 
+/* ── Fee Packages (drawing lists + default fees) — editable after select ── */
+const EST_PACKAGES={
+  basic:{
+    name:'Basic Drawing Package',
+    hint:'Plans + elevations only. Good for small residential / drawing-only work.',
+    category:'Drawing Only',
+    pricing:'itemized',
+    sqftRate:12,
+    lumpsum:0,
+    revisions:1,visits:1,visitRate:2000,
+    items:[
+      {service:'Ground Floor Plan',qty:1,unit:'LS',rate:8000},
+      {service:'2D Elevation',qty:1,unit:'LS',rate:6000},
+      {service:'Blueprint',qty:1,unit:'LS',rate:3000}
+    ],
+    scope:'Preparation of basic architectural drawings — floor plan, elevation and blueprint prints as per client brief.',
+    inclusions:'Floor plan, 2D elevation, blueprint set, 1 design revision, 1 site coordination visit.',
+    exclusions:'3D views, structural design, plumbing/electrical drawings, building permission, government fees, interior design.',
+    payment:'50% advance on acceptance · 50% on delivery of final drawings.',
+    stages:'1. Concept / measured plan\n2. Final floor plan & elevation\n3. Blueprint delivery',
+    notes:'This quotation is valid for 30 days. Additional revisions charged extra.'
+  },
+  standard:{
+    name:'Standard Design Package',
+    hint:'Full drawing set for permission + working drawings. Typical residential / commercial.',
+    category:'Architectural',
+    pricing:'itemized',
+    sqftRate:18,
+    lumpsum:0,
+    revisions:2,visits:3,visitRate:2500,
+    items:[
+      {service:'Ground Floor Plan',qty:1,unit:'LS',rate:8000},
+      {service:'First Floor Plan',qty:1,unit:'LS',rate:6000},
+      {service:'2D Elevation',qty:1,unit:'LS',rate:6000},
+      {service:'3D Elevation',qty:1,unit:'LS',rate:12000},
+      {service:'Plumbing Drawing',qty:1,unit:'LS',rate:5000},
+      {service:'Electrical Drawing',qty:1,unit:'LS',rate:5000},
+      {service:'Building Permission',qty:1,unit:'LS',rate:8000},
+      {service:'Site Visit',qty:3,unit:'Visit',rate:2500}
+    ],
+    scope:'Architectural design including concept plans, submission drawings as per UDCPR, exterior 3D elevations, working drawings, plumbing & electrical layouts.',
+    inclusions:'Concept plans & designs, submission drawings (UDCPR), exterior 3D elevations, working drawings (architectural), elevational sections & 2D elevations, plumbing layout, electrical layout, building permission set, design revisions (as limited), site visits (as limited).',
+    exclusions:'Structural design & drawings, interior design, liasoning charges / government fees / premiums, soil testing.',
+    payment:'30% advance on acceptance · 40% on working drawings approval · 30% on final / permission submission.',
+    stages:'1. Concept & Preliminary Drawings\n2. Submission Drawings for Approval\n3. Exterior 3D Elevations\n4. Working Drawings (Plans, Sections, Elevations, Plumbing, Electrical)\n5. Site Visits',
+    notes:'GST as applicable extra. Extra site visits beyond included count charged separately.'
+  },
+  premium:{
+    name:'Premium Full Design',
+    hint:'Complete design package with higher coverage — apartment / larger projects.',
+    category:'Apartment Design',
+    pricing:'sqft',
+    sqftRate:25,
+    lumpsum:0,
+    revisions:3,visits:6,visitRate:3000,
+    items:[
+      {service:'Apartment Design',qty:1,unit:'LS',rate:25000},
+      {service:'G+2 2D Floor Plan',qty:1,unit:'LS',rate:20000},
+      {service:'2D Elevation',qty:1,unit:'LS',rate:6000},
+      {service:'3D Elevation',qty:1,unit:'LS',rate:12000},
+      {service:'Plumbing Drawing',qty:1,unit:'LS',rate:5000},
+      {service:'Electrical Drawing',qty:1,unit:'LS',rate:5000},
+      {service:'Building Permission',qty:1,unit:'LS',rate:8000},
+      {service:'Central Line Plan',qty:1,unit:'LS',rate:4000},
+      {service:'Site Visit',qty:6,unit:'Visit',rate:3000}
+    ],
+    scope:'Complete architectural design package for multi-storey / apartment project including master planning, typical floors, elevations, services drawings, permission set and coordination.',
+    inclusions:'Master layout, typical floor plans, elevations, 3D views, plumbing & electrical layouts, central line plan, permission drawings, revisions and site visits as limited.',
+    exclusions:'Structural & foundation design, detailed MEP / HVAC, landscape design, government fees, marketing walkthrough animation.',
+    payment:'30% advance · 35% on floor plan freeze · 20% on elevation / services · 15% on permission drawings.',
+    stages:'1. Concept & Preliminary Drawings\n2. Submission Drawings for Approval\n3. Exterior 3D Elevations\n4. Working Drawings (Plans, Sections, Elevations, Plumbing, Electrical)\n5. Follow-up & Coordination with Structural Engineer\n6. Site Visits',
+    notes:'Fee may be charged on built-up area (sq.ft) basis. GST extra. Validity 30 days.'
+  },
+  consultancy:{
+    name:'Full Consultancy (Site + Stages)',
+    hint:'Like professional fees letter — lump sum + stage-wise / slab-linked payment. Matches proposal format.',
+    category:'Architectural',
+    pricing:'lumpsum',
+    sqftRate:22,
+    lumpsum:325000,
+    revisions:3,visits:12,visitRate:3000,
+    items:[
+      {service:'Concept Plans & Designs',qty:1,unit:'LS',rate:0},
+      {service:'Submission Drawings (UDCPR)',qty:1,unit:'LS',rate:0},
+      {service:'Exterior 3D Elevations',qty:1,unit:'LS',rate:0},
+      {service:'Working Drawings (Architectural)',qty:1,unit:'LS',rate:0},
+      {service:'Elevational Sections & 2D Elevations',qty:1,unit:'LS',rate:0},
+      {service:'Plumbing Layout Drawings',qty:1,unit:'LS',rate:0},
+      {service:'Electrical Layout Drawings',qty:1,unit:'LS',rate:0},
+      {service:'Coordination with Structural Engineer',qty:1,unit:'LS',rate:0},
+      {service:'Site Visits at Important Stages',qty:12,unit:'Visit',rate:0}
+    ],
+    scope:'Full architectural design consultancy for the proposed building — concept to working drawings, permission support and site visits at important stages of work.',
+    inclusions:'Preparation of Concept Plans & Designs; Submission Drawings as per UDCPR; Exterior 3D Elevations; Working Drawings (Architectural); Elevational Sections & 2D Elevation Drawings; Plumbing Layout Drawings; Electrical Layout Drawings; Follow-up and Coordination with Structural Engineer; Site Visits at Important Stages of Work.',
+    exclusions:'Structural Design & Drawings; Interior Design; Liasoning Charges / Government Fees / Premiums.',
+    payment:'Advance as agreed · Balance in stages linked with construction progress / slab completion / finishing as detailed in notes. GST as applicable extra.',
+    stages:'1. Stage 1 – Concept & Preliminary Drawings\n2. Stage 2 – Submission Drawings for Approval\n3. Stage 3 – Exterior 3D Elevations\n4. Stage 4 – Working Drawings (Plans, Sections, Elevations, Plumbing, Electrical)\n5. Stage 5 – Follow-up & Coordination with Structural Engineer\n6. Stage 6 – Site Visits',
+    notes:'12 Site Visits included. After included visits, additional charges ₹3,000/- per visit. GST as applicable will be charged extra. Balance may be released in installments linked with construction progress / slab / finishing as mutually agreed.'
+  }
+};
+
 function openEstimateModal(){ initEstimateModal(); }
+
+function applyEstPackage(key){
+  const hint=document.getElementById('est-pkg-hint');
+  if(!key||!EST_PACKAGES[key]){
+    if(hint)hint.textContent='';
+    return;
+  }
+  const p=EST_PACKAGES[key];
+  if(hint)hint.innerHTML='<b style="color:var(--grn)">'+p.name+':</b> '+p.hint;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  set('est-category',p.category);
+  set('est-revisions',p.revisions);
+  set('est-visits',p.visits);
+  set('est-visit-rate',p.visitRate);
+  set('est-pricing-mode',p.pricing);
+  set('est-sqft-rate',p.sqftRate||'');
+  set('est-lumpsum',p.lumpsum||'');
+  set('est-terms',EST_DEFAULT_TERMS);
+  // PDF style: consultancy → proposal letter default
+  const ps=document.getElementById('est-pdf-style');
+  const ps2=document.getElementById('est-pdf-style-2');
+  const style=key==='consultancy'?'proposal':'quotation';
+  if(ps)ps.value=style;
+  if(ps2)ps2.value=style;
+  estPricingModeChange();
+  // Fill line items from package (editable)
+  estCustomLines=[];
+  p.items.forEach(it=>{
+    // map known SERVICES to grid selection; unknown → custom lines
+    if((SERVICES||[]).indexOf(it.service)>=0){
+      /* handled in buildEstGrid below */
+    } else {
+      estCustomLines.push({name:it.service,qty:it.qty||1,unit:it.unit||'LS',rate:it.rate||0});
+    }
+  });
+  const known=p.items.filter(it=>(SERVICES||[]).indexOf(it.service)>=0).map(it=>it.service);
+  buildEstGrid(known);
+  // apply qty/rate from package onto selected rows
+  p.items.forEach(it=>{
+    if((SERVICES||[]).indexOf(it.service)<0)return;
+    const row=document.querySelector('#est-svc-grid .est-svc-row[data-service="'+CSS.escape(it.service)+'"]');
+    if(!row)return;
+    const q=row.querySelector('[data-qty]');if(q)q.value=it.qty||1;
+    const u=row.querySelector('[data-unit]');if(u)u.value=it.unit||'LS';
+    const r=row.querySelector('[data-rate]');if(r)r.value=it.rate||0;
+    estRecalcRow(r||q);
+  });
+  // rebuild custom rows
+  estCustomLines.forEach((cl,idx)=>estAppendCustomRow(cl,idx));
+  estApplyTextToPresets('scope',p.scope);
+  estApplyTextToPresets('inclusions',p.inclusions);
+  estApplyTextToPresets('exclusions',p.exclusions);
+  estApplyTextToPresets('payment',p.payment);
+  estApplyTextToPresets('notes',p.notes);
+  // stages into a dedicated field if present
+  let stg=document.getElementById('est-stages');
+  if(!stg){
+    // inject stages box once near scope if missing
+    const scopeBox=document.getElementById('est-scope')?.closest('.fg');
+    if(scopeBox){
+      const wrap=document.createElement('div');
+      wrap.className='fg';
+      wrap.style.marginBottom='12px';
+      wrap.innerHTML='<label>Deliverables &amp; Stages</label><textarea class="fi fi-ta" id="est-stages" rows="3" placeholder="Stage-wise deliverables..."></textarea>';
+      scopeBox.parentNode.insertBefore(wrap,scopeBox.nextSibling);
+      stg=document.getElementById('est-stages');
+    }
+  }
+  if(stg)stg.value=p.stages||'';
+  updateEstimate();
+}
+
+function estPricingModeChange(){
+  const mode=(document.getElementById('est-pricing-mode')||{}).value||'itemized';
+  const sq=document.getElementById('est-sqft-row');
+  const ls=document.getElementById('est-lumpsum-row');
+  const ir=document.getElementById('est-pdf-row-itemized');
+  if(sq)sq.style.display=mode==='sqft'?'grid':'none';
+  if(ls)ls.style.display=mode==='lumpsum'?'grid':'none';
+  if(ir)ir.style.display=mode==='lumpsum'?'none':'grid';
+  updateEstimate();
+}
+
+function estGetPdfStyle(){
+  const mode=(document.getElementById('est-pricing-mode')||{}).value||'itemized';
+  if(mode==='lumpsum'){
+    return (document.getElementById('est-pdf-style')||{}).value||'proposal';
+  }
+  return (document.getElementById('est-pdf-style-2')||{}).value||'quotation';
+}
 
 function estSvcId(s){return 'est-svc-'+String(s).replace(/\W+/g,'-');}
 
@@ -5599,6 +5790,8 @@ function initEstimateModal(){
     const e=document.getElementById(id);if(e)e.value='';
   });
   const tpl=document.getElementById('est-template');if(tpl)tpl.value='';
+  const pkg=document.getElementById('est-package');if(pkg)pkg.value='';
+  const hint=document.getElementById('est-pkg-hint');if(hint)hint.textContent='';
   const gst=document.getElementById('est-gst');if(gst)gst.value='18';
   const rev=document.getElementById('est-revisions');if(rev)rev.value='2';
   const visits=document.getElementById('est-visits');if(visits)visits.value='2';
@@ -5609,10 +5802,16 @@ function initEstimateModal(){
   const eno=document.getElementById('est-no');if(eno)eno.value='EST-'+Date.now().toString().slice(-6);
   const terms=document.getElementById('est-terms');if(terms)terms.value=EST_DEFAULT_TERMS;
   const acc=document.getElementById('est-acceptance');if(acc)acc.checked=true;
+  const mode=document.getElementById('est-pricing-mode');if(mode)mode.value='itemized';
+  const sqr=document.getElementById('est-sqft-rate');if(sqr)sqr.value='';
+  const lst=document.getElementById('est-lumpsum');if(lst)lst.value='';
+  const vr=document.getElementById('est-visit-rate');if(vr)vr.value='3000';
+  const stg=document.getElementById('est-stages');if(stg)stg.value='';
   estCustomLines=[];
   estExtraCharges=[];
   estRenderExtras();
   estResetPresets();
+  estPricingModeChange();
 
   const modalEl=document.getElementById('m-estimate');
   if(modalEl)modalEl.classList.add('open');
@@ -5645,47 +5844,84 @@ function collectEstItems(){
   return items;
 }
 
-function updateEstimate(){
+function estCalcSubtotal(){
+  const mode=(document.getElementById('est-pricing-mode')||{}).value||'itemized';
   const items=collectEstItems();
-  let sub=items.reduce((a,x)=>a+x.amount,0);
   const extras=estExtraCharges.reduce((a,x)=>a+(parseFloat(x.amount)||0),0);
-  sub+=extras;
+  let servicesSub=items.reduce((a,x)=>a+x.amount,0);
+  let feeBase=servicesSub;
+  let modeLabel='Itemized services';
+  if(mode==='sqft'){
+    const area=parseFloat(document.getElementById('est-area')?.value)||0;
+    const rate=parseFloat(document.getElementById('est-sqft-rate')?.value)||0;
+    feeBase=Math.round(area*rate);
+    const st=document.getElementById('est-sqft-total');
+    if(st)st.value=feeBase?('₹ '+feeBase.toLocaleString('en-IN')):'';
+    modeLabel=area&&rate?(area+' sq.ft × ₹'+rate):'Per Sq.Ft';
+  } else if(mode==='lumpsum'){
+    feeBase=parseFloat(document.getElementById('est-lumpsum')?.value)||0;
+    modeLabel='Lump sum design fee';
+  }
+  const sub=feeBase+extras;
+  return {mode,items,extras,servicesSub,feeBase,sub,modeLabel};
+}
+
+function updateEstimate(){
+  const {mode,items,extras,servicesSub,feeBase,sub,modeLabel}=estCalcSubtotal();
   const gstEl=document.getElementById('est-gst');
   const gst=gstEl?parseInt(gstEl.value)||0:0;
   const gstAmt=Math.round(sub*gst/100);
   const total=sub+gstAmt;
   const sum=document.getElementById('est-summary');
   if(!sum)return;
-  sum.innerHTML=
-    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Services Subtotal</span><span style="font-weight:700">${fmt(items.reduce((a,x)=>a+x.amount,0))}</span></div>`+
-    (extras?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Additional Charges</span><span style="font-weight:700">${fmt(extras)}</span></div>`:'')+
-    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Sub Total</span><span style="font-weight:700">${fmt(sub)}</span></div>`+
-    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>GST (${gst}%)</span><span style="font-weight:700;color:var(--orange)">${fmt(gstAmt)}</span></div>`+
-    `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;font-weight:800"><span>Grand Total</span><span style="color:var(--grn)">${fmt(total)}</span></div>`;
+  let html='';
+  if(mode==='itemized'){
+    html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Services Subtotal</span><span style="font-weight:700">${fmt(servicesSub)}</span></div>`;
+  } else {
+    html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>${modeLabel}</span><span style="font-weight:700">${fmt(feeBase)}</span></div>`;
+    if(items.length)html+=`<div style="font-size:11px;color:var(--mut);padding:2px 0 6px">${items.length} drawing / service line(s) listed (scope)</div>`;
+  }
+  if(extras)html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Additional Charges</span><span style="font-weight:700">${fmt(extras)}</span></div>`;
+  html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Sub Total</span><span style="font-weight:700">${fmt(sub)}</span></div>`;
+  html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>GST (${gst}%)</span><span style="font-weight:700;color:var(--orange)">${fmt(gstAmt)}</span></div>`;
+  html+=`<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;font-weight:800"><span>Grand Total</span><span style="color:var(--grn)">${fmt(total)}</span></div>`;
+  sum.innerHTML=html;
 }
 
 function saveEstimate(){
   const cid=document.getElementById('est-client').value;
   const pname=document.getElementById('est-proj').value.trim();
   if(!cid){alert('Select client');return;}
-  const items=collectEstItems();
-  if(!items.length&&!estExtraCharges.some(x=>x.amount>0)){alert('Select at least one service or add a charge');return;}
-  const servicesSub=items.reduce((a,x)=>a+x.amount,0);
+  const calc=estCalcSubtotal();
+  const items=calc.items;
+  if(calc.mode==='itemized'&&!items.length&&!estExtraCharges.some(x=>x.amount>0)){
+    alert('Select at least one service or add a charge');return;
+  }
+  if(calc.mode==='sqft'&&!(parseFloat(document.getElementById('est-area')?.value)>0&&parseFloat(document.getElementById('est-sqft-rate')?.value)>0)){
+    alert('Enter Site Area and Rate per Sq.Ft');return;
+  }
+  if(calc.mode==='lumpsum'&&!(parseFloat(document.getElementById('est-lumpsum')?.value)>0)){
+    alert('Enter Lump Sum Design Fee');return;
+  }
   const extras=estExtraCharges.filter(x=>(x.name||'').trim()||x.amount).map(x=>({name:x.name||'Additional charge',amount:parseFloat(x.amount)||0}));
-  const extrasSum=extras.reduce((a,x)=>a+x.amount,0);
-  const sub=servicesSub+extrasSum;
   const gst=parseInt(document.getElementById('est-gst').value)||0;
-  const gstAmt=Math.round(sub*gst/100);
+  const gstAmt=Math.round(calc.sub*gst/100);
   const est={
     id:uid('EST'),
     clientId:cid,
     projName:pname,
     items,
     extras,
-    sub,
+    sub:calc.sub,
+    feeBase:calc.feeBase,
     gst,
     gstAmt,
-    total:sub+gstAmt,
+    total:calc.sub+gstAmt,
+    pricingMode:calc.mode,
+    sqftRate:parseFloat(document.getElementById('est-sqft-rate')?.value)||0,
+    lumpsum:parseFloat(document.getElementById('est-lumpsum')?.value)||0,
+    pdfStyle:estGetPdfStyle(),
+    package:document.getElementById('est-package')?.value||'',
     notes:document.getElementById('est-notes').value.trim(),
     date:document.getElementById('est-date')?.value||new Date().toISOString().split('T')[0],
     address:document.getElementById('est-address').value.trim(),
@@ -5694,11 +5930,13 @@ function saveEstimate(){
     validUntil:document.getElementById('est-valid').value,
     revisions:parseInt(document.getElementById('est-revisions').value)||0,
     visits:parseInt(document.getElementById('est-visits').value)||0,
+    visitRate:parseFloat(document.getElementById('est-visit-rate')?.value)||0,
     category:document.getElementById('est-category').value,
     scope:document.getElementById('est-scope').value.trim(),
     inclusions:document.getElementById('est-inclusions')?.value.trim()||'',
     exclusions:document.getElementById('est-exclusions').value.trim(),
     paymentSchedule:document.getElementById('est-payment').value.trim(),
+    stages:document.getElementById('est-stages')?.value.trim()||'',
     terms:document.getElementById('est-terms')?.value.trim()||'',
     acceptance:!!(document.getElementById('est-acceptance')?.checked),
     template:document.getElementById('est-template')?.value||''
@@ -5736,11 +5974,135 @@ function renderEstimates(){
 }
 function delEstimate(id){if(!confirm('Delete estimate?'))return;db.estimates=db.estimates.filter(e=>e.id!==id);saveAll();renderEstimates();}
 
+function generateProposalPDF(est,c){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF('p','mm','a4');
+  // Header bar
+  doc.setFillColor(26,58,42);doc.rect(0,0,210,28,'F');
+  doc.setFillColor(201,168,76);doc.rect(0,28,210,2,'F');
+  doc.setTextColor(201,168,76);doc.setFont('helvetica','bold');doc.setFontSize(16);
+  doc.text((officeInfo.name||'GreenHouse Studio'),14,14);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(220,220,220);
+  doc.text('Creative Architecture Group',14,20);
+  doc.setTextColor(201,168,76);doc.setFont('helvetica','bold');doc.setFontSize(10);
+  doc.text('Architectural Design Fees & Payment Schedule',196,14,{align:'right'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(200,200,200);
+  doc.text('Ref: '+(est.estimateNo||est.id),196,20,{align:'right'});
+  doc.text('Date: '+(est.date||''),196,25,{align:'right'});
+  let y=40;
+  doc.setTextColor(40,40,40);doc.setFont('helvetica','normal');doc.setFontSize(10);
+  doc.text('To,',14,y);y+=6;
+  doc.setFont('helvetica','bold');
+  doc.text((c?c.name:'Client'),14,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);
+  if(c&&(c.company||c.cat)) {doc.text(String(c.company||c.cat),14,y);y+=5;}
+  doc.text(est.address||(c&&c.city)||'Solapur',14,y);y+=8;
+  doc.setFont('helvetica','bold');doc.setFontSize(10);
+  doc.text('Subject: Architectural Design Fees & Payment Schedule',14,y);y+=8;
+  doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+  const intro='With reference to your project "'+(est.projName||'Proposed Project')+'"'+(est.address?', at '+est.address:'')+', our professional fees and payment schedule are finalized as follows:';
+  const introLines=doc.splitTextToSize(intro,182);
+  introLines.forEach(l=>{doc.text(l,14,y);y+=5;});
+  y+=4;
+  // Total fees box
+  doc.setFillColor(246,243,237);doc.roundedRect(12,y,186,22,2,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(26,58,42);
+  doc.text('Total Architectural Design Fees',17,y+8);
+  let feeTxt=fmt(est.feeBase!=null?est.feeBase:est.sub);
+  if(est.pricingMode==='sqft'&&est.area&&est.sqftRate){
+    feeTxt=fmt(est.feeBase)+'  ('+est.area+' sq.ft × ₹'+est.sqftRate+')';
+  }
+  doc.setFontSize(13);doc.text(feeTxt,17,y+17);
+  y+=28;
+  // Payment schedule
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
+  doc.text('Payment Schedule',14,y);y+=6;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
+  const pay=est.paymentSchedule||'As mutually agreed.';
+  doc.splitTextToSize(pay,182).forEach(l=>{doc.text(l,14,y);y+=4.5;});
+  y+=3;
+  doc.setFontSize(8.5);doc.setTextColor(80,80,80);
+  doc.text('• Taxes: GST'+(est.gst?(' @ '+est.gst+'%'):' as applicable')+' will be charged extra.  Grand Total incl. GST: '+fmt(est.total),14,y);y+=5;
+  doc.text('• Site Visits: '+(est.visits||0)+' Site Visits included. Additional visits: ₹'+(est.visitRate||3000)+'/- per visit.',14,y);y+=5;
+  doc.text('• Revisions included: '+(est.revisions||0),14,y);y+=8;
+  // Scope
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
+  doc.text('Scope of Work',14,y);y+=6;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
+  const scopeParts=[];
+  if(est.inclusions)scopeParts.push(est.inclusions);
+  else if(est.scope)scopeParts.push(est.scope);
+  (est.items||[]).forEach(it=>{if(it.service)scopeParts.push(it.service);});
+  // unique-ish bullets
+  const seen=new Set();
+  scopeParts.join(' · ').split(/[·;]|\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>{
+    if(seen.has(s))return;seen.add(s);
+    const lines=doc.splitTextToSize('• '+s,180);
+    lines.forEach(l=>{if(y>270){doc.addPage();y=20;}doc.text(l,14,y);y+=4.5;});
+  });
+  y+=4;
+  if(est.stages){
+    if(y>250){doc.addPage();y=20;}
+    doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
+    doc.text('Deliverables & Stages',14,y);y+=6;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
+    est.stages.split('\n').forEach(line=>{
+      if(!line.trim())return;
+      if(y>275){doc.addPage();y=20;}
+      doc.splitTextToSize(line.trim(),180).forEach(l=>{doc.text(l,14,y);y+=4.5;});
+    });
+    y+=4;
+  }
+  if(est.exclusions){
+    if(y>250){doc.addPage();y=20;}
+    doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
+    doc.text('Exclusions',14,y);y+=6;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
+    est.exclusions.split(/[·;]|\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>{
+      if(y>275){doc.addPage();y=20;}
+      doc.splitTextToSize('• '+s,180).forEach(l=>{doc.text(l,14,y);y+=4.5;});
+    });
+    y+=4;
+  }
+  if(est.notes){
+    if(y>250){doc.addPage();y=20;}
+    doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,58,42);
+    doc.text('Notes',14,y);y+=6;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
+    doc.splitTextToSize(est.notes,182).forEach(l=>{if(y>275){doc.addPage();y=20;}doc.text(l,14,y);y+=4.5;});
+    y+=4;
+  }
+  if(y>230){doc.addPage();y=20;}
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
+  doc.splitTextToSize('We request you to kindly confirm and acknowledge the above payment terms and scope of work by signing this letter.',182).forEach(l=>{doc.text(l,14,y);y+=5;});
+  y+=10;
+  doc.setFont('helvetica','bold');doc.setFontSize(10);
+  doc.text('For,',14,y);
+  doc.text('Accepted By Client',120,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);
+  doc.text(officeInfo.name||'GreenHouse Studio',14,y);
+  doc.text('Name & Signature: ____________________',120,y);y+=5;
+  doc.text(officeInfo.addr||'497, Sakhar Peth, Solapur',14,y);
+  doc.text('Date: ____________________',120,y);y+=5;
+  doc.text(officeInfo.arch||'Architect',14,y);
+  // Footer
+  const pages=doc.getNumberOfPages();
+  for(let pg=1;pg<=pages;pg++){
+    doc.setPage(pg);
+    doc.setFillColor(26,58,42);doc.rect(0,287,210,10,'F');
+    doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(180,180,180);
+    doc.text((officeInfo.phone||'')+'  '+(officeInfo.email||'')+'  '+(officeInfo.addr||''),14,293);
+    doc.text('Page '+pg+' of '+pages,196,293,{align:'right'});
+  }
+  doc.save('Proposal_'+(est.estimateNo||est.projName||'fees')+'_'+(est.date||'')+'.pdf');
+}
+
 function generateEstimatePDF(id){
   try{
     const {jsPDF}=window.jspdf;
     const est=db.estimates.find(e=>e.id===id);if(!est)return;
     const c=gc(est.clientId);
+    if(est.pdfStyle==='proposal'){generateProposalPDF(est,c);return;}
     const doc=new jsPDF('p','mm','a4');
     doc.setFillColor(26,58,42);doc.rect(0,0,210,38,'F');
     doc.setFillColor(201,168,76);doc.rect(0,36,210,2.5,'F');
@@ -10990,19 +11352,32 @@ document.addEventListener('DOMContentLoaded',async ()=>{
   <div class="modal-box" style="width:760px;max-width:98vw">
     <div class="modal-head"><div class="modal-title">📋 Create Estimate</div><button class="modal-close" onclick="closeModal('m-estimate')">✕</button></div>
     <div class="modal-body" style="max-height:80vh;overflow-y:auto">
-      <div class="fg" style="margin-bottom:12px">
-        <label>Estimate Template</label>
-        <select class="fi fi-sel" id="est-template" onchange="applyEstTemplate(this.value)">
-          <option value="">— Select template (optional) —</option>
-          <option value="residential">Residential Building</option>
-          <option value="commercial">Commercial Project</option>
-          <option value="apartment">Apartment Design</option>
-          <option value="interior">Interior Design</option>
-          <option value="renovation">Renovation / Alteration</option>
-          <option value="permission">Permission &amp; Documentation</option>
-          <option value="drawing">Drawing Only (2D / 3D)</option>
-        </select>
+      <div class="form-row c2">
+        <div class="fg">
+          <label>Project Template</label>
+          <select class="fi fi-sel" id="est-template" onchange="applyEstTemplate(this.value)">
+            <option value="">— Select template (optional) —</option>
+            <option value="residential">Residential Building</option>
+            <option value="commercial">Commercial Project</option>
+            <option value="apartment">Apartment Design</option>
+            <option value="interior">Interior Design</option>
+            <option value="renovation">Renovation / Alteration</option>
+            <option value="permission">Permission &amp; Documentation</option>
+            <option value="drawing">Drawing Only (2D / 3D)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Fee Package *</label>
+          <select class="fi fi-sel" id="est-package" onchange="applyEstPackage(this.value)">
+            <option value="">— Select package —</option>
+            <option value="basic">1. Basic Drawing Package</option>
+            <option value="standard">2. Standard Design Package</option>
+            <option value="premium">3. Premium Full Design</option>
+            <option value="consultancy">4. Full Consultancy (Site + Stages)</option>
+          </select>
+        </div>
       </div>
+      <div id="est-pkg-hint" style="font-size:11px;color:var(--mut);margin:-4px 0 12px;line-height:1.45"></div>
       <div class="form-row c2">
         <div class="fg"><label>Client *</label><select class="fi fi-sel" id="est-client"></select></div>
         <div class="fg"><label>Project Name</label><input class="fi" id="est-proj" placeholder="e.g. Sharma Residence"></div>
@@ -11018,9 +11393,38 @@ document.addEventListener('DOMContentLoaded',async ()=>{
         <div class="fg"><label>Estimate Date</label><input class="fi" id="est-date" type="date"></div>
         <div class="fg"><label>Valid Until</label><input class="fi" id="est-valid" type="date"></div>
       </div>
-      <div class="form-row c2">
+      <div class="form-row c3">
+        <div class="fg"><label>Pricing Mode</label>
+          <select class="fi fi-sel" id="est-pricing-mode" onchange="estPricingModeChange()">
+            <option value="itemized">Itemized (Qty × Rate)</option>
+            <option value="sqft">Per Sq.Ft Rate</option>
+            <option value="lumpsum">Lump Sum Total</option>
+          </select>
+        </div>
         <div class="fg"><label>Site Area (sq.ft)</label><input class="fi" id="est-area" type="number" placeholder="1200" oninput="updateEstimate()"></div>
         <div class="fg"><label>GST %</label><select class="fi fi-sel" id="est-gst" onchange="updateEstimate()"><option value="0">No GST</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option></select></div>
+      </div>
+      <div class="form-row c2" id="est-sqft-row" style="display:none">
+        <div class="fg"><label>Rate per Sq.Ft (₹)</label><input class="fi" id="est-sqft-rate" type="number" min="0" placeholder="e.g. 25" oninput="updateEstimate()"></div>
+        <div class="fg"><label>Calculated Fee</label><input class="fi" id="est-sqft-total" readonly placeholder="Area × Rate" style="font-weight:700;color:var(--grn)"></div>
+      </div>
+      <div class="form-row c2" id="est-lumpsum-row" style="display:none">
+        <div class="fg"><label>Lump Sum Design Fee (₹)</label><input class="fi" id="est-lumpsum" type="number" min="0" placeholder="e.g. 325000" oninput="updateEstimate()"></div>
+        <div class="fg"><label>PDF Format</label>
+          <select class="fi fi-sel" id="est-pdf-style">
+            <option value="quotation">Itemized Quotation</option>
+            <option value="proposal">Proposal Letter (Fees &amp; Schedule)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row c2" id="est-pdf-row-itemized">
+        <div class="fg"><label>PDF Format</label>
+          <select class="fi fi-sel" id="est-pdf-style-2">
+            <option value="quotation">Itemized Quotation</option>
+            <option value="proposal">Proposal Letter (Fees &amp; Schedule)</option>
+          </select>
+        </div>
+        <div class="fg"><label>Extra Site Visit Rate (₹)</label><input class="fi" id="est-visit-rate" type="number" min="0" value="3000" placeholder="3000"></div>
       </div>
       <div class="fg" style="margin-bottom:12px">
         <label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--grn)">
