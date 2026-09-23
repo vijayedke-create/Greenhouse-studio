@@ -2799,8 +2799,17 @@ function openModal(id){
   if(el) el.classList.add('open');
   else console.error('Modal not found:',id);
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function closeModal(id){
+  const el=document.getElementById(id);
+  if(el)el.classList.remove('open');
+  if(id==='m-estimate'){estEditId=null;if(typeof estSetModalMode==='function')estSetModalMode(false);}
+}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{
+  if(e.target===m){
+    m.classList.remove('open');
+    if(m.id==='m-estimate'){estEditId=null;if(typeof estSetModalMode==='function')estSetModalMode(false);}
+  }
+}));
 
 function toggleCatOther(){const v=document.getElementById('c-cat').value;document.getElementById('c-other-wrap').style.display=v==='Other'?'flex':'none';}
 function toggleUpiSub(subId,val){const el=document.getElementById(subId);if(el)el.style.display=val==='UPI'?'flex':'none';}
@@ -5205,6 +5214,9 @@ function delExpense(id){if(!confirm('Delete expense?'))return;db.expenses=db.exp
 let estSvcPrices={};
 let estCustomLines=[];
 let estExtraCharges=[];
+let estEditId=null; /* when set, saveEstimate updates existing record */
+let estPayRows=[{name:'Advance on acceptance',pct:30},{name:'On working drawings approval',pct:40},{name:'On final submission',pct:30}];
+let estPayOther=false;
 
 const EST_DEFAULT_RATES={
   'Apartment Design':25000,'Ground Floor Plan':8000,'First Floor Plan':6000,
@@ -5318,7 +5330,32 @@ function estBuildPresetChips(field){
 function estTogglePreset(field,id){
   const st=estEnsurePresetState(field);
   if(st.selected.has(id))st.selected.delete(id);else st.selected.add(id);
-  // turning on a preset turns off pure-other-only mode visually but keeps other text if any
+  // Payment presets → structured % rows
+  if(field==='payment'){
+    const map={
+      '30-40-30':[30,40,30],
+      '40-30-30':[40,30,30],
+      '50-50':[50,50],
+      '30-35-20-15':[30,35,20,15],
+      '40-40-20':[40,40,20],
+      'full-advance':[100]
+    };
+    const names={
+      '30-40-30':['Advance on acceptance','On working drawings approval','On final submission'],
+      '40-30-30':['Advance','On design approval','On final drawings / permission'],
+      '50-50':['Advance on acceptance','On delivery of final drawings'],
+      '30-35-20-15':['Advance','Floor plan freeze','Elevation / services','Permission drawings'],
+      '40-40-20':['Advance','Detailed drawings','Final handover'],
+      'full-advance':['Full advance before commencement']
+    };
+    // use last selected preset that maps
+    let applied=null;
+    st.selected.forEach(sid=>{if(map[sid])applied=sid;});
+    if(applied){
+      estApplyPayPreset(map[applied], names[applied]||[]);
+      st.other=false;
+    }
+  }
   estBuildPresetChips(field);
 }
 
@@ -5628,9 +5665,124 @@ function estPricingModeChange(){
   const sq=document.getElementById('est-sqft-row');
   const ls=document.getElementById('est-lumpsum-row');
   const ir=document.getElementById('est-pdf-row-itemized');
-  if(sq)sq.style.display=mode==='sqft'?'grid':'none';
+  const areaWrap=document.getElementById('est-area-itemized-wrap');
+  if(sq)sq.style.display=mode==='sqft'?'block':'none';
   if(ls)ls.style.display=mode==='lumpsum'?'grid':'none';
   if(ir)ir.style.display=mode==='lumpsum'?'none':'grid';
+  if(areaWrap)areaWrap.style.display=mode==='itemized'?'':'none';
+  // Service grid: description-only in sqft/lumpsum
+  const lbl=document.getElementById('est-svc-label');
+  const hdr=document.getElementById('est-svc-colhdr');
+  if(mode==='sqft'||mode==='lumpsum'){
+    if(lbl)lbl.textContent='✅ Scope / Drawings Included (description only)';
+    if(hdr)hdr.innerHTML='<div></div><div style="grid-column:2/-1">Description / Drawing</div>';
+    if(hdr)hdr.style.gridTemplateColumns='28px 1fr';
+  } else {
+    if(lbl)lbl.textContent='✅ Services — Qty × Rate = Amount';
+    if(hdr){
+      hdr.style.gridTemplateColumns='28px 1fr 58px 48px 78px 88px';
+      hdr.innerHTML='<div></div><div>Service</div><div>Qty</div><div>Unit</div><div>Rate ₹</div><div style="text-align:right">Amount ₹</div>';
+    }
+  }
+  document.querySelectorAll('#est-svc-grid .est-svc-row, #est-svc-grid .est-custom-row').forEach(row=>{
+    estApplyRowMode(row, mode);
+  });
+  updateEstimate();
+}
+
+function estApplyRowMode(row, mode){
+  if(!row)return;
+  const hide = (mode==='sqft'||mode==='lumpsum');
+  row.style.gridTemplateColumns = hide ? '28px 1fr' : '28px 1fr 58px 48px 78px 88px';
+  row.querySelectorAll('[data-qty],[data-unit],[data-rate],[data-amt]').forEach(el=>{
+    el.style.display = hide ? 'none' : '';
+  });
+}
+
+function estSyncAreaFromBuiltup(){
+  const b=document.getElementById('est-builtup');
+  const a=document.getElementById('est-area');
+  if(b&&a&&(!a.value||a.dataset.auto!=='0')){
+    a.value=b.value;
+    a.dataset.auto='1';
+  }
+  updateEstimate();
+}
+function estAreaItemizedSync(){
+  const src=document.getElementById('est-area-itemized');
+  const a=document.getElementById('est-area');
+  if(src&&a)a.value=src.value;
+  updateEstimate();
+}
+
+function estAddPayRow(){
+  estPayRows.push({name:'',pct:0});
+  estRenderPayRows();
+  updateEstimate();
+}
+function estRemovePayRow(i){
+  estPayRows.splice(i,1);
+  if(!estPayRows.length)estPayRows.push({name:'',pct:0});
+  estRenderPayRows();
+  updateEstimate();
+}
+function estRenderPayRows(){
+  const box=document.getElementById('est-pay-rows');
+  if(!box)return;
+  const fee=estGetFeeBaseOnly();
+  box.innerHTML=estPayRows.map((r,i)=>{
+    const amt=Math.round(fee*((parseFloat(r.pct)||0)/100));
+    return `<div style="display:grid;grid-template-columns:1fr 70px 110px 28px;gap:6px;align-items:center">
+      <input class="fi" placeholder="e.g. Advance / On slab" value="${(r.name||'').replace(/"/g,'&quot;')}" oninput="estPayRows[${i}].name=this.value;estSyncPaymentText()">
+      <input class="fi" type="number" min="0" max="100" step="0.01" value="${r.pct||''}" style="text-align:right" oninput="estPayRows[${i}].pct=parseFloat(this.value)||0;estRenderPayRows();updateEstimate()">
+      <input class="fi" readonly value="${amt?amt.toLocaleString('en-IN'):'0'}" style="text-align:right;font-weight:700;color:var(--grn);background:var(--surf2)">
+      <button type="button" onclick="estRemovePayRow(${i})" style="border:0;background:transparent;color:var(--red);cursor:pointer;font-size:16px">×</button>
+    </div>`;
+  }).join('');
+  const pctSum=estPayRows.reduce((a,r)=>a+(parseFloat(r.pct)||0),0);
+  const amtSum=estPayRows.reduce((a,r)=>a+Math.round(fee*((parseFloat(r.pct)||0)/100)),0);
+  const tot=document.getElementById('est-pay-total');
+  if(tot){
+    tot.innerHTML='Total %: <b>'+pctSum.toFixed(1)+'%</b> &nbsp;·&nbsp; Total amount: <b>₹ '+amtSum.toLocaleString('en-IN')+'</b>'+
+      (Math.abs(pctSum-100)>0.05?' <span style="color:var(--orange)">(should be 100%)</span>':' <span style="color:var(--rgreen)">✓</span>');
+  }
+  estSyncPaymentText();
+}
+function estGetFeeBaseOnly(){
+  const mode=(document.getElementById('est-pricing-mode')||{}).value||'itemized';
+  if(mode==='sqft'){
+    const area=parseFloat(document.getElementById('est-area')?.value)||0;
+    const rate=parseFloat(document.getElementById('est-sqft-rate')?.value)||0;
+    return Math.round(area*rate);
+  }
+  if(mode==='lumpsum')return parseFloat(document.getElementById('est-lumpsum')?.value)||0;
+  return collectEstItems().reduce((a,x)=>a+x.amount,0);
+}
+function estSyncPaymentText(){
+  if(estPayOther)return;
+  const fee=estGetFeeBaseOnly();
+  const lines=estPayRows.filter(r=>(r.name||'').trim()||r.pct).map(r=>{
+    const amt=Math.round(fee*((parseFloat(r.pct)||0)/100));
+    return (r.name||'Installment')+' — '+(r.pct||0)+'% = ₹ '+amt.toLocaleString('en-IN');
+  });
+  const ta=document.getElementById('est-payment');
+  if(ta){ta.value=lines.join('\n');ta.dataset.userEdited='';}
+}
+function estTogglePayOther(){
+  estPayOther=!estPayOther;
+  const ta=document.getElementById('est-payment');
+  if(ta){
+    ta.style.display=estPayOther?'block':'none';
+    if(estPayOther){ta.focus();ta.dataset.userEdited='1';}
+    else estSyncPaymentText();
+  }
+}
+function estApplyPayPreset(pcts, names){
+  estPayRows=pcts.map((p,i)=>({name:names[i]||('Installment '+(i+1)),pct:p}));
+  estPayOther=false;
+  const ta=document.getElementById('est-payment');
+  if(ta){ta.style.display='none';ta.dataset.userEdited='';}
+  estRenderPayRows();
   updateEstimate();
 }
 
@@ -5676,6 +5828,8 @@ function buildEstGrid(preselect){
   });
   // restore custom lines
   estCustomLines.forEach((cl,idx)=>estAppendCustomRow(cl,idx));
+  const mode=(document.getElementById('est-pricing-mode')||{}).value||'itemized';
+  document.querySelectorAll('#est-svc-grid .est-svc-row, #est-svc-grid .est-custom-row').forEach(row=>estApplyRowMode(row, mode));
   updateEstimate();
 }
 
@@ -5809,16 +5963,140 @@ function initEstimateModal(){
   const stg=document.getElementById('est-stages');if(stg)stg.value='';
   estCustomLines=[];
   estExtraCharges=[];
+  estEditId=null;
   estRenderExtras();
   estResetPresets();
+  estPayRows=[{name:'Advance on acceptance',pct:30},{name:'On working drawings approval',pct:40},{name:'On final submission',pct:30}];
+  estPayOther=false;
   estPricingModeChange();
+  estSetModalMode(false);
+  estRenderPayRows();
 
   const modalEl=document.getElementById('m-estimate');
   if(modalEl)modalEl.classList.add('open');
   setTimeout(()=>{
     buildEstGrid([]);
     EST_PRESET_FIELDS.forEach(estBuildPresetChips);
+    estPricingModeChange();
   },80);
+}
+
+function estSetModalMode(editing){
+  const title=document.querySelector('#m-estimate .modal-title');
+  if(title)title.textContent=editing?'✏️ Edit Estimate':'📋 Create Estimate';
+  const btn=document.querySelector('#m-estimate .form-actions .btn-full');
+  // first gold button
+  const btns=document.querySelectorAll('#m-estimate .form-actions button');
+  if(btns[0])btns[0].textContent=editing?'Update Estimate':'Generate Estimate';
+}
+
+function editEstimate(id){
+  const est=(db.estimates||[]).find(e=>e.id===id);
+  if(!est){alert('Estimate not found');return;}
+  estEditId=id;
+  // Populate client dropdown first
+  const sel=document.getElementById('est-client');
+  if(sel){
+    sel.innerHTML='<option value="">Select Client</option>';
+    (db.contacts||[]).forEach(c=>{
+      const o=document.createElement('option');
+      o.value=c.id;
+      o.textContent=c.name+' ('+c.cat+')';
+      sel.appendChild(o);
+    });
+    sel.value=est.clientId||'';
+  }
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=(v==null?'':v);};
+  set('est-proj',est.projName||'');
+  set('est-address',est.address||'');
+  set('est-category',est.category||'Architectural');
+  set('est-no',est.estimateNo||'');
+  set('est-date',est.date||'');
+  set('est-valid',est.validUntil||'');
+  set('est-area',est.area||'');
+  set('est-gst',est.gst!=null?String(est.gst):'18');
+  set('est-revisions',est.revisions!=null?est.revisions:2);
+  set('est-visits',est.visits!=null?est.visits:2);
+  set('est-visit-rate',est.visitRate!=null?est.visitRate:3000);
+  set('est-pricing-mode',est.pricingMode||'itemized');
+  set('est-sqft-rate',est.sqftRate||'');
+  set('est-lumpsum',est.lumpsum||est.feeBase||'');
+  set('est-template',est.template||'');
+  set('est-package',est.package||'');
+  set('est-terms',est.terms||EST_DEFAULT_TERMS);
+  const acc=document.getElementById('est-acceptance');
+  if(acc)acc.checked=est.acceptance!==false;
+  const ps=document.getElementById('est-pdf-style');
+  const ps2=document.getElementById('est-pdf-style-2');
+  const style=est.pdfStyle||'quotation';
+  if(ps)ps.value=style;
+  if(ps2)ps2.value=style;
+  // extras
+  estExtraCharges=(est.extras||[]).map(x=>({name:x.name||'',amount:x.amount||0}));
+  estRenderExtras();
+  // line items: known services vs custom
+  const known=[], rates={};
+  estCustomLines=[];
+  (est.items||[]).forEach(it=>{
+    if((SERVICES||[]).indexOf(it.service)>=0){
+      known.push(it.service);
+      rates[it.service]={qty:it.qty!=null?it.qty:1,unit:it.unit||'LS',rate:it.rate!=null?it.rate:(it.amount||0)};
+    } else {
+      estCustomLines.push({name:it.service,qty:it.qty!=null?it.qty:1,unit:it.unit||'LS',rate:it.rate!=null?it.rate:(it.amount||0)});
+    }
+  });
+  estPricingModeChange();
+  // text fields via Other mode
+  estApplyTextToPresets('scope',est.scope||'');
+  estApplyTextToPresets('inclusions',est.inclusions||'');
+  estApplyTextToPresets('exclusions',est.exclusions||'');
+  estApplyTextToPresets('payment',est.paymentSchedule||'');
+  if(est.paymentRows&&est.paymentRows.length){
+    estPayRows=est.paymentRows.map(r=>({name:r.name||'',pct:r.pct||0}));
+  } else {
+    estPayRows=[{name:'Advance on acceptance',pct:30},{name:'On working drawings approval',pct:40},{name:'On final submission',pct:30}];
+  }
+  estPayOther=false;
+  set('est-builtup',est.builtup||'');
+  set('est-slab',est.slabArea||'');
+  set('est-area',est.area||'');
+  set('est-area-itemized',est.area||'');
+  setTimeout(estRenderPayRows,120);
+  estApplyTextToPresets('notes',est.notes||'');
+  let stg=document.getElementById('est-stages');
+  if(!stg){
+    const scopeBox=document.getElementById('est-scope')?.closest('.fg');
+    if(scopeBox){
+      const wrap=document.createElement('div');
+      wrap.className='fg';
+      wrap.style.marginBottom='12px';
+      wrap.innerHTML='<label>Deliverables &amp; Stages</label><textarea class="fi fi-ta" id="est-stages" rows="3" placeholder="Stage-wise deliverables..."></textarea>';
+      scopeBox.parentNode.insertBefore(wrap,scopeBox.nextSibling);
+      stg=document.getElementById('est-stages');
+    }
+  }
+  if(stg)stg.value=est.stages||'';
+  const hint=document.getElementById('est-pkg-hint');
+  if(hint){
+    if(est.package&&EST_PACKAGES[est.package])hint.innerHTML='<b style="color:var(--grn)">'+EST_PACKAGES[est.package].name+':</b> editing saved estimate';
+    else hint.textContent='Editing saved estimate';
+  }
+  estSetModalMode(true);
+  const modalEl=document.getElementById('m-estimate');
+  if(modalEl)modalEl.classList.add('open');
+  setTimeout(()=>{
+    buildEstGrid(known);
+    Object.keys(rates).forEach(s=>{
+      const row=document.querySelector('#est-svc-grid .est-svc-row[data-service="'+CSS.escape(s)+'"]');
+      if(!row)return;
+      const q=row.querySelector('[data-qty]');if(q)q.value=rates[s].qty;
+      const u=row.querySelector('[data-unit]');if(u)u.value=rates[s].unit;
+      const r=row.querySelector('[data-rate]');if(r)r.value=rates[s].rate;
+      estRecalcRow(r||q);
+    });
+    estCustomLines.forEach((cl,idx)=>estAppendCustomRow(cl,idx));
+    updateEstimate();
+  },100);
 }
 
 function collectEstItems(){
@@ -5852,15 +6130,32 @@ function estCalcSubtotal(){
   let feeBase=servicesSub;
   let modeLabel='Itemized services';
   if(mode==='sqft'){
-    const area=parseFloat(document.getElementById('est-area')?.value)||0;
+    // Prefer chargeable area; sync from built-up if empty
+    let area=parseFloat(document.getElementById('est-area')?.value)||0;
+    const built=parseFloat(document.getElementById('est-builtup')?.value)||0;
+    const slab=parseFloat(document.getElementById('est-slab')?.value)||0;
+    if(!area&&built){area=built;const a=document.getElementById('est-area');if(a)a.value=built;}
     const rate=parseFloat(document.getElementById('est-sqft-rate')?.value)||0;
     feeBase=Math.round(area*rate);
     const st=document.getElementById('est-sqft-total');
     if(st)st.value=feeBase?('₹ '+feeBase.toLocaleString('en-IN')):'';
-    modeLabel=area&&rate?(area+' sq.ft × ₹'+rate):'Per Sq.Ft';
+    const formula=document.getElementById('est-sqft-formula');
+    if(formula){
+      let f=[];
+      if(built)f.push('Built-up: '+built+' sq.ft');
+      if(slab)f.push('Slab: '+slab+' sq.ft');
+      f.push('Chargeable: '+(area||0)+' sq.ft × ₹'+(rate||0)+' = ₹ '+(feeBase||0).toLocaleString('en-IN'));
+      formula.textContent=f.join('  ·  ');
+    }
+    modeLabel=area&&rate?(area+' sq.ft × ₹'+rate+'/sq.ft'):'Per Sq.Ft';
   } else if(mode==='lumpsum'){
     feeBase=parseFloat(document.getElementById('est-lumpsum')?.value)||0;
     modeLabel='Lump sum design fee';
+  } else {
+    // keep itemized area in hidden est-area
+    const ai=document.getElementById('est-area-itemized');
+    const a=document.getElementById('est-area');
+    if(ai&&a)a.value=ai.value;
   }
   const sub=feeBase+extras;
   return {mode,items,extras,servicesSub,feeBase,sub,modeLabel};
@@ -5875,7 +6170,18 @@ function updateEstimate(){
   const sum=document.getElementById('est-summary');
   if(!sum)return;
   let html='';
-  if(mode==='itemized'){
+  if(mode==='sqft'){
+    const built=document.getElementById('est-builtup')?.value;
+    const slab=document.getElementById('est-slab')?.value;
+    const area=document.getElementById('est-area')?.value;
+    const rate=document.getElementById('est-sqft-rate')?.value;
+    if(built)html+=`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span>Built-up Area</span><span>${built} sq.ft</span></div>`;
+    if(slab)html+=`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span>Slab Area</span><span>${slab} sq.ft</span></div>`;
+    html+=`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span>Chargeable Area</span><span>${area||0} sq.ft</span></div>`;
+    html+=`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span>Rate per Sq.Ft</span><span>₹ ${rate||0}</span></div>`;
+    html+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)"><span style="font-weight:700">Area × Rate</span><span style="font-weight:800;color:var(--grn)">${fmt(feeBase)}</span></div>`;
+    if(items.length)html+=`<div style="font-size:11px;color:var(--mut);padding:4px 0">Drawings / scope: ${items.map(i=>i.service).join(', ')}</div>`;
+  } else if(mode==='itemized'){
     html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>Services Subtotal</span><span style="font-weight:700">${fmt(servicesSub)}</span></div>`;
   } else {
     html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>${modeLabel}</span><span style="font-weight:700">${fmt(feeBase)}</span></div>`;
@@ -5886,6 +6192,29 @@ function updateEstimate(){
   html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span>GST (${gst}%)</span><span style="font-weight:700;color:var(--orange)">${fmt(gstAmt)}</span></div>`;
   html+=`<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;font-weight:800"><span>Grand Total</span><span style="color:var(--grn)">${fmt(total)}</span></div>`;
   sum.innerHTML=html;
+  // refresh payment amounts
+  if(typeof estRenderPayRows==='function'&&document.getElementById('est-pay-rows')){
+    const box=document.getElementById('est-pay-rows');
+    // only re-render amounts without destroying focus if possible — full re-render is ok for simplicity
+    if(!box.dataset.editing){
+      const active=document.activeElement;
+      const isPay=active&&box.contains(active);
+      if(!isPay)estRenderPayRows();
+      else {
+        // update amount fields only
+        const fee=feeBase;
+        box.querySelectorAll('input[readonly]').forEach((inp,i)=>{
+          const pct=estPayRows[i]?parseFloat(estPayRows[i].pct)||0:0;
+          inp.value=Math.round(fee*pct/100).toLocaleString('en-IN');
+        });
+        estSyncPaymentText();
+        const pctSum=estPayRows.reduce((a,r)=>a+(parseFloat(r.pct)||0),0);
+        const amtSum=estPayRows.reduce((a,r)=>a+Math.round(fee*((parseFloat(r.pct)||0)/100)),0);
+        const tot=document.getElementById('est-pay-total');
+        if(tot)tot.innerHTML='Total %: <b>'+pctSum.toFixed(1)+'%</b> &nbsp;·&nbsp; Total amount: <b>₹ '+amtSum.toLocaleString('en-IN')+'</b>'+(Math.abs(pctSum-100)>0.05?' <span style="color:var(--orange)">(should be 100%)</span>':' <span style="color:var(--rgreen)">✓</span>');
+      }
+    }
+  }
 }
 
 function saveEstimate(){
@@ -5907,7 +6236,7 @@ function saveEstimate(){
   const gst=parseInt(document.getElementById('est-gst').value)||0;
   const gstAmt=Math.round(calc.sub*gst/100);
   const est={
-    id:uid('EST'),
+    id:estEditId||uid('EST'),
     clientId:cid,
     projName:pname,
     items,
@@ -5936,13 +6265,24 @@ function saveEstimate(){
     inclusions:document.getElementById('est-inclusions')?.value.trim()||'',
     exclusions:document.getElementById('est-exclusions').value.trim(),
     paymentSchedule:document.getElementById('est-payment').value.trim(),
+    paymentRows:estPayRows.map(r=>({name:r.name,pct:parseFloat(r.pct)||0,amount:Math.round((calc.feeBase||0)*((parseFloat(r.pct)||0)/100))})),
+    builtup:document.getElementById('est-builtup')?.value||'',
+    slabArea:document.getElementById('est-slab')?.value||'',
     stages:document.getElementById('est-stages')?.value.trim()||'',
     terms:document.getElementById('est-terms')?.value.trim()||'',
     acceptance:!!(document.getElementById('est-acceptance')?.checked),
     template:document.getElementById('est-template')?.value||''
   };
   if(!db.estimates)db.estimates=[];
-  db.estimates.push(est);
+  if(estEditId){
+    est.id=estEditId;
+    const idx=db.estimates.findIndex(e=>e.id===estEditId);
+    if(idx>=0)db.estimates[idx]=est;
+    else db.estimates.push(est);
+    estEditId=null;
+  } else {
+    db.estimates.push(est);
+  }
   saveAll();closeModal('m-estimate');renderEstimates();
   generateEstimatePDF(est.id);
 }
@@ -5963,6 +6303,7 @@ function renderEstimates(){
           <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--grn)">${fmt(e.total)}</div>
           <div style="font-size:10px;color:var(--mut)">incl. GST</div>
           <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn btn-s btn-sm" onclick="editEstimate('${e.id}')">✏️ Edit</button>
             <button class="btn-pdf" onclick="generateEstimatePDF('${e.id}')">📄 PDF</button>
             <button class="btn-wa" style="font-size:10px;padding:5px 9px" onclick="sendEstimateWA('${e.id}')">📲 WA</button>
             <button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="delEstimate('${e.id}')">🗑</button>
@@ -11401,12 +11742,22 @@ document.addEventListener('DOMContentLoaded',async ()=>{
             <option value="lumpsum">Lump Sum Total</option>
           </select>
         </div>
-        <div class="fg"><label>Site Area (sq.ft)</label><input class="fi" id="est-area" type="number" placeholder="1200" oninput="updateEstimate()"></div>
+        <div class="fg" id="est-area-itemized-wrap"><label>Site Area (sq.ft)</label><input class="fi" id="est-area-itemized" type="number" placeholder="1200" oninput="estAreaItemizedSync()"></div>
         <div class="fg"><label>GST %</label><select class="fi fi-sel" id="est-gst" onchange="updateEstimate()"><option value="0">No GST</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option></select></div>
       </div>
-      <div class="form-row c2" id="est-sqft-row" style="display:none">
-        <div class="fg"><label>Rate per Sq.Ft (₹)</label><input class="fi" id="est-sqft-rate" type="number" min="0" placeholder="e.g. 25" oninput="updateEstimate()"></div>
-        <div class="fg"><label>Calculated Fee</label><input class="fi" id="est-sqft-total" readonly placeholder="Area × Rate" style="font-weight:700;color:var(--grn)"></div>
+      <input type="hidden" id="est-area" value="">
+      <div id="est-sqft-row" style="display:none;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--grn);margin-bottom:8px">📐 Area × Per Sq.Ft Rate</div>
+        <div class="form-row c3">
+          <div class="fg"><label>Built-up Area (sq.ft)</label><input class="fi" id="est-builtup" type="number" min="0" step="0.01" placeholder="e.g. 2400" oninput="estSyncAreaFromBuiltup()"></div>
+          <div class="fg"><label>Slab Area (sq.ft) <span style="font-weight:400;color:var(--mut)">optional</span></label><input class="fi" id="est-slab" type="number" min="0" step="0.01" placeholder="e.g. 2200" oninput="updateEstimate()"></div>
+          <div class="fg"><label>Chargeable Area (sq.ft)</label><input class="fi" id="est-area" type="number" min="0" step="0.01" placeholder="Total area for fee" oninput="this.dataset.auto='0';updateEstimate()"></div>
+        </div>
+        <div class="form-row c2">
+          <div class="fg"><label>Rate per Sq.Ft (₹)</label><input class="fi" id="est-sqft-rate" type="number" min="0" placeholder="e.g. 25" oninput="updateEstimate()"></div>
+          <div class="fg"><label>Total Amount (Area × Rate)</label><input class="fi" id="est-sqft-total" readonly placeholder="Auto" style="font-weight:800;color:var(--grn);font-size:15px"></div>
+        </div>
+        <div id="est-sqft-formula" style="font-size:12px;color:var(--mut);margin-top:2px"></div>
       </div>
       <div class="form-row c2" id="est-lumpsum-row" style="display:none">
         <div class="fg"><label>Lump Sum Design Fee (₹)</label><input class="fi" id="est-lumpsum" type="number" min="0" placeholder="e.g. 325000" oninput="updateEstimate()"></div>
@@ -11427,10 +11778,10 @@ document.addEventListener('DOMContentLoaded',async ()=>{
         <div class="fg"><label>Extra Site Visit Rate (₹)</label><input class="fi" id="est-visit-rate" type="number" min="0" value="3000" placeholder="3000"></div>
       </div>
       <div class="fg" style="margin-bottom:12px">
-        <label style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--grn)">
+        <label id="est-svc-label" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--grn)">
           ✅ Services — Qty × Rate = Amount
         </label>
-        <div style="display:grid;grid-template-columns:28px 1fr 58px 48px 78px 88px;gap:6px;padding:6px 8px;margin-top:8px;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">
+        <div id="est-svc-colhdr" style="display:grid;grid-template-columns:28px 1fr 58px 48px 78px 88px;gap:6px;padding:6px 8px;margin-top:8px;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">
           <div></div><div>Service</div><div>Qty</div><div>Unit</div><div>Rate ₹</div><div style="text-align:right">Amount ₹</div>
         </div>
         <div id="est-svc-grid" style="display:flex;flex-direction:column;gap:5px;min-height:40px">
@@ -11469,7 +11820,14 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       <div class="fg" style="margin-bottom:12px">
         <label>Payment Schedule</label>
         <div id="est-payment-chips" class="est-preset-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px"></div>
-        <textarea class="fi fi-ta" id="est-payment" rows="2" placeholder="Selected schedule will appear here. Or choose Other to type manually..." style="display:none" oninput="estOnOtherInput('payment')"></textarea>
+        <div style="display:grid;grid-template-columns:1fr 70px 110px 28px;gap:6px;padding:4px 0;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">
+          <div>Stage / Description</div><div>%</div><div style="text-align:right">Amount ₹</div><div></div>
+        </div>
+        <div id="est-pay-rows" style="display:flex;flex-direction:column;gap:5px"></div>
+        <button type="button" class="btn btn-s btn-sm" style="margin-top:8px" onclick="estAddPayRow()">+ Add Installment</button>
+        <div id="est-pay-total" style="margin-top:8px;font-size:12px;font-weight:700;color:var(--grn)"></div>
+        <textarea class="fi fi-ta" id="est-payment" rows="2" placeholder="Auto-generated from % rows / or type manually..." style="margin-top:8px;display:none" oninput="estOnOtherInput('payment')"></textarea>
+        <button type="button" class="btn btn-s btn-sm" style="margin-top:6px" id="est-pay-other-btn" onclick="estTogglePayOther()">Other / Manual text</button>
       </div>
       <div class="fg" style="margin-bottom:12px"><label>Terms &amp; Conditions</label><textarea class="fi fi-ta" id="est-terms" rows="4" placeholder="Standard terms..."></textarea></div>
       <!-- Notes / Special Terms -->
