@@ -5215,7 +5215,7 @@ let estSvcPrices={};
 let estCustomLines=[];
 let estExtraCharges=[];
 let estEditId=null; /* when set, saveEstimate updates existing record */
-let estPayRows=[{name:'Advance on acceptance',pct:30},{name:'On working drawings approval',pct:40},{name:'On final submission',pct:30}];
+let estPayRows=[{name:'Advance / Project Start',pct:20},{name:'Floor Plan Finalization',pct:20},{name:'3D & 2D Elevation Finalization',pct:20},{name:'Building Permission Submission / Approval',pct:20},{name:'Electrical & Plumbing Working Drawings',pct:20}];
 let estPayOther=false;
 
 const EST_DEFAULT_RATES={
@@ -5273,6 +5273,7 @@ const EST_PRESETS={
     {id:'legal',label:'Legal / Advocate',text:'Legal, advocate and NOC consultancy fees'}
   ],
   payment:[
+    {id:'5x20',label:'5 × 20% (Revised)',text:'Advance / Project Start 20% · Floor Plan Finalization 20% · 3D & 2D Elevation Finalization 20% · Building Permission Submission / Approval 20% · Electrical & Plumbing Working Drawings 20%.'},
     {id:'30-40-30',label:'30% · 40% · 30%',text:'30% advance on acceptance · 40% on working drawings approval · 30% on final submission.'},
     {id:'40-30-30',label:'40% · 30% · 30%',text:'40% advance · 30% on design approval · 30% on final drawings / permission submission.'},
     {id:'50-50',label:'50% · 50%',text:'50% advance on acceptance · 50% on delivery of final drawings / submission.'},
@@ -5333,6 +5334,7 @@ function estTogglePreset(field,id){
   // Payment presets → structured % rows
   if(field==='payment'){
     const map={
+      '5x20':[20,20,20,20,20],
       '30-40-30':[30,40,30],
       '40-30-30':[40,30,30],
       '50-50':[50,50],
@@ -5341,6 +5343,7 @@ function estTogglePreset(field,id){
       'full-advance':[100]
     };
     const names={
+      '5x20':['Advance / Project Start','Floor Plan Finalization','3D & 2D Elevation Finalization','Building Permission Submission / Approval','Electrical & Plumbing Working Drawings'],
       '30-40-30':['Advance on acceptance','On working drawings approval','On final submission'],
       '40-30-30':['Advance','On design approval','On final drawings / permission'],
       '50-50':['Advance on acceptance','On delivery of final drawings'],
@@ -5381,16 +5384,20 @@ function estSyncPresetText(field){
   const presets=EST_PRESETS[field]||[];
   const parts=[];
   presets.forEach(p=>{if(st.selected.has(p.id))parts.push(p.text);});
+  // Bullet list for scope / inclusions / exclusions / notes
+  const useBullets = (field==='scope'||field==='inclusions'||field==='exclusions'||field==='notes');
+  const composed = useBullets
+    ? parts.map(t=>'• '+t.replace(/^[••\-\s]+/,'')).join('\n')
+    : parts.join(field==='payment'?' ':' · ');
   if(st.other){
     ta.style.display='block';
-    // If user already typed custom content starting with composed parts, don't wipe
     if(!ta.dataset.userEdited){
-      ta.value=parts.join(field==='payment'||field==='scope'?' ':' · ');
+      ta.value=composed;
     }
   } else {
     ta.style.display=parts.length?'block':'none';
     ta.dataset.userEdited='';
-    ta.value=parts.join(field==='payment'||field==='scope'?' ':' · ');
+    ta.value=composed;
   }
 }
 
@@ -5966,7 +5973,7 @@ function initEstimateModal(){
   estEditId=null;
   estRenderExtras();
   estResetPresets();
-  estPayRows=[{name:'Advance on acceptance',pct:30},{name:'On working drawings approval',pct:40},{name:'On final submission',pct:30}];
+  estPayRows=[{name:'Advance / Project Start',pct:20},{name:'Floor Plan Finalization',pct:20},{name:'3D & 2D Elevation Finalization',pct:20},{name:'Building Permission Submission / Approval',pct:20},{name:'Electrical & Plumbing Working Drawings',pct:20}];
   estPayOther=false;
   estPricingModeChange();
   estSetModalMode(false);
@@ -6054,7 +6061,7 @@ function editEstimate(id){
   if(est.paymentRows&&est.paymentRows.length){
     estPayRows=est.paymentRows.map(r=>({name:r.name||'',pct:r.pct||0}));
   } else {
-    estPayRows=[{name:'Advance on acceptance',pct:30},{name:'On working drawings approval',pct:40},{name:'On final submission',pct:30}];
+    estPayRows=[{name:'Advance / Project Start',pct:20},{name:'Floor Plan Finalization',pct:20},{name:'3D & 2D Elevation Finalization',pct:20},{name:'Building Permission Submission / Approval',pct:20},{name:'Electrical & Plumbing Working Drawings',pct:20}];
   }
   estPayOther=false;
   set('est-builtup',est.builtup||'');
@@ -6593,24 +6600,35 @@ function generateEstimatePDF(id){
       y=doc.lastAutoTable.finalY+8;
     }
 
-    const addSection=(title,text)=>{
+    const addSection=(title,text,mark)=>{
       if(!text)return;
-      const lines=doc.splitTextToSize(text,176);
-      const h=Math.max(16,10+lines.length*4.2);
+      const raw=String(text).split(/\n|[·;]/).map(s=>s.trim()).filter(Boolean);
+      const bullet=mark||'•';
+      const items=raw.map(s=>{
+        const clean=s.replace(/^[\u2022•\-\*\s]+/,'');
+        return bullet+' '+clean;
+      });
+      let allLines=[];
+      items.forEach(it=>{
+        doc.splitTextToSize(it,176).forEach(l=>allLines.push(l));
+      });
+      if(!allLines.length)return;
+      const h=Math.max(16,10+allLines.length*4.2);
       if(y+h>275){doc.addPage();y=16;}
       doc.setFillColor(250,248,243);doc.roundedRect(12,y,186,h,2,2,'F');
       doc.setDrawColor(220,215,205);doc.setLineWidth(0.3);doc.roundedRect(12,y,186,h,2,2,'S');
       doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(26,58,42);doc.text(title,17,y+6);
       doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(50,50,50);
-      lines.forEach((l,i)=>doc.text(l,17,y+11+i*4.2));
+      allLines.forEach((l,i)=>doc.text(l,17,y+11+i*4.2));
       y+=h+5;
     };
-    if(est.scope)addSection('SCOPE OF WORK',est.scope);
+    if(est.scope)addSection('SCOPE OF WORK',est.scope,'•');
     const inclParts=[];
     if(est.inclusions)inclParts.push(est.inclusions);
-    inclParts.push('Revisions included: '+(est.revisions||0)+'. Site visits included: '+(est.visits||0)+'.');
-    addSection('INCLUDED SERVICES',inclParts.join(' '));
-    if(est.exclusions)addSection('EXCLUDED SERVICES',est.exclusions);
+    inclParts.push('Revisions included: '+(est.revisions||0));
+    inclParts.push('Site visits included: '+(est.visits||0));
+    addSection('INCLUDED SERVICES',inclParts.join('\n'),'\u2713');
+    if(est.exclusions)addSection('EXCLUDED SERVICES',est.exclusions,'•');
     if(est.paymentRows&&est.paymentRows.length){
       if(y>250){doc.addPage();y=16;}
       doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,58,42);doc.text('PAYMENT SCHEDULE',14,y);y+=2;
@@ -6627,8 +6645,8 @@ function generateEstimatePDF(id){
       });
       y=doc.lastAutoTable.finalY+8;
     } else if(est.paymentSchedule)addSection('PAYMENT SCHEDULE',est.paymentSchedule);
-    if(est.terms)addSection('TERMS & CONDITIONS',est.terms);
-    if(est.notes)addSection('SPECIAL NOTES',est.notes);
+    if(est.terms)addSection('TERMS & CONDITIONS',est.terms,'•');
+    if(est.notes)addSection('SPECIAL NOTES',est.notes,'•');
     // Client acceptance block
     if(est.acceptance!==false){
       if(y>230){doc.addPage();y=16;}
