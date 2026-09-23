@@ -7657,11 +7657,19 @@ function renderUDCPR(){
           </div>
 
           <div style="height:1px;background:var(--bdr)"></div>
-          <div style="font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--mut)">Road & Plot</div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--mut)">Road & Plot (UDCPR 6.3)</div>
           <div class="form-row c2" style="margin-bottom:0">
-            <div class="fg" style="margin-bottom:0"><label>Road Width (m)</label><input class="fi" type="number" id="u-road" placeholder="12" step="0.5" min="3"></div>
-            <div class="fg" style="margin-bottom:0"><label>Plot Area (sq.m.)</label><input class="fi" type="number" id="u-area-sqm" placeholder="250" min="20"></div>
+            <div class="fg" style="margin-bottom:0"><label>Front Road Width (m)</label><input class="fi" type="number" id="u-road" placeholder="12" step="0.5" min="3"></div>
+            <div class="fg" style="margin-bottom:0"><label>Gross Plot Area (sq.m.)</label><input class="fi" type="number" id="u-area-sqm" placeholder="250" min="20" oninput="udcprUpdateNet()"></div>
           </div>
+          <div class="form-row c2" style="margin-bottom:0">
+            <div class="fg" style="margin-bottom:0"><label>DP Road / Reservation (sq.m.)</label><input class="fi" type="number" id="u-dp-deduct" placeholder="0" min="0" oninput="udcprUpdateNet()" title="Note xiv: Basic FSI on net plot after handover"></div>
+            <div class="fg" style="margin-bottom:0"><label>Net Plot (auto)</label><input class="fi" type="number" id="u-net-plot" placeholder="—" readonly style="background:var(--surf2)"></div>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;padding:6px 10px;background:var(--surf2);border-radius:8px;border:1px solid var(--bdr)">
+            <input type="checkbox" id="u-unauth" style="width:16px;height:16px;accent-color:var(--grn)">
+            <span>Unauthorised sub-division ≤0.4 ha <span style="font-size:10px;color:var(--mut);font-weight:400">— Basic+Premium 75%, TDR 50% (Note ix)</span></span>
+          </label>
           <div style="font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-top:4px">Road Frontage (रस्त्याची स्थिती)</div>
           <div class="fg" style="margin-bottom:0">
             <label>Plot Road Type</label>
@@ -7791,28 +7799,34 @@ function udcprFrontageChange(){
   const lab = document.getElementById('u-road2-label');
   const cornerCb = document.getElementById('u-corner');
   if(cornerCb) cornerCb.checked = (v==='corner'||v==='three');
-  if(wrap){
-    // show second road for corner / through / three
-    wrap.style.display = (v==='single') ? 'none' : 'grid';
-  }
+  if(wrap) wrap.style.display = (v==='single') ? 'none' : 'grid';
   if(lab){
     if(v==='corner') lab.textContent = 'Side Road Width (m)';
-    else if(v==='through') lab.textContent = 'Rear / Back Road Width (m)';
+    else if(v==='through') lab.textContent = 'Back / Rear Road Width (m)';
     else if(v==='three') lab.textContent = 'Other Road Width (m)';
     else lab.textContent = '2nd Road Width (m)';
   }
   if(hint){
     const tips = {
-      single: 'समोर → Front margin. बाजू → Side margins. मागे → Rear margin.',
-      corner: '📐 Corner (Reg 6.2.6): दोन्ही रस्त्यांवर Front margin. उरलेल्या बाजूंना Side/Rear. FSI सामान्यतः जास्त रुंद रस्त्यावरून.',
-      through: '🔄 Front+Back: समोर आणि मागे दोन्हीकडे Front margin (दोन्ही roads = front). Side margins बाजूंना. FSI = wider road.',
-      three: '3️⃣ तीन बाजू: तीनही रस्त्यांवर Front margin. एक बाजू Side/Rear. FSI = widest road.'
+      single: 'समोर → Front margin · बाजू → Side · मागे → Rear (Table 6-D / 6-B)',
+      corner: 'Reg 6.2.6: दोन्ही रस्त्यांवर Front setback. FSI = wider road (recommended).',
+      through: 'Reg 6.2.6 Front+Back: दोन्हीकडे Front margin. Side margins बाजूंना. FSI = wider road.',
+      three: 'तीन बाजूंना Front margin. FSI = widest road.'
     };
     hint.innerHTML = tips[v]||tips.single;
   }
 }
 
+function udcprUpdateNet(){
+  const g = parseFloat(document.getElementById('u-area-sqm')?.value)||0;
+  const d = parseFloat(document.getElementById('u-dp-deduct')?.value)||0;
+  const net = Math.max(0, g - d);
+  const el = document.getElementById('u-net-plot');
+  if(el) el.value = g ? net.toFixed(2) : '';
+}
+
 function udcprCalculate(){
+  udcprUpdateNet();
   const auth   = document.getElementById('u-auth')?.value||'mc_abc';
   const areaT  = document.getElementById('u-area')?.value||'non_cong';
   const use    = document.getElementById('u-use')?.value||'residential';
@@ -7821,16 +7835,20 @@ function udcprCalculate(){
   const roadW2 = parseFloat(document.getElementById('u-road2')?.value)||0;
   const frontage = document.getElementById('u-frontage')?.value||'single';
   const roadBasis = document.getElementById('u-road-basis')?.value||'wider';
-  const plotA  = parseFloat(document.getElementById('u-area-sqm')?.value)||0;
+  const grossA = parseFloat(document.getElementById('u-area-sqm')?.value)||0;
+  const dpDed  = parseFloat(document.getElementById('u-dp-deduct')?.value)||0;
+  const netA   = Math.max(0, grossA - dpDed);
+  const plotA  = netA; // Basic FSI on net (Note xiv)
   const plotW  = parseFloat(document.getElementById('u-pw')?.value)||0;
   const plotD  = parseFloat(document.getElementById('u-pd')?.value)||0;
   const bldH   = parseFloat(document.getElementById('u-ht')?.value)||0;
   const asr    = parseFloat(document.getElementById('u-asr')?.value)||0;
+  const unauth = document.getElementById('u-unauth')?.checked||false;
 
-  if(!roadW1||!plotA){showErr('Road width आणि Plot area आवश्यक');return;}
-  if(frontage!=='single' && !roadW2){showErr('2nd road width भरा (corner / front+back plot साठी)');return;}
+  if(!roadW1 || !grossA){ showErr('Front road width आणि Gross plot area आवश्यक'); return; }
+  if(frontage!=='single' && !roadW2){ showErr('2nd road width भरा (corner / front+back साठी)'); return; }
 
-  // Effective road for FSI table: wider of the two (or front only)
+  // FSI road = wider of multi-road (or front only)
   const roadW = (frontage!=='single' && roadBasis==='wider') ? Math.max(roadW1, roadW2||0) : roadW1;
   const isCorner = (frontage==='corner'||frontage==='three');
   const isThrough = (frontage==='through');
@@ -7842,202 +7860,241 @@ function udcprCalculate(){
   const isInd = areaT==='industrial';
   const isTOD = areaT==='tod';
   const isIT  = areaT==='it';
-  const isMix = use==='res_mixed'||use==='commercial';
-  const isRowHouseType = use==='row_house'||use==='row_house_ews'||use==='semi_detached';
+  const isMix = use==='res_mixed'||use==='commercial'||use==='mixed';
+  const isRowHouse = use==='row_house';
+  const isRowHouseEWS = use==='row_house_ews';
+  const isSemiDet = use==='semi_detached';
 
-  let basicFSI,premFSI,tdrFSI,maxPot,ancPct,frontMargin,sideMargin,rearMargin,tableRef,marginRef,notes=[];
+  let basicFSI=0, premFSI=0, tdrFSI=0, maxPot=0, ancPct=0.60;
+  let frontMargin=0, sideMargin=0, rearMargin=0;
+  let tableRef='', marginRef='', notes=[], roadLabel='';
 
+  // ── FSI by zone ──
   if(isIT){
     basicFSI=UDCPR_IT.bFSI; premFSI=UDCPR_IT.pFSI; tdrFSI=0; maxPot=UDCPR_IT.max;
     frontMargin=6; sideMargin=6; rearMargin=6; ancPct=0.80;
-    tableRef='Reg 12.1 — IT/ITES'; marginRef='6m all sides';
-    notes.push('⚠️ Min plot 4000 sqm, Min road 18m required for IT zone');
-    if(plotA<4000) notes.push('❌ Plot area < 4000 sqm — IT zone not eligible');
-    if(roadW<18)   notes.push('❌ Road < 18m — IT zone not eligible');
+    tableRef='IT/ITES provisions'; marginRef='6 m all sides';
+    notes.push('IT/ITES: Min plot 4000 sq.m, Min road 18 m');
+    if(grossA<4000) notes.push('❌ Plot < 4000 sq.m — IT not eligible');
+    if(roadW<18) notes.push('❌ Road < 18 m — IT not eligible');
   } else if(isTOD){
-    const todR=roadW>=500?UDCPR_TOD[0]:UDCPR_TOD[1];
+    const todR = roadW>=12 ? UDCPR_TOD[0] : UDCPR_TOD[1];
     basicFSI=todR.bFSI; premFSI=0; tdrFSI=0; maxPot=todR.max;
     frontMargin=3; sideMargin=3; rearMargin=3; ancPct=0.60;
-    tableRef='Reg 14.6 — TOD Zone'; marginRef='3m all sides (TOD)';
-    notes.push('ℹ️ '+todR.note);
-    notes.push('⚠️ Min road 12m for TOD. Mixed use ground floor mandatory.');
+    tableRef='TOD Reg 14.x'; marginRef='3 m all sides (typical TOD)';
+    notes.push(todR.note);
   } else if(isInd){
-    const iRow=UDCPR_6H.find(r=>plotA>r.minP&&plotA<=r.maxP)||UDCPR_6H[UDCPR_6H.length-1];
+    const iRow = UDCPR_6H.find(r=>grossA>r.minP && grossA<=r.maxP) || UDCPR_6H[UDCPR_6H.length-1];
     basicFSI=iRow.bFSI; premFSI=iRow.pFSI; tdrFSI=0; maxPot=basicFSI+premFSI;
-    frontMargin=iRow.fM; sideMargin=iRow.sM; rearMargin=iRow.sM; ancPct=0.80;
-    tableRef='Reg 6.4 — Table 6-H (Industrial)'; marginRef='Table 6-H';
+    frontMargin=iRow.fM; sideMargin=iRow.sM; rearMargin=iRow.sM;
+    tableRef='Industrial Reg 6.4 / Table 6-H'; marginRef='Industrial margins';
+    ancPct=0.60;
   } else if(isCong){
-    const row=udcprRow(roadW,UDCPR_6A);
+    // Table 6-A
+    const row = udcprRow(roadW, UDCPR_6A);
     basicFSI=row.bFSI;
     premFSI=isMC?row.pFSI_mc:row.pFSI_r;
     tdrFSI=isMC?row.tdr_mc:row.tdr_r;
     maxPot=isMC?row.max_mc:row.max_r;
-    ancPct=isMix?0.80:0.60;
-    tableRef='Reg 6.1.1 — Table 6-A (Congested)';
-    // Cong margins
-    const pid=document.getElementById('udcpr-proj-sel')?.value;
-    if(plotA<=1000){frontMargin=roadW<4.5?2.25:roadW<6?0:roadW<12?1:2;sideMargin=0;rearMargin=0;marginRef='Table 6-B/C (≤1000sqm, no side/rear)';}
-    else if(plotA<=4000){frontMargin=roadW<4.5?2.25:roadW<6?0:roadW<12?1:2;sideMargin=1.0;rearMargin=1.0;marginRef='Table 6-B/C (1000-4000sqm)';}
-    else{frontMargin=roadW<12?1:2;sideMargin=1.5;rearMargin=1.5;marginRef='Non-congested rules (>4000sqm)';}
-    if(bldH>=15&&bldH<24){sideMargin+=1;rearMargin+=1;notes.push('⚠️ Height 15-24m: Margins +1m (Reg 6.1.1 vi)');}
-    if(bldH>=24){notes.push('ℹ️ Height ≥24m: Non-congested margins apply');}
-  } else {
-    const row=udcprRow(roadW,UDCPR_6G);
-    basicFSI=row.bFSI;
-    premFSI=isMC?row.pFSI_mc:row.pFSI_r;
-    tdrFSI=isMC?row.tdr_mc:row.tdr_r;
-    maxPot=isMC?row.max_mc:row.max_r;
-    ancPct=isMix||use==='commercial'?0.80:0.60;
-    tableRef='Reg 6.3 — Table 6-G (Non-Congested)';
+    roadLabel=row.label;
+    tableRef='Table 6-A (Congested/Gaothan) · '+row.label;
+    ancPct = isMix ? 0.80 : 0.60;
 
-    const isRowHouse   = use==='row_house';
-    const isRowHouseEWS= use==='row_house_ews';
-    const isSemiDet    = use==='semi_detached';
-
-    if(isRowHouseEWS){
-      // Sr. 7 — Table 6-D: Row Housing EWS/LIG
-      frontMargin = 0.9;  // 0.9m from pathway OR 2.25m from road boundary
-      sideMargin  = 0.0;
-      rearMargin  = 0.9;
-      tableRef    = 'Reg 6.3 — Table 6-G + Table 6-D Sr.7 (Row Housing EWS/LIG)';
-      marginRef   = 'Table 6-D Sr.7 — Row Housing EWS/LIG: Front 0.9m (pathway)/2.25m (road), Side NIL, Rear 0.9m';
-      notes.push('ℹ️ Front margin: 0.9m from pathway OR 2.25m from road boundary (whichever applies — Reg 6.2.1 Sr.7)');
-      notes.push('ℹ️ Corner plot: Side margin = 1.5m or building line of adjoining road, whichever is more');
-      notes.push('ℹ️ Max height: G+1 or Stilt+2 only (Table 6-D Sr.7)');
-      notes.push('ℹ️ Min plot: 20 sqm, Min width: 3.0m');
-      if(plotA>0&&plotA<20)   notes.push('❌ Plot area < 20 sqm — Below minimum for EWS Row Housing');
-      if(plotW>0&&plotW<3.0)  notes.push('❌ Plot width < 3.0m — Below minimum for EWS Row Housing');
-    } else if(isRowHouse){
-      // Sr. 6 — Table 6-D: Row Housing (road ≤12m)
-      frontMargin = 2.25;
-      sideMargin  = 0.0;   // No side margin — shared wall between row units
-      rearMargin  = 1.5;
-      tableRef    = 'Reg 6.3 — Table 6-G + Table 6-D Sr.6 (Row Housing)';
-      marginRef   = 'Table 6-D Sr.6 — Row Housing: Front 2.25m, Side NIL (shared wall), Rear 1.5m';
-      notes.push('ℹ️ Side margin NIL — Row houses share party walls. End houses get 1.5m side margin.');
-      notes.push('ℹ️ Corner plot exception: Side margin = 1.5m or building line of adjoining road, whichever is more');
-      notes.push('ℹ️ Road ≤12m applicable for Row Housing Sr.6. Min plot: 30 sqm, Min width: 3.5m');
-      notes.push('ℹ️ Max height: G+2 or Stilt+3 (same as Sr.5, Table 6-D)');
-      notes.push('ℹ️ Not more than 12 and not less than 3 plots per row housing block (Reg 6.2.1 Note 5)');
-      if(roadW>12) notes.push('⚠️ Road > 12m detected — Row Housing Sr.6 is for roads ≤12m. Consider Sr.5 (regular residential) margins.');
-      if(plotA>0&&plotA<30)   notes.push('❌ Plot area < 30 sqm — Below minimum for Row Housing');
-      if(plotW>0&&plotW<3.5)  notes.push('❌ Plot width < 3.5m — Below minimum for Row Housing');
-    } else if(isSemiDet){
-      // Semi-Detached: side margin on one side only (Reg 6.2.1 Note 4)
-      const dRow=UDCPR_6D.find(r=>roadW>=r.minR&&roadW<r.maxR)||UDCPR_6D[UDCPR_6D.length-1];
-      frontMargin=isMC?dRow.fM_mc:dRow.fM_r;
-      sideMargin  = dRow.sM;   // only ONE side
-      rearMargin  = dRow.rM;
-      marginRef   = 'Table 6-D — Semi-Detached: side margin on ONE side only (Reg 6.2.1 Note 4). Plots must be in pairs.';
-      notes.push('ℹ️ Semi-Detached: Side margin required on ONE side only — other side is shared party wall');
-      notes.push('ℹ️ Semi-detached plots must be in pairs (Reg 6.2.1 Note 4)');
+    // Front Table 6-B
+    frontMargin = udcprCongFront(roadW, isMix);
+    marginRef = 'Table 6-B front + Table 6-C side/rear';
+    // Side/rear Table 6-C
+    const sr = udcprCongSideRear(grossA, plotW);
+    if(sr.s===null){
+      // >4000 → non-congested margins for side/rear
+      const dRow = udcprRow(roadW, UDCPR_6D);
+      sideMargin = dRow.sM; rearMargin = dRow.rM;
+      notes.push('Plot >4000 sq.m → side/rear as non-congested (Table 6-C)');
     } else {
-      // Regular residential / commercial
-      const dRow=UDCPR_6D.find(r=>roadW>=r.minR&&roadW<r.maxR)||UDCPR_6D[UDCPR_6D.length-1];
-      frontMargin=isMC?dRow.fM_mc:dRow.fM_r;
-      sideMargin=dRow.sM; rearMargin=dRow.rM;
-      marginRef='Table 6-D ('+dRow.minR+'–'+(dRow.maxR===999?'30+':dRow.maxR)+'m road)';
+      sideMargin = sr.s; rearMargin = sr.r;
+      notes.push(sr.note);
     }
-
-    if(!isRowHouse&&!isRowHouseEWS&&bldH>15){
-      const calcS=Math.min(bldH/5,12);
-      sideMargin=calcS; rearMargin=calcS;
-      notes.push('📏 Height '+bldH+'m > 15m → Side/Rear = H/5 = '+calcS.toFixed(1)+'m (max 12m) — Reg 6.2.3');
+    // Height adjustments Reg 6.1.1(vi)
+    if(bldH>=15 && bldH<24){
+      sideMargin += 1; rearMargin += 1;
+      notes.push('Height 15–24 m: side/rear +1.0 m (Reg 6.1.1 vi)');
     }
-    if(roadW<9) notes.push('⚠️ Road < 9m: TDR not available (Reg 6.3 Note x)');
-    if(bldH>=24&&roadW<12) notes.push('❌ Special Building ≥24m needs road ≥12m (Reg 3.3.9)');
-    // Multi-road / front+back / corner bye-laws (Reg 6.2.6 style)
-    if(!isRowHouse&&!isRowHouseEWS){
-      if(isThrough){
-        // Front + Back road: BOTH sides take FRONT margin
-        const fm2 = frontMargin; // same table front margin on rear road too
-        notes.push('🔄 Front+Back Road (Through plot): समोर आणि मागे दोन्हीकडे <b>Front margin</b> = '+frontMargin+' m (Reg 6.2.6 — building treated as fronting each street).');
-        notes.push('ℹ️ Side margins बाजूच्या दोन बाजूंना = '+sideMargin+' m each. Rear margin concept लागू नाही — मागील रस्ता = दुसरा front.');
-        notes.push('ℹ️ FSI / potential: '+(roadBasis==='wider'?'जास्त रुंद रस्ता ('+roadW+' m)':'primary front road ('+roadW1+' m)')+' नुसार Table.');
-        if(roadW1!==roadW2) notes.push('ℹ️ Front road '+roadW1+' m · Back road '+roadW2+' m → effective for FSI = '+roadW+' m');
-        // override rear to equal front margin for footprint
-        rearMargin = frontMargin;
-        marginRef = (marginRef||'')+' + Front+Back dual frontage';
-      } else if(isCorner){
-        notes.push('📐 Corner Plot (Reg 6.2.6): दोन्ही रस्त्यांवर <b>Front margin</b>. Building दोन्ही roads ला face करत असल्यासारखे.');
-        notes.push('ℹ️ Primary road '+roadW1+' m front margin = '+frontMargin+' m · Side road '+(roadW2||'—')+' m → त्या बाजूला पण front margin (side margin ऐवजी).');
-        notes.push('ℹ️ उरलेल्या non-road बाजूंना Side/Rear margin = '+sideMargin+' / '+rearMargin+' m');
-        notes.push('ℹ️ FSI basis: '+(roadBasis==='wider'?'wider road '+roadW+' m':'front road '+roadW1+' m'));
-        marginRef = (marginRef||'')+' + Corner dual frontage';
-      } else if(frontage==='three'){
-        notes.push('3️⃣ Three-side roads: तीनही रस्त्यांवर Front margin. एक बाजू Side/Rear.');
-        rearMargin = frontMargin;
-        marginRef = (marginRef||'')+' + Three-side frontage';
+    if(bldH>=24){
+      const dRow = udcprRow(roadW, UDCPR_6D);
+      sideMargin = dRow.sM; rearMargin = dRow.rM;
+      notes.push('Height ≥24 m: non-congested margins apply (Reg 6.1.1 vi)');
+      if(bldH>15){
+        const h5 = Math.min(bldH/5, 12);
+        sideMargin = Math.max(sideMargin, h5);
+        rearMargin = Math.max(rearMargin, h5);
+        notes.push('Side/Rear ≥ H/5 = '+h5.toFixed(2)+' m (max 12 m) Reg 6.2.3');
       }
-    } else if(isCorner||isThrough){
-      notes.push('ℹ️ Row/Semi-detached + multi-road: end/corner unit side margin min 1.5 m or building line of adjoining road (Table 6-D notes).');
+    }
+    if(roadW<4.5) notes.push('Lane <4.5 m: setback 2.25 m from centre to make 4.5 m (Reg 6.1.1 iv)');
+  } else {
+    // Non-congested Table 6-G
+    const row = udcprRow(roadW, UDCPR_6G);
+    basicFSI=row.bFSI;
+    premFSI=isMC?row.pFSI_mc:row.pFSI_r;
+    tdrFSI=isMC?row.tdr_mc:row.tdr_r;
+    maxPot=isMC?row.max_mc:row.max_r;
+    roadLabel=row.label;
+    tableRef='Table 6-G (Non-Congested) · '+row.label;
+    ancPct = isMix ? 0.80 : 0.60;
+
+    // Margins Table 6-D / row housing
+    if(isRowHouseEWS){
+      frontMargin=2.25; sideMargin=0; rearMargin=0.9;
+      marginRef='Table 6-D Sr.7 EWS/LIG Row';
+      notes.push('EWS Row: Front 0.9 m pathway / 2.25 m road · Side NIL · Rear 0.9 m · Max G+1 or Stilt+2');
+      if(isCorner){ sideMargin=1.5; notes.push('Corner: side 1.5 m or adjoining building line (whichever more)'); }
+      if(grossA>0 && grossA<20) notes.push('❌ Min plot 20 sq.m for EWS row');
+      if(plotW>0 && plotW<3) notes.push('❌ Min width 3.0 m');
+    } else if(isRowHouse){
+      frontMargin=2.25; sideMargin=0; rearMargin=1.5;
+      marginRef='Table 6-D Sr.6 Row Housing';
+      notes.push('Row: Front 2.25 m · Side NIL (party wall) · Rear 1.5 m · Road ≤12 m typical');
+      if(isCorner){ sideMargin=1.5; notes.push('Corner end unit: side 1.5 m or adjoining building line'); }
+      if(roadW>12) notes.push('⚠️ Road >12 m — Row Sr.6 is for roads ≤12 m');
+      if(grossA>0 && grossA<30) notes.push('❌ Min plot 30 sq.m');
+      if(plotW>0 && plotW<3.5) notes.push('❌ Min width 3.5 m');
+    } else if(isSemiDet){
+      const dRow = udcprRow(roadW, UDCPR_6D);
+      frontMargin = isMC ? dRow.fM_mc : dRow.fM_r;
+      sideMargin = dRow.sM; // one side only
+      rearMargin = dRow.rM;
+      marginRef='Table 6-D Semi-detached (one side only)';
+      notes.push('Semi-detached: side margin एका बाजूला only · plots in pairs (Note 4)');
+    } else {
+      const dRow = udcprRow(roadW, UDCPR_6D);
+      frontMargin = isMC ? dRow.fM_mc : dRow.fM_r;
+      sideMargin = dRow.sM;
+      rearMargin = dRow.rM;
+      marginRef = 'Table 6-D · '+dRow.label;
+      if(dRow.minP && grossA>0 && grossA<dRow.minP) notes.push('⚠️ Plot area < recommended min '+dRow.minP+' sq.m for this road (Table 6-D col.3)');
+      if(dRow.minW && plotW>0 && plotW<dRow.minW) notes.push('⚠️ Plot width < recommended min '+dRow.minW+' m');
+    }
+
+    // Height > table limit → H/5 side/rear (Reg 6.2.3) — front stays Table 6-D
+    if(!isRowHouse && !isRowHouseEWS && bldH>15){
+      const h5 = Math.min(bldH/5, 12);
+      sideMargin = Math.max(sideMargin, h5);
+      rearMargin = Math.max(rearMargin, h5);
+      notes.push('Height '+bldH+' m >15 m → Side/Rear max(table, H/5='+h5.toFixed(2)+' m) · Front unchanged (Reg 6.2.3)');
     }
   }
 
-  // Ancillary FSI
-  let usedFSI=basicFSI;
-  if(fsiT==='prem') usedFSI=Math.min(basicFSI+premFSI,maxPot);
-  if(fsiT==='full') usedFSI=maxPot;
-  const ancFSI=usedFSI*ancPct;
-
-  // Built-up areas
-  const basicBUA=(basicFSI*plotA).toFixed(1);
-  const usedBUA=(usedFSI*plotA).toFixed(1);
-  const maxBUA=(maxPot*plotA).toFixed(1);
-  const ancBUA=(ancFSI*plotA).toFixed(1);
-
-  // Footprint — multi-road aware
-  const smNum=parseFloat(sideMargin)||0;
-  const rmNum=parseFloat(rearMargin)||0;
-  const fmNum=parseFloat(frontMargin)||0;
-  // through: depth loses front+front (rear already set = front)
-  // corner: width loses side + front(on side road) ≈ side + frontMargin on one side
-  let deductW, deductD;
-  if(isThrough){
-    deductW = smNum*2;           // sides only
-    deductD = fmNum + rmNum;     // front + back (both front margins)
+  // ── Multi-road Reg 6.2.6 ──
+  if(isThrough && !isRowHouse && !isRowHouseEWS){
+    rearMargin = frontMargin; // both streets = front setback
+    notes.push('🔄 Front+Back (Reg 6.2.6): समोर व मागे दोन्ही Front setback = '+frontMargin+' m');
+    marginRef += ' + dual frontage';
+  } else if(isCorner && !isRowHouse && !isRowHouseEWS){
+    notes.push('📐 Corner (Reg 6.2.6): दोन्ही रस्त्यांवर Front setback. Side-road बाजू = front margin.');
+    marginRef += ' + corner frontage';
   } else if(frontage==='three'){
-    deductW = smNum + fmNum;     // one side margin + one side as front
-    deductD = fmNum + rmNum;     // front + back as front
-  } else if(isCorner){
-    // one side becomes front margin (use max of side table vs front margin of side road)
-    const sideAsFront = fmNum; // approximate: same front margin on side road
-    deductW = smNum + Math.max(sideAsFront, smNum);
-    deductD = fmNum + rmNum;
+    rearMargin = frontMargin;
+    notes.push('3️⃣ Three-side roads: तीनही Front setback');
+  }
+
+  // ── Unauthorised sub-division Note ix ──
+  if(unauth && !isIT && !isTOD){
+    basicFSI = basicFSI * 0.75;
+    premFSI = premFSI * 0.75;
+    tdrFSI = tdrFSI * 0.50;
+    maxPot = basicFSI + premFSI + tdrFSI;
+    notes.push('Unauthorised sub-division ≤0.4 ha: Basic & Premium ×75%, TDR ×50% (Table 6-G Note ix)');
+  }
+
+  // ── Note xiv: Basic on net; Premium+TDR potential on gross when reservation handed over ──
+  // We compute BUA: basic on netA, prem/tdr extra on grossA for potential display
+  const basicBUA_net = basicFSI * netA;
+  // Max potential BUA: basic*net + (prem+tdr)*gross  OR simply maxPot*net if no DP (common practice many authorities use net for all)
+  // Official: "Entire area of plot may be considered for premium FSI + TDR, but not the basic FSI. Basic FSI on remaining after DP road/reservation."
+  const premTdrFSI = premFSI + tdrFSI;
+  let usedFSI_display, usedBUA, maxBUA, basicBUA, ancFSI, ancBUA;
+
+  basicBUA = basicBUA_net;
+  // Max building potential on plot (col 6/9) is typically applied as maxPot * net for simplicity when no handover;
+  // with handover: basic*net + prem*gross + tdr*gross capped conceptually
+  if(dpDed > 0){
+    maxBUA = basicFSI*netA + premFSI*grossA + tdrFSI*grossA;
+    notes.push('Note xiv: Basic FSI on net '+netA.toFixed(1)+' sq.m · Premium+TDR on gross '+grossA.toFixed(1)+' sq.m (reservation/DP handed over)');
   } else {
-    deductW = smNum*2;
-    deductD = fmNum + rmNum;
-  }
-  if(use==='row_house'||use==='row_house_ews'){
-    deductW = isCorner ? 1.5 : 0; // shared walls
-  }
-  const buildW=plotW>0?Math.max(0,plotW-deductW):null;
-  const buildD=plotD>0?Math.max(0,plotD-deductD):null;
-  const footprint=buildW&&buildD?(buildW*buildD).toFixed(1):null;
-  const coverage=footprint?(footprint/plotA*100).toFixed(1):null;
-
-  // Premium
-  let premCost=null;
-  if(asr>0&&fsiT!=='basic'&&premFSI>0){
-    premCost=premFSI*plotA*0.35*asr;
+    maxBUA = maxPot * netA;
   }
 
-  // Special building
-  if(bldH>=24) notes.push('🔴 Special Building (≥24m) — Fire NOC mandatory. Reg 3.3.9 applicable.');
-  if(roadW<9&&!isCong&&!isInd) notes.push('⚠️ Min road 9m needed for TDR in non-congested area');
+  if(fsiT==='basic'){
+    usedFSI_display = basicFSI;
+    usedBUA = basicBUA_net;
+  } else if(fsiT==='prem'){
+    usedFSI_display = basicFSI + premFSI;
+    usedBUA = dpDed>0 ? (basicFSI*netA + premFSI*grossA) : (basicFSI+premFSI)*netA;
+  } else {
+    usedFSI_display = maxPot;
+    usedBUA = maxBUA;
+  }
+
+  ancFSI = usedFSI_display * ancPct;
+  ancBUA = ancFSI * (dpDed>0 ? netA : netA); // ancillary on proposed FSI area basis — use net
+  // More accurately ancillary is % of proposed FSI in permission measured with total BUA including ancillary
+  notes.push('Ancillary area FSI up to '+(ancPct*100).toFixed(0)+'% of proposed FSI (Res 60% / Non-res 80%) · optional · premium per Reg 6.1.1');
+
+  // TDR road rule
+  if(!isCong && !isInd && !isIT && roadW < 9 && fsiT==='full')
+    notes.push('⚠️ TDR utilisation needs existing road ≥9.0 m (Table 6-G Note x)');
+  if(bldH>=24)
+    notes.push('🔴 Special Building ≥24 m — Fire NOC · Reg 3.3.9 road width rules');
+  if(bldH>=24 && roadW<12 && !isCong)
+    notes.push('❌ Special building generally needs adequate road (often ≥12 m) — check Reg 3.3.9');
+
+  // Premium cost: 35% of ASR for premium FSI (Note viii)
+  let premCost = null;
+  if(asr>0 && premFSI>0 && fsiT!=='basic'){
+    const premBUA = premFSI * (dpDed>0 ? grossA : netA);
+    premCost = premBUA * 0.35 * asr;
+    notes.push('Premium FSI charge = 35% of ASR × Premium BUA (Reg 6.3 Note viii)');
+  }
+
+  // Footprint
+  let deductW, deductD;
+  const smNum=sideMargin, rmNum=rearMargin, fmNum=frontMargin;
+  if(isThrough){ deductW=smNum*2; deductD=fmNum+rmNum; }
+  else if(frontage==='three'){ deductW=smNum+fmNum; deductD=fmNum+rmNum; }
+  else if(isCorner){ deductW=smNum+Math.max(fmNum,smNum); deductD=fmNum+rmNum; }
+  else { deductW=smNum*2; deductD=fmNum+rmNum; }
+  if(isRowHouse||isRowHouseEWS) deductW = isCorner ? 1.5 : 0;
+  const buildW = plotW>0 ? Math.max(0, plotW-deductW) : null;
+  const buildD = plotD>0 ? Math.max(0, plotD-deductD) : null;
+  const footprint = (buildW!=null && buildD!=null) ? (buildW*buildD) : null;
+  const coverage = footprint!=null && netA>0 ? (footprint/netA*100) : null;
 
   const frontageLabel={single:'Single Front',corner:'Corner (Front+Side)',through:'Through (Front+Back)',three:'Three Side'}[frontage]||frontage;
-  const result={basicFSI,premFSI,tdrFSI,maxPot,ancFSI,usedFSI,ancPct,basicBUA,usedBUA,maxBUA,ancBUA,
-    frontMargin,sideMargin,rearMargin,footprint,buildW,buildD,coverage,premCost,tableRef,marginRef,notes,
-    roadW,roadW1,roadW2,frontage,frontageLabel,plotA,plotW,plotD,bldH,asr,auth,areaT,use,fsiT,isMC,isCong,isInd,isTOD,isIT,
-    isCorner,isThrough,isMultiRoad};
+
+  const result = {
+    basicFSI, premFSI, tdrFSI, maxPot,
+    ancFSI, usedFSI: usedFSI_display, ancPct,
+    basicBUA: +basicBUA.toFixed(2),
+    usedBUA: +usedBUA.toFixed(2),
+    maxBUA: +maxBUA.toFixed(2),
+    ancBUA: +ancBUA.toFixed(2),
+    frontMargin, sideMargin, rearMargin,
+    footprint: footprint!=null?+footprint.toFixed(2):null,
+    buildW: buildW!=null?+buildW.toFixed(2):null,
+    buildD: buildD!=null?+buildD.toFixed(2):null,
+    coverage: coverage!=null?+coverage.toFixed(1):null,
+    premCost, tableRef, marginRef, notes,
+    roadW, roadW1, roadW2, roadLabel, frontage, frontageLabel,
+    plotA: netA, grossA, netA, dpDed, plotW, plotD, bldH, asr,
+    auth, areaT, use, fsiT, isMC, isCong, isInd, isTOD, isIT,
+    isCorner, isThrough, isMultiRoad, unauth
+  };
 
   udcprRenderResult(result);
-  udcprSaveToProject(result);
+  if(typeof udcprSaveToProject==='function') udcprSaveToProject(result);
 
-  // Enable AI button
   const aiBtn=document.getElementById('udcpr-ai-btn');
-  if(aiBtn){aiBtn.disabled=false;aiBtn.style.opacity='1';aiBtn._result=result;}
+  if(aiBtn){ aiBtn.disabled=false; aiBtn.style.opacity='1'; aiBtn._result=result; }
   window._udcprLastResult=result;
 }
 
@@ -8056,14 +8113,39 @@ function udcprRenderResult(r){
     n.startsWith('⚠️')?'background:#fff8e0;border-left:3px solid var(--gold);color:#7a5a00':
     'background:#e8f4ee;border-left:3px solid var(--grn);color:#1a4a2a'}">${n}</div>`).join('')}
 
-  <!-- Frontage summary -->
+  <!-- FSI breakdown (UDCPR exact) -->
+  <div style="padding:14px 16px;border-radius:12px;background:var(--grn);color:#fff;margin-bottom:12px">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:8px">FSI · ${r.tableRef||''}</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;margin-bottom:10px">
+      <div><div style="font-size:10px;opacity:.7">Basic</div><div style="font-size:20px;font-weight:800;color:var(--gold)">${Number(r.basicFSI).toFixed(2)}</div></div>
+      <div><div style="font-size:10px;opacity:.7">Premium</div><div style="font-size:20px;font-weight:800;color:var(--gold)">${Number(r.premFSI).toFixed(2)}</div></div>
+      <div><div style="font-size:10px;opacity:.7">TDR</div><div style="font-size:20px;font-weight:800;color:var(--gold)">${Number(r.tdrFSI).toFixed(2)}</div></div>
+      <div><div style="font-size:10px;opacity:.7">Max Potential</div><div style="font-size:20px;font-weight:800;color:var(--gold)">${Number(r.maxPot).toFixed(2)}</div></div>
+    </div>
+    <div style="font-size:12px;line-height:1.7;opacity:.95;border-top:1px solid rgba(255,255,255,.15);padding-top:8px">
+      Road <b>${r.roadW} m</b>${r.roadLabel?` (${r.roadLabel})`:''}
+      ${r.dpDed>0?` · Gross ${r.grossA} → Net <b>${Number(r.netA).toFixed(1)}</b> (DP/Res −${r.dpDed})`:''}
+      ${r.unauth?' · <b>Unauth 75%/50%</b>':''}<br>
+      <b>Used FSI ${Number(r.usedFSI).toFixed(2)}</b> → BUA <b>${r.usedBUA} sq.m</b>
+      &nbsp;·&nbsp; Max BUA <b>${r.maxBUA} sq.m</b>
+      &nbsp;·&nbsp; Ancillary ~${(r.ancPct*100).toFixed(0)}% → <b>${r.ancBUA} sq.m</b>
+      ${r.premCost?`<br>Premium charge (35% ASR): <b>₹ ${Math.round(r.premCost).toLocaleString('en-IN')}</b>`:''}
+    </div>
+  </div>
+
+  <!-- Margins + Frontage -->
   <div style="padding:12px 14px;border-radius:10px;background:linear-gradient(135deg,#f0faf4,#e8f4ee);border:1px solid var(--grn);margin-bottom:12px">
-    <div style="font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);margin-bottom:6px">Road Frontage · Bye-laws</div>
-    <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px">${r.frontageLabel||'Single Front'}${r.isMultiRoad?` · Roads: ${r.roadW1||r.roadW} m${r.roadW2?` + ${r.roadW2} m`:''} → FSI on <b>${r.roadW} m</b>`:''}</div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);margin-bottom:6px">Margins · ${r.marginRef||''}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:6px">
+      <div style="background:#fff;border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--mut)">Front</div><div style="font-size:18px;font-weight:800;color:var(--grn)">${r.frontMargin} m</div></div>
+      <div style="background:#fff;border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--mut)">Side</div><div style="font-size:18px;font-weight:800;color:var(--grn)">${r.sideMargin} m</div></div>
+      <div style="background:#fff;border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--mut)">Rear</div><div style="font-size:18px;font-weight:800;color:var(--grn)">${r.rearMargin} m</div></div>
+    </div>
     <div style="font-size:11px;color:var(--ink2);line-height:1.6">
-      ${r.isThrough?`समोर <b>${r.frontMargin} m</b> + मागे <b>${r.rearMargin} m</b> (दोन्ही Front margin) · बाजू <b>${r.sideMargin} m</b> each`:
-        r.isCorner?`समोर <b>${r.frontMargin} m</b> · Side-road बाजूला Front margin · इतर Side/Rear <b>${r.sideMargin}/${r.rearMargin} m</b>`:
-        `Front <b>${r.frontMargin} m</b> · Side <b>${r.sideMargin} m</b> · Rear <b>${r.rearMargin} m</b>`}
+      ${r.frontageLabel||'Single Front'}${r.isMultiRoad?` · Roads ${r.roadW1} m + ${r.roadW2||'—'} m → FSI on <b>${r.roadW} m</b>`:''}
+      ${r.isThrough?' · Reg 6.2.6: front+back = both Front setback':''}
+      ${r.isCorner?' · Reg 6.2.6: corner = Front on both streets':''}
+      ${r.footprint?`<br>Buildable footprint ~ <b>${r.footprint} sq.m</b> (${r.buildW} × ${r.buildD} m) · Coverage ${r.coverage}%`:''}
     </div>
   </div>
 
