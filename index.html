@@ -226,6 +226,294 @@ header{
 .pc-pay.paid{color:var(--rgreen)}
 .pc-pay.ok{color:var(--grn2)}
 
+
+/* ── Project Architectural Workspace ── */
+.pd-workspace{border-radius:var(--rad-lg,10px)!important;background:var(--surf)!important}
+.pd-ws-head{
+  padding:22px 28px 16px;border-bottom:1px solid var(--bdr);
+  background:var(--surf);flex-shrink:0;
+}
+.pd-ws-title{
+  font-family:var(--font-display),serif;font-size:28px;font-weight:600;
+  color:var(--ink);letter-spacing:-.03em;line-height:1.15;
+  text-transform:uppercase;margin:0 0 6px;
+}
+.pd-ws-sub{
+  font-size:13px;color:var(--mut);font-weight:500;
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+}
+.pd-ws-sub .sep{opacity:.4}
+.pd-ws-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pd-ws-tabs{
+  display:flex;gap:0;padding:0 20px;
+  border-bottom:1px solid var(--bdr);background:var(--surf2);
+  flex-shrink:0;overflow-x:auto;
+}
+.pd-tab{
+  appearance:none;border:none;background:none;cursor:pointer;
+  font-family:var(--font-body),sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+  color:var(--mut);padding:14px 16px;position:relative;
+  white-space:nowrap;transition:color .15s;
+}
+.pd-tab:hover{color:var(--ink)}
+.pd-tab.active{color:var(--grn)}
+.pd-tab.active::after{
+  content:'';position:absolute;left:16px;right:16px;bottom:0;height:2px;
+  background:var(--gold);border-radius:2px 2px 0 0;
+}
+.pd-ws-body{background:var(--bg)}
+.pd-panel{padding:22px 28px 32px;animation:fadeUp .25s ease}
+.pd-kpi-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;
+}
+@media(max-width:720px){.pd-kpi-grid{grid-template-columns:1fr 1fr}}
+.pd-kpi{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:14px 16px;
+}
+.pd-kpi-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:6px;
+}
+.pd-kpi-val{
+  font-family:var(--font-display),serif;font-size:22px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;
+}
+.pd-kpi-val.green{color:var(--rgreen)}
+.pd-kpi-val.red{color:var(--red)}
+.pd-section{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:16px 18px;margin-bottom:14px;
+}
+.pd-section-title{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:12px;
+}
+.pd-stage-bar{
+  display:flex;gap:4px;margin-bottom:8px;
+}
+.pd-stage-seg{
+  flex:1;height:4px;border-radius:2px;background:var(--bdr);
+}
+.pd-stage-seg.on{background:var(--grn)}
+.pd-stage-seg.current{background:var(--gold)}
+.pd-file-row,.pd-visit-row,.pd-fin-row,.pd-tl-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--bdr);
+}
+.pd-file-row:last-child,.pd-visit-row:last-child,.pd-fin-row:last-child,.pd-tl-item:last-child{border-bottom:none}
+.pd-empty{
+  text-align:center;padding:36px 16px;color:var(--mut);font-size:13px;
+}
+.pd-empty-icon{font-size:28px;margin-bottom:8px;opacity:.4}
+
+
+/* ═══════════════════════════════════════════
+   MICRO ANIMATIONS — quiet, architectural
+   Respects prefers-reduced-motion
+═══════════════════════════════════════════ */
+@keyframes gsFadeUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes gsFadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes gsScaleIn{
+  from{opacity:0;transform:scale(.97)}
+  to{opacity:1;transform:scale(1)}
+}
+@keyframes gsProgress{
+  from{transform:scaleX(0)}
+  to{transform:scaleX(1)}
+}
+@keyframes gsCheckPop{
+  0%{transform:scale(0);opacity:0}
+  60%{transform:scale(1.12);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes gsCheckDraw{
+  to{stroke-dashoffset:0}
+}
+@keyframes gsToastIn{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes gsToastOut{
+  to{opacity:0;transform:translateY(8px)}
+}
+@keyframes gsPulseSoft{
+  0%,100%{opacity:1}
+  50%{opacity:.72}
+}
+
+/* Card hover — lift is subtle */
+.proj-card,.card,.pc-premium,.kpi-card{
+  transition:border-color .2s ease, box-shadow .25s ease, transform .25s ease !important;
+}
+.proj-card:hover,.card:hover,.pc-premium:hover{
+  transform:translateY(-2px) !important;
+  box-shadow:var(--sh2) !important;
+}
+.proj-card:active,.pc-premium:active{
+  transform:translateY(0) !important;
+  transition-duration:.1s !important;
+}
+
+/* Button press */
+.btn,.btn-p,.btn-s,.btn-gold,.btn-wa,.btn-pdf,.nav-btn,.sb-collapse-btn,
+button[class*="btn"]{
+  transition:transform .15s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease, opacity .2s ease !important;
+}
+.btn:active,.btn-p:active,.btn-s:active,.btn-gold:active,.btn-wa:active,.btn-pdf:active,
+button[class*="btn"]:active{
+  transform:scale(.97) !important;
+}
+.btn:hover,.btn-s:hover{
+  filter:brightness(1.03);
+}
+
+/* Page / view transition */
+.view-section{
+  animation:none;
+}
+.view-section.active.gs-enter{
+  animation:gsFadeUp .28s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* Sidebar expand / collapse already width-transitions; polish content */
+aside{
+  transition:width .28s cubic-bezier(.22,1,.36,1), min-width .28s cubic-bezier(.22,1,.36,1), transform .3s ease !important;
+}
+aside .nav-btn .nav-icon{
+  transition:transform .2s ease;
+}
+aside.collapsed .nav-btn:hover .nav-icon{
+  transform:scale(1.08);
+}
+.sb-collapse-btn .sb-collapse-icon{
+  display:inline-block;
+  transition:transform .25s ease;
+}
+aside.collapsed .sb-collapse-btn .sb-collapse-icon{
+  transform:rotate(180deg);
+}
+
+/* Progress bars — fill animates on appear */
+.pc-progress-fill,.prog-fill,.pd-stage-seg.on,.pd-stage-seg.current,
+[class*="progress-fill"],.pc-progress-track > div{
+  transform-origin:left center;
+  animation:gsProgress .55s cubic-bezier(.22,1,.36,1) both;
+}
+.pd-stage-bar .pd-stage-seg{
+  transition:background .3s ease;
+}
+
+/* Modal opening */
+.modal-bg{
+  transition:opacity .2s ease !important;
+}
+.modal-bg.open{
+  animation:gsFadeIn .2s ease both;
+}
+.modal-bg.open .modal-box{
+  animation:gsScaleIn .28s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* Tabs underline soft */
+.pd-tab{
+  transition:color .2s ease !important;
+}
+.pd-tab.active::after{
+  animation:gsFadeIn .2s ease both;
+}
+
+/* Success check + save toast */
+#gs-toast-ok{
+  display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  z-index:9999;align-items:center;gap:10px;
+  background:var(--grn);color:#f7f5f0;
+  padding:12px 18px;border-radius:8px;
+  font-size:13px;font-weight:600;
+  box-shadow:var(--sh2);
+  border:1px solid rgba(255,255,255,.08);
+  max-width:90vw;
+}
+#gs-toast-ok.show{
+  display:flex;
+  animation:gsToastIn .3s cubic-bezier(.22,1,.36,1) both;
+}
+#gs-toast-ok.hide{
+  animation:gsToastOut .25s ease forwards;
+}
+.gs-check{
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  animation:gsCheckPop .35s cubic-bezier(.22,1,.36,1) both;
+}
+.gs-check svg{width:12px;height:12px}
+.gs-check path{
+  fill:none;stroke:#f7f5f0;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:20;stroke-dashoffset:20;
+  animation:gsCheckDraw .35s .15s ease forwards;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  .proj-card:hover,.card:hover,.pc-premium:hover{transform:none !important}
+}
+
+
+/* Dashboard visual charts */
+.dash-viz-grid{
+  display:grid;grid-template-columns:1.5fr 1fr;gap:16px;
+}
+@media(max-width:900px){
+  .dash-viz-grid,.dash-viz-row2{grid-template-columns:1fr !important}
+}
+.dash-ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none;
+  font-family:var(--font-display),serif;font-weight:600;color:var(--ink);
+}
+.dash-ring-center b{font-size:26px;letter-spacing:-.03em;line-height:1}
+.dash-ring-center span{font-size:10px;color:var(--mut);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-family:var(--font-body),sans-serif}
+.dash-pay-bar-row{margin-bottom:12px}
+.dash-pay-bar-row:last-child{margin-bottom:0}
+.dash-pay-bar-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;gap:8px}
+.dash-pay-bar-label b{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dash-pay-bar-track{height:8px;border-radius:3px;background:var(--surf2);border:1px solid var(--bdr);overflow:hidden}
+.dash-pay-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--grn),var(--gold));transform-origin:left;animation:gsProgress .6s cubic-bezier(.22,1,.36,1) both}
+.dash-tl{
+  display:flex;gap:0;overflow-x:auto;padding:8px 0 4px;
+}
+.dash-tl-month{
+  flex:1;min-width:64px;text-align:center;position:relative;padding:0 4px;
+}
+.dash-tl-month::before{
+  content:'';position:absolute;left:0;right:0;top:18px;height:2px;background:var(--bdr);z-index:0;
+}
+.dash-tl-month:first-child::before{left:50%}
+.dash-tl-month:last-child::before{right:50%}
+.dash-tl-dot{
+  width:10px;height:10px;border-radius:50%;margin:0 auto 8px;
+  background:var(--bdr);border:2px solid var(--surf);position:relative;z-index:1;
+  box-sizing:content-box;
+}
+.dash-tl-month.has .dash-tl-dot{background:var(--grn);box-shadow:0 0 0 3px rgba(44,62,45,.15)}
+.dash-tl-month.hot .dash-tl-dot{background:var(--gold);box-shadow:0 0 0 3px rgba(184,151,90,.25)}
+.dash-tl-lbl{font-size:10px;font-weight:700;color:var(--mut);letter-spacing:.04em}
+.dash-tl-val{font-size:10px;font-family:var(--font-mono),monospace;color:var(--ink2);margin-top:2px}
+
 /* ── MOBILE OVERLAY ── */
 .mob-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:298;backdrop-filter:blur(2px)}
 .mob-bg.on{display:block}
@@ -1024,16 +1312,43 @@ html{transition:background .3s,color .3s}
       <div id="kpi-grid"></div>
       <!-- Revenue Target -->
       <div id="revenue-target-card"></div>
-      <!-- Charts row -->
-      <div class="g65" style="margin-bottom:18px">
+      <!-- Visual charts — fewer, meaningful -->
+      <div class="dash-viz-grid" style="margin-bottom:18px">
+        <div class="card dash-card dash-viz-rev">
+          <div class="card-head">
+            <span class="card-title">Revenue</span>
+            <span class="badge bgold" style="font-size:9px" id="dash-fy-label">This year</span>
+          </div>
+          <div class="card-body"><div class="chart-wrap" style="height:200px"><canvas id="rev-chart"></canvas></div></div>
+        </div>
+        <div class="card dash-card dash-viz-side">
+          <div class="card-head"><span class="card-title">Project progress</span></div>
+          <div class="card-body" style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap">
+            <div class="chart-wrap" style="height:140px;width:140px;position:relative">
+              <canvas id="prog-ring-chart"></canvas>
+              <div id="prog-ring-center" class="dash-ring-center"></div>
+            </div>
+            <div id="dash-status-legend" style="flex:1;min-width:120px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-viz-row2" style="display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:16px;margin-bottom:18px">
         <div class="card dash-card">
-          <div class="card-head"><span class="card-title">📈 Monthly Revenue</span><span class="badge bgold" style="font-size:9px">FY 2024-25</span></div>
-          <div class="card-body"><div class="chart-wrap"><canvas id="rev-chart"></canvas></div></div>
+          <div class="card-head"><span class="card-title">Payment status</span></div>
+          <div class="card-body" id="dash-pay-bars" style="padding-top:8px"></div>
         </div>
         <div class="card dash-card">
-          <div class="card-head"><span class="card-title">👥 Client Mix</span></div>
-          <div class="card-body"><div class="chart-wrap"><canvas id="cat-chart"></canvas></div></div>
+          <div class="card-head"><span class="card-title">Project status</span></div>
+          <div class="card-body"><div class="chart-wrap" style="height:160px"><canvas id="status-donut-chart"></canvas></div></div>
         </div>
+        <div class="card dash-card">
+          <div class="card-head"><span class="card-title">Expenses</span></div>
+          <div class="card-body"><div class="chart-wrap" style="height:160px"><canvas id="exp-bar-chart"></canvas></div></div>
+        </div>
+      </div>
+      <div class="card dash-card" style="margin-bottom:18px">
+        <div class="card-head"><span class="card-title">Monthly work</span></div>
+        <div class="card-body" id="dash-work-timeline" style="padding-top:4px"></div>
       </div>
       <!-- Projects + Activity -->
       <div class="g2" style="margin-bottom:18px">
@@ -2159,11 +2474,12 @@ html{transition:background .3s,color .3s}
   </div>
 </div>
 
-<!-- PROJECT DETAIL -->
+<!-- PROJECT DETAIL — Architectural Workspace -->
 <div class="modal-bg" id="m-pd">
-  <div class="modal-box" style="width:700px">
-    <div class="modal-head"><div class="modal-title" id="pd-title"></div><button class="modal-close" onclick="closeModal('m-pd')">✕</button></div>
-    <div class="modal-body" id="pd-body"></div>
+  <div class="modal-box pd-workspace" style="width:min(960px,96vw);max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <div class="pd-ws-head" id="pd-ws-head"></div>
+    <div class="pd-ws-tabs" id="pd-ws-tabs"></div>
+    <div class="modal-body pd-ws-body" id="pd-body" style="flex:1;overflow-y:auto;padding:0"></div>
   </div>
 </div>
 
@@ -2340,18 +2656,25 @@ async function claudeFetch(body){
 // ── Global Toast System ──
 function showOk(msg){
   var t=document.getElementById('gs-toast-ok');
-  if(!t)return;
-  t.textContent='✅ '+msg;
+  if(!t){
+    t=document.createElement('div');
+    t.id='gs-toast-ok';
+    document.body.appendChild(t);
+  }
+  t.className='show';
+  t.innerHTML='<span class="gs-check"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2 L5 8.7 L9.5 3.5"/></svg></span><span>'+(msg||'Saved')+'</span>';
   t.style.display='flex';
   t.style.animation='none';
   void t.offsetWidth;
-  t.style.animation='slideInToast .35s cubic-bezier(.16,1,.3,1)';
+  t.style.animation='gsToastIn .3s cubic-bezier(.22,1,.36,1) both';
   clearTimeout(t._tm);
   t._tm=setTimeout(function(){
-    t.style.animation='fadeOut .3s ease forwards';
-    setTimeout(function(){t.style.display='none';},280);
-  },3200);
+    t.style.animation='gsToastOut .25s ease forwards';
+    setTimeout(function(){ t.style.display='none'; t.className=''; }, 260);
+  }, 2400);
 }
+function showSuccess(msg){ showOk(msg); }
+function showSaveConfirm(msg){ showOk(msg||'Saved successfully'); }
 function showErr(msg){
   var t=document.getElementById('gs-toast-err');
   if(!t)return;
@@ -2366,6 +2689,8 @@ function showErr(msg){
     setTimeout(function(){t.style.display='none';},280);
   },4500);
 }
+
+
 
 let db={
   contacts:[
@@ -3081,14 +3406,16 @@ function switchView(v){
   if(!v) return;
   // Hide all views
   document.querySelectorAll('.view-section').forEach(function(e){
-    e.classList.remove('active');
+    e.classList.remove('active','gs-enter');
     e.style.display='none';
   });
-  // Show selected view
+  // Show selected view with micro enter animation
   var viewEl=document.getElementById('view-'+v);
   if(viewEl){
     viewEl.classList.add('active');
     viewEl.style.display='block';
+    void viewEl.offsetWidth;
+    viewEl.classList.add('gs-enter');
   }
   // Update nav
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
@@ -3280,30 +3607,197 @@ function renderDashboard(){
   // ── Revenue Target ──
   try{renderRevenueTarget();}catch(e){}
 
-  // ── Charts ──
+  // ── Visual charts (area, ring, bars, donut, timeline) ──
+  const yr=now.getFullYear();
+  const calMonths=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fyLabel=document.getElementById('dash-fy-label');
+  if(fyLabel) fyLabel.textContent=String(yr);
+
+  // Revenue — area chart (calendar year)
   const rCtx=document.getElementById('rev-chart')?.getContext('2d');
   if(rCtx){
     if(charts.rev)charts.rev.destroy();
-    const months=['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
-    const curMonth=now.getMonth();
-    const revenueData=months.map((_,i)=>{
-      const pays=(db.payments||[]).filter(p=>{
+    const revenueData=calMonths.map((_,i)=>{
+      return (db.payments||[]).filter(p=>{
         const d=new Date(p.date);
-        return d.getMonth()===((i+3)%12);
-      });
-      return pays.reduce((a,p)=>a+p.amount,0)||0;
+        return d.getFullYear()===yr && d.getMonth()===i;
+      }).reduce((a,p)=>a+(p.amount||0),0);
     });
-    charts.rev=new Chart(rCtx,{type:'line',data:{labels:months,datasets:[{label:'Revenue ₹',data:revenueData,borderColor:'#c9a84c',borderWidth:2.5,pointBackgroundColor:'#c9a84c',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,tension:.45,fill:true,backgroundColor:ctx=>{const g=ctx.chart.ctx.createLinearGradient(0,0,0,200);g.addColorStop(0,'rgba(201,168,76,.22)');g.addColorStop(1,'rgba(201,168,76,0)');return g;}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+Number(v.raw).toLocaleString('en-IN')}}},scales:{x:{grid:{display:false},ticks:{color:'#7a7568',font:{size:10}}},y:{grid:{color:'rgba(232,226,217,.6)'},border:{dash:[4,4]},ticks:{color:'#7a7568',font:{size:10},callback:v=>v>=100000?'₹'+(v/100000).toFixed(1)+'L':'₹'+(v/1000)+'K'}}}}});
+    charts.rev=new Chart(rCtx,{
+      type:'line',
+      data:{labels:calMonths,datasets:[{
+        label:'Revenue',
+        data:revenueData,
+        borderColor:'#b8975a',
+        borderWidth:2.5,
+        pointRadius:0,
+        pointHoverRadius:5,
+        pointBackgroundColor:'#b8975a',
+        pointBorderColor:'#fffcf7',
+        pointBorderWidth:2,
+        tension:.4,
+        fill:true,
+        backgroundColor:(ctx)=>{
+          const {chart}=ctx; const {ctx:c,chartArea}=chart;
+          if(!chartArea) return 'rgba(184,151,90,.15)';
+          const g=c.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
+          g.addColorStop(0,'rgba(184,151,90,.28)');
+          g.addColorStop(.55,'rgba(184,151,90,.08)');
+          g.addColorStop(1,'rgba(184,151,90,0)');
+          return g;
+        }
+      }]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+Number(v.raw).toLocaleString('en-IN')}}},
+        scales:{
+          x:{grid:{display:false},ticks:{color:'#6e6960',font:{size:10}},border:{display:false}},
+          y:{grid:{color:'rgba(228,223,214,.7)',drawBorder:false},border:{display:false,dash:[4,4]},ticks:{color:'#6e6960',font:{size:10},callback:v=>v>=100000?'₹'+(v/100000).toFixed(1)+'L':(v>=1000?'₹'+Math.round(v/1000)+'K':'₹'+v)}}
+        }
+      }
+    });
   }
 
-  const cCtx=document.getElementById('cat-chart')?.getContext('2d');
-  if(cCtx){
-    if(charts.cat)charts.cat.destroy();
-    const cats=['Engineer','Builder','Direct','Institution','Contractor','Agency','Society','Other'];
-    const cnts=cats.map(c=>db.contacts.filter(x=>x.cat===c).length);
-    const lbls=cats.filter((_,i)=>cnts[i]>0),vals=cnts.filter(v=>v>0);
-    charts.cat=new Chart(cCtx,{type:'doughnut',data:{labels:lbls,datasets:[{data:vals,backgroundColor:['#1a3a2a','#c9a84c','#27ae60','#2c5f8a','#d35400','#c0392b','#8e44ad','#7a7568'],borderColor:'#fff',borderWidth:3,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#7a7568',font:{size:11},boxWidth:10,padding:8}}}}});
+  // Project progress — ring (avg stage %)
+  const STAGES_D=['Concept','Layout','3D','Working Drawing','Submission','Completed'];
+  const projs=db.projects||[];
+  let avgStage=0;
+  if(projs.length){
+    avgStage=Math.round(projs.reduce((a,p)=>{
+      const idx=Math.max(0,STAGES_D.indexOf(p.stage||'Concept'));
+      return a+((idx+1)/STAGES_D.length*100);
+    },0)/projs.length);
   }
+  const ringCtx=document.getElementById('prog-ring-chart')?.getContext('2d');
+  if(ringCtx){
+    if(charts.progRing)charts.progRing.destroy();
+    charts.progRing=new Chart(ringCtx,{
+      type:'doughnut',
+      data:{labels:['Progress','Rest'],datasets:[{
+        data:[avgStage,Math.max(0,100-avgStage)],
+        backgroundColor:['#2c3e2d','#e4dfd6'],
+        borderWidth:0,
+        hoverOffset:0
+      }]},
+      options:{
+        responsive:true,maintainAspectRatio:false,cutout:'78%',
+        plugins:{legend:{display:false},tooltip:{enabled:false}}
+      }
+    });
+  }
+  const ringC=document.getElementById('prog-ring-center');
+  if(ringC) ringC.innerHTML=`<b>${avgStage}%</b><span>Avg stage</span>`;
+
+  const activeN=projs.filter(p=>p.stage!=='Completed').length;
+  const doneN=projs.filter(p=>p.stage==='Completed').length;
+  const leg=document.getElementById('dash-status-legend');
+  if(leg){
+    leg.innerHTML=`
+      <div style="font-size:12px;line-height:1.8;color:var(--ink2)">
+        <div><b style="color:var(--ink)">${projs.length}</b> total projects</div>
+        <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--grn);margin-right:6px"></span>${activeN} active</div>
+        <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-right:6px"></span>${doneN} completed</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--mut)">Ring = average stage progress across all projects</div>
+      </div>`;
+  }
+
+  // Payment — horizontal progress (top projects by balance or value)
+  const payBars=document.getElementById('dash-pay-bars');
+  if(payBars){
+    const ranked=[...projs].sort((a,b)=>(b.total||0)-(a.total||0)).slice(0,5);
+    if(!ranked.length){
+      payBars.innerHTML='<div style="color:var(--mut);font-size:12px;padding:12px 0">No projects yet</div>';
+    }else{
+      payBars.innerHTML=ranked.map(p=>{
+        const paid=ppaid(p.id); const tot=p.total||0;
+        const pct=tot>0?Math.min(100,Math.round(paid/tot*100)):0;
+        return `<div class="dash-pay-bar-row">
+          <div class="dash-pay-bar-label"><b title="${p.name}">${p.name}</b><span style="font-family:var(--font-mono),monospace;color:var(--mut)">${pct}%</span></div>
+          <div class="dash-pay-bar-track"><div class="dash-pay-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Project status — compact donut by stage
+  const stCtx=document.getElementById('status-donut-chart')?.getContext('2d');
+  if(stCtx){
+    if(charts.statusDonut)charts.statusDonut.destroy();
+    const stageCounts=STAGES_D.map(s=>projs.filter(p=>(p.stage||'Concept')===s).length);
+    const colors=['#5a7260','#3d5a6c','#a67c52','#b8975a','#4a7c59','#2c3e2d'];
+    const lbls=STAGES_D.filter((_,i)=>stageCounts[i]>0);
+    const vals=stageCounts.filter(v=>v>0);
+    const cols=colors.filter((_,i)=>stageCounts[i]>0);
+    if(!vals.length){ vals.push(1); lbls.push('None'); cols.push('#e4dfd6'); }
+    charts.statusDonut=new Chart(stCtx,{
+      type:'doughnut',
+      data:{labels:lbls,datasets:[{data:vals,backgroundColor:cols,borderColor:'#fffcf7',borderWidth:2,hoverOffset:4}]},
+      options:{
+        responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'right',labels:{color:'#6e6960',font:{size:10},boxWidth:8,padding:8,usePointStyle:true,pointStyle:'circle'}}}
+      }
+    });
+  }
+
+  // Expenses — bar chart (calendar year months)
+  const eCtx=document.getElementById('exp-bar-chart')?.getContext('2d');
+  if(eCtx){
+    if(charts.expBar)charts.expBar.destroy();
+    const expData=calMonths.map((_,i)=>{
+      return (db.expenses||[]).filter(e=>{
+        const d=new Date(e.date);
+        return d.getFullYear()===yr && d.getMonth()===i;
+      }).reduce((a,e)=>a+(e.amount||0),0);
+    });
+    charts.expBar=new Chart(eCtx,{
+      type:'bar',
+      data:{labels:calMonths,datasets:[{
+        label:'Expenses',
+        data:expData,
+        backgroundColor:'rgba(44,62,45,.75)',
+        hoverBackgroundColor:'#b8975a',
+        borderRadius:3,
+        borderSkipped:false,
+        maxBarThickness:18
+      }]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+Number(v.raw).toLocaleString('en-IN')}}},
+        scales:{
+          x:{grid:{display:false},ticks:{color:'#6e6960',font:{size:9},maxRotation:0},border:{display:false}},
+          y:{grid:{color:'rgba(228,223,214,.7)'},border:{display:false},ticks:{color:'#6e6960',font:{size:9},callback:v=>v>=1000?'₹'+Math.round(v/1000)+'K':'₹'+v}}
+        }
+      }
+    });
+  }
+
+  // Monthly work — timeline (activity intensity by month)
+  const tl=document.getElementById('dash-work-timeline');
+  if(tl){
+    const workCounts=calMonths.map((_,i)=>{
+      let n=0;
+      (db.payments||[]).forEach(p=>{const d=new Date(p.date);if(d.getFullYear()===yr&&d.getMonth()===i)n++;});
+      (db.siteVisits||[]).forEach(v=>{const d=new Date(v.date||v.ts||0);if(d.getFullYear()===yr&&d.getMonth()===i)n++;});
+      (db.activities||[]).forEach(a=>{const d=new Date(a.date||a.ts||0);if(!isNaN(d)&&d.getFullYear()===yr&&d.getMonth()===i)n++;});
+      return n;
+    });
+    const maxW=Math.max(1,...workCounts);
+    const curM=now.getMonth();
+    tl.innerHTML=`<div class="dash-tl">${calMonths.map((m,i)=>{
+      const n=workCounts[i];
+      const hot=n>=maxW&&n>0;
+      const has=n>0;
+      const cur=i===curM?' style="opacity:1"':'';
+      return `<div class="dash-tl-month${has?' has':''}${hot?' hot':''}"${cur}>
+        <div class="dash-tl-dot"></div>
+        <div class="dash-tl-lbl">${m}</div>
+        <div class="dash-tl-val">${n?n+'×': '—'}</div>
+      </div>`;
+    }).join('')}</div>
+    <div style="font-size:10px;color:var(--mut);margin-top:8px">Payments · site visits · activity logs this year</div>`;
+  }
+
 
   // ── Recent Projects — attractive cards ──
   const pl=document.getElementById('dash-proj-list');
@@ -3685,58 +4179,241 @@ document.querySelectorAll('#pf-tabs .tab-btn').forEach(b=>b.addEventListener('cl
 // ════════════════════════════════════════════════
 function openPD(pid){
   const p=gp(pid);if(!p)return;
-  const c=gc(p.clientId);const paid=ppaid(pid);const bal=pbal(pid);const pays=ppays(pid);
-  document.getElementById('pd-title').textContent=p.name;
-  const rows=pays.length?pays.map(px=>`
-    <div style="display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--bdr)">
-      <div style="width:32px;height:32px;background:rgba(39,174,96,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">₹</div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${px.stage} — ${fmt(px.amount)}</div>
-        <div style="font-size:10px;color:var(--mut)">${px.date} · ${px.mode} · ${px.id}</div>
-        ${px.drawings&&px.drawings.length?`<div style="font-size:10px;color:var(--blue);margin-top:2px">📐 ${px.drawings.join(', ')}</div>`:''}
-      </div>
-      <div style="display:flex;gap:5px;flex-shrink:0">
-        <button class="btn-wa" style="font-size:10px;padding:4px 9px" onclick="sendWA('${pid}','${px.id}')">📲 WA</button>
-        <button class="btn btn-s btn-sm" style="color:var(--mut);border-color:var(--bdr)" onclick="editPayment('${px.id}')">✏️</button>
-        <button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="delPay('${px.id}','${pid}')">✕</button>
-      </div>
-    </div>`).join('')
-    :'<div style="color:var(--mut);font-size:13px;padding:10px 0">No payments yet</div>';
-
-  document.getElementById('pd-body').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-      <div style="background:var(--surf2);border-radius:10px;padding:12px;border:1px solid var(--bdr)"><div class="kpi-lbl">Total</div><div style="font-family:'Playfair Display',serif;font-size:19px">${fmt(p.total)}</div></div>
-      <div style="background:rgba(39,174,96,.05);border-radius:10px;padding:12px;border:1px solid rgba(39,174,96,.2)"><div class="kpi-lbl">Received</div><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--rgreen)">${fmt(paid)}</div></div>
-      <div style="background:rgba(192,57,43,.05);border-radius:10px;padding:12px;border:1px solid rgba(192,57,43,.2)"><div class="kpi-lbl">Balance</div><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--red)">${fmt(bal)}</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div><div class="kpi-lbl" style="margin-bottom:4px">Client</div><div style="font-size:13px;font-weight:600">${c?c.name:'—'}</div><div style="font-size:11px;color:var(--mut)">${c?c.cat:''} ${c?'· 📞 '+c.wa:''}</div></div>
-      <div><div class="kpi-lbl" style="margin-bottom:4px">Site / Deadline</div><div style="font-size:13px">${p.address||'—'}</div><div style="font-size:11px;color:var(--mut)">📅 ${p.deadline||'No deadline'} · ${p.paymode||'—'}</div></div>
-    </div>
-    <div style="margin-bottom:12px"><div class="kpi-lbl" style="margin-bottom:6px">Services</div><div>${p.services.map(s=>`<span class="svc-chip">${s}</span>`).join('')}</div></div>
-    ${p.notes?`<div style="margin-bottom:12px;font-size:12px;color:var(--mut);background:var(--surf2);padding:10px;border-radius:8px">📝 ${p.notes}</div>`:''}
-    <div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
-        <div class="kpi-lbl">Payment History</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap">
-          <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openModal('m-pay')">+ Payment</button>
-          <button class="btn btn-s btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="closeModal('m-pd');openProjAgreement('${pid}')">📜 Agreement</button>
-          <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openFileManager('${pid}')">📁 Files</button>
-          <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openSiteVisitModal('${pid}')">🏗️ Site Visit</button>
-              <button class="btn btn-s btn-sm" style="color:var(--orange);border-color:var(--orange)" onclick="closeModal('m-pd');siteVisitPDF('${pid}')">📄 Visit Report</button>
-          <button class="btn-wa btn-sm" onclick="sendWA('${pid}',null)">📲 WhatsApp + PDF</button>
-          <button class="btn-pdf" onclick="generateAndDownloadPDF('${pid}')">📄 Download PDF</button>
-          <button class="btn-wa" style="background:rgba(255,165,0,.1);color:var(--orange);border-color:rgba(211,84,0,.25);font-size:10px;padding:4px 9px" onclick="sendAutoReminder('${pid}','installment')">🔔 Reminder</button>
+  window._pdPid=pid;
+  window._pdTab='overview';
+  const c=gc(p.clientId);
+  const loc=(p.location||p.city||p.address||'').trim()||'—';
+  const ptype=(p.type||p.category||(c&&c.cat)||(p.services&&p.services[0])||'Project').trim();
+  const head=document.getElementById('pd-ws-head');
+  if(head){
+    head.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="min-width:0;flex:1">
+          <div class="pd-ws-title" id="pd-title">${p.name||'Project'}</div>
+          <div class="pd-ws-sub">
+            <span>${ptype}</span>
+            <span class="sep">|</span>
+            <span>${loc}</span>
+            ${c?`<span class="sep">|</span><span>${c.name}</span>`:''}
+          </div>
         </div>
+        <button class="modal-close" onclick="closeModal('m-pd')" style="position:relative;top:0;right:0;flex-shrink:0">✕</button>
       </div>
-      ${rows}
-    </div>
-    <div style="display:flex;gap:6px;padding-top:12px;margin-top:8px;border-top:1px solid var(--bdr);flex-wrap:wrap">
-      <button class="btn btn-gold btn-sm" onclick="closeModal('m-pd');openEditProject('${pid}')">✏️ Edit Project</button>
-      <button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="delProject('${pid}')">🗑 Delete Project</button>
-    </div>`;
+      <div class="pd-ws-actions">
+        <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openEditProject('${pid}')">Edit</button>
+        <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openFileManager('${pid}')">Files</button>
+        <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openSiteVisitModal('${pid}')">Site Visit</button>
+        <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openProjAgreement('${pid}')">Agreement</button>
+        <button class="btn-wa btn-sm" onclick="sendWA('${pid}',null)">WhatsApp</button>
+        <button class="btn-pdf btn-sm" onclick="generateAndDownloadPDF('${pid}')">PDF</button>
+      </div>`;
+  }
+  const tabs=document.getElementById('pd-ws-tabs');
+  if(tabs){
+    const items=[['overview','Overview'],['drawings','Drawings'],['documents','Documents'],['site','Site'],['finance','Finance'],['timeline','Timeline']];
+    tabs.innerHTML=items.map(([id,label])=>
+      `<button type="button" class="pd-tab${id==='overview'?' active':''}" data-pd-tab="${id}" onclick="pdSwitchTab('${id}')">${label}</button>`
+    ).join('');
+  }
+  pdRenderTab('overview');
   openModal('m-pd');
 }
+
+function pdSwitchTab(tab){
+  window._pdTab=tab;
+  document.querySelectorAll('.pd-tab').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-pd-tab')===tab);
+  });
+  pdRenderTab(tab);
+}
+
+function pdRenderTab(tab){
+  const pid=window._pdPid;
+  const p=gp(pid);if(!p)return;
+  const c=gc(p.clientId);
+  const paid=ppaid(pid);const bal=pbal(pid);const pays=ppays(pid)||[];
+  const ST=['Concept','Layout','3D','Working Drawing','Submission','Completed'];
+  const stage=p.stage||'Concept';
+  const stageIdx=Math.max(0,ST.indexOf(stage));
+  const stagePct=Math.round((stageIdx+1)/ST.length*100);
+  const files=(p.files||[]);
+  const isDrawing=f=>{
+    const cat=(f.cat||f.category||'').toLowerCase();
+    const n=(f.name||f.title||'').toLowerCase();
+    return /draw|plan|elevation|section|3d|working|layout|cad|dwg/.test(cat+' '+n);
+  };
+  const drawings=files.filter(isDrawing);
+  const documents=files.filter(f=>!isDrawing(f));
+  const visits=(db.siteVisits||[]).filter(v=>v.projId===pid).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const body=document.getElementById('pd-body');
+  if(!body)return;
+
+  if(tab==='overview'){
+    body.innerHTML=`<div class="pd-panel">
+      <div class="pd-kpi-grid">
+        <div class="pd-kpi"><div class="pd-kpi-lbl">Contract</div><div class="pd-kpi-val">${fmt(p.total)}</div></div>
+        <div class="pd-kpi"><div class="pd-kpi-lbl">Received</div><div class="pd-kpi-val green">${fmt(paid)}</div></div>
+        <div class="pd-kpi"><div class="pd-kpi-lbl">Outstanding</div><div class="pd-kpi-val red">${fmt(bal)}</div></div>
+        <div class="pd-kpi"><div class="pd-kpi-lbl">Stage Progress</div><div class="pd-kpi-val">${stagePct}%</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px">
+        <div class="pd-section">
+          <div class="pd-section-title">Current Stage</div>
+          <div style="font-family:var(--font-display),serif;font-size:20px;font-weight:600;margin-bottom:12px">${stage}</div>
+          <div class="pd-stage-bar">
+            ${ST.map((s,i)=>`<div class="pd-stage-seg${i<stageIdx?' on':''}${i===stageIdx?' current':''}" title="${s}"></div>`).join('')}
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-top:6px">
+            <span>${ST[0]}</span><span>${ST[ST.length-1]}</span>
+          </div>
+          <div style="margin-top:16px;font-size:12px;color:var(--ink2);line-height:1.6">
+            <div><b>Client</b> — ${c?c.name:'—'} ${c&&c.wa?'· '+c.wa:''}</div>
+            <div><b>Deadline</b> — ${p.deadline||'Not set'}</div>
+            <div><b>Pay mode</b> — ${p.paymode||'—'}</div>
+            <div><b>Location</b> — ${(p.location||p.address||'—')}</div>
+          </div>
+        </div>
+        <div class="pd-section">
+          <div class="pd-section-title">Services</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+            ${(p.services||[]).length?(p.services||[]).map(s=>`<span class="svc-chip">${s}</span>`).join(''):'<span style="color:var(--mut);font-size:12px">No services listed</span>'}
+          </div>
+          <div class="pd-section-title">Notes</div>
+          <div style="font-size:13px;color:var(--ink2);line-height:1.55">${p.notes||'No notes yet.'}</div>
+          <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:6px">
+            <button class="btn btn-s btn-sm" onclick="pdSwitchTab('finance')">Finance</button>
+            <button class="btn btn-s btn-sm" onclick="pdSwitchTab('drawings')">Drawings</button>
+            <button class="btn btn-s btn-sm" onclick="pdSwitchTab('site')">Site</button>
+            <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openModal('m-pay')">+ Payment</button>
+          </div>
+        </div>
+      </div>
+      <div class="pd-section" style="margin-top:0">
+        <div class="pd-section-title">Quick Snapshot</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-size:12px">
+          <div><span style="color:var(--mut)">Drawings</span><br><b>${drawings.length}</b> files</div>
+          <div><span style="color:var(--mut)">Documents</span><br><b>${documents.length}</b> files</div>
+          <div><span style="color:var(--mut)">Site visits</span><br><b>${visits.length}</b> logged</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px">
+        <button class="btn btn-gold btn-sm" onclick="closeModal('m-pd');openEditProject('${pid}')">Edit Project</button>
+        <button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="delProject('${pid}')">Delete</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if(tab==='drawings'||tab==='documents'){
+    const list=tab==='drawings'?drawings:documents;
+    const label=tab==='drawings'?'Drawings':'Documents';
+    body.innerHTML=`<div class="pd-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+        <div class="pd-section-title" style="margin:0">${label}</div>
+        <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openFileManager('${pid}')">Manage files</button>
+      </div>
+      <div class="pd-section" style="padding-top:4px;padding-bottom:4px">
+        ${list.length?list.map(f=>`
+          <div class="pd-file-row">
+            <div style="width:36px;height:36px;border-radius:6px;background:var(--surf2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📄</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600">${f.name||f.title||'File'}</div>
+              <div style="font-size:11px;color:var(--mut)">${f.cat||f.category||'—'} ${f.date?'· '+f.date:''}</div>
+            </div>
+            ${f.url||f.link?`<a href="${f.url||f.link}" target="_blank" rel="noopener" class="btn btn-s btn-sm" onclick="event.stopPropagation()">Open</a>`:''}
+          </div>`).join(''):`<div class="pd-empty"><div class="pd-empty-icon">📁</div>No ${label.toLowerCase()} yet.<br><span style="font-size:12px">Use Manage files to add Drive links.</span></div>`}
+      </div>
+    </div>`;
+    return;
+  }
+
+  if(tab==='site'){
+    body.innerHTML=`<div class="pd-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+        <div class="pd-section-title" style="margin:0">Site Visits</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openSiteVisitModal('${pid}')">+ Log visit</button>
+          <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');siteVisitPDF('${pid}')">Visit report PDF</button>
+        </div>
+      </div>
+      <div class="pd-section" style="padding-top:4px;padding-bottom:4px">
+        ${visits.length?visits.map(v=>`
+          <div class="pd-visit-row">
+            <div style="width:36px;height:36px;border-radius:6px;background:rgba(166,124,82,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">🏗️</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">${v.date||'Visit'}</div>
+              <div style="font-size:11px;color:var(--mut)">${v.weather?v.weather+' · ':''}${v.notes||v.instructions||'—'}</div>
+            </div>
+            ${v.charge?`<div style="font-family:var(--font-mono),monospace;font-size:12px;font-weight:700">${fmt(v.charge)}</div>`:''}
+          </div>`).join(''):`<div class="pd-empty"><div class="pd-empty-icon">🏗️</div>No site visits logged.</div>`}
+      </div>
+    </div>`;
+    return;
+  }
+
+  if(tab==='finance'){
+    const rows=pays.length?pays.map(px=>`
+      <div class="pd-fin-row">
+        <div style="width:36px;height:36px;border-radius:6px;background:rgba(74,124,89,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--rgreen)">₹</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${px.stage||'Payment'} — ${fmt(px.amount)}</div>
+          <div style="font-size:11px;color:var(--mut)">${px.date||''} · ${px.mode||''} · ${px.id||''}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn-wa" style="font-size:10px;padding:4px 8px" onclick="sendWA('${pid}','${px.id}')">WA</button>
+          <button class="btn btn-s btn-sm" onclick="editPayment('${px.id}')">Edit</button>
+          <button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="delPay('${px.id}','${pid}')">✕</button>
+        </div>
+      </div>`).join(''):`<div class="pd-empty"><div class="pd-empty-icon">₹</div>No payments yet.</div>`;
+    body.innerHTML=`<div class="pd-panel">
+      <div class="pd-kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="pd-kpi"><div class="pd-kpi-lbl">Total</div><div class="pd-kpi-val">${fmt(p.total)}</div></div>
+        <div class="pd-kpi"><div class="pd-kpi-lbl">Received</div><div class="pd-kpi-val green">${fmt(paid)}</div></div>
+        <div class="pd-kpi"><div class="pd-kpi-lbl">Balance</div><div class="pd-kpi-val red">${fmt(bal)}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+        <div class="pd-section-title" style="margin:0">Payment history</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openModal('m-pay')">+ Payment</button>
+          <button class="btn btn-s btn-sm" onclick="sendAutoReminder('${pid}','installment')">Reminder</button>
+        </div>
+      </div>
+      <div class="pd-section" style="padding-top:4px;padding-bottom:4px">${rows}</div>
+    </div>`;
+    return;
+  }
+
+  if(tab==='timeline'){
+    const events=[];
+    ST.forEach((s,i)=>{
+      events.push({t:i, sort:i, label:s, sub:i<=stageIdx?'Reached / current pathway':'Upcoming', kind:'stage', done:i<=stageIdx});
+    });
+    pays.forEach(px=>{
+      events.push({t:px.date||'', sort:px.date||'', label:'Payment · '+fmt(px.amount), sub:(px.stage||'')+' · '+(px.mode||''), kind:'pay'});
+    });
+    visits.forEach(v=>{
+      events.push({t:v.date||'', sort:v.date||'', label:'Site visit', sub:v.notes||v.instructions||'', kind:'site'});
+    });
+    // keep stages first then chronological pays/visits
+    const stageEv=events.filter(e=>e.kind==='stage');
+    const other=events.filter(e=>e.kind!=='stage').sort((a,b)=>String(b.sort).localeCompare(String(a.sort)));
+    const all=[...stageEv, ...other];
+    body.innerHTML=`<div class="pd-panel">
+      <div class="pd-section-title">Project timeline</div>
+      <div class="pd-section">
+        ${all.map(e=>`
+          <div class="pd-tl-item">
+            <div style="width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0;background:${e.kind==='stage'?(e.done?'var(--grn)':'var(--bdr)'):e.kind==='pay'?'var(--rgreen)':'var(--orange)'}"></div>
+            <div>
+              <div style="font-size:13px;font-weight:600">${e.label}</div>
+              <div style="font-size:11px;color:var(--mut)">${e.sub||''}${e.t&&e.kind!=='stage'?' · '+e.t:''}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+}
+
 function delProject(pid){if(!confirm('Delete this project and all its payments?'))return;db.projects=db.projects.filter(p=>p.id!==pid);db.payments=db.payments.filter(p=>p.projectId!==pid);closeModal('m-pd');saveAll();renderProjects();renderDashboard();}
 function delPay(id,pid){if(!confirm('Delete this payment?'))return;db.payments=db.payments.filter(p=>p.id!==id);saveAll();openPD(pid);renderPayments();renderDashboard();}
 
