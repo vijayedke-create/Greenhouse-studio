@@ -948,6 +948,20 @@ aside.collapsed .user-row.gs-glass-user{padding:6px;border-radius:8px}
 
 /* Client Drawings UI */
 .cp-dwg{max-width:560px;margin:0 auto}
+.cp-project-group{margin:0 0 18px;border:1px solid var(--bdr);border-radius:12px;background:var(--surf);overflow:hidden}
+.cp-project-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 15px;background:var(--surf2);border-bottom:1px solid var(--bdr)}
+.cp-project-head-main{min-width:0}
+.cp-project-title{font-family:var(--font-display),serif;font-size:17px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.cp-project-sub{font-size:10px;color:var(--mut);margin-top:2px}
+.cp-project-count{font-size:10px;font-weight:700;color:var(--grn);white-space:nowrap}
+.cp-drive-folder{margin:10px 12px 0;border:1px solid var(--bdr);border-radius:9px;background:var(--bg);overflow:hidden}
+.cp-drive-folder-head{display:flex;align-items:center;gap:7px;padding:9px 10px;font-size:11px;font-weight:700;color:var(--ink2);background:var(--surf2);border-bottom:1px solid var(--bdr)}
+.cp-drive-folder-path{font-size:9px;color:var(--mut);font-weight:500;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp-drive-folder-body{padding:10px}
+.cp-drive-file-list{display:grid;gap:8px}
+.cp-project-files{padding:12px}
+.cp-drive-empty{font-size:11px;color:var(--mut);padding:10px 2px}
+
 .cp-dwg-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px}
 .cp-dwg-title{
   font-family:var(--font-display),serif;font-size:22px;font-weight:600;
@@ -16665,13 +16679,19 @@ function renderCpDrawings(c, projs) {
     if (f.clientVisible) return 'approved';
     return 'review';
   }
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]});
+  }
+  function fileUrl(f) { return f.url || f.link || f.href || ''; }
+  function folderPath(f) {
+    return String(f.driveFolderPath || f.drivePath || f.folderPath || '').trim();
+  }
 
-  // Collect client-visible files
+  // Build exactly from the client's assigned projects. Each project remains isolated.
   let items = [];
   projs.forEach(p => {
-    (p.files || []).filter(f => f.clientVisible !== false && (f.clientVisible || f.url || f.link)).forEach((f, i) => {
+    (p.files || []).filter(f => f.clientVisible !== false && (f.clientVisible || f.url || f.link || f.href)).forEach((f, i) => {
       if (f.clientVisible === false) return;
-      // only show if explicitly client visible when flag exists on any file of project
       items.push({
         ...f,
         _proj: p.name,
@@ -16681,11 +16701,13 @@ function renderCpDrawings(c, projs) {
         _no: parseDrawingNo(f, i),
         _title: titleCase(f.name || f.title),
         _date: f.date || f.updatedAt || f.uploadedAt || '',
-        _url: f.url || f.link || f.href || '',
-        _status: statusOf(f)
+        _url: fileUrl(f),
+        _status: statusOf(f),
+        _drivePath: folderPath(f)
       });
     });
-    // legacy payment drawings as simple cards
+
+    // Keep legacy payment-linked drawings.
     const pays = typeof ppays === 'function' ? ppays(p.id) : [];
     const legacy = [...new Set(pays.flatMap(pay => pay.drawings || []))];
     legacy.forEach((d, i) => {
@@ -16700,27 +16722,19 @@ function renderCpDrawings(c, projs) {
         _date: '',
         _url: '',
         _status: 'approved',
-        _legacy: true
+        _legacy: true,
+        _drivePath: ''
       });
     });
   });
 
-  // Prefer clientVisible true only if any file uses the flag
   const hasFlag = projs.some(p => (p.files || []).some(f => f.clientVisible === true || f.clientVisible === false));
-  if (hasFlag) {
-    items = items.filter(f => f._legacy || f.clientVisible === true);
-  }
-
+  if (hasFlag) items = items.filter(f => f._legacy || f.clientVisible === true);
   window._cpDrawingsCache = items;
 
   function revHistory(item) {
-    // Group by drawing number within same project
     const same = items.filter(x => x._projId === item._projId && x._no === item._no && x._no !== '—');
-    if (same.length > 1) {
-      const revs = [...new Set(same.map(x => x._rev))].sort();
-      return revs;
-    }
-    // synthesize path up to current rev number
+    if (same.length > 1) return [...new Set(same.map(x => x._rev))].sort();
     const n = parseInt(String(item._rev).replace(/\D/g, ''), 10);
     if (isNaN(n) || n < 0) return [item._rev || 'R00'];
     const list = [];
@@ -16731,60 +16745,83 @@ function renderCpDrawings(c, projs) {
   const activeFilter = window._cpDwgFilter || 'all';
   const filtered = activeFilter === 'all' ? items : items.filter(f => f._bucket === activeFilter);
 
+  function fileCard(f) {
+    const revs = revHistory(f);
+    const st = f._status === 'approved'
+      ? '<span class="cp-dwg-status ok">✓ Approved</span>'
+      : '<span class="cp-dwg-status pending">In review</span>';
+    const previewBtn = f._url
+      ? `<a class="cp-dwg-btn" href="${escHtml(f._url)}" target="_blank" rel="noopener">Preview</a>`
+      : `<button type="button" class="cp-dwg-btn muted" disabled>Preview</button>`;
+    const dlBtn = f._url
+      ? `<a class="cp-dwg-btn primary" href="${escHtml(f._url)}" target="_blank" rel="noopener" download>Download</a>`
+      : `<button type="button" class="cp-dwg-btn muted" disabled>Download</button>`;
+    return `<article class="cp-dwg-card" style="margin-bottom:0">
+      <div class="cp-dwg-card-top">
+        <div class="cp-dwg-name">${escHtml(f._title)}</div>
+      </div>
+      <div class="cp-dwg-meta">
+        <span>Drawing No. <b>${escHtml(f._no)}</b></span>
+        <span>Revision <b>${escHtml(f._rev)}</b></span>
+        ${f._date ? `<span>${escHtml(f._date)}</span>` : ''}
+      </div>
+      <div class="cp-dwg-revs" title="Revision history">
+        ${revs.map((r, i) => `<span class="cp-dwg-rev${r === f._rev ? ' current' : (i < revs.indexOf(f._rev) ? ' past' : '')}">${escHtml(r)}</span>${i < revs.length - 1 ? '<span class="cp-dwg-rev-arrow">→</span>' : ''}`).join('')}
+      </div>
+      <div class="cp-dwg-actions">${previewBtn}${dlBtn}${st}</div>
+    </article>`;
+  }
+
+  function renderProject(p) {
+    const pItems = filtered.filter(f => f._projId === p.id);
+    if (!pItems.length) return '';
+    const driveCount = pItems.filter(f => f.source === 'google-drive').length;
+    const groups = {};
+    pItems.forEach(f => {
+      const key = f._drivePath || 'Main Project Folder';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(f);
+    });
+
+    let body = '';
+    Object.keys(groups).sort((a,b) => a.localeCompare(b)).forEach(path => {
+      const list = groups[path];
+      const isDrive = path !== 'Main Project Folder';
+      body += `<div class="cp-drive-folder">
+        <div class="cp-drive-folder-head"><span>${isDrive ? '📁' : '📂'}</span><span>${escHtml(path.split(' / ').pop() || path)}</span><span class="cp-drive-folder-path">${isDrive ? escHtml(path) : 'Project root'}</span></div>
+        <div class="cp-drive-folder-body"><div class="cp-drive-file-list">${list.map(fileCard).join('')}</div></div>
+      </div>`;
+    });
+
+    return `<section class="cp-project-group">
+      <div class="cp-project-head">
+        <div class="cp-project-head-main"><div class="cp-project-title">📁 ${escHtml(p.name || 'Project')}</div><div class="cp-project-sub">Project-wise drawings & Google Drive folders</div></div>
+        <div class="cp-project-count">${pItems.length} drawing${pItems.length !== 1 ? 's' : ''}${driveCount ? ' · ☁️ '+driveCount : ''}</div>
+      </div>
+      <div class="cp-project-files">${body || '<div class="cp-drive-empty">No client-visible drawings in this project.</div>'}</div>
+    </section>`;
+  }
+
   let html = `<div class="cp-dwg">
     <div class="cp-dwg-head">
       <div class="cp-dwg-title">Drawings</div>
-      <div class="cp-dwg-count">${filtered.length} sheet${filtered.length !== 1 ? 's' : ''}</div>
+      <div class="cp-dwg-count">${filtered.length} sheet${filtered.length !== 1 ? 's' : ''} · ${projs.length} project${projs.length !== 1 ? 's' : ''}</div>
     </div>
     <div class="cp-dwg-filters" role="tablist">
       ${FILTERS.map(f => `<button type="button" class="cp-dwg-filter${activeFilter === f.id ? ' active' : ''}" onclick="cpDwgFilter('${f.id}')">${f.label}</button>`).join('')}
     </div>`;
 
   if (!filtered.length) {
-    html += `<div class="cp-dwg-empty">
-      <div class="cp-dwg-empty-ico">📐</div>
-      <p>No drawings in this filter yet</p>
-      <p class="cp-dwg-empty-sub">Your architect will share plans here when ready.</p>
-    </div></div>`;
+    html += `<div class="cp-dwg-empty"><div class="cp-dwg-empty-ico">📐</div><p>No drawings in this filter yet</p><p class="cp-dwg-empty-sub">Your architect will share plans here when ready.</p></div></div>`;
     return html;
   }
 
-  filtered.forEach((f, idx) => {
-    const revs = revHistory(f);
-    const st = f._status === 'approved'
-      ? '<span class="cp-dwg-status ok">✓ Approved</span>'
-      : '<span class="cp-dwg-status pending">In review</span>';
-    const previewBtn = f._url
-      ? `<a class="cp-dwg-btn" href="${f._url}" target="_blank" rel="noopener">Preview</a>`
-      : `<button type="button" class="cp-dwg-btn muted" disabled>Preview</button>`;
-    const dlBtn = f._url
-      ? `<a class="cp-dwg-btn primary" href="${f._url}" target="_blank" rel="noopener" download>Download</a>`
-      : `<button type="button" class="cp-dwg-btn muted" disabled>Download</button>`;
-    html += `
-    <article class="cp-dwg-card">
-      <div class="cp-dwg-card-top">
-        <div class="cp-dwg-name">${f._title}</div>
-        <div class="cp-dwg-proj">${f._proj || ''}</div>
-      </div>
-      <div class="cp-dwg-meta">
-        <span>Drawing No. <b>${f._no}</b></span>
-        <span>Revision <b>${f._rev}</b></span>
-        ${f._date ? `<span>${f._date}</span>` : ''}
-      </div>
-      <div class="cp-dwg-revs" title="Revision history">
-        ${revs.map((r, i) => `<span class="cp-dwg-rev${r === f._rev ? ' current' : (i < revs.indexOf(f._rev) ? ' past' : '')}">${r}</span>${i < revs.length - 1 ? '<span class="cp-dwg-rev-arrow">→</span>' : ''}`).join('')}
-      </div>
-      <div class="cp-dwg-actions">
-        ${previewBtn}
-        ${dlBtn}
-        ${st}
-      </div>
-    </article>`;
-  });
-
+  // Project order follows the Admin panel's project order.
+  projs.forEach(p => { html += renderProject(p); });
   html += '</div>';
   return html;
 }
+
 function cpDwgFilter(id) {
   window._cpDwgFilter = id;
   if (typeof renderCpContent === 'function') renderCpContent();
@@ -19062,9 +19099,47 @@ function fid(v){var s=String(v||'').trim(),m=s.match(/folders\/([\w-]+)/)||s.mat
 function gis(){if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();if(loadP)return loadP;loadP=new Promise(function(ok,no){var s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;s.onload=ok;s.onerror=function(){no(Error('Google Identity Services could not load'))};document.head.appendChild(s)});return loadP}
 async function connect(interactive){var c=cid();if(!c)throw Error('Google OAuth Client ID required');await gis();if(!tc)tc=google.accounts.oauth2.initTokenClient({client_id:c,scope:S,callback:function(){}});if(tok&&Date.now()<exp)return tok;return new Promise(function(ok,no){tc.callback=function(r){if(r&&r.access_token){tok=r.access_token;exp=Date.now()+Math.max(30,(+r.expires_in||3600)-60)*1000;ok(tok)}else no(Error('Google authorization was not completed'))};tc.requestAccessToken({prompt:interactive?'consent':''})})}
 async function api(u){await connect(false);var r=await fetch(u,{headers:{Authorization:'Bearer '+tok}});if(r.status===401){tok=null;await connect(true);r=await fetch(u,{headers:{Authorization:'Bearer '+tok}})}if(!r.ok)throw Error('Drive API '+r.status);return r.json()}
-async function children(folder){var out=[],page='';do{var q="'"+folder+"' in parents and trashed=false";var u='https://www.googleapis.com/drive/v3/files?'+new URLSearchParams({q:q,pageSize:'1000',fields:'nextPageToken,files(id,name,mimeType,modifiedTime,webViewLink,size)',orderBy:'name',pageToken:page}).toString();var d=await api(u);out=out.concat(d.files||[]);page=d.nextPageToken||''}while(page);return out}
+async function children(folder){
+  var out=[];
+  async function walk(fid,path){
+    var page='';
+    do{
+      var q="'"+fid+"' in parents and trashed=false";
+      var u='https://www.googleapis.com/drive/v3/files?'+new URLSearchParams({q:q,pageSize:'1000',fields:'nextPageToken,files(id,name,mimeType,modifiedTime,webViewLink,size)',orderBy:'name',pageToken:page}).toString();
+      var d=await api(u);
+      var folders=[];
+      (d.files||[]).forEach(function(f){
+        if(f.mimeType==='application/vnd.google-apps.folder') folders.push(f);
+        else out.push({file:f,folderPath:path||''});
+      });
+      for(var i=0;i<folders.length;i++){
+        var fp=path ? path+' / '+folders[i].name : folders[i].name;
+        await walk(folders[i].id,fp);
+      }
+      page=d.nextPageToken||'';
+    }while(page);
+  }
+  await walk(folder,'');
+  return out;
+}
 function cat(n,m){n=String(n||'').toLowerCase();if(/structural|column|beam|footing|foundation/.test(n))return'structural';if(/electrical|lighting|power/.test(n))return'electrical';if(/plumbing|water|sanitary|drain/.test(n))return'plumbing';if(/elevation/.test(n))return'elevation';if(/section/.test(n))return'section';if(/3d|render|walkthrough|perspective/.test(n))return'3d_view';if(/floor plan|ground floor|first floor|typical floor|terrace plan|site plan|plan/.test(n))return'floor_plan';if(/photo|jpg|jpeg|png/.test(n)||String(m||'').indexOf('image/')===0)return'site_photo';if(/approval|permission|noc|sanction|municipal|tp /.test(n))return'approval';if(/agreement|contract/.test(n))return'agreement';if(/quotation|estimate/.test(n))return'quotation';if(/invoice/.test(n))return'invoice';if(/receipt|payment/.test(n))return'receipt';if(/site report|progress report|visit report/.test(n))return'site_report';return'other'}
-async function sync(pid,interactive){var p=gp(pid);if(!p||!p.driveFolderId)return null;await connect(!!interactive);var fs=await children(p.driveFolderId);p.files=p.files||[];var map={};p.files.forEach(function(f,i){if(f.source==='google-drive'&&f.driveFileId)map[f.driveFileId]={f:f,i:i}});var add=0,upd=0;fs.forEach(function(f){if(f.mimeType==='application/vnd.google-apps.folder')return;var x=map[f.id],old=x&&x.f,obj={id:old?old.id:uid('FL'),name:f.name,url:f.webViewLink||'https://drive.google.com/open?id='+f.id,cat:old&&old.cat||cat(f.name,f.mimeType),notes:old&&old.notes||'',clientVisible:old?old.clientVisible:true,date:(f.modifiedTime||new Date().toISOString()).slice(0,10),addedBy:'google-drive',source:'google-drive',driveFileId:f.id,driveMimeType:f.mimeType,driveModifiedTime:f.modifiedTime||''};if(x){p.files[x.i]=Object.assign({},old,obj);upd++}else{p.files.push(obj);add++}});p.driveLastSync=new Date().toISOString();saveAll();if(pid===currentUploadPid){renderFmFiles();renderFmForm()}return{add:add,upd:upd,total:fs.length}}
+async function sync(pid,interactive){
+  var p=gp(pid);if(!p||!p.driveFolderId)return null;
+  await connect(!!interactive);
+  var fs=await children(p.driveFolderId);
+  p.files=p.files||[];
+  var map={};p.files.forEach(function(f,i){if(f.source==='google-drive'&&f.driveFileId)map[f.driveFileId]={f:f,i:i}});
+  var add=0,upd=0;
+  fs.forEach(function(item){
+    var f=item.file,folderPath=item.folderPath||'',x=map[f.id],old=x&&x.f;
+    var obj={id:old?old.id:uid('FL'),name:f.name,url:f.webViewLink||'https://drive.google.com/open?id='+f.id,cat:old&&old.cat||cat(f.name,f.mimeType),notes:old&&old.notes||'',clientVisible:old?old.clientVisible:true,date:(f.modifiedTime||new Date().toISOString()).slice(0,10),addedBy:'google-drive',source:'google-drive',driveFileId:f.id,driveMimeType:f.mimeType,driveModifiedTime:f.modifiedTime||'',driveFolderPath:folderPath};
+    if(x){p.files[x.i]=Object.assign({},old,obj);upd++;}else{p.files.push(obj);add++;}
+  });
+  p.driveLastSync=new Date().toISOString();saveAll();
+  if(pid===currentUploadPid){renderFmFiles();renderFmForm();}
+  return{add:add,upd:upd,total:fs.length};
+}
+
 window.gsDriveSaveConfig=function(){var c=(document.getElementById('gs-drive-client-id')||{}).value||'',f=fid((document.getElementById('gs-drive-folder')||{}).value||'');if(!c.trim())return showErr('Google OAuth Client ID टाका.');if(!f)return showErr('Valid Google Drive Folder Link / ID टाका.');localStorage.setItem('gs_google_drive_client_id',c.trim());var p=gp(currentUploadPid);if(!p)return;p.driveFolderId=f;saveAll();renderFmForm();showOk('Google Drive folder saved')}
 window.gsDriveConnectNow=async function(){try{await connect(true);status('🟢 Connected','ok');showOk('Google Drive connected')}catch(e){status('🔴 '+e.message,'err');showErr(e.message)}};
 window.gsDriveSyncNow=async function(){try{var p=gp(currentUploadPid);if(!p||!p.driveFolderId)return showErr('आधी Drive Folder map करा.');status('⏳ Syncing...');var r=await sync(currentUploadPid,true);status('🟢 '+r.total+' files · +'+r.add+' new','ok');showOk('Drive sync complete · '+r.add+' new file(s)')}catch(e){status('🔴 Sync failed','err');showErr('Drive Sync: '+e.message)}};
