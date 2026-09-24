@@ -3829,13 +3829,23 @@ async function syncFirebase(){
   }
 }
 async function fbPoll(){
-  if(!fbDbUrl)return;
+  if(!fbDbUrl)return false;
   var url=fbUrl();
-  if(!url)return;
+  if(!url)return false;
   try{
-    var r=await fetch(url);
-    if(!r.ok)return;
+    var r=await fetch(url,{cache:'no-store'});
+    if(!r.ok){
+      var msg='Firebase Read Error HTTP '+r.status;
+      setSyncStatus('red',msg);
+      console.error(msg,url);
+      return false;
+    }
     var data=await r.json();
+    // null means the database/path is reachable but no data has been saved yet.
+    if(data===null){
+      setSyncStatus('green','Firebase Connected — No data yet');
+      return true;
+    }
     if(data&&data.db){
       // Ensure all arrays present
       var d=data.db;
@@ -3853,10 +3863,17 @@ async function fbPoll(){
         if(data.officeInfo) officeInfo=data.officeInfo;
         saveLocal();
         refreshAll();
-        setSyncStatus('green','Live ✓ '+new Date().toLocaleTimeString());
       }
+      setSyncStatus('green','Firebase Live ✓ '+new Date().toLocaleTimeString());
+      return true;
     }
-  }catch(e){ /* network error — silent */ }
+    setSyncStatus('green','Firebase Connected — No app data');
+    return true;
+  }catch(e){
+    setSyncStatus('red','Firebase Offline / Read Failed');
+    console.error('Firebase read:',e);
+    return false;
+  }
 }
 
 // ── FIREBASE CONFIG (standalone only) ────────────
@@ -3971,28 +3988,33 @@ function disconnectFirebase(){
 
 async function loadSavedFirebaseConfig(){
   try{
-    // Use the embedded central Firebase URL first. localStorage is only a fallback
-    // for older installations where a different URL was intentionally configured.
+    // Always use the central Firebase database so every PC sees the same data.
     var url=GS_FIREBASE_URL || localStorage.getItem('gs_fb_url');
-    if(!url) return;
-    fbDbUrl=url;
-    localStorage.setItem('gs_fb_url',url);
+    if(!url) return false;
+    fbDbUrl=url.replace(/\/+$/,'');
+    localStorage.setItem('gs_fb_url',fbDbUrl);
     var inp=document.getElementById('inline-fb-url');
-    if(inp) inp.value=url;
+    if(inp) inp.value=fbDbUrl;
     // ensure db arrays before poll
     if(!db.expenses) db.expenses=[];
     if(!db.estimates) db.estimates=[];
     if(!db.siteVisits) db.siteVisits=[];
     if(!db.activities) db.activities=[];
-    await fbPoll();
-    if(fbPollTimer) clearInterval(fbPollTimer);
-    fbPollTimer=setInterval(pollRemote,6000);
-    var discBtn=document.getElementById('btn-disconnect');
-    if(discBtn) discBtn.style.display='';
-    var badge=document.getElementById('sync-status-badge');
-    if(badge){badge.className='sync-status active';badge.textContent='🟢 Firebase Connected';}
-    setSyncStatus('green','Connected ✓');
-  }catch(e){ console.warn('Firebase auto-load:',e.message); }
+    var ok=await fbPoll();
+    if(ok){
+      if(fbPollTimer) clearInterval(fbPollTimer);
+      fbPollTimer=setInterval(pollRemote,6000);
+      var discBtn=document.getElementById('btn-disconnect');
+      if(discBtn) discBtn.style.display='';
+      var badge=document.getElementById('sync-status-badge');
+      if(badge) badge.className='sync-status active';
+    }
+    return ok;
+  }catch(e){
+    setSyncStatus('red','Firebase connection failed');
+    console.warn('Firebase auto-load:',e.message);
+    return false;
+  }
 }
 function loadFirebaseFormValues(){
   try{document.getElementById('fb-db-url').value=localStorage.getItem('gs_fb_url')||'';}catch(e){}
@@ -14511,18 +14533,16 @@ document.addEventListener('DOMContentLoaded',async ()=>{
     var nc=document.getElementById('nb-c');if(nc)nc.textContent=(db.contacts||[]).length;
     var np=document.getElementById('nb-p');if(np)np.textContent=(db.projects||[]).length;
   }catch(e){}
-  // Load Firebase
-  try{loadSavedFirebaseConfig();}catch(e){}
-  setSyncStatus('gray','Ready');
-  // Load remote data async
+  // Load the same Firebase database on every PC before declaring the app ready.
   setTimeout(async()=>{
     try{
+      await loadSavedFirebaseConfig();
       await loadRemoteData();
       ensureDbExtensions();
       refreshAll();
     }catch(e){console.warn('Remote:',e);}
     setInterval(pollRemote,6000);
-  },500);
+  },300);
 });
 </script>
 
