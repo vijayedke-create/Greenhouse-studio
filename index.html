@@ -14,25 +14,217 @@
 
 <style>
 :root{
-  --bg:#f5f3ef;--surf:#fff;--surf2:#f9f7f4;--bdr:#e8e2d9;--bdr2:#d4ccc0;
-  --ink:#1a1a18;--ink2:#3d3530;--mut:#7a7568;--dim:#b8afa5;
-  --grn:#1a3a2a;--grn2:#2d5a3d;--grn3:#3d7a52;
-  --gold:#c9a84c;--gold2:#e8c96e;--gold-bg:rgba(201,168,76,.1);
-  --red:#c0392b;--rgreen:#27ae60;--blue:#2c5f8a;--orange:#d35400;
-  --sh:0 2px 16px rgba(26,58,42,.08);--sh2:0 8px 40px rgba(26,58,42,.16);
-  --rad:14px;
-  --transition:all .22s cubic-bezier(.4,0,.2,1);
+  /* Modern Architecture Studio */
+  --bg:#f7f5f0;
+  --surf:#fffcf7;
+  --surf2:#f3f0ea;
+  --bdr:#e4dfd6;
+  --bdr2:#d0c9bc;
+  --ink:#1c1b19;
+  --ink2:#3a3632;
+  --mut:#6e6960;
+  --dim:#b0a89c;
+  --grn:#2c3e2d;
+  --grn2:#3d5340;
+  --grn3:#5a7260;
+  --gold:#b8975a;
+  --gold2:#d4b87a;
+  --gold-bg:rgba(184,151,90,.12);
+  --red:#a63d32;--rgreen:#4a7c59;--blue:#3d5a6c;--orange:#a67c52;
+  --sh:0 1px 2px rgba(28,27,25,.04),0 4px 16px rgba(28,27,25,.05);
+  --sh2:0 8px 28px rgba(28,27,25,.08);
+  --rad:6px;
+  --rad-lg:10px;
+  --transition:all .2s ease;
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
 }
-/* ── DARK MODE ── */
 [data-theme="dark"]{
-  --bg:#0f1612;--surf:#1a2420;--surf2:#1f2d28;--bdr:#2a3d35;--bdr2:#334d42;
-  --ink:#e8e4dc;--ink2:#c8c0b4;--mut:#7a9088;--dim:#4a6058;
-  --sh:0 2px 16px rgba(0,0,0,.35);--sh2:0 8px 40px rgba(0,0,0,.55);
+  --bg:#121410;--surf:#1a1c18;--surf2:#22251f;--bdr:#2e322b;--bdr2:#3a4036;
+  --ink:#eceae4;--ink2:#c4c0b6;--mut:#8a8680;--dim:#555850;
+  --grn:#1e2e22;--grn2:#2a3f30;--grn3:#4a6552;
+  --gold:#c4a66a;--gold2:#d9bc84;--gold-bg:rgba(196,166,106,.12);
+  --sh:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.25);
+  --sh2:0 8px 28px rgba(0,0,0,.4);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{height:100%;overflow:hidden}
-body{height:100%;display:flex;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);overflow:hidden}
-::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:8px}
+body{
+  height:100%;display:flex;
+  font-family:var(--font-body);
+  background:var(--bg);color:var(--ink);
+  overflow:hidden;font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;letter-spacing:.01em;
+}
+h1,h2,h3,.sec-title,.card-title,.logo-name{
+  font-family:var(--font-display);letter-spacing:-.02em;font-weight:600;
+}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ── MODERN ARCHITECTURE STUDIO LAYER ── */
+main{padding:28px 32px 96px !important}
+.sec-head{margin-bottom:22px !important}
+.sec-title{
+  font-family:var(--font-display) !important;
+  font-size:26px !important;font-weight:600 !important;
+  color:var(--ink) !important;letter-spacing:-.03em !important;line-height:1.2;
+}
+.card{
+  background:var(--surf) !important;border:1px solid var(--bdr) !important;
+  border-radius:var(--rad) !important;box-shadow:var(--sh) !important;
+  transition:border-color .2s,box-shadow .2s !important;
+}
+.card:hover{transform:none !important;box-shadow:var(--sh2) !important;border-color:var(--bdr2) !important}
+.card-head{padding:18px 22px 14px !important;border-bottom:1px solid var(--bdr) !important;background:transparent}
+.card-title{
+  font-family:var(--font-display) !important;font-size:15px !important;
+  font-weight:600 !important;color:var(--ink) !important;letter-spacing:-.02em;
+}
+.card-body{padding:18px 22px !important}
+.g2,.g3,.g65{gap:20px !important;margin-bottom:20px !important}
+.fi,input.fi,select.fi,textarea.fi,.fi-sel{
+  border:1px solid var(--bdr) !important;border-radius:var(--rad) !important;
+  background:var(--surf) !important;color:var(--ink) !important;
+  padding:10px 12px !important;font-size:13px !important;
+  font-family:var(--font-body) !important;box-shadow:none !important;
+}
+.fi:focus,input.fi:focus,select.fi:focus,textarea.fi:focus{
+  border-color:var(--grn2) !important;
+  box-shadow:0 0 0 2px rgba(44,62,45,.12) !important;outline:none !important;
+}
+label,.fg label{
+  font-size:11px !important;font-weight:600 !important;
+  letter-spacing:.06em !important;text-transform:uppercase !important;
+  color:var(--mut) !important;margin-bottom:6px !important;
+}
+.btn,.btn-p,button.btn-p{border-radius:var(--rad) !important;font-weight:600 !important}
+.tbl-wrap{border-radius:var(--rad) !important;border:1px solid var(--bdr) !important;box-shadow:none !important}
+table th{
+  font-size:10px !important;letter-spacing:.08em !important;text-transform:uppercase !important;
+  font-weight:700 !important;color:var(--mut) !important;background:var(--surf2) !important;
+  border-bottom:1px solid var(--bdr) !important;
+}
+table td{border-bottom:1px solid var(--bdr) !important;font-size:13px !important}
+aside{background:var(--grn) !important;border-right:1px solid rgba(0,0,0,.12)}
+.logo-name{font-family:var(--font-display) !important;font-size:16px !important}
+.logo-badge{border-radius:4px !important;box-shadow:none !important;background:var(--gold) !important}
+.logo-badge:hover{transform:none !important;box-shadow:none !important}
+.nav-btn{border-radius:4px !important;margin:2px 10px !important;font-size:13px !important;font-weight:500 !important}
+.nav-btn.active{background:rgba(255,255,255,.1) !important;box-shadow:inset 2px 0 0 var(--gold)}
+header{
+  background:var(--surf) !important;border-bottom:1px solid var(--bdr) !important;
+  box-shadow:none !important;height:56px !important;min-height:56px !important;
+}
+.kpi-card{border-radius:var(--rad) !important;box-shadow:none !important}
+
+
+/* ── Premium Project Cards ── */
+.pc-grid{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr)) !important;
+  gap:20px !important;
+}
+.proj-card.pc-premium{
+  display:flex;flex-direction:column;
+  padding:0 !important;overflow:hidden;
+  background:var(--surf);border:1px solid var(--bdr);
+  border-radius:var(--rad-lg,10px);
+  box-shadow:var(--sh);
+  cursor:pointer;
+  transition:border-color .2s,box-shadow .2s;
+}
+.proj-card.pc-premium:hover{
+  border-color:var(--bdr2);
+  box-shadow:var(--sh2);
+  transform:none;
+}
+.pc-cover{
+  position:relative;height:140px;
+  background:linear-gradient(145deg,var(--grn) 0%,var(--grn2) 55%,#4a6350 100%);
+  overflow:hidden;flex-shrink:0;
+}
+.pc-cover.has-img{background:var(--surf2)}
+.pc-cover img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.pc-cover-fallback{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+}
+.pc-cover-fallback span{
+  font-family:var(--font-display),serif;font-size:42px;font-weight:600;
+  color:rgba(255,255,255,.2);letter-spacing:-.04em;
+}
+.pc-cover-shade{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(28,27,25,.72) 0%,rgba(28,27,25,.15) 45%,transparent 70%);
+  pointer-events:none;
+}
+.pc-cover-top{
+  position:absolute;top:12px;left:12px;right:12px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:1;
+}
+.pc-type-pill{
+  font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:4px 10px;border-radius:4px;
+  background:rgba(255,252,247,.92);color:var(--grn);
+}
+.pc-overdue{
+  font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;
+  background:var(--red);color:#fff;
+}
+.pc-cover-stage{
+  position:absolute;left:14px;bottom:12px;z-index:1;
+  font-size:11px;font-weight:600;color:rgba(255,252,247,.9);
+  letter-spacing:.04em;
+}
+.pc-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pc-premium .pc-name{
+  font-family:var(--font-display),serif;font-size:18px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;line-height:1.25;
+  text-transform:uppercase;
+}
+.pc-meta{
+  font-size:12px;color:var(--mut);font-weight:500;
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px;
+}
+.pc-dot{opacity:.5}
+.pc-stage-label{
+  font-size:12px;font-weight:600;color:var(--ink2);margin-top:6px;
+}
+.pc-progress{
+  display:flex;align-items:center;gap:10px;margin:2px 0 4px;
+}
+.pc-progress-track{
+  flex:1;height:6px;border-radius:2px;background:var(--surf2);
+  border:1px solid var(--bdr);overflow:hidden;
+}
+.pc-progress-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--grn),var(--grn3));
+  transition:width .35s ease;
+}
+.pc-progress-pct{
+  font-family:var(--font-mono),monospace;font-size:11px;font-weight:700;
+  color:var(--ink2);min-width:32px;text-align:right;
+}
+.pc-bottom{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+  margin-top:auto;padding-top:10px;border-top:1px solid var(--bdr);
+}
+.pc-activity{
+  font-size:10px;color:var(--mut);line-height:1.35;
+  max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pc-pay{
+  font-family:var(--font-mono),monospace;font-size:11px;font-weight:700;
+  text-align:right;white-space:nowrap;
+}
+.pc-pay.due{color:var(--red)}
+.pc-pay.paid{color:var(--rgreen)}
+.pc-pay.ok{color:var(--grn2)}
 
 /* ── MOBILE OVERLAY ── */
 .mob-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:298;backdrop-filter:blur(2px)}
@@ -43,9 +235,134 @@ aside{
   width:252px;min-width:252px;background:var(--grn);
   display:flex;flex-direction:column;height:100vh;max-height:100vh;
   position:relative;flex-shrink:0;
-  transition:transform .3s ease;overflow:hidden;
+  transition:width .25s ease,min-width .25s ease,transform .3s ease;
+  overflow:hidden;
 }
-.logo-area{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+/* Compact / icons-only sidebar */
+aside.collapsed{
+  width:68px;min-width:68px;
+}
+aside.collapsed .logo-name,
+aside.collapsed .logo-title,
+aside.collapsed .logo-sub,
+aside.collapsed .nav-sec,
+aside.collapsed .user-info{display:none !important}
+aside.collapsed .logo-area{padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px}
+aside.collapsed .logo-row{justify-content:center;width:100%}
+aside.collapsed .logo-badge{width:36px;height:36px}
+aside.collapsed .logo-badge img{width:32px;height:32px}
+aside.collapsed nav{padding:8px 6px;align-items:stretch}
+aside.collapsed .nav-btn{
+  justify-content:center;padding:12px 8px;font-size:0 !important;
+  gap:0;position:relative;border-radius:6px;margin:2px 4px;
+}
+aside.collapsed .nav-icon{font-size:18px !important;width:auto;line-height:1}
+aside.collapsed .nav-badge{
+  position:absolute;top:4px;right:4px;margin:0;
+  font-size:8px !important;padding:1px 5px;min-width:14px;text-align:center;
+}
+aside.collapsed .sidebar-footer{padding:10px 8px}
+aside.collapsed .user-row{justify-content:center}
+aside.collapsed .user-av{margin:0 auto}
+aside.collapsed .sb-collapse-btn{margin:0}
+aside.collapsed .sb-collapse-btn .sb-collapse-label{display:none}
+.sb-collapse-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;margin-top:10px;padding:8px 10px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:6px;color:rgba(255,255,255,.7);cursor:pointer;
+  font-family:var(--font-body),sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.04em;transition:background .2s,color .2s;
+}
+.sb-collapse-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.sb-collapse-icon{font-size:14px;line-height:1}
+/* ── Tooltip system (sidebar collapsed + reusable) ──
+   Customize via :root or [data-tooltip-theme]:
+   --tip-bg, --tip-fg, --tip-radius, --tip-pad, --tip-size, --tip-delay, --tip-offset
+*/
+:root{
+  --tip-bg:var(--ink);
+  --tip-fg:#f7f5f0;
+  --tip-radius:4px;
+  --tip-pad:6px 11px;
+  --tip-size:11px;
+  --tip-delay:0.15s;
+  --tip-offset:10px;
+  --tip-shadow:var(--sh2);
+  --tip-weight:600;
+}
+/* Gold accent tooltips */
+[data-tooltip-theme="gold"]{
+  --tip-bg:var(--gold);
+  --tip-fg:var(--grn);
+}
+/* Olive tooltips */
+[data-tooltip-theme="olive"]{
+  --tip-bg:var(--grn2);
+  --tip-fg:#f7f5f0;
+}
+/* Soft light tooltips */
+[data-tooltip-theme="light"]{
+  --tip-bg:var(--surf);
+  --tip-fg:var(--ink);
+  --tip-shadow:0 2px 12px rgba(28,27,25,.12);
+}
+
+aside.collapsed .nav-btn[data-tip]{position:relative}
+aside.collapsed .nav-btn[data-tip]:hover::after,
+aside.collapsed .nav-btn[data-tip]:focus-visible::after{
+  content:attr(data-tip);
+  position:absolute;
+  left:calc(100% + var(--tip-offset));
+  top:50%;
+  transform:translateY(-50%);
+  background:var(--tip-bg);
+  color:var(--tip-fg);
+  font-size:var(--tip-size);
+  font-weight:var(--tip-weight);
+  padding:var(--tip-pad);
+  border-radius:var(--tip-radius);
+  white-space:nowrap;
+  z-index:500;
+  box-shadow:var(--tip-shadow);
+  pointer-events:none;
+  font-family:var(--font-body),sans-serif;
+  letter-spacing:.02em;
+  animation:tipIn var(--tip-delay) ease forwards;
+  opacity:0;
+  border:1px solid transparent;
+}
+[data-tooltip-theme="light"] aside.collapsed .nav-btn[data-tip]:hover::after{
+  border-color:var(--bdr);
+}
+aside.collapsed .nav-btn[data-tip]:hover::before,
+aside.collapsed .nav-btn[data-tip]:focus-visible::before{
+  content:'';
+  position:absolute;
+  left:calc(100% + 4px);
+  top:50%;
+  transform:translateY(-50%);
+  border:5px solid transparent;
+  border-right-color:var(--tip-bg);
+  z-index:500;
+  animation:tipIn var(--tip-delay) ease forwards;
+  opacity:0;
+}
+@keyframes tipIn{to{opacity:1}}
+
+/* Optional: bottom tooltips for footer icons */
+aside.collapsed .sidebar-footer [data-tip]:hover::after{
+  left:50%;top:auto;bottom:calc(100% + 8px);
+  transform:translateX(-50%);
+}
+aside.collapsed .sidebar-footer [data-tip]:hover::before{
+  left:50%;top:auto;bottom:calc(100% + 0px);
+  transform:translateX(-50%);
+  border:5px solid transparent;
+  border-top-color:var(--tip-bg);
+  border-right-color:transparent;
+}
+.logo-area{padding:24px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
 .logo-row{display:flex;align-items:center;gap:11px}
 .logo-badge{
   width:42px;height:42px;border-radius:11px;
@@ -122,7 +439,7 @@ header{display:flex;align-items:center;gap:0}
 .btn-wa:hover{background:#25d366;color:#fff;border-color:#25d366}
 .btn-pdf{background:rgba(192,57,43,.08);color:var(--red);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s}
 .btn-pdf:hover{background:var(--red);color:#fff}
-main{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px 20px 80px;min-height:0;-webkit-overflow-scrolling:touch}
+main{flex:1;overflow-y:auto;overflow-x:hidden;padding:28px 32px 96px;min-height:0;-webkit-overflow-scrolling:touch}
 
 /* ── VIEWS ── */
 .proj-step{animation:fadeUp .3s ease}
@@ -229,15 +546,15 @@ html{transition:background .3s,color .3s}
 
 /* ── CARD ── */
 .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rad);box-shadow:var(--sh)}
-.card-head{padding:15px 18px 12px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:8px}
-.card-title{font-family:'Playfair Display',serif;font-size:14px;color:var(--ink)}
-.card-body{padding:15px 18px}
+.card-head{padding:18px 22px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-title{font-family:var(--font-display),serif;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+.card-body{padding:18px 22px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
 .g65{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:16px}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .chart-wrap{position:relative;height:188px}
 .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-.sec-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--ink)}
+.sec-title{font-family:var(--font-display),serif;font-size:26px;font-weight:600;color:var(--ink);letter-spacing:-0.03em}
 
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;border-radius:var(--rad);border:1px solid var(--bdr);background:var(--surf)}
@@ -606,7 +923,7 @@ html{transition:background .3s,color .3s}
 <div id="mob-bg" class="mob-bg" onclick="closeSidebar()"></div>
 
 <!-- ══ SIDEBAR ══ -->
-<aside id="sidebar">
+<aside id="sidebar" data-tooltip-theme="default">
   <div class="logo-area">
     <div class="logo-row">
       <div class="logo-badge" style="background:transparent;box-shadow:none;padding:2px">
@@ -618,6 +935,10 @@ html{transition:background .3s,color .3s}
       </div>
     </div>
     <div class="logo-sub">Architecture Management</div>
+    <button type="button" class="sb-collapse-btn" id="sb-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar">
+      <span class="sb-collapse-icon" id="sb-collapse-icon">«</span>
+      <span class="sb-collapse-label">Collapse</span>
+    </button>
   </div>
   <nav>
     <div class="nav-sec">Main</div>
@@ -1059,11 +1380,20 @@ html{transition:background .3s,color .3s}
         </div>
       </div>
 
-      <!-- BI KPI Row 1 — Revenue & Finance -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px" id="an-kpi"></div>
+      <!-- Performance strip -->
+      <div id="an-perf-strip" style="margin-bottom:14px"></div>
 
-      <!-- BI KPI Row 2 — Projects & Pipeline -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="an-kpi2"></div>
+      <!-- BI KPI Row 1 — This Month Finance -->
+      <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:0 0 6px 2px">This Month · Finance</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px" id="an-kpi"></div>
+
+      <!-- BI KPI Row 2 — Pipeline -->
+      <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:0 0 6px 2px">Pipeline · Clients</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px" id="an-kpi2"></div>
+
+      <!-- BI KPI Row 3 — Projects -->
+      <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:0 0 6px 2px">Projects · Profitability</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px" id="an-kpi3"></div>
 
       <!-- Insight Cards -->
       <div id="an-insights" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px"></div>
@@ -2794,6 +3124,55 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('mob-open');document.getElementById('mob-bg').classList.toggle('on');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('mob-open');document.getElementById('mob-bg').classList.remove('on');}
 
+function toggleSidebarCollapse(){
+  const sb = document.getElementById('sidebar');
+  if(!sb) return;
+  sb.classList.toggle('collapsed');
+  const on = sb.classList.contains('collapsed');
+  try{ localStorage.setItem('gs_sidebar_collapsed', on ? '1' : '0'); }catch(e){}
+  const icon = document.getElementById('sb-collapse-icon');
+  const label = document.querySelector('.sb-collapse-label');
+  if(icon) icon.textContent = on ? '»' : '«';
+  if(label) label.textContent = on ? 'Expand' : 'Collapse';
+  const btn = document.getElementById('sb-collapse-btn');
+  if(btn) btn.title = on ? 'Expand sidebar' : 'Collapse sidebar';
+  // tooltips from button text
+  document.querySelectorAll('aside .nav-btn').forEach(b=>{
+    if(!b.dataset.tip){
+      const clone = b.cloneNode(true);
+      clone.querySelectorAll('.nav-icon,.nav-badge').forEach(n=>n.remove());
+      b.dataset.tip = (clone.textContent||'').trim() || b.getAttribute('data-view') || '';
+    }
+  });
+}
+function setTooltipTheme(theme){
+  const sb=document.getElementById('sidebar');
+  if(!sb) return;
+  const t = theme||'default';
+  sb.setAttribute('data-tooltip-theme', t==='default'?'default':t);
+  try{ localStorage.setItem('gs_tooltip_theme', t); }catch(e){}
+}
+function initSidebarCollapse(){
+  try{
+    if(localStorage.getItem('gs_sidebar_collapsed')==='1'){
+      const sb=document.getElementById('sidebar');
+      if(sb && !sb.classList.contains('collapsed')) toggleSidebarCollapse();
+    }
+    const th=localStorage.getItem('gs_tooltip_theme');
+    if(th) setTooltipTheme(th);
+  }catch(e){}
+  document.querySelectorAll('aside .nav-btn').forEach(b=>{
+    if(!b.dataset.tip){
+      const clone=b.cloneNode(true);
+      clone.querySelectorAll('.nav-icon,.nav-badge').forEach(n=>n.remove());
+      b.dataset.tip=(clone.textContent||'').trim()||b.getAttribute('data-view')||'';
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', initSidebarCollapse);
+// also run late if DOM already ready
+if(document.readyState!=='loading') setTimeout(initSidebarCollapse, 0);
+
 // ════════════════════════════════════════════════
 // MODAL
 // ════════════════════════════════════════════════
@@ -3137,32 +3516,83 @@ function delContact(id,e){if(e)e.stopPropagation();if(!confirm('Delete this cont
 // PROJECTS
 // ════════════════════════════════════════════════
 function buildPC(p){
-  const c=gc(p.clientId);const paid=ppaid(p.id);const bal=pbal(p.id);
-  const pct=p.total>0?Math.min(100,Math.round(paid/p.total*100)):0;
-  const stageIdx=STAGES.indexOf(p.stage||'Concept');
-  const filesCount=(p.files||[]).length;
-  const clientFilesCount=(p.files||[]).filter(f=>f.clientVisible).length;
-  const visitsCount=(db.siteVisits||[]).filter(v=>v.projId===p.id).length;
-  const div=document.createElement('div');div.className='proj-card';
+  const c=gc(p.clientId);
+  const paid=ppaid(p.id);
+  const bal=pbal(p.id);
+  const ST=['Concept','Layout','3D','Working Drawing','Submission','Completed'];
+  const stage=p.stage||'Concept';
+  const stageIdx=Math.max(0, ST.indexOf(stage));
+  const stagePct=Math.round((stageIdx+1)/ST.length*100);
+  const payPct=p.total>0?Math.min(100,Math.round(paid/p.total*100)):0;
+  const loc=(p.location||p.city||p.address||'').trim()||'—';
+  const ptype=(p.type||p.category||(c&&c.cat)||(p.services&&p.services[0])||'Project').trim();
+  // cover image: explicit field or first image file
+  let cover=p.cover||p.image||p.photo||'';
+  if(!cover && p.files&&p.files.length){
+    const img=p.files.find(f=>f.type&&String(f.type).startsWith('image')||/\.(jpg|jpeg|png|webp|gif)$/i.test(f.name||f.url||''));
+    if(img) cover=img.url||img.data||img.src||'';
+  }
+  // last activity
+  let lastAct='—', lastTs=0;
+  (ppays(p.id)||[]).forEach(px=>{
+    const t=new Date(px.date||0).getTime();
+    if(t>=lastTs){ lastTs=t; lastAct='Payment · '+(px.date||''); }
+  });
+  (db.siteVisits||[]).filter(v=>v.projId===p.id).forEach(v=>{
+    const t=new Date(v.date||v.ts||0).getTime();
+    if(t>=lastTs){ lastTs=t; lastAct='Site visit · '+(v.date||v.ts||''); }
+  });
+  (db.activities||[]).filter(a=>a.projId===p.id||a.projectId===p.id).forEach(a=>{
+    const t=new Date(a.date||a.ts||0).getTime();
+    if(t>=lastTs){ lastTs=t; lastAct=(a.text||a.label||'Update')+' · '+(a.date||''); }
+  });
+  if(p.updatedAt){
+    const t=new Date(p.updatedAt).getTime();
+    if(t>=lastTs){ lastTs=t; lastAct='Updated · '+String(p.updatedAt).slice(0,10); }
+  }
+  const fmtL= (n)=>{
+    if(n>=100000) return '₹'+(n/100000).toFixed(n%100000===0?0:1)+'L';
+    if(n>=1000) return '₹'+Math.round(n/1000)+'K';
+    return '₹'+fmt2(n);
+  };
+  const initials=(p.name||'P').split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+  const isDone=stage.toLowerCase()==='completed'||stagePct>=100;
+  const isOver=p.deadline&&new Date(p.deadline)<new Date()&&bal>0;
+
+  const div=document.createElement('div');
+  div.className='proj-card pc-premium';
   div.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <span class="badge ${bdgCls(c?c.cat:'')}">${c?c.cat:'—'}</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        ${filesCount?`<span style="font-size:10px;color:var(--mut)" title="${filesCount} files (${clientFilesCount} visible to client)">📁${filesCount}${clientFilesCount?'<span style="color:var(--grn)"> · '+clientFilesCount+' client</span>':''}</span>`:''}
-        ${visitsCount?`<span style="font-size:10px;color:var(--orange)">🏗️${visitsCount}</span>`:''}
-        <span class="pc-id">${p.id}</span>
+    <div class="pc-cover${cover?' has-img':''}">
+      ${cover
+        ? `<img src="${cover}" alt="" loading="lazy" onerror="this.parentElement.classList.remove('has-img');this.remove()">`
+        : `<div class="pc-cover-fallback"><span>${initials}</span></div>`}
+      <div class="pc-cover-shade"></div>
+      <div class="pc-cover-top">
+        <span class="pc-type-pill">${ptype}</span>
+        ${isOver?'<span class="pc-overdue">Overdue</span>':''}
       </div>
+      <div class="pc-cover-stage">${stage}</div>
     </div>
-    <div class="pc-name">${p.name}</div>
-    <div class="pc-client">${c?c.name:'—'}</div>
-    <div style="margin-bottom:8px;display:flex;flex-wrap:wrap">${p.services.slice(0,3).map(s=>`<span class="svc-chip">${s}</span>`).join('')}${p.services.length>3?`<span class="svc-chip">+${p.services.length-3}</span>`:''}</div>
-    ${stageTrackHTML(p.id,p.stage||'Concept')}
-    <div class="prog-row"><span>Payment</span><span>${pct}%</span></div>
-    <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
-    <div class="pc-footer">
-      <div class="pc-amt"><p>Total</p><span>${fmt(p.total)}</span></div>
-      <div class="pc-amt"><p>Received</p><span style="color:var(--rgreen)">${fmt(paid)}</span></div>
-      <div class="pc-amt"><p>Balance</p><span style="color:var(--red)">${fmt(bal)}</span></div>
+    <div class="pc-body">
+      <div class="pc-name">${p.name}</div>
+      <div class="pc-meta">
+        <span>${c?c.name:'—'}</span>
+        <span class="pc-dot">·</span>
+        <span>${loc}</span>
+      </div>
+      <div class="pc-stage-label">${stage}</div>
+      <div class="pc-progress">
+        <div class="pc-progress-track">
+          <div class="pc-progress-fill" style="width:${stagePct}%"></div>
+        </div>
+        <span class="pc-progress-pct">${stagePct}%</span>
+      </div>
+      <div class="pc-bottom">
+        <div class="pc-activity" title="Last activity">${lastAct}</div>
+        <div class="pc-pay ${bal>0?'due':(isDone?'paid':'ok')}">
+          ${bal>0 ? fmtL(bal)+' Outstanding' : (payPct>=100 ? 'Fully Paid' : fmtL(paid)+' received')}
+        </div>
+      </div>
     </div>`;
   div.addEventListener('click',e=>{if(!e.target.closest('.stage-step'))openPD(p.id);});
   return div;
@@ -6772,16 +7202,42 @@ function renderAnalytics(){
   const thisMonthProfit = thisMonthRev - thisMonthExp;
 
   // ── Project stats ──
-  const activeProjs    = projs.filter(p=>p.stage!=='Completed').length;
-  const completedProjs = projs.filter(p=>p.stage==='Completed').length;
+  const isCompleted = (p)=> {
+    const s = (p.stage||'').toLowerCase();
+    return s==='completed'||s==='complete'||s==='done'||s==='closed'||s==='handover';
+  };
+  const completedProjs = projs.filter(isCompleted).length;
+  const activeProjs    = projs.filter(p=>!isCompleted(p)).length;
   const collectionRate = totalContract>0?Math.round(totalInc/totalContract*100):0;
 
-  // ── Enquiries (contacts added this year) ──
-  const newEnquiries = contacts.length; // all contacts = enquiries
-  // ── Conversion Rate (projects / contacts * 100) ──
-  const convRate = contacts.length>0?Math.round(projs.length/contacts.length*100):0;
+  // ── New Enquiries (this month + year) ──
+  const contactDate = (c)=> {
+    const d = c.createdAt || c.date || c.addedAt || c.ts || null;
+    return d ? new Date(d) : null;
+  };
+  const monthEnquiries = contacts.filter(c=>{
+    const d=contactDate(c);
+    return d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+  }).length;
+  const yearEnquiries = contacts.filter(c=>{
+    const d=contactDate(c);
+    return d && d.getFullYear()===selYear;
+  }).length;
+  const newEnquiries = monthEnquiries || yearEnquiries || contacts.length;
 
-  // ── Most profitable project type by services ──
+  // ── Conversion Rate (projects / contacts) ──
+  const convRate = contacts.length>0 ? Math.round(projs.length/contacts.length*100) : 0;
+
+  // ── Most profitable project TYPE (type / category / first service) ──
+  const typeRevMap={};
+  projs.forEach(p=>{
+    const paid=ppaid(p.id);
+    const typ = p.type || p.category || p.projType || (p.services&&p.services[0]) || p.stage || 'Other';
+    typeRevMap[typ]=(typeRevMap[typ]||0)+paid;
+  });
+  const topType = Object.entries(typeRevMap).sort((a,b)=>b[1]-a[1])[0];
+
+  // ── Service revenue (insight) ──
   const svcRevMap={};
   projs.forEach(p=>{
     const paid=ppaid(p.id);
@@ -6791,23 +7247,33 @@ function renderAnalytics(){
 
   // ── Client source ──
   const srcMap={};
-  projs.forEach(p=>{const c=gc(p.clientId);const s=c?.source||'—';srcMap[s]=(srcMap[s]||0)+ppaid(p.id);});
+  const srcCount={};
+  contacts.forEach(c=>{ const s=c.source||'—'; srcCount[s]=(srcCount[s]||0)+1; });
+  projs.forEach(p=>{const c=gc(p.clientId);const s=(c&&c.source)||'—';srcMap[s]=(srcMap[s]||0)+ppaid(p.id);});
   const topSrc = Object.entries(srcMap).sort((a,b)=>b[1]-a[1])[0];
+  const topSrcCount = Object.entries(srcCount).sort((a,b)=>b[1]-a[1])[0];
 
-  // ════ KPI ROW 1 — Financial ════
+  // ════ KPI ROW 1 — This month finance ════
   const kpi1=[
     {icon:'💰',lbl:'Monthly Revenue',sub:months[now.getMonth()]+' '+now.getFullYear(),val:'₹'+fmt(thisMonthRev),color:'#e8f7ee',border:'#27ae60',tcolor:'#27ae60'},
     {icon:'💸',lbl:'Monthly Expenses',sub:months[now.getMonth()]+' '+now.getFullYear(),val:'₹'+fmt(thisMonthExp),color:'#fdecea',border:'#c0392b',tcolor:'#c0392b'},
-    {icon:'📈',lbl:'Net Profit',sub:'This month',val:'₹'+fmt(thisMonthProfit),color:thisMonthProfit>=0?'#e8f7ee':'#fdecea',border:thisMonthProfit>=0?'#27ae60':'#c0392b',tcolor:thisMonthProfit>=0?'#27ae60':'#c0392b'},
-    {icon:'⏳',lbl:'Pending Fees',sub:projs.filter(p=>pbal(p.id)>0).length+' projects',val:'₹'+fmt(totalPending),color:'#fff8e0',border:'#c9a84c',tcolor:'#7a5a00'},
+    {icon:'📈',lbl:'Net Profit',sub:'Revenue − Expenses',val:'₹'+fmt(thisMonthProfit),color:thisMonthProfit>=0?'#e8f7ee':'#fdecea',border:thisMonthProfit>=0?'#27ae60':'#c0392b',tcolor:thisMonthProfit>=0?'#27ae60':'#c0392b'},
+    {icon:'⏳',lbl:'Pending Fees',sub:projs.filter(p=>pbal(p.id)>0).length+' projects outstanding',val:'₹'+fmt(totalPending),color:'#fff8e0',border:'#c9a84c',tcolor:'#7a5a00'},
   ];
 
-  // ════ KPI ROW 2 — Business ════
+  // ════ KPI ROW 2 — Pipeline / clients ════
   const kpi2=[
-    {icon:'📥',lbl:'New Enquiries',sub:'Total contacts',val:newEnquiries,color:'#eef4fb',border:'#2c5f8a',tcolor:'#2c5f8a'},
-    {icon:'🎯',lbl:'Conversion Rate',sub:'Contacts → Projects',val:convRate+'%',color:convRate>=50?'#e8f7ee':'#fff8e0',border:convRate>=50?'#27ae60':'#c9a84c',tcolor:convRate>=50?'#27ae60':'#7a5a00'},
-    {icon:'🏗️',lbl:'Avg Project Fee',sub:projs.length+' projects',val:'₹'+fmt(avgVal),color:'#f0eef8',border:'#8e44ad',tcolor:'#8e44ad'},
-    {icon:'✅',lbl:'Completed / Active',sub:'Projects',val:completedProjs+' / '+activeProjs,color:'#e8f7ee',border:'var(--grn)',tcolor:'var(--grn)'},
+    {icon:'📥',lbl:'New Enquiries',sub:monthEnquiries?('This month · Year '+selYear+': '+yearEnquiries):('All contacts · Year '+yearEnquiries),val:newEnquiries,color:'#eef4fb',border:'#2c5f8a',tcolor:'#2c5f8a'},
+    {icon:'🎯',lbl:'Conversion Rate',sub:projs.length+' projects / '+contacts.length+' contacts',val:convRate+'%',color:convRate>=50?'#e8f7ee':'#fff8e0',border:convRate>=50?'#27ae60':'#c9a84c',tcolor:convRate>=50?'#27ae60':'#7a5a00'},
+    {icon:'🏗️',lbl:'Average Project Fee',sub:'Contract value ÷ '+projs.length+' projects',val:'₹'+fmt(avgVal),color:'#f0eef8',border:'#8e44ad',tcolor:'#8e44ad'},
+    {icon:'📍',lbl:'Top Client Source',sub:topSrc?('₹'+fmt(topSrc[1])+' revenue'):(topSrcCount?topSrcCount[1]+' contacts': 'Add source on contacts'),val:topSrc?topSrc[0]:(topSrcCount?topSrcCount[0]:'—'),color:'#e8f7ee',border:'#27ae60',tcolor:'#1a5c38'},
+  ];
+
+  // ════ KPI ROW 3 — Projects ════
+  const kpi3=[
+    {icon:'✅',lbl:'Completed Projects',sub:'Stage = Completed',val:completedProjs,color:'#e8f7ee',border:'#27ae60',tcolor:'#27ae60'},
+    {icon:'🔄',lbl:'Active Projects',sub:'In progress',val:activeProjs,color:'#eef4fb',border:'#2c5f8a',tcolor:'#2c5f8a'},
+    {icon:'🏆',lbl:'Most Profitable Type',sub:topType?('₹'+fmt(topType[1])+' received'):'Add type / services on projects',val:topType?topType[0]:'—',color:'#fff8e0',border:'#c9a84c',tcolor:'#7a5a00'},
   ];
 
   const kpiCard=(k)=>`<div style="background:${k.color};border:1.5px solid ${k.border};border-radius:14px;padding:14px 16px">
@@ -6821,25 +7287,40 @@ function renderAnalytics(){
   if(k1El) k1El.innerHTML=kpi1.map(kpiCard).join('');
   const k2El=document.getElementById('an-kpi2');
   if(k2El) k2El.innerHTML=kpi2.map(kpiCard).join('');
+  const k3El=document.getElementById('an-kpi3');
+  if(k3El) k3El.innerHTML=kpi3.map(kpiCard).join('');
+
+  // Performance summary strip
+  const strip=document.getElementById('an-perf-strip');
+  if(strip){
+    const yLabel = selYear;
+    strip.innerHTML = `<div style="background:linear-gradient(135deg,#1a3a2a,#2d5a3d);border-radius:14px;padding:14px 18px;color:#fff;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center">
+      <div><div style="font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.08em">Year ${yLabel} Revenue</div><div style="font-family:JetBrains Mono,monospace;font-size:16px;font-weight:800;color:var(--gold)">₹${fmt(yearRev)}</div></div>
+      <div><div style="font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.08em">Year Expenses</div><div style="font-family:JetBrains Mono,monospace;font-size:16px;font-weight:800">₹${fmt(yearExp)}</div></div>
+      <div><div style="font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.08em">Year Net Profit</div><div style="font-family:JetBrains Mono,monospace;font-size:16px;font-weight:800;color:${yearProfit>=0?'#7dcea0':'#f5b7b1'}">₹${fmt(yearProfit)}</div></div>
+      <div><div style="font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.08em">Collection Rate</div><div style="font-family:JetBrains Mono,monospace;font-size:16px;font-weight:800;color:var(--gold)">${collectionRate}%</div></div>
+      <div><div style="font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.08em">Projects</div><div style="font-family:JetBrains Mono,monospace;font-size:16px;font-weight:800">${completedProjs} done · ${activeProjs} active</div></div>
+    </div>`;
+  }
 
   // ════ INSIGHT CARDS ════
   const insights=[
     {
-      icon:'🔥',lbl:'Most Profitable Service',
-      val:topSvc?topSvc[0]:'—',
-      sub:topSvc?'₹'+fmt(topSvc[1])+' total received':'Add services to projects',
+      icon:'🏆',lbl:'Most Profitable Project Type',
+      val:topType?topType[0]:'—',
+      sub:topType?'₹'+fmt(topType[1])+' received from this type':'Set type / services on projects',
       color:'#fff8e0',border:'#c9a84c'
     },
     {
-      icon:'🎯',lbl:'Top Client Source',
-      val:topSrc?topSrc[0]:'—',
-      sub:topSrc?'₹'+fmt(topSrc[1])+' revenue':'Add source to contacts',
+      icon:'📍',lbl:'Client Source',
+      val:topSrc?topSrc[0]:(topSrcCount?topSrcCount[0]:'—'),
+      sub:topSrc?'₹'+fmt(topSrc[1])+' revenue'+(topSrcCount?' · '+topSrcCount[1]+' contacts':''):(topSrcCount?topSrcCount[1]+' enquiries from this source':'Add source on contacts'),
       color:'#e8f7ee',border:'#27ae60'
     },
     {
       icon:'📊',lbl:'Collection Rate',
       val:collectionRate+'%',
-      sub:'₹'+fmt(totalInc)+' of ₹'+fmt(totalContract)+' contracted',
+      sub:'₹'+fmt(totalInc)+' collected of ₹'+fmt(totalContract)+' contracted',
       color:collectionRate>=80?'#e8f7ee':collectionRate>=60?'#fff8e0':'#fdecea',
       border:collectionRate>=80?'#27ae60':collectionRate>=60?'#c9a84c':'#c0392b'
     },
