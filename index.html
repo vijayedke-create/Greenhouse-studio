@@ -1021,6 +1021,72 @@ aside.collapsed .user-row.gs-glass-user{padding:6px;border-radius:8px}
 .cp-dwg-empty-sub{font-size:12px;margin-top:6px}
 
 
+/* Client Documents UI */
+.cp-docs{max-width:560px;margin:0 auto}
+.cp-docs-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px}
+.cp-docs-title{
+  font-family:var(--font-display),serif;font-size:22px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;
+}
+.cp-docs-count{font-size:12px;color:var(--mut);font-weight:600}
+.cp-docs-filters{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;
+  -webkit-overflow-scrolling:touch;
+}
+.cp-docs-filter{
+  flex-shrink:0;border:1px solid var(--bdr);background:var(--surf);
+  border-radius:20px;padding:7px 14px;font-size:11px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--mut);cursor:pointer;
+  font-family:var(--font-body),sans-serif;
+}
+.cp-docs-filter.active{
+  background:var(--grn);border-color:var(--grn);color:#f7f5f0;
+}
+.cp-docs-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surf);border:1px solid var(--bdr);border-radius:12px;
+  padding:14px 14px;margin-bottom:10px;
+  box-shadow:0 1px 2px rgba(28,27,25,.04);
+}
+.cp-docs-ico{
+  width:42px;height:42px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(166,61,50,.08);color:var(--red,#a63d32);
+}
+.cp-docs-pdf-ico{display:block}
+.cp-docs-body{flex:1;min-width:0}
+.cp-docs-name{
+  font-size:14px;font-weight:600;color:var(--ink);line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.cp-docs-meta{
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;
+  margin-top:4px;font-size:11px;color:var(--mut);
+}
+.cp-docs-cat{font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em;font-size:10px}
+.cp-docs-dot{opacity:.45}
+.cp-docs-right{
+  display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;
+}
+.cp-docs-date{
+  font-family:var(--font-mono),monospace;font-size:11px;font-weight:600;color:var(--mut);
+}
+.cp-docs-dl{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;text-decoration:none;
+  background:var(--grn);border:1px solid var(--grn);color:#f7f5f0;
+  font-family:var(--font-body),sans-serif;cursor:pointer;
+}
+.cp-docs-dl:hover{filter:brightness(1.06)}
+.cp-docs-dl.muted{
+  background:var(--surf2);border-color:var(--bdr);color:var(--mut);cursor:default;opacity:.6;
+}
+.cp-docs-empty{text-align:center;padding:48px 16px;color:var(--mut)}
+.cp-docs-empty-ico{font-size:32px;margin-bottom:8px;opacity:.5}
+.cp-docs-empty-sub{font-size:12px;margin-top:6px}
+
+
 /* 3D / Render Gallery */
 .cp-gal{max-width:640px;margin:0 auto}
 .cp-gal-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
@@ -13651,6 +13717,12 @@ const FILE_CATEGORIES=[
   {id:'plumbing',     label:'Plumbing',         icon:'🔧', color:'#5a2d82'},
   {id:'site_photo',   label:'Site Photo',       icon:'📷', color:'#2d7a82'},
   {id:'contract',     label:'Contract/Quote',   icon:'📋', color:'#c0392b'},
+  {id:'agreement',    label:'Agreement',        icon:'📜', color:'#1a3a2a'},
+  {id:'quotation',    label:'Quotation',        icon:'🧾', color:'#b8975a'},
+  {id:'invoice',      label:'Invoice',          icon:'🧾', color:'#a63d32'},
+  {id:'receipt',      label:'Payment Receipt',  icon:'💳', color:'#4a7c59'},
+  {id:'approval',     label:'Approval Documents',icon:'✅', color:'#3d5a6c'},
+  {id:'site_report',  label:'Site Report',      icon:'🏗️', color:'#2d7a82'},
   {id:'other',        label:'Other',            icon:'📄', color:'#6b7280'},
 ];
 
@@ -15139,6 +15211,7 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
         <button class="cp-tab" onclick="cpTab('payments')">💰 Payments</button>
       <button class="cp-tab" onclick="cpTab('sitevisits')">🏗️ Site Visits</button>
       <button class="cp-tab" onclick="cpTab('drawings')">📐 Drawings</button>
+      <button class="cp-tab" onclick="cpTab('documents')">📁 Documents</button>
       <button class="cp-tab" onclick="cpTab('gallery')">🖼 3D / Renders</button>
       <button class="cp-tab" onclick="cpTab('brief')">➕ Add New Project</button>
       <button class="cp-tab" onclick="cpTab('request')">✏️ Drawing Request</button>
@@ -15176,6 +15249,7 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
       <div class="cp-more-inner">
         <div class="cp-more-title">More</div>
         <button type="button" onclick="cpMobNav('agreement');document.getElementById('cp-more-sheet').classList.remove('open')">Agreement</button>
+        <button type="button" onclick="cpMobNav('documents');document.getElementById('cp-more-sheet').classList.remove('open')">Documents</button>
         <button type="button" onclick="cpMobNav('sitevisits');document.getElementById('cp-more-sheet').classList.remove('open')">Site Visits</button>
         <button type="button" onclick="cpMobNav('brief');document.getElementById('cp-more-sheet').classList.remove('open')">Add New Project</button>
         <button type="button" onclick="cpMobNav('request');document.getElementById('cp-more-sheet').classList.remove('open')">Drawing Request</button>
@@ -15423,6 +15497,7 @@ function renderCpContent() {
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
   else if (cpCurrentTab === 'agreement') el.innerHTML = renderCpAgreement(c, projs);
   else if (cpCurrentTab === 'drawings') el.innerHTML = renderCpDrawings(c, projs);
+  else if (cpCurrentTab === 'documents') el.innerHTML = renderCpDocuments(c, projs);
   else if (cpCurrentTab === 'gallery') el.innerHTML = renderCpGallery(c, projs);
   else if (cpCurrentTab === 'brief') { el.innerHTML = renderCpBrief(c, projs); initCpBrief(); }
   else if (cpCurrentTab === 'request') { el.innerHTML = renderCpRequest(c, projs); }
@@ -16712,6 +16787,141 @@ function renderCpDrawings(c, projs) {
 }
 function cpDwgFilter(id) {
   window._cpDwgFilter = id;
+  if (typeof renderCpContent === 'function') renderCpContent();
+}
+
+// ════════════════════════════════════════
+// 📁 DOCUMENTS TAB
+// Categories: Agreement, Quotation, Invoice, Payment Receipt,
+// Approval Documents, Drawings, Site Reports, Other Documents
+// ════════════════════════════════════════
+function renderCpDocuments(c, projs) {
+  const DOC_CATS = [
+    { id: 'all', label: 'All' },
+    { id: 'agreement', label: 'Agreement' },
+    { id: 'quotation', label: 'Quotation' },
+    { id: 'invoice', label: 'Invoice' },
+    { id: 'receipt', label: 'Payment Receipt' },
+    { id: 'approval', label: 'Approval Documents' },
+    { id: 'drawings', label: 'Drawings' },
+    { id: 'site', label: 'Site Reports' },
+    { id: 'other', label: 'Other Documents' }
+  ];
+
+  function classifyDoc(f) {
+    const cat = String(f.cat || f.category || '').toLowerCase();
+    const name = String(f.name || f.title || '').toLowerCase();
+    const notes = String(f.notes || '').toLowerCase();
+    const blob = cat + ' ' + name + ' ' + notes;
+
+    // Explicit category ids from file manager
+    if (cat === 'agreement') return 'agreement';
+    if (cat === 'quotation') return 'quotation';
+    if (cat === 'invoice') return 'invoice';
+    if (cat === 'receipt') return 'receipt';
+    if (cat === 'approval') return 'approval';
+    if (cat === 'site_report' || cat === 'site_photo') return 'site';
+    if (['floor_plan','elevation','section','3d_view','structural','electrical','plumbing'].indexOf(cat) > -1) return 'drawings';
+
+    // Name / notes heuristics
+    if (/agreement|करार|करारनामा|mou/.test(blob)) return 'agreement';
+    if (/quotat|estimate|अंदाज|कोटेशन|budget/.test(blob)) return 'quotation';
+    if (/invoice|इनव्हॉइस|gst.?bill|tax.?invoice|बिल/.test(blob)) return 'invoice';
+    if (/receipt|payment.?receipt|रसीद|ack/.test(blob)) return 'receipt';
+    if (/approv|noc|परवानगी|sanction|permission|udcpr|building.?permit|अभिप्राय|नकाशा.?मंजूरी/.test(blob)) return 'approval';
+    if (/site.?report|site.?photo|site.?visit|progress.?photo|साइट|भेट/.test(blob)) return 'site';
+    if (/drawing|plan|elevation|section|blueprint|नकाशा|drwg|dwg/.test(blob)) return 'drawings';
+    if (cat === 'contract') return 'agreement';
+    if (cat === 'other') return 'other';
+    return 'other';
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    const s = String(d).slice(0, 10);
+    const p = s.split('-');
+    if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
+    return s;
+  }
+
+  function pdfIconSvg() {
+    return `<svg class="cp-doc-pdf-ico" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M14 3v5h5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M9 13h6M9 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  let items = [];
+  projs.forEach(p => {
+    (p.files || []).forEach(f => {
+      if (f.clientVisible === false) return;
+      if (!(f.clientVisible || f.url || f.link || f.data)) return;
+      const url = f.url || f.link || f.data || '';
+      items.push({
+        name: f.name || f.title || 'Document',
+        date: f.date || f.updatedAt || f.uploadedAt || '',
+        url: url,
+        cat: classifyDoc(f),
+        proj: p.name || '',
+        notes: f.notes || ''
+      });
+    });
+  });
+
+  // Sort newest first
+  items.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+
+  const active = window._cpDocFilter || 'all';
+  const filtered = active === 'all' ? items : items.filter(x => x.cat === active);
+  const counts = {};
+  DOC_CATS.forEach(c => { counts[c.id] = c.id === 'all' ? items.length : items.filter(x => x.cat === c.id).length; });
+
+  let html = `<div class="cp-docs">
+    <div class="cp-docs-head">
+      <div class="cp-docs-title">Documents</div>
+      <div class="cp-docs-count">${filtered.length} file${filtered.length !== 1 ? 's' : ''}</div>
+    </div>
+    <div class="cp-docs-filters" role="tablist">
+      ${DOC_CATS.map(c => `<button type="button" class="cp-docs-filter${active === c.id ? ' active' : ''}" onclick="cpDocFilter('${c.id}')">${c.label}${counts[c.id] ? ' · ' + counts[c.id] : ''}</button>`).join('')}
+    </div>`;
+
+  if (!filtered.length) {
+    html += `<div class="cp-docs-empty">
+      <div class="cp-docs-empty-ico">📁</div>
+      <p>No documents in this category yet</p>
+      <p class="cp-docs-empty-sub">Your architect will share agreements, invoices and reports here.</p>
+    </div></div>`;
+    return html;
+  }
+
+  filtered.forEach(f => {
+    const catLabel = (DOC_CATS.find(c => c.id === f.cat) || {}).label || 'Document';
+    const dl = f.url
+      ? `<a class="cp-docs-dl" href="${String(f.url).replace(/"/g, '&quot;')}" target="_blank" rel="noopener" download title="Download">Download</a>`
+      : `<span class="cp-docs-dl muted">No link</span>`;
+    html += `
+    <article class="cp-docs-row">
+      <div class="cp-docs-ico">${pdfIconSvg()}</div>
+      <div class="cp-docs-body">
+        <div class="cp-docs-name">${String(f.name).replace(/</g, '&lt;')}</div>
+        <div class="cp-docs-meta">
+          <span class="cp-docs-cat">${catLabel}</span>
+          ${f.proj ? `<span class="cp-docs-dot">·</span><span>${String(f.proj).replace(/</g, '&lt;')}</span>` : ''}
+        </div>
+      </div>
+      <div class="cp-docs-right">
+        <div class="cp-docs-date">${fmtDate(f.date)}</div>
+        ${dl}
+      </div>
+    </article>`;
+  });
+
+  html += '</div>';
+  return html;
+}
+function cpDocFilter(id) {
+  window._cpDocFilter = id;
   if (typeof renderCpContent === 'function') renderCpContent();
 }
 
@@ -18258,11 +18468,11 @@ window.renderNocView=function(){
       <div class="noc-card"><h4 onclick="nocTog(this)">👤 मालक व पत्ता<span class="ar">▼</span></h4><div class="eb">
         <div class="noc-f">
           <label>दिनांक (Date)</label>
-          <input type="date" id="noc-date">
+          <input type="date" id="noc-date" oninput="nocRender()" onchange="nocRender()">
           <label>महानगरपालिका / नगरपालिका / ग्रामपंचायत</label>
-          <input id="noc-corp" placeholder="उदा. सोलापूर महानगरपालिका">
+          <input id="noc-corp" placeholder="उदा. सोलापूर महानगरपालिका" oninput="nocRender()">
           <label>शहर / गाव</label>
-          <input id="noc-city" placeholder="उदा. सोलापूर">
+          <input id="noc-city" placeholder="उदा. सोलापूर" oninput="nocRender()">
           <label>मालकांची नावे (Owners) — एकापेक्षा जास्त असल्यास + ने add करा</label>
           <div id="noc-owners"></div>
           <button class="chip" onclick="nocAddOwner()" style="margin-bottom:9px">+ आणखी एक मालक</button>
@@ -18343,7 +18553,7 @@ const ae=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 const awToday=()=>new Date().toISOString().slice(0,10);
 const awDmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
 
-function awRender(){
+window.awRender=function awRender(){
   if(!awDrawn)return;
   const applicant=ae(av('applicant')||'____________________________');
   const addr=ae(av('addr')||'____________________________');
@@ -18361,7 +18571,8 @@ function awRender(){
   const action=ae(av('action')||'बांधकाम परवानगी / एकत्रीकरण / विभागणी');
   const date=awDmy(av('date'));
 
-  aq('pv').innerHTML=`<div class="cmp-sheet aw"><div class="in aw-frame">
+  const _awpv=aq('pv');if(!_awpv)return;
+  _awpv.innerHTML=`<div class="cmp-sheet aw"><div class="in aw-frame">
     <div class="aw-title">// हमीपत्र //</div>
     <div class="aw-to">प्रति,<br>मा. आयुक्त,<br>सोलापूर महानगरपालिका, सोलापूर.</div>
     <div class="aw-subject">विषय: ${location}, जुना स. नं. ${oldsn}, नवा स. नं. ${newsn}, C.T.S. नं. ${cts}, टी. पी. स्कीम नं. ${tps}, अंतिम भूखंड नं. ${finalplot}, उपभूखंड नं. ${subplot} या जागेतील ${action} बाबत.</div>
@@ -18481,8 +18692,8 @@ const today=()=>new Date().toISOString().slice(0,10);
 const dmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
 function owners(){return csOwners.map(x=>x.trim()).filter(Boolean)}
 function ownerText(){const a=owners();if(!a.length)return 'मी/आम्ही ____________________'; if(a.length===1)return 'मी, '+esc(a[0]); return 'मी/आम्ही, '+a.map(esc).join(' व ');}
-function render(){if(!csDrawn)return;const a=owners();const ltp=esc(gv('ltp')||'____________________');const site=esc(gv('site')||'____________________');const addr=esc(gv('addr')||'____________________');const contact=esc(gv('contact')||'____________________');const city=esc(gv('city')||'सोलापूर');
-q('pv').innerHTML=`<div class="cmp-sheet csd"><div class="in cs-frame">
+window.csRender=function render(){if(!csDrawn)return;const a=owners();const ltp=esc(gv('ltp')||'____________________');const site=esc(gv('site')||'____________________');const addr=esc(gv('addr')||'____________________');const contact=esc(gv('contact')||'____________________');const city=esc(gv('city')||'सोलापूर');
+const _cspv=q('pv');if(!_cspv)return;_cspv.innerHTML=`<div class="cmp-sheet csd"><div class="in cs-frame">
 <div class="cs-title">// स्वयं-घोषणापत्र (मालकाकडून) //</div>
 <div class="cs-to">प्रति,<br>आयुक्त महोदय,<br>सोलापूर महानगरपालिका,<br>${city}.</div>
 <div class="cs-sub">विषय :- मंजूर नकाशानुसार बांधकामाबाबत घोषणा</div>
@@ -18506,7 +18717,7 @@ window.csOwner=(i,v)=>{csOwners[i]=v;render()};window.csAdd=()=>{csOwners.push('
 window.csNew=()=>{q('date').value=today();q('city').value='सोलापूर';q('site').value='';q('addr').value='';q('contact').value='';q('ltp').value='';csOwners=[''];drawOwners();render()};
 window.csToggleLH=v=>{csLH=!!v;localStorage.setItem('gs_cs_lh',v?'1':'0');render()};
 window.csPrint=()=>{const body=q('pv').innerHTML;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups to print.');w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>स्वयं-घोषणापत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>html,body{margin:0;padding:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cmp-sheet.csd{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0 auto!important;padding:18mm 18mm!important;box-sizing:border-box!important;box-shadow:none!important;transform:none!important;overflow:hidden!important;background:#fff!important;color:#111;font-size:14pt;line-height:1.65}.cmp-sheet.csd .cs-title{text-align:center;font-weight:700;font-size:16pt;text-decoration:underline;margin:0 0 18px}@page{size:A4 portrait;margin:0!important}@media print{.cmp-sheet{break-after:auto;page-break-after:auto}}</style></head><body>'+body+'</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},700)};
-window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){render();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="render()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="render()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="render()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="render()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="render()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="render()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
+window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){render();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="csRender()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="csRender()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="csRender()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="csRender()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="csRender()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="csRender()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.clientself='📄 Client Self Declaration';
 })();
 </script>
@@ -18522,7 +18733,7 @@ const tv=id=>{const e=tq(id);return e?e.value:''};
 const te=s=>String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const tpToday=()=>new Date().toISOString().slice(0,10);
 const tpDmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
-function tpRender(){
+window.tpRender=function tpRender(){
   if(!tpDrawn)return;
   const incoming=te(tv('incoming')||'________');
   const date=tpDmy(tv('date'));
@@ -18536,7 +18747,8 @@ function tpRender(){
   const city=te(tv('city')||'सोलापूर');
   const purpose=te(tv('purpose')||'बांधकाम परवानगी / सुधारीत बांधकाम परवानगी');
   const extra=te(tv('extra')||'');
-  tq('pv').innerHTML=`<div class="tp-sheet"><div class="tp-in">
+  const _tppv=tq('pv');if(!_tppv)return;
+  _tppv.innerHTML=`<div class="tp-sheet"><div class="tp-in">
     <div class="tp-head">आवक नंबर / ${incoming}<br>दि. ${date}</div>
     <div class="tp-office">सोलापूर महानगरपालिका, सोलापूर.</div>
     <div class="tp-to">सहा. अभियंता, (नगर रचना) यांचेकडे,</div>
