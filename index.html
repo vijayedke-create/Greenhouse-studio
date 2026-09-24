@@ -738,6 +738,213 @@ aside.collapsed .user-row.gs-glass-user{padding:6px;border-radius:8px}
 }
 .cp-login-back:hover{color:rgba(255,255,255,.55)}
 
+
+/* Client Portal home dashboard */
+.cp-home{max-width:560px;margin:0 auto;padding:8px 0 24px}
+.cp-home-greet{
+  font-family:var(--font-display),'Playfair Display',serif;
+  font-size:26px;font-weight:600;color:var(--ink);letter-spacing:-.02em;
+  margin-bottom:18px;line-height:1.25;
+}
+.cp-home-proj-name{
+  font-family:var(--font-display),serif;font-size:22px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;text-transform:uppercase;line-height:1.2;
+}
+.cp-home-proj-loc{
+  font-size:13px;color:var(--mut);font-weight:500;margin:4px 0 18px;
+}
+.cp-home-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;
+}
+.cp-home-card{
+  background:var(--surf,#fff);border:1px solid var(--bdr);
+  border-radius:10px;padding:16px 14px;
+  box-shadow:0 1px 2px rgba(28,27,25,.04);
+}
+.cp-home-card-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:8px;
+}
+.cp-home-card-val{
+  font-family:var(--font-display),serif;font-size:22px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;line-height:1.15;
+}
+.cp-home-card-val-sm{font-size:17px}
+.cp-home-card-sub{font-size:12px;color:var(--mut);margin-top:6px}
+.cp-home-bar{
+  height:6px;border-radius:3px;background:var(--surf2,#f3f0ea);
+  border:1px solid var(--bdr);overflow:hidden;margin-top:10px;
+}
+.cp-home-bar-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--grn,#2c3e2d),var(--gold,#b8975a));
+  transform-origin:left;animation:gsProgress .55s cubic-bezier(.22,1,.36,1) both;
+}
+.cp-home-more-title{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mut);margin:8px 0 10px;
+}
+.cp-home-proj-row{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:12px 14px;background:var(--surf);border:1px solid var(--bdr);
+  border-radius:8px;margin-bottom:8px;
+}
+.cp-home-proj-row-name{font-weight:600;font-size:14px;color:var(--ink)}
+.cp-home-proj-row-meta{font-size:11px;color:var(--mut);margin-top:2px}
+.cp-home-proj-row-bal{font-family:var(--font-mono),monospace;font-size:12px;font-weight:700;color:var(--ink2)}
+.cp-home-summary{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  margin-top:16px;padding:14px;background:var(--surf2);
+  border:1px solid var(--bdr);border-radius:10px;
+}
+.cp-home-summary div{text-align:center}
+.cp-home-summary span{display:block;font-size:10px;color:var(--mut);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.cp-home-summary b{font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink)}
+.cp-home-summary b.ok{color:var(--rgreen,#4a7c59)}
+.cp-home-summary b.due{color:var(--red,#a63d32)}
+.cp-home-foot{
+  margin-top:20px;text-align:center;font-size:11px;color:var(--mut);line-height:1.6;
+}
+.cp-home-foot b{color:var(--ink2);display:block;font-size:12px}
+.cp-home-empty{padding:40px 16px;text-align:center;background:var(--surf);border:1px solid var(--bdr);border-radius:10px}
+.cp-home-empty-title{font-family:var(--font-display),serif;font-size:18px;color:var(--ink);margin-bottom:6px}
+.cp-home-empty-sub{font-size:13px;color:var(--mut)}
+@media(max-width:480px){
+  .cp-home-greet{font-size:22px}
+  .cp-home-proj-name{font-size:18px}
+  .cp-home-card-val{font-size:18px}
+}
+
+
+/* Client portal bottom nav */
+.cp-bottom-nav{display:none}
+.cp-more-sheet{display:none}
+.cp-tabs-desktop{}
+@media(max-width:768px){
+  #cp-tabs{display:none!important}
+  #cp-content{padding-bottom:88px!important}
+  .cp-bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:200;
+    height:60px;padding:0 4px calc(4px + env(safe-area-inset-bottom,0));
+    background:rgba(255,252,247,.94);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-top:1px solid var(--bdr,#e4dfd6);
+    align-items:center;justify-content:space-around;
+    box-shadow:0 -4px 20px rgba(28,27,25,.06);
+  }
+  .cp-bnav{
+    flex:1;border:none;background:none;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 2px;color:var(--mut,#6e6960);
+    font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    font-family:var(--font-body),sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .cp-bnav.active{color:var(--grn,#2c3e2d)}
+  .cp-bnav.active .cp-bnav-ico svg{stroke:var(--grn,#2c3e2d)}
+  .cp-bnav-ico{display:flex;line-height:0}
+  .cp-more-sheet{
+    display:none;position:fixed;inset:0;z-index:260;
+    background:rgba(28,27,25,.4);align-items:flex-end;justify-content:center;
+    padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));
+  }
+  .cp-more-sheet.open{display:flex}
+  .cp-more-inner{
+    width:100%;max-width:400px;background:var(--surf,#fffcf7);
+    border:1px solid var(--bdr);border-radius:14px;padding:8px;
+    box-shadow:var(--sh2);
+  }
+  .cp-more-title{
+    font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--mut);padding:10px 14px 6px;
+  }
+  .cp-more-inner>button{
+    display:block;width:100%;border:none;background:transparent;text-align:left;
+    padding:14px 14px;font-size:15px;font-weight:600;color:var(--ink);
+    font-family:var(--font-body),sans-serif;border-radius:8px;cursor:pointer;
+  }
+  .cp-more-inner>button:active{background:var(--surf2)}
+  .cp-more-logout{color:var(--red,#a63d32)!important}
+  .cp-more-cancel{text-align:center!important;color:var(--mut)!important;font-weight:500!important}
+}
+@media(min-width:769px){
+  .cp-bottom-nav,.cp-more-sheet{display:none!important}
+}
+
+
+/* Client project progress timeline */
+.cp-tl-wrap{
+  background:var(--surf,#fff);border:1px solid var(--bdr);
+  border-radius:12px;padding:16px 12px 14px;margin-bottom:18px;
+  box-shadow:0 1px 2px rgba(28,27,25,.04);
+}
+.cp-tl-title{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin:0 0 14px 4px;
+}
+.cp-tl{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  position:relative;gap:2px;padding:0 2px;
+}
+.cp-tl-track{
+  position:absolute;left:8%;right:8%;top:11px;height:2px;
+  background:var(--bdr);z-index:0;border-radius:2px;
+}
+.cp-tl-step{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  position:relative;z-index:1;min-width:0;
+}
+.cp-tl-node{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;line-height:1;
+  background:var(--surf2,#f3f0ea);border:2px solid var(--bdr);
+  color:var(--mut);margin-bottom:8px;
+  transition:background .25s, border-color .25s, color .25s, box-shadow .25s;
+}
+.cp-tl-label{
+  font-size:9px;font-weight:600;text-align:center;line-height:1.25;
+  color:var(--mut);max-width:100%;padding:0 1px;
+  letter-spacing:.01em;
+}
+.cp-tl-step.done .cp-tl-node{
+  background:var(--grn,#2c3e2d);border-color:var(--grn,#2c3e2d);color:#f7f5f0;
+}
+.cp-tl-step.done .cp-tl-label{color:var(--ink2)}
+.cp-tl-step.current .cp-tl-node{
+  background:var(--gold,#b8975a);border-color:var(--gold,#b8975a);color:#1a1f1c;
+  box-shadow:0 0 0 4px rgba(184,151,90,.22);
+}
+.cp-tl-step.current .cp-tl-label{
+  color:var(--ink);font-weight:700;
+}
+.cp-tl-step.future .cp-tl-node{
+  background:transparent;border-color:var(--bdr2,#d0c9bc);color:transparent;
+}
+.cp-tl-step.future .cp-tl-label{color:var(--dim,#b0a89c)}
+.cp-tl-caption{
+  margin-top:12px;text-align:center;
+}
+.cp-tl-now{
+  font-size:11px;font-weight:600;color:var(--grn);
+  letter-spacing:.04em;
+}
+/* fill track up to current via gradient on track using steps — optional line segments */
+.cp-tl-step.done::before,
+.cp-tl-step.current::before{
+  content:'';position:absolute;top:11px;right:50%;height:2px;left:-50%;
+  background:var(--grn,#2c3e2d);z-index:0;
+}
+.cp-tl-step:first-child::before{display:none}
+.cp-tl-step.current::before{background:linear-gradient(90deg,var(--grn),var(--gold))}
+.cp-tl-step.future::before{display:none}
+@media(max-width:420px){
+  .cp-tl-label{font-size:8px}
+  .cp-tl-node{width:18px;height:18px;font-size:10px}
+  .cp-tl-track{top:9px}
+  .cp-tl-step.done::before,.cp-tl-step.current::before{top:9px}
+}
+
 /* ── MOBILE OVERLAY ── */
 .mob-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:298;backdrop-filter:blur(2px)}
 .mob-bg.on{display:block}
@@ -14583,6 +14790,41 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
       <div style="text-align:center;padding:40px;color:var(--mut)">Loading...</div>
     </div>
 
+    <!-- Client mobile bottom nav -->
+    <nav id="cp-bottom-nav" class="cp-bottom-nav" aria-label="Client navigation">
+      <button type="button" class="cp-bnav active" data-cp="overview" onclick="cpMobNav('overview')">
+        <span class="cp-bnav-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="0.5"/><rect x="13" y="3" width="8" height="5" rx="0.5"/><rect x="13" y="10" width="8" height="11" rx="0.5"/><rect x="3" y="13" width="8" height="8" rx="0.5"/></svg></span>
+        <span>Home</span>
+      </button>
+      <button type="button" class="cp-bnav" data-cp="project" onclick="cpMobNav('project')">
+        <span class="cp-bnav-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
+        <span>Project</span>
+      </button>
+      <button type="button" class="cp-bnav" data-cp="drawings" onclick="cpMobNav('drawings')">
+        <span class="cp-bnav-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7V3z"/><path d="M15 3v4h4"/><path d="M10 12h6M10 16h6"/></svg></span>
+        <span>Drawings</span>
+      </button>
+      <button type="button" class="cp-bnav" data-cp="payments" onclick="cpMobNav('payments')">
+        <span class="cp-bnav-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M8 21h8"/><path d="M5 9h14"/><path d="M7 9l-2 6h4L7 9zM17 9l-2 6h4l-2-6z"/></svg></span>
+        <span>Payments</span>
+      </button>
+      <button type="button" class="cp-bnav" data-cp="more" onclick="cpMobNav('more')">
+        <span class="cp-bnav-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="18" cy="12" r="1.5" fill="currentColor"/></svg></span>
+        <span>More</span>
+      </button>
+    </nav>
+    <div id="cp-more-sheet" class="cp-more-sheet" onclick="if(event.target===this)this.classList.remove('open')">
+      <div class="cp-more-inner">
+        <div class="cp-more-title">More</div>
+        <button type="button" onclick="cpMobNav('agreement');document.getElementById('cp-more-sheet').classList.remove('open')">Agreement</button>
+        <button type="button" onclick="cpMobNav('sitevisits');document.getElementById('cp-more-sheet').classList.remove('open')">Site Visits</button>
+        <button type="button" onclick="cpMobNav('brief');document.getElementById('cp-more-sheet').classList.remove('open')">Add New Project</button>
+        <button type="button" onclick="cpMobNav('request');document.getElementById('cp-more-sheet').classList.remove('open')">Drawing Request</button>
+        <button type="button" class="cp-more-logout" onclick="cpLogout()">Logout</button>
+        <button type="button" class="cp-more-cancel" onclick="document.getElementById('cp-more-sheet').classList.remove('open')">Cancel</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -14793,7 +15035,21 @@ function cpTab(tab) {
   document.querySelectorAll('.cp-tab').forEach(t => t.classList.remove('active'));
   const activeTab = document.querySelector('.cp-tab[onclick*="' + tab + '"]');
   if (activeTab) activeTab.classList.add('active');
+  document.querySelectorAll('.cp-bnav').forEach(b => {
+    const m = b.getAttribute('data-cp');
+    b.classList.toggle('active', m === tab || (tab === 'overview' && m === 'overview') || (tab === 'project' && m === 'project'));
+  });
   renderCpContent();
+}
+function cpMobNav(tab) {
+  if (tab === 'more') {
+    const sheet = document.getElementById('cp-more-sheet');
+    if (sheet) sheet.classList.add('open');
+    return;
+  }
+  const sheet = document.getElementById('cp-more-sheet');
+  if (sheet) sheet.classList.remove('open');
+  cpTab(tab);
 }
 
 // ── RENDER CLIENT CONTENT ──
@@ -14802,7 +15058,7 @@ function renderCpContent() {
   if (!cpCurrentClient) return;
   const c = cpCurrentClient;
   const projs = (db.projects || []).filter(p => p.clientId === c.id);
-  if (cpCurrentTab === 'overview') el.innerHTML = renderCpOverview(c, projs);
+  if (cpCurrentTab === 'overview' || cpCurrentTab === 'project') el.innerHTML = renderCpOverview(c, projs);
   else if (cpCurrentTab === 'payments') el.innerHTML = renderCpPayments(c, projs);
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
   else if (cpCurrentTab === 'agreement') el.innerHTML = renderCpAgreement(c, projs);
@@ -15303,103 +15559,153 @@ function submitDrawingRequest() {
 
 // ── OVERVIEW TAB ──
 function renderCpOverview(c, projs) {
-  const totalContract = projs.reduce((a, p) => a + (p.total || 0), 0);
-  const totalPaid = projs.reduce((a, p) => a + ppaid(p.id), 0);
-  const totalBal = totalContract - totalPaid;
-  const pct = totalContract > 0 ? Math.min(100, Math.round(totalPaid / totalContract * 100)) : 0;
-  const STAGES = ['Concept', 'Layout', '3D', 'Working Drawing', 'Submission', 'Completed'];
-
-  let html = `
-    <!-- Client header -->
-    <div style="background:var(--grn);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">
-      <div style="display:flex;align-items:center;gap:14px">
-        <div style="width:52px;height:52px;border-radius:50%;background:var(--gold);color:var(--grn);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:'Playfair Display',serif">${c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
-        <div>
-          <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold)">${c.name}</div>
-          <div style="color:rgba(255,255,255,.55);font-size:12px">${c.phone||c.wa||''} · ${projs.length} Project${projs.length!==1?'s':''}</div>
-        </div>
-      </div>
+  // Client-facing progress path
+  const CP_PATH = ['Brief', 'Concept', 'Design', '3D', 'Working Drawing', 'Approval', 'Site'];
+  // Map internal studio stages → client path index
+  function pathIndexFromStage(stage) {
+    const s = String(stage || 'Concept').toLowerCase();
+    if (/brief|enquiry|lead|new/.test(s)) return 0;
+    if (/concept/.test(s)) return 1;
+    if (/layout|design/.test(s)) return 2;
+    if (/^3d$|3-d|three/.test(s)) return 3;
+    if (/working/.test(s)) return 4;
+    if (/submission|approv|sanction|permit/.test(s)) return 5;
+    if (/site|construct|execution|completed|complete|done|handover/.test(s)) return 6;
+    return 1;
+  }
+  function stageMeta(p) {
+    const stage = (p && p.stage) || 'Concept';
+    const idx = pathIndexFromStage(stage);
+    const pct = Math.round((idx + 1) / CP_PATH.length * 100);
+    const next = idx < CP_PATH.length - 1 ? CP_PATH[idx + 1] : 'Complete';
+    return { stage, idx, pct, next, label: CP_PATH[idx] };
+  }
+  function progressTimelineHTML(currentIdx) {
+    return `<div class="cp-tl" role="list" aria-label="Project progress">
+      <div class="cp-tl-track" aria-hidden="true"></div>
+      ${CP_PATH.map((label, i) => {
+        let cls = 'cp-tl-step';
+        if (i < currentIdx) cls += ' done';
+        else if (i === currentIdx) cls += ' current';
+        else cls += ' future';
+        const mark = i < currentIdx ? '✓' : (i === currentIdx ? String(i + 1) : '');
+        return `<div class="${cls}" role="listitem" title="${label}">
+          <div class="cp-tl-node">${i < currentIdx ? '✓' : ''}</div>
+          <div class="cp-tl-label">${label}</div>
+        </div>`;
+      }).join('')}
     </div>
-
-    <!-- Stats -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-      <div class="cp-stat"><div class="cp-sl">Contract</div><div class="cp-sv" style="font-size:15px">${fmtCp(totalContract)}</div></div>
-      <div class="cp-stat"><div class="cp-sl">Paid</div><div class="cp-sv" style="font-size:15px;color:var(--grn)">${fmtCp(totalPaid)}</div></div>
-      <div class="cp-stat red-stat"><div class="cp-sl">Balance</div><div class="cp-sv" style="font-size:15px">${fmtCp(totalBal)}</div></div>
-    </div>
-
-    <!-- Payment progress -->
-    <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--bdr)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--grn)">Payment Progress</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--grn)">${pct}%</div>
-      </div>
-      <div class="cp-progress-wrap"><div class="cp-progress-bar" style="width:${pct}%"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-top:4px">
-        <span>Paid: ${fmtCp(totalPaid)}</span><span>Remaining: ${fmtCp(totalBal)}</span>
-      </div>
-    </div>`;
-
-  // Each project card
-  projs.forEach(p => {
-    const paid = ppaid(p.id);
-    const bal = pbal(p.id);
-    const stageIdx = STAGES.indexOf(p.stage || 'Concept');
-    const stagePct = Math.round(((stageIdx + 1) / STAGES.length) * 100);
-    const visits = (db.siteVisits || []).filter(v => v.projId === p.id);
-    html += `
-      <div style="background:#fff;border:1.5px solid var(--bdr);border-radius:16px;padding:18px;margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          <div>
-            <div style="font-weight:700;font-size:15px;color:var(--txt)">${p.name}</div>
-            <div style="font-size:11px;color:var(--mut);margin-top:2px">📍 ${p.address||'—'}</div>
-          </div>
-          <span style="background:${p.stage==='Completed'?'var(--grn)':'var(--surf2)'};color:${p.stage==='Completed'?'#fff':'var(--mut)'};font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap">${p.stage||'Concept'}</span>
-        </div>
-
-        <!-- Stage track -->
-        <div style="margin-bottom:12px">
-          <div style="font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Project Stage</div>
-          <div style="display:flex;gap:3px">
-            ${STAGES.map((s,i)=>`<div style="flex:1;height:5px;border-radius:3px;background:${i<=stageIdx?'var(--grn)':'var(--bdr)'}"></div>`).join('')}
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mut);margin-top:3px">
-            <span>Concept</span><span>Completed</span>
-          </div>
-        </div>
-
-        <!-- Payment mini summary -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
-          <div style="background:var(--surf2);border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--mut)">Contract</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--txt)">${fmtCp(p.total)}</div>
-          </div>
-          <div style="background:#e8f4ee;border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--mut)">Paid</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--grn)">${fmtCp(paid)}</div>
-          </div>
-          <div style="background:${bal>0?'#fde8e6':'#e8f4ee'};border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:10px;color:var(--mut)">Balance</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${bal>0?'var(--red)':'var(--grn)'}">${fmtCp(bal)}</div>
-          </div>
-        </div>
-
-        ${visits.length>0?`<div style="font-size:11px;color:var(--mut);margin-top:6px">🏗️ ${visits.length} site visit${visits.length!==1?'s':''} completed · Last: ${visits[visits.length-1]?.date||'—'}</div>`:''}
-        ${p.services&&p.services.length?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${p.services.map(s=>`<span style="background:rgba(26,58,42,.08);color:var(--grn);font-size:10px;padding:3px 8px;border-radius:20px">${s}</span>`).join('')}</div>`:''}
-      </div>`;
-  });
-
-  if (!projs.length) {
-    html += `<div style="text-align:center;padding:40px;color:var(--mut)"><div style="font-size:36px;margin-bottom:8px">🏗️</div><p>No projects found</p></div>`;
+    <div class="cp-tl-caption"><span class="cp-tl-now">Now: ${CP_PATH[Math.min(currentIdx, CP_PATH.length - 1)]}</span></div>`;
   }
 
-  html += `<div style="text-align:center;font-size:10px;color:var(--mut);margin-top:16px;padding:12px;background:#fff;border-radius:10px;border:1px solid var(--bdr)">
-    <b>${officeInfo.name||'Greenhouse Studio'}</b> · ${officeInfo.arch||''} · ${officeInfo.phone||''}<br>
-    <span style="color:var(--mut)">Data is live — refreshes every time you open</span>
+  const now = new Date();
+  const hr = now.getHours();
+  const greet = hr < 12 ? 'Good Morning' : (hr < 17 ? 'Good Afternoon' : 'Good Evening');
+  const firstName = (c.name || 'Client').trim().split(/\s+/)[0];
+  const primary = projs[0] || null;
+
+  const totalContract = projs.reduce((a, p) => a + (p.total || 0), 0);
+  const totalPaid = projs.reduce((a, p) => a + ppaid(p.id), 0);
+  const totalBal = Math.max(0, totalContract - totalPaid);
+
+  function fmtLakh(n) {
+    const v = Number(n) || 0;
+    if (v >= 100000) {
+      const l = v / 100000;
+      return '₹' + (l % 1 === 0 ? l.toFixed(0) : l.toFixed(2)) + ' Lakh';
+    }
+    return fmtCp(v);
+  }
+
+  let html = `
+  <div class="cp-home">
+    <div class="cp-home-greet">${greet}, ${firstName}</div>
+  `;
+
+  if (!projs.length) {
+    html += `
+      <div class="cp-home-empty">
+        <div class="cp-home-empty-title">No projects linked yet</div>
+        <div class="cp-home-empty-sub">Your architect will share project access here.</div>
+      </div>`;
+  } else {
+    const p = primary;
+    const loc = (p.location || p.city || p.address || '').trim() || '—';
+    const ptype = (p.type || p.category || (p.services && p.services[0]) || c.cat || 'Residential').trim();
+    const floors = p.floors || p.building || p.storeys || p.gplus || '';
+    const { stage, idx, pct, next, label } = stageMeta(p);
+    const bal = pbal(p.id);
+    const nextDate = p.deadline || '';
+
+    html += `
+    <div class="cp-home-proj-name">${p.name || 'Project'}</div>
+    <div class="cp-home-proj-loc">${loc}</div>
+
+    <div class="cp-tl-wrap">
+      <div class="cp-tl-title">Project progress</div>
+      ${progressTimelineHTML(idx)}
+    </div>
+
+    <div class="cp-home-grid">
+      <div class="cp-home-card">
+        <div class="cp-home-card-lbl">Project</div>
+        <div class="cp-home-card-val">${ptype}</div>
+        <div class="cp-home-card-sub">${floors ? floors : (label || 'In progress')}</div>
+      </div>
+      <div class="cp-home-card">
+        <div class="cp-home-card-lbl">Progress</div>
+        <div class="cp-home-card-val">${pct}%</div>
+        <div class="cp-home-bar"><div class="cp-home-bar-fill" style="width:${pct}%"></div></div>
+        <div class="cp-home-card-sub">${label}</div>
+      </div>
+      <div class="cp-home-card">
+        <div class="cp-home-card-lbl">Payment</div>
+        <div class="cp-home-card-val">${fmtLakh(bal > 0 ? bal : 0)}</div>
+        <div class="cp-home-card-sub">${bal > 0 ? 'Outstanding' : 'Fully paid'}</div>
+      </div>
+      <div class="cp-home-card">
+        <div class="cp-home-card-lbl">Next step</div>
+        <div class="cp-home-card-val cp-home-card-val-sm">${next}</div>
+        <div class="cp-home-card-sub">${nextDate || 'Schedule with architect'}</div>
+      </div>
+    </div>
+    `;
+
+    if (projs.length > 1) {
+      html += `<div class="cp-home-more-title">All projects</div>`;
+      projs.forEach(pp => {
+        const m = stageMeta(pp);
+        const b = pbal(pp.id);
+        html += `
+        <div class="cp-home-proj-row">
+          <div>
+            <div class="cp-home-proj-row-name">${pp.name}</div>
+            <div class="cp-home-proj-row-meta">${m.label} · ${m.pct}%</div>
+          </div>
+          <div class="cp-home-proj-row-bal">${b > 0 ? fmtLakh(b) : 'Paid'}</div>
+        </div>`;
+      });
+    }
+
+    html += `
+    <div class="cp-home-summary">
+      <div><span>Contract</span><b>${fmtCp(totalContract)}</b></div>
+      <div><span>Received</span><b class="ok">${fmtCp(totalPaid)}</b></div>
+      <div><span>Outstanding</span><b class="due">${fmtCp(totalBal)}</b></div>
+    </div>`;
+  }
+
+  html += `
+    <div class="cp-home-foot">
+      <b>${officeInfo.name || 'Greenhouse Studio'}</b>
+      <span>${officeInfo.arch || ''} ${officeInfo.phone ? '· ' + officeInfo.phone : ''}</span>
+    </div>
   </div>`;
 
   return html;
 }
+
+
 
 // ── PAYMENTS TAB ──
 function renderCpPayments(c, projs) {
