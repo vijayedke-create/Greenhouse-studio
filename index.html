@@ -3759,6 +3759,9 @@ function loadLocal(){
 // window.storage (artifact) used only as fallback if Firebase not configured
 const IS_ARTIFACT = false; // Force Firebase/localStorage mode for real-time sync
 
+// Firebase database URL is embedded so every PC uses the same central database.
+// Project: greenhouse-studio-509609
+const GS_FIREBASE_URL='https://greenhouse-studio-509609-default-rtdb.firebaseio.com';
 let fbDbUrl=null, fbPollTimer=null, fbLastHash='';
 
 function stripQuotes(s){
@@ -3968,9 +3971,12 @@ function disconnectFirebase(){
 
 async function loadSavedFirebaseConfig(){
   try{
-    var url=localStorage.getItem('gs_fb_url');
+    // Use the embedded central Firebase URL first. localStorage is only a fallback
+    // for older installations where a different URL was intentionally configured.
+    var url=GS_FIREBASE_URL || localStorage.getItem('gs_fb_url');
     if(!url) return;
     fbDbUrl=url;
+    localStorage.setItem('gs_fb_url',url);
     var inp=document.getElementById('inline-fb-url');
     if(inp) inp.value=url;
     // ensure db arrays before poll
