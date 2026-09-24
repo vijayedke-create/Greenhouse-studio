@@ -945,6 +945,364 @@ aside.collapsed .user-row.gs-glass-user{padding:6px;border-radius:8px}
   .cp-tl-step.done::before,.cp-tl-step.current::before{top:9px}
 }
 
+
+/* Client Drawings UI */
+.cp-dwg{max-width:560px;margin:0 auto}
+.cp-dwg-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px}
+.cp-dwg-title{
+  font-family:var(--font-display),serif;font-size:22px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;
+}
+.cp-dwg-count{font-size:12px;color:var(--mut);font-weight:600}
+.cp-dwg-filters{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;
+  -webkit-overflow-scrolling:touch;
+}
+.cp-dwg-filter{
+  flex-shrink:0;border:1px solid var(--bdr);background:var(--surf);
+  border-radius:20px;padding:7px 14px;font-size:11px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--mut);cursor:pointer;
+  font-family:var(--font-body),sans-serif;
+}
+.cp-dwg-filter.active{
+  background:var(--grn);border-color:var(--grn);color:#f7f5f0;
+}
+.cp-dwg-card{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:12px;
+  padding:16px;margin-bottom:12px;
+  box-shadow:0 1px 2px rgba(28,27,25,.04);
+}
+.cp-dwg-name{
+  font-family:var(--font-display),serif;font-size:15px;font-weight:600;
+  color:var(--ink);letter-spacing:.02em;text-transform:uppercase;line-height:1.3;
+}
+.cp-dwg-proj{font-size:11px;color:var(--mut);margin-top:2px}
+.cp-dwg-meta{
+  display:flex;flex-wrap:wrap;gap:10px 14px;margin:12px 0 10px;
+  font-size:12px;color:var(--mut);
+}
+.cp-dwg-meta b{color:var(--ink);font-weight:600}
+.cp-dwg-revs{
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px;
+  margin-bottom:14px;padding:8px 10px;background:var(--surf2);
+  border-radius:8px;border:1px solid var(--bdr);
+}
+.cp-dwg-rev{
+  font-family:var(--font-mono),monospace;font-size:11px;font-weight:700;
+  color:var(--dim);padding:2px 4px;
+}
+.cp-dwg-rev.past{color:var(--ink2)}
+.cp-dwg-rev.current{
+  color:var(--grn);background:rgba(44,62,45,.08);border-radius:4px;
+  padding:2px 6px;
+}
+.cp-dwg-rev-arrow{color:var(--dim);font-size:10px}
+.cp-dwg-actions{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+}
+.cp-dwg-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:8px 14px;border-radius:6px;font-size:11px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;text-decoration:none;
+  border:1px solid var(--bdr);background:var(--surf);color:var(--ink);
+  font-family:var(--font-body),sans-serif;cursor:pointer;
+}
+.cp-dwg-btn.primary{
+  background:var(--grn);border-color:var(--grn);color:#f7f5f0;
+}
+.cp-dwg-btn.muted{opacity:.45;cursor:not-allowed}
+.cp-dwg-status{
+  margin-left:auto;font-size:11px;font-weight:700;
+}
+.cp-dwg-status.ok{color:var(--rgreen,#4a7c59)}
+.cp-dwg-status.pending{color:var(--gold,#b8975a)}
+.cp-dwg-empty{text-align:center;padding:48px 16px;color:var(--mut)}
+.cp-dwg-empty-ico{font-size:32px;margin-bottom:8px;opacity:.5}
+.cp-dwg-empty-sub{font-size:12px;margin-top:6px}
+
+
+/* 3D / Render Gallery */
+.cp-gal{max-width:640px;margin:0 auto}
+.cp-gal-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.cp-gal-title{
+  font-family:var(--font-display),serif;font-size:22px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;
+}
+.cp-gal-count{font-size:12px;color:var(--mut);font-weight:600}
+.cp-gal-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.cp-gal-tile{
+  position:relative;aspect-ratio:4/3;border:1px solid var(--bdr);
+  border-radius:10px;overflow:hidden;cursor:pointer;padding:0;
+  background-color:var(--surf2);background-size:cover;background-position:center;
+  font-family:var(--font-body),sans-serif;-webkit-tap-highlight-color:transparent;
+}
+.cp-gal-tile-shade{
+  position:absolute;inset:0;
+  background:linear-gradient(to top, rgba(28,27,25,.75) 0%, rgba(28,27,25,.1) 45%, transparent 70%);
+  pointer-events:none;
+}
+.cp-gal-tile-label{
+  position:absolute;left:12px;right:12px;bottom:12px;
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:#f7f5f0;text-align:left;z-index:1;
+}
+.cp-gal-tile:active{transform:scale(.98)}
+.cp-gal-empty{text-align:center;padding:48px 16px;color:var(--mut)}
+.cp-gal-empty-sub{font-size:12px;margin-top:6px}
+
+/* Full-screen lightbox */
+.cp-gal-lightbox{
+  display:none;position:fixed;inset:0;z-index:10000;
+  background:rgba(12,14,12,.94);
+  flex-direction:column;align-items:center;justify-content:center;
+}
+.cp-gal-lightbox.open{display:flex}
+.cp-gal-lb-stage{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  width:100%;padding:48px 56px 16px;min-height:0;
+}
+.cp-gal-lb-stage img{
+  max-width:100%;max-height:100%;object-fit:contain;
+  border-radius:4px;box-shadow:0 12px 48px rgba(0,0,0,.4);
+}
+.cp-gal-lb-close{
+  position:absolute;top:14px;right:14px;z-index:2;
+  width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);color:#fff;font-size:18px;cursor:pointer;
+}
+.cp-gal-lb-nav{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:2;
+  width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.08);color:#fff;font-size:28px;line-height:1;cursor:pointer;
+}
+.cp-gal-lb-nav.prev{left:12px}
+.cp-gal-lb-nav.next{right:12px}
+.cp-gal-lb-caption{
+  padding:12px 20px 28px;text-align:center;color:#fff;width:100%;
+}
+#cp-gal-lb-title{
+  font-family:var(--font-display),serif;font-size:16px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+#cp-gal-lb-meta{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px}
+@media(max-width:480px){
+  .cp-gal-lb-stage{padding:56px 12px 12px}
+  .cp-gal-lb-nav{width:36px;height:36px;font-size:22px}
+}
+
+
+/* Client Payment UI */
+.cp-pay-ui{max-width:480px;margin:0 auto}
+.cp-pay-page-title{
+  font-family:var(--font-display),serif;font-size:22px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;margin-bottom:16px;
+}
+.cp-pay-block{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:12px;
+  padding:20px 18px 18px;margin-bottom:16px;
+}
+.cp-pay-proj{
+  font-family:var(--font-display),serif;font-size:16px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.02em;color:var(--ink);margin-bottom:16px;
+}
+.cp-pay-summary{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;
+}
+.cp-pay-sum-item{text-align:center}
+.cp-pay-sum-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:6px;
+}
+.cp-pay-sum-val{
+  font-family:var(--font-display),serif;font-size:15px;font-weight:600;color:var(--ink);
+}
+.cp-pay-sum-val.ok{color:var(--rgreen,#4a7c59)}
+.cp-pay-sum-val.due{color:var(--red,#a63d32)}
+.cp-pay-ring-wrap{display:flex;justify-content:center;margin:8px 0 22px}
+.cp-pay-ring{position:relative;width:140px;height:140px}
+.cp-pay-ring-svg{width:100%;height:100%}
+.cp-pay-ring-arc{transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1)}
+.cp-pay-ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none;
+}
+.cp-pay-ring-center b{
+  font-family:var(--font-display),serif;font-size:28px;font-weight:600;
+  color:var(--ink);letter-spacing:-.03em;line-height:1;
+}
+.cp-pay-ring-center span{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin-top:4px;
+}
+.cp-pay-ms-title{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:10px;
+}
+.cp-pay-ms-list{display:flex;flex-direction:column;gap:0}
+.cp-pay-ms{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--bdr);
+}
+.cp-pay-ms:last-child{border-bottom:none}
+.cp-pay-ms-ico{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+  border:2px solid var(--bdr2);color:transparent;background:transparent;
+}
+.cp-pay-ms.done .cp-pay-ms-ico{
+  background:var(--grn);border-color:var(--grn);color:#f7f5f0;
+}
+.cp-pay-ms.todo .cp-pay-ms-ico{border-color:var(--bdr2)}
+.cp-pay-ms-label{font-size:14px;font-weight:600;color:var(--ink)}
+.cp-pay-ms.todo .cp-pay-ms-label{color:var(--mut)}
+.cp-pay-ms-amt{
+  margin-left:auto;font-family:var(--font-mono),monospace;
+  font-size:13px;font-weight:700;color:var(--ink2);
+}
+.cp-pay-ms.todo .cp-pay-ms-amt{color:var(--mut)}
+.cp-pay-hist-title{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin:18px 0 8px;
+}
+.cp-pay-hist-row{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--bdr);font-size:13px;
+}
+.cp-pay-hist-stage{font-weight:600;color:var(--ink)}
+.cp-pay-hist-meta{font-size:11px;color:var(--mut);margin-top:2px}
+.cp-pay-hist-amt{
+  font-family:var(--font-mono),monospace;font-weight:700;color:var(--rgreen);
+}
+.cp-pay-empty{text-align:center;padding:40px;color:var(--mut)}
+
+
+/* Client activity timeline feed */
+.cp-feed{
+  margin-top:8px;margin-bottom:20px;
+  background:var(--surf);border:1px solid var(--bdr);border-radius:12px;
+  padding:16px 16px 8px;
+}
+.cp-feed-title{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:14px;
+}
+.cp-feed-list{position:relative}
+.cp-feed-item{
+  display:grid;grid-template-columns:52px 16px 1fr;gap:0 10px;
+  padding-bottom:16px;position:relative;
+}
+.cp-feed-item:last-child{padding-bottom:8px}
+.cp-feed-date{
+  font-size:11px;font-weight:700;color:var(--ink2);
+  font-family:var(--font-mono),monospace;padding-top:1px;
+}
+.cp-feed-dot{
+  width:10px;height:10px;border-radius:50%;margin-top:4px;
+  background:var(--grn);border:2px solid var(--surf);
+  box-shadow:0 0 0 2px var(--grn);justify-self:center;
+  position:relative;z-index:1;
+}
+.cp-feed-item:not(:last-child) .cp-feed-dot::after{
+  content:'';position:absolute;left:50%;top:12px;transform:translateX(-50%);
+  width:2px;height:calc(100% + 16px);background:var(--bdr);z-index:0;
+}
+.cp-feed-body{
+  font-size:13px;font-weight:500;color:var(--ink);line-height:1.4;padding-top:0;
+}
+
+
+/* Client Site Updates */
+.cp-site{max-width:520px;margin:0 auto}
+.cp-site-title{
+  font-family:var(--font-display),serif;font-size:22px;font-weight:600;
+  color:var(--ink);letter-spacing:-.02em;margin-bottom:16px;
+}
+.cp-site-latest{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:12px;
+  padding:18px 16px;margin-bottom:16px;
+}
+.cp-site-latest-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:8px;
+}
+.cp-site-date{
+  font-family:var(--font-display),serif;font-size:18px;font-weight:600;
+  color:var(--ink);margin-bottom:4px;
+}
+.cp-site-proj{font-size:12px;color:var(--mut);margin-bottom:10px}
+.cp-site-notes{
+  font-size:14px;line-height:1.55;color:var(--ink2);margin-bottom:10px;
+}
+.cp-site-checks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.cp-site-checks span{
+  font-size:10px;font-weight:600;padding:4px 8px;border-radius:4px;
+  background:var(--surf2);border:1px solid var(--bdr);color:var(--ink2);
+}
+.cp-site-meta{font-size:11px;color:var(--mut)}
+.cp-site-photos-lbl,.cp-site-earlier-lbl,.cp-site-ba-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin:4px 0 10px;
+}
+.cp-site-photos{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;
+}
+.cp-site-photo{
+  aspect-ratio:1;border-radius:8px;border:1px solid var(--bdr);
+  background-size:cover;background-position:center;cursor:pointer;padding:0;
+}
+.cp-site-card{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:10px;
+  padding:12px 14px;margin-bottom:8px;
+}
+.cp-site-card-date{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.cp-site-card-notes{font-size:13px;color:var(--ink2);line-height:1.45}
+.cp-site-card-thumbs{display:flex;gap:6px;margin-top:8px}
+.cp-site-card-thumbs span{
+  width:48px;height:48px;border-radius:6px;background-size:cover;background-position:center;
+  border:1px solid var(--bdr);display:block;
+}
+.cp-site-empty{text-align:center;padding:48px 16px;color:var(--mut)}
+.cp-site-empty-sub{font-size:12px;margin-top:6px}
+
+/* Before / After slider */
+.cp-site-ba{margin-bottom:18px}
+.cp-ba-slider{
+  position:relative;width:100%;aspect-ratio:16/10;border-radius:12px;
+  overflow:hidden;border:1px solid var(--bdr);user-select:none;
+  background:var(--surf2);
+}
+.cp-ba-after,.cp-ba-before{
+  position:absolute;inset:0;background-size:cover;background-position:center;
+}
+.cp-ba-before{
+  border-right:2px solid #fff;
+  box-shadow:2px 0 12px rgba(0,0,0,.2);
+}
+.cp-ba-handle{
+  position:absolute;right:-1px;top:0;bottom:0;width:2px;background:#fff;
+}
+.cp-ba-handle::after{
+  content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:36px;height:36px;border-radius:50%;background:rgba(255,252,247,.95);
+  border:2px solid var(--grn);box-shadow:0 2px 10px rgba(0,0,0,.2);
+  background-image:linear-gradient(var(--grn),var(--grn)),linear-gradient(var(--grn),var(--grn));
+  background-size:2px 12px,12px 2px;background-position:center;background-repeat:no-repeat;
+}
+.cp-ba-tag{
+  position:absolute;top:10px;z-index:2;
+  font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 8px;border-radius:4px;background:rgba(28,27,25,.55);color:#fff;
+}
+.cp-ba-tag.left{left:10px}
+.cp-ba-tag.right{right:10px}
+.cp-ba-range{
+  position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;
+  cursor:ew-resize;z-index:3;
+}
+
 /* ── MOBILE OVERLAY ── */
 .mob-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:298;backdrop-filter:blur(2px)}
 .mob-bg.on{display:block}
@@ -14781,6 +15139,7 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
         <button class="cp-tab" onclick="cpTab('payments')">💰 Payments</button>
       <button class="cp-tab" onclick="cpTab('sitevisits')">🏗️ Site Visits</button>
       <button class="cp-tab" onclick="cpTab('drawings')">📐 Drawings</button>
+      <button class="cp-tab" onclick="cpTab('gallery')">🖼 3D / Renders</button>
       <button class="cp-tab" onclick="cpTab('brief')">➕ Add New Project</button>
       <button class="cp-tab" onclick="cpTab('request')">✏️ Drawing Request</button>
     </div>
@@ -14820,6 +15179,7 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
         <button type="button" onclick="cpMobNav('sitevisits');document.getElementById('cp-more-sheet').classList.remove('open')">Site Visits</button>
         <button type="button" onclick="cpMobNav('brief');document.getElementById('cp-more-sheet').classList.remove('open')">Add New Project</button>
         <button type="button" onclick="cpMobNav('request');document.getElementById('cp-more-sheet').classList.remove('open')">Drawing Request</button>
+        <button type="button" onclick="cpMobNav('gallery');document.getElementById('cp-more-sheet').classList.remove('open')">3D / Renders</button>
         <button type="button" class="cp-more-logout" onclick="cpLogout()">Logout</button>
         <button type="button" class="cp-more-cancel" onclick="document.getElementById('cp-more-sheet').classList.remove('open')">Cancel</button>
       </div>
@@ -15063,6 +15423,7 @@ function renderCpContent() {
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
   else if (cpCurrentTab === 'agreement') el.innerHTML = renderCpAgreement(c, projs);
   else if (cpCurrentTab === 'drawings') el.innerHTML = renderCpDrawings(c, projs);
+  else if (cpCurrentTab === 'gallery') el.innerHTML = renderCpGallery(c, projs);
   else if (cpCurrentTab === 'brief') { el.innerHTML = renderCpBrief(c, projs); initCpBrief(); }
   else if (cpCurrentTab === 'request') { el.innerHTML = renderCpRequest(c, projs); }
 }
@@ -15558,6 +15919,81 @@ function submitDrawingRequest() {
 }
 
 // ── OVERVIEW TAB ──
+
+function buildCpActivityFeed(c, projs) {
+  const events = [];
+  const projIds = new Set((projs || []).map(p => p.id));
+
+  function push(dateStr, text, sortKey) {
+    if (!text) return;
+    let d = dateStr ? new Date(dateStr) : null;
+    if (d && isNaN(d.getTime())) d = null;
+    const label = d
+      ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+      : (dateStr || '—');
+    events.push({
+      sort: d ? d.getTime() : 0,
+      dateLabel: label,
+      text: text
+    });
+  }
+
+  (projs || []).forEach(p => {
+    // Files shared with client
+    (p.files || []).forEach(f => {
+      if (f.clientVisible === false) return;
+      const when = f.date || f.updatedAt || f.uploadedAt || '';
+      const name = (f.name || f.title || 'Drawing').replace(/\.[a-z0-9]+$/i, '');
+      const rev = f.rev || f.revision || '';
+      const is3d = /3d|render/i.test(String(f.cat || '') + name);
+      let msg = is3d ? (name + ' approved') : (name + (rev ? ' ' + String(rev).toUpperCase() : '') + ' uploaded');
+      if (/approv/i.test(String(f.status || ''))) msg = name + ' approved';
+      push(when, msg, when);
+    });
+    // Payments
+    const pays = typeof ppays === 'function' ? ppays(p.id) : [];
+    pays.forEach(pay => {
+      push(pay.date, (pay.stage || 'Payment') + ' payment received', pay.date);
+    });
+  });
+
+  // Site visits
+  (db.siteVisits || []).forEach(v => {
+    if (!projIds.has(v.projId)) return;
+    push(v.date || v.ts, v.notes ? ('Site visit — ' + v.notes) : 'Site visit completed', v.date || v.ts);
+  });
+
+  // Studio activities linked to these projects or client name
+  (db.activities || []).forEach(a => {
+    const pid = a.projId || a.projectId;
+    const text = a.text || a.label || '';
+    if (pid && projIds.has(pid)) {
+      push(a.date || a.ts || a.time, text, a.date || a.ts);
+      return;
+    }
+    if (c && c.name && text.toLowerCase().includes(String(c.name).toLowerCase().split(' ')[0])) {
+      push(a.date || a.ts || a.time, text, a.date || a.ts);
+    }
+  });
+
+  // Stage as soft event
+  (projs || []).forEach(p => {
+    if (p.stage) push(p.updatedAt || p.deadline || '', 'Stage: ' + p.stage, p.updatedAt || '');
+  });
+
+  events.sort((a, b) => b.sort - a.sort);
+  // Dedupe similar text+date
+  const seen = new Set();
+  const out = [];
+  events.forEach(e => {
+    const k = e.dateLabel + '|' + e.text;
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push(e);
+  });
+  return out.slice(0, 20);
+}
+
 function renderCpOverview(c, projs) {
   // Client-facing progress path
   const CP_PATH = ['Brief', 'Concept', 'Design', '3D', 'Working Drawing', 'Approval', 'Site'];
@@ -15695,6 +16131,22 @@ function renderCpOverview(c, projs) {
     </div>`;
   }
 
+  // Activity feed for client
+  const feed = buildCpActivityFeed(c, projs);
+  if (feed.length) {
+    html += `<div class="cp-feed">
+      <div class="cp-feed-title">Project timeline</div>
+      <div class="cp-feed-list">
+        ${feed.map(ev => `
+          <div class="cp-feed-item">
+            <div class="cp-feed-date">${ev.dateLabel}</div>
+            <div class="cp-feed-dot"></div>
+            <div class="cp-feed-body">${ev.text}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
   html += `
     <div class="cp-home-foot">
       <b>${officeInfo.name || 'Greenhouse Studio'}</b>
@@ -15709,67 +16161,252 @@ function renderCpOverview(c, projs) {
 
 // ── PAYMENTS TAB ──
 function renderCpPayments(c, projs) {
-  let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">💰 Payment History</div>';
-  let anyPays = false;
+  const DEFAULT_MILESTONES = ['Agreement', 'Concept', 'Working Drawing', 'Approval', 'Completion'];
+
+  function buildMilestones(p, pays, total) {
+    // Custom schedule on project if present
+    let ms = [];
+    if (Array.isArray(p.milestones) && p.milestones.length) {
+      ms = p.milestones.map(m => ({
+        label: m.label || m.stage || m.name || 'Milestone',
+        amount: Number(m.amount) || 0
+      }));
+    } else {
+      const n = DEFAULT_MILESTONES.length;
+      const each = total > 0 ? Math.round(total / n) : 0;
+      ms = DEFAULT_MILESTONES.map((label, i) => ({
+        label,
+        amount: i < n - 1 ? each : Math.max(0, total - each * (n - 1))
+      }));
+    }
+    // Mark done: match payment stages or cumulative paid
+    let paidLeft = pays.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+    const stagePaid = {};
+    pays.forEach(pay => {
+      const key = String(pay.stage || '').toLowerCase();
+      stagePaid[key] = (stagePaid[key] || 0) + (Number(pay.amount) || 0);
+    });
+    return ms.map(m => {
+      const key = m.label.toLowerCase();
+      let done = false;
+      // stage name match
+      for (const k of Object.keys(stagePaid)) {
+        if (k && (key.includes(k) || k.includes(key.split(' ')[0]))) {
+          if (stagePaid[k] > 0) done = true;
+        }
+      }
+      // cumulative waterfall
+      if (!done && paidLeft >= m.amount && m.amount > 0) {
+        done = true;
+        paidLeft -= m.amount;
+      } else if (done) {
+        paidLeft = Math.max(0, paidLeft - m.amount);
+      }
+      return { ...m, done };
+    });
+  }
+
+  function ringSVG(pct) {
+    const r = 54, c = 2 * Math.PI * r;
+    const offset = c - (Math.min(100, Math.max(0, pct)) / 100) * c;
+    return `<svg class="cp-pay-ring-svg" viewBox="0 0 120 120" aria-hidden="true">
+      <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--bdr)" stroke-width="10"/>
+      <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--grn)" stroke-width="10"
+        stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"
+        transform="rotate(-90 60 60)" class="cp-pay-ring-arc"/>
+    </svg>`;
+  }
+
+  if (!projs.length) {
+    return `<div class="cp-pay-ui"><div class="cp-pay-empty">No projects linked yet</div></div>`;
+  }
+
+  let html = `<div class="cp-pay-ui"><div class="cp-pay-page-title">Payments</div>`;
+
   projs.forEach(p => {
-    const pays = ppays(p.id).sort((a, b) => b.date.localeCompare(a.date));
-    const paid = ppaid(p.id);
-    const bal = pbal(p.id);
-    if (!pays.length) return;
-    anyPays = true;
+    const pays = (typeof ppays === 'function' ? ppays(p.id) : []).slice().sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+    const total = Number(p.total) || 0;
+    const paid = typeof ppaid === 'function' ? ppaid(p.id) : pays.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+    const bal = Math.max(0, total - paid);
+    const pct = total > 0 ? Math.min(100, Math.round(paid / total * 100)) : 0;
+    const milestones = buildMilestones(p, pays, total);
+
     html += `
-      <div style="background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-weight:700;font-size:14px">${p.name}</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${bal>0?'var(--red)':'var(--grn)'}">Balance: ${fmtCp(bal)}</div>
+    <div class="cp-pay-block">
+      <div class="cp-pay-proj">${p.name || 'Project'}</div>
+
+      <div class="cp-pay-summary">
+        <div class="cp-pay-sum-item">
+          <div class="cp-pay-sum-lbl">Project fee</div>
+          <div class="cp-pay-sum-val">${fmtCp(total)}</div>
         </div>
-        ${pays.map(pay => `
-          <div class="cp-pay-row">
-            <div>
-              <div style="font-size:13px;font-weight:600">${pay.stage||'Payment'}</div>
-              <div style="font-size:11px;color:var(--mut)">${pay.date} · ${pay.mode||'—'}${pay.notes?' · '+pay.notes:''}</div>
-              ${pay.drawings&&pay.drawings.length?`<div style="font-size:10px;color:var(--blue);margin-top:2px">📐 ${pay.drawings.join(', ')}</div>`:''}
+        <div class="cp-pay-sum-item">
+          <div class="cp-pay-sum-lbl">Received</div>
+          <div class="cp-pay-sum-val ok">${fmtCp(paid)}</div>
+        </div>
+        <div class="cp-pay-sum-item">
+          <div class="cp-pay-sum-lbl">Outstanding</div>
+          <div class="cp-pay-sum-val ${bal > 0 ? 'due' : 'ok'}">${fmtCp(bal)}</div>
+        </div>
+      </div>
+
+      <div class="cp-pay-ring-wrap">
+        <div class="cp-pay-ring">
+          ${ringSVG(pct)}
+          <div class="cp-pay-ring-center">
+            <b>${pct}%</b>
+            <span>Paid</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cp-pay-ms-title">Payment milestones</div>
+      <div class="cp-pay-ms-list">
+        ${milestones.map(m => `
+          <div class="cp-pay-ms ${m.done ? 'done' : 'todo'}">
+            <div class="cp-pay-ms-ico">${m.done ? '✓' : ''}</div>
+            <div class="cp-pay-ms-body">
+              <div class="cp-pay-ms-label">${m.label}</div>
             </div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--grn);white-space:nowrap">${fmtCp(pay.amount)}</div>
+            <div class="cp-pay-ms-amt">${fmtCp(m.amount)}</div>
           </div>`).join('')}
-        <div style="border-top:2px solid var(--grn);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between">
-          <span style="font-size:12px;font-weight:700">Total Paid</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--grn)">${fmtCp(paid)}</span>
-        </div>
-      </div>`;
+      </div>
+
+      ${pays.length ? `
+      <div class="cp-pay-hist-title">Recent transactions</div>
+      <div class="cp-pay-hist">
+        ${pays.slice().reverse().map(pay => `
+          <div class="cp-pay-hist-row">
+            <div>
+              <div class="cp-pay-hist-stage">${pay.stage || 'Payment'}</div>
+              <div class="cp-pay-hist-meta">${pay.date || ''} ${pay.mode ? '· ' + pay.mode : ''}</div>
+            </div>
+            <div class="cp-pay-hist-amt">${fmtCp(pay.amount)}</div>
+          </div>`).join('')}
+      </div>` : ''}
+    </div>`;
   });
-  if (!anyPays) html += `<div style="text-align:center;padding:40px;color:var(--mut)"><div style="font-size:36px;margin-bottom:8px">💰</div><p>No payments recorded yet</p></div>`;
+
+  html += '</div>';
   return html;
 }
 
+
 // ── SITE VISITS TAB ──
 function renderCpSiteVisits(c, projs) {
-  let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">🏗️ Site Visit Reports</div>';
-  let anyVisits = false;
-  projs.forEach(p => {
-    const visits = (db.siteVisits || []).filter(v => v.projId === p.id).sort((a, b) => b.date.localeCompare(a.date));
-    if (!visits.length) return;
-    anyVisits = true;
-    html += `<div style="font-size:12px;font-weight:700;color:var(--mut);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">📁 ${p.name}</div>`;
-    visits.forEach((v, i) => {
-      html += `
-        <div class="cp-sv-card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-            <div>
-              <div style="font-weight:700;font-size:13px">Visit #${visits.length - i} — ${v.date}</div>
-              <div style="font-size:11px;color:var(--mut)">${v.timeIn?'⏰ '+v.timeIn+(v.timeOut?' – '+v.timeOut:''):''}${v.weather?' · '+v.weather:''}</div>
-            </div>
-          </div>
-          ${v.checklist&&v.checklist.length?`<div style="font-size:11px;color:var(--mut);margin-bottom:6px">✔ Inspected: ${v.checklist.join(' · ')}</div>`:''}
-          ${v.instructions?`<div style="background:#fffbee;border-left:3px solid var(--gold);padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:6px"><b style="color:#7a5a00">📋 Instructions Given:</b><br>${v.instructions}</div>`:''}
-          ${v.notes?`<div style="font-size:12px;color:var(--txt);background:var(--surf2);padding:8px 10px;border-radius:6px;margin-bottom:6px">📝 ${v.notes}</div>`:''}
-          ${v.photos&&v.photos.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${v.photos.filter(Boolean).map(ph=>`<img src="${ph.data}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--bdr)">`).join('')}</div>`:''}
-        </div>`;
+  const all = [];
+  (projs || []).forEach(p => {
+    (db.siteVisits || []).filter(v => v.projId === p.id).forEach(v => {
+      all.push({ ...v, _projName: p.name });
     });
   });
-  if (!anyVisits) html += `<div style="text-align:center;padding:40px;color:var(--mut)"><div style="font-size:36px;margin-bottom:8px">🏗️</div><p>No site visits logged yet</p></div>`;
+  all.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+
+  function photoSrc(ph) {
+    if (!ph) return '';
+    if (typeof ph === 'string') return ph;
+    return ph.data || ph.url || ph.src || '';
+  }
+  function formatDate(d) {
+    if (!d) return '—';
+    const dt = new Date(d);
+    if (isNaN(dt.getTime())) return d;
+    return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  if (!all.length) {
+    return `<div class="cp-site">
+      <div class="cp-site-title">Site updates</div>
+      <div class="cp-site-empty">
+        <div style="font-size:36px;opacity:.4;margin-bottom:8px">🏗️</div>
+        <p>No site visits logged yet</p>
+        <p class="cp-site-empty-sub">Visit notes and photos will appear here.</p>
+      </div>
+    </div>`;
+  }
+
+  const latest = all[0];
+  const photos = (latest.photos || []).map(photoSrc).filter(Boolean);
+  const before = latest.beforePhoto || latest.photoBefore || (photos[0] || '');
+  const after = latest.afterPhoto || latest.photoAfter || (photos[1] || photos[photos.length - 1] || '');
+  const hasSlider = before && after && before !== after;
+
+  let html = `<div class="cp-site">
+    <div class="cp-site-title">Site updates</div>
+
+    <div class="cp-site-latest">
+      <div class="cp-site-latest-lbl">Latest site visit</div>
+      <div class="cp-site-date">📅 ${formatDate(latest.date)}</div>
+      ${latest._projName ? `<div class="cp-site-proj">${latest._projName}</div>` : ''}
+      <div class="cp-site-notes">${latest.notes || latest.instructions || 'Site visit completed.'}</div>
+      ${latest.checklist && latest.checklist.length ? `<div class="cp-site-checks">${latest.checklist.map(x => `<span>${x}</span>`).join('')}</div>` : ''}
+      ${latest.weather || latest.timeIn ? `<div class="cp-site-meta">${[latest.timeIn && ('⏰ ' + latest.timeIn + (latest.timeOut ? ' – ' + latest.timeOut : '')), latest.weather].filter(Boolean).join(' · ')}</div>` : ''}
+    </div>`;
+
+  if (hasSlider) {
+    const sliderId = 'cp-ba-' + (latest.id || '0');
+    html += `
+    <div class="cp-site-ba">
+      <div class="cp-site-ba-lbl">Before / After</div>
+      <div class="cp-ba-slider" id="${sliderId}">
+        <div class="cp-ba-after" style="background-image:url('${after.replace(/'/g, "%27")}')"></div>
+        <div class="cp-ba-before" style="background-image:url('${before.replace(/'/g, "%27")}');width:50%">
+          <div class="cp-ba-handle"></div>
+        </div>
+        <span class="cp-ba-tag left">Before</span>
+        <span class="cp-ba-tag right">After</span>
+        <input type="range" min="0" max="100" value="50" class="cp-ba-range"
+          oninput="cpBaSlide('${sliderId}', this.value)" aria-label="Before after slider">
+      </div>
+    </div>`;
+  }
+
+  if (photos.length) {
+    window._cpSitePhotos = photos;
+    html += `
+    <div class="cp-site-photos-lbl">Site photos</div>
+    <div class="cp-site-photos">
+      ${photos.map((src, i) => `
+        <button type="button" class="cp-site-photo" onclick="cpSitePhotoOpen(window._cpSitePhotos, ${i})"
+          style="background-image:url('${src.replace(/'/g, "%27")}')"></button>`).join('')}
+    </div>`;
+  }
+
+  if (all.length > 1) {
+    html += `<div class="cp-site-earlier-lbl">Earlier visits</div>`;
+    all.slice(1).forEach(v => {
+      const ph = (v.photos || []).map(photoSrc).filter(Boolean);
+      html += `
+      <div class="cp-site-card">
+        <div class="cp-site-card-date">${formatDate(v.date)}</div>
+        <div class="cp-site-card-notes">${v.notes || v.instructions || 'Site visit'}</div>
+        ${ph.length ? `<div class="cp-site-card-thumbs">${ph.slice(0, 4).map(s => `<span style="background-image:url('${s.replace(/'/g, "%27")}')"></span>`).join('')}</div>` : ''}
+      </div>`;
+    });
+  }
+
+  html += '</div>';
   return html;
 }
+
+function cpBaSlide(id, val) {
+  const root = document.getElementById(id);
+  if (!root) return;
+  const before = root.querySelector('.cp-ba-before');
+  if (before) before.style.width = val + '%';
+}
+
+function cpSitePhotoOpen(photos, index) {
+  window._cpGalleryItems = (photos || []).map((url, i) => ({
+    title: 'Site photo ' + (i + 1),
+    url: url,
+    thumb: url,
+    proj: 'Site',
+    date: ''
+  }));
+  if (typeof cpGalOpen === 'function') cpGalOpen(index || 0);
+}
+
 
 // ── DRAWINGS TAB ──
 // ════════════════════════════════════════
@@ -15910,87 +16547,299 @@ function renderCpAgreement(c, projs) {
 }
 
 function renderCpDrawings(c, projs) {
-  let html = '<div style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:14px">📐 Drawings & Files</div>';
-  let anyFiles = false;
+  const FILTERS = [
+    { id: 'all', label: 'All' },
+    { id: 'plans', label: 'Plans' },
+    { id: 'elevations', label: 'Elevations' },
+    { id: 'sections', label: 'Sections' },
+    { id: 'details', label: 'Details' },
+    { id: '3d', label: '3D' }
+  ];
+  function filterBucket(f) {
+    const cat = String(f.cat || f.category || '').toLowerCase();
+    const name = String(f.name || f.title || '').toLowerCase();
+    const blob = cat + ' ' + name;
+    if (/elev/.test(blob)) return 'elevations';
+    if (/section/.test(blob)) return 'sections';
+    if (/3d|3-d|perspective|view|render/.test(blob)) return '3d';
+    if (/detail|joinery|door|window|toilet|stair/.test(blob)) return 'details';
+    if (/floor|plan|layout|site plan|key plan/.test(blob) || cat === 'floor_plan') return 'plans';
+    if (cat === 'elevation') return 'elevations';
+    if (cat === 'section') return 'sections';
+    if (cat === '3d_view') return '3d';
+    return 'plans';
+  }
+  function parseRev(f) {
+    const r = f.rev || f.revision || f.version || '';
+    const m = String(r).match(/R?\s*(\d+)/i) || String(f.name || '').match(/R(\d{2})/i);
+    if (m) return 'R' + String(m[1]).padStart(2, '0');
+    return r ? String(r).toUpperCase() : 'R00';
+  }
+  function parseDrawingNo(f, idx) {
+    return f.drawingNo || f.dwgNo || f.number || f.code ||
+      (String(f.name || '').match(/\b([A-Z]-?\d{2,4})\b/) || [])[1] ||
+      ('A-' + String(100 + idx));
+  }
+  function titleCase(name) {
+    return String(name || 'Drawing').replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim().toUpperCase();
+  }
+  function statusOf(f) {
+    const s = String(f.status || f.approval || '').toLowerCase();
+    if (/approv|released|final|ok/.test(s) || f.approved) return 'approved';
+    if (/review|pending|draft/.test(s)) return 'review';
+    if (f.clientVisible) return 'approved';
+    return 'review';
+  }
 
-  // FILE_CATEGORIES may not exist in this scope — use simplified icons
-  const catIcons = {floor_plan:'🏠',elevation:'🏛',section:'✂️','3d_view':'🎨',structural:'⚙️',electrical:'⚡',plumbing:'🔧',site_photo:'📷',contract:'📋',other:'📄'};
-  const catLabels = {floor_plan:'Floor Plan',elevation:'Elevation',section:'Section','3d_view':'3D View',structural:'Structural',electrical:'Electrical',plumbing:'Plumbing',site_photo:'Site Photo',contract:'Contract',other:'Other'};
-
+  // Collect client-visible files
+  let items = [];
   projs.forEach(p => {
-    // Drive-linked files visible to client
-    const driveFiles = (p.files || []).filter(f => f.clientVisible);
-    // Legacy: drawings from payments
-    const pays = ppays(p.id);
-    const legacyDrawings = [...new Set(pays.flatMap(pay => pay.drawings || []))];
-
-    if (!driveFiles.length && !legacyDrawings.length) return;
-    anyFiles = true;
-
-    const STAGES_LIST = ['Concept','Layout','3D','Working Drawing','Submission','Completed'];
-    const stageIdx = STAGES_LIST.indexOf(p.stage || 'Concept');
-
-    html += `<div style="background:#fff;border:1.5px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px">${p.name}</div>
-        <span style="font-size:10px;background:var(--surf2);color:var(--mut);padding:3px 9px;border-radius:20px">Stage: ${p.stage||'Concept'}</span>
-      </div>
-      <!-- Stage bar -->
-      <div style="display:flex;gap:3px;margin-bottom:14px">
-        ${STAGES_LIST.map((s,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<=stageIdx?'var(--grn)':'var(--bdr)'}"></div>`).join('')}
-      </div>`;
-
-    // Google Drive files
-    if (driveFiles.length) {
-      // Group by category
-      const grouped = {};
-      driveFiles.forEach(f => { grouped[f.cat] = grouped[f.cat] || []; grouped[f.cat].push(f); });
-      Object.entries(grouped).forEach(([catId, files]) => {
-        const icon = catIcons[catId] || '📄';
-        const label = catLabels[catId] || catId;
-        html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:6px">${icon} ${label}</div>`;
-        files.forEach(f => {
-          html += `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surf2);border-radius:10px;margin-bottom:6px">
-            <div style="font-size:20px;flex-shrink:0">${icon}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div>
-              ${f.notes ? `<div style="font-size:10px;color:var(--mut)">${f.notes}</div>` : ''}
-              <div style="font-size:10px;color:var(--mut)">${f.date||''}</div>
-            </div>
-            ${f.type==='direct' && f.fileData
-              ? `<a href="${f.fileData}" download="${f.fileName||f.name}" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block">⬇️ Download</a>
-                 ${['jpg','jpeg','png','pdf'].includes(f.fileExt||'') ? `<a href="${f.fileData}" target="_blank" style="background:var(--surf2);color:var(--grn);border:1px solid var(--grn);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block;margin-left:6px">👁 View</a>` : ''}`
-              : `<a href="${f.url}" target="_blank" style="background:var(--grn);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-block">↗ Open</a>`
-            }
-          </div>`;
-        });
+    (p.files || []).filter(f => f.clientVisible !== false && (f.clientVisible || f.url || f.link)).forEach((f, i) => {
+      if (f.clientVisible === false) return;
+      // only show if explicitly client visible when flag exists on any file of project
+      items.push({
+        ...f,
+        _proj: p.name,
+        _projId: p.id,
+        _bucket: filterBucket(f),
+        _rev: parseRev(f),
+        _no: parseDrawingNo(f, i),
+        _title: titleCase(f.name || f.title),
+        _date: f.date || f.updatedAt || f.uploadedAt || '',
+        _url: f.url || f.link || f.href || '',
+        _status: statusOf(f)
       });
-    }
-
-    // Legacy released drawings (from payments)
-    if (legacyDrawings.length) {
-      html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:10px 0 6px">📋 Released Drawings</div>`;
-      legacyDrawings.forEach(d => {
-        html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)">
-          <div style="font-size:14px">📄</div>
-          <div style="flex:1;font-size:13px;font-weight:500">${d}</div>
-          <div style="font-size:10px;color:var(--grn);font-weight:700">✓ Released</div>
-        </div>`;
+    });
+    // legacy payment drawings as simple cards
+    const pays = typeof ppays === 'function' ? ppays(p.id) : [];
+    const legacy = [...new Set(pays.flatMap(pay => pay.drawings || []))];
+    legacy.forEach((d, i) => {
+      items.push({
+        name: d,
+        _proj: p.name,
+        _projId: p.id,
+        _bucket: 'plans',
+        _rev: 'R00',
+        _no: '—',
+        _title: titleCase(d),
+        _date: '',
+        _url: '',
+        _status: 'approved',
+        _legacy: true
       });
-    }
-
-    html += '</div>';
+    });
   });
 
-  if (!anyFiles) {
-    html += `<div style="text-align:center;padding:40px;color:var(--mut)">
-      <div style="font-size:36px;margin-bottom:8px">📐</div>
-      <p style="font-size:13px">No files shared yet</p>
-      <p style="font-size:11px;margin-top:6px">Architect files add केल्यावर इथे दिसतील</p>
-    </div>`;
+  // Prefer clientVisible true only if any file uses the flag
+  const hasFlag = projs.some(p => (p.files || []).some(f => f.clientVisible === true || f.clientVisible === false));
+  if (hasFlag) {
+    items = items.filter(f => f._legacy || f.clientVisible === true);
   }
+
+  window._cpDrawingsCache = items;
+
+  function revHistory(item) {
+    // Group by drawing number within same project
+    const same = items.filter(x => x._projId === item._projId && x._no === item._no && x._no !== '—');
+    if (same.length > 1) {
+      const revs = [...new Set(same.map(x => x._rev))].sort();
+      return revs;
+    }
+    // synthesize path up to current rev number
+    const n = parseInt(String(item._rev).replace(/\D/g, ''), 10);
+    if (isNaN(n) || n < 0) return [item._rev || 'R00'];
+    const list = [];
+    for (let i = 0; i <= n; i++) list.push('R' + String(i).padStart(2, '0'));
+    return list;
+  }
+
+  const activeFilter = window._cpDwgFilter || 'all';
+  const filtered = activeFilter === 'all' ? items : items.filter(f => f._bucket === activeFilter);
+
+  let html = `<div class="cp-dwg">
+    <div class="cp-dwg-head">
+      <div class="cp-dwg-title">Drawings</div>
+      <div class="cp-dwg-count">${filtered.length} sheet${filtered.length !== 1 ? 's' : ''}</div>
+    </div>
+    <div class="cp-dwg-filters" role="tablist">
+      ${FILTERS.map(f => `<button type="button" class="cp-dwg-filter${activeFilter === f.id ? ' active' : ''}" onclick="cpDwgFilter('${f.id}')">${f.label}</button>`).join('')}
+    </div>`;
+
+  if (!filtered.length) {
+    html += `<div class="cp-dwg-empty">
+      <div class="cp-dwg-empty-ico">📐</div>
+      <p>No drawings in this filter yet</p>
+      <p class="cp-dwg-empty-sub">Your architect will share plans here when ready.</p>
+    </div></div>`;
+    return html;
+  }
+
+  filtered.forEach((f, idx) => {
+    const revs = revHistory(f);
+    const st = f._status === 'approved'
+      ? '<span class="cp-dwg-status ok">✓ Approved</span>'
+      : '<span class="cp-dwg-status pending">In review</span>';
+    const previewBtn = f._url
+      ? `<a class="cp-dwg-btn" href="${f._url}" target="_blank" rel="noopener">Preview</a>`
+      : `<button type="button" class="cp-dwg-btn muted" disabled>Preview</button>`;
+    const dlBtn = f._url
+      ? `<a class="cp-dwg-btn primary" href="${f._url}" target="_blank" rel="noopener" download>Download</a>`
+      : `<button type="button" class="cp-dwg-btn muted" disabled>Download</button>`;
+    html += `
+    <article class="cp-dwg-card">
+      <div class="cp-dwg-card-top">
+        <div class="cp-dwg-name">${f._title}</div>
+        <div class="cp-dwg-proj">${f._proj || ''}</div>
+      </div>
+      <div class="cp-dwg-meta">
+        <span>Drawing No. <b>${f._no}</b></span>
+        <span>Revision <b>${f._rev}</b></span>
+        ${f._date ? `<span>${f._date}</span>` : ''}
+      </div>
+      <div class="cp-dwg-revs" title="Revision history">
+        ${revs.map((r, i) => `<span class="cp-dwg-rev${r === f._rev ? ' current' : (i < revs.indexOf(f._rev) ? ' past' : '')}">${r}</span>${i < revs.length - 1 ? '<span class="cp-dwg-rev-arrow">→</span>' : ''}`).join('')}
+      </div>
+      <div class="cp-dwg-actions">
+        ${previewBtn}
+        ${dlBtn}
+        ${st}
+      </div>
+    </article>`;
+  });
+
+  html += '</div>';
   return html;
 }
+function cpDwgFilter(id) {
+  window._cpDwgFilter = id;
+  if (typeof renderCpContent === 'function') renderCpContent();
+}
+
+function renderCpGallery(c, projs) {
+  function isRender(f) {
+    const cat = String(f.cat || '').toLowerCase();
+    const name = String(f.name || f.title || '').toLowerCase();
+    const url = String(f.url || f.link || f.data || f.src || '');
+    const blob = cat + ' ' + name;
+    if (cat === '3d_view' || cat === 'site_photo') return true;
+    if (/3d|render|view|interior|exterior|perspective|living|bedroom|kitchen|elevation photo|walkthrough/.test(blob)) return true;
+    if (/\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(url)) return true;
+    if (url.startsWith('data:image')) return true;
+    return false;
+  }
+  function labelOf(f) {
+    return String(f.name || f.title || 'Render')
+      .replace(/\.[a-z0-9]+$/i, '')
+      .replace(/[_-]+/g, ' ')
+      .trim()
+      .toUpperCase() || 'RENDER';
+  }
+  const items = [];
+  projs.forEach(p => {
+    (p.files || []).forEach(f => {
+      if (f.clientVisible === false) return;
+      if (!isRender(f)) return;
+      const url = f.url || f.link || f.data || f.src || '';
+      if (!url && !f.thumb) return;
+      items.push({
+        title: labelOf(f),
+        url: url,
+        thumb: f.thumb || url,
+        proj: p.name,
+        date: f.date || ''
+      });
+    });
+  });
+  window._cpGalleryItems = items;
+
+  if (!items.length) {
+    return `<div class="cp-gal">
+      <div class="cp-gal-title">3D / Renders</div>
+      <div class="cp-gal-empty">
+        <div style="font-size:36px;opacity:.4;margin-bottom:8px">🖼</div>
+        <p>No renders shared yet</p>
+        <p class="cp-gal-empty-sub">3D views and interiors will appear here.</p>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="cp-gal">
+    <div class="cp-gal-head">
+      <div class="cp-gal-title">3D / Renders</div>
+      <div class="cp-gal-count">${items.length} image${items.length !== 1 ? 's' : ''}</div>
+    </div>
+    <div class="cp-gal-grid">
+      ${items.map((it, i) => `
+        <button type="button" class="cp-gal-tile" onclick="cpGalOpen(${i})" style="background-image:url('${(it.thumb || it.url).replace(/'/g, "%27")}')">
+          <span class="cp-gal-tile-shade"></span>
+          <span class="cp-gal-tile-label">${it.title}</span>
+        </button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function cpGalOpen(index) {
+  const items = window._cpGalleryItems || [];
+  if (!items.length) return;
+  let i = Math.max(0, Math.min(index, items.length - 1));
+  window._cpGalIndex = i;
+
+  let overlay = document.getElementById('cp-gal-lightbox');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'cp-gal-lightbox';
+    overlay.className = 'cp-gal-lightbox';
+    overlay.innerHTML = `
+      <button type="button" class="cp-gal-lb-close" onclick="cpGalClose()" aria-label="Close">✕</button>
+      <button type="button" class="cp-gal-lb-nav prev" onclick="cpGalNav(-1)" aria-label="Previous">‹</button>
+      <button type="button" class="cp-gal-lb-nav next" onclick="cpGalNav(1)" aria-label="Next">›</button>
+      <div class="cp-gal-lb-stage">
+        <img id="cp-gal-lb-img" src="" alt="">
+      </div>
+      <div class="cp-gal-lb-caption">
+        <div id="cp-gal-lb-title"></div>
+        <div id="cp-gal-lb-meta"></div>
+      </div>`;
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) cpGalClose();
+    });
+    document.body.appendChild(overlay);
+  }
+  overlay.classList.add('open');
+  cpGalRender();
+  document.body.style.overflow = 'hidden';
+}
+function cpGalRender() {
+  const items = window._cpGalleryItems || [];
+  const i = window._cpGalIndex || 0;
+  const it = items[i];
+  if (!it) return;
+  const img = document.getElementById('cp-gal-lb-img');
+  const title = document.getElementById('cp-gal-lb-title');
+  const meta = document.getElementById('cp-gal-lb-meta');
+  if (img) { img.src = it.url || it.thumb; img.alt = it.title; }
+  if (title) title.textContent = it.title;
+  if (meta) meta.textContent = [it.proj, it.date, (i + 1) + ' / ' + items.length].filter(Boolean).join(' · ');
+}
+function cpGalNav(dir) {
+  const items = window._cpGalleryItems || [];
+  if (!items.length) return;
+  window._cpGalIndex = (window._cpGalIndex + dir + items.length) % items.length;
+  cpGalRender();
+}
+function cpGalClose() {
+  const overlay = document.getElementById('cp-gal-lightbox');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  const overlay = document.getElementById('cp-gal-lightbox');
+  if (!overlay || !overlay.classList.contains('open')) return;
+  if (e.key === 'Escape') cpGalClose();
+  if (e.key === 'ArrowLeft') cpGalNav(-1);
+  if (e.key === 'ArrowRight') cpGalNav(1);
+});
+
 
 // ════════════════════════════════════════════════
 // CLIENT PORTAL MANAGER (Architect view)
