@@ -514,6 +514,230 @@ aside.collapsed .sb-collapse-btn .sb-collapse-icon{
 .dash-tl-lbl{font-size:10px;font-weight:700;color:var(--mut);letter-spacing:.04em}
 .dash-tl-val{font-size:10px;font-family:var(--font-mono),monospace;color:var(--ink2);margin-top:2px}
 
+
+/* Architecture icon set — unified stroke language */
+.nav-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;flex-shrink:0;
+  font-size:0 !important;line-height:0;
+}
+.nav-icon svg{
+  width:18px;height:18px;display:block;
+  stroke:currentColor;fill:none;
+  opacity:.88;
+}
+.nav-btn:hover .nav-icon svg,
+.nav-btn.active .nav-icon svg{opacity:1}
+aside.collapsed .nav-icon svg{width:20px;height:20px}
+.nav-btn.active .nav-icon svg{stroke:var(--gold2,#d4b87a)}
+
+
+/* ── Subtle glassmorphism (targeted only) ── */
+.gs-glass{
+  background:rgba(255,252,247,.55) !important;
+  backdrop-filter:blur(12px) saturate(1.2);
+  -webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border:1px solid rgba(255,255,255,.45) !important;
+  box-shadow:0 4px 24px rgba(28,27,25,.06), inset 0 1px 0 rgba(255,255,255,.5);
+}
+[data-theme="dark"] .gs-glass{
+  background:rgba(26,28,24,.55) !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  box-shadow:0 4px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.gs-glass-strong{
+  background:rgba(255,252,247,.72) !important;
+  backdrop-filter:blur(16px) saturate(1.25);
+  -webkit-backdrop-filter:blur(16px) saturate(1.25);
+  border:1px solid rgba(255,255,255,.5) !important;
+  box-shadow:0 8px 32px rgba(28,27,25,.08), inset 0 1px 0 rgba(255,255,255,.55);
+}
+[data-theme="dark"] .gs-glass-strong{
+  background:rgba(26,28,24,.7) !important;
+  border:1px solid rgba(255,255,255,.1) !important;
+}
+/* Search */
+#gs-search-input.gs-glass-input{
+  background:rgba(255,252,247,.5) !important;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(228,223,214,.8) !important;
+  border-radius:8px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+}
+[data-theme="dark"] #gs-search-input.gs-glass-input{
+  background:rgba(34,37,31,.55) !important;
+  border-color:rgba(255,255,255,.1) !important;
+}
+#gs-search-results.gs-glass-panel{
+  background:rgba(255,252,247,.82) !important;
+  backdrop-filter:blur(16px) saturate(1.2);
+  -webkit-backdrop-filter:blur(16px) saturate(1.2);
+  border:1px solid rgba(255,255,255,.55) !important;
+  border-radius:10px !important;
+  box-shadow:0 12px 40px rgba(28,27,25,.1);
+}
+[data-theme="dark"] #gs-search-results.gs-glass-panel{
+  background:rgba(26,28,24,.88) !important;
+  border-color:rgba(255,255,255,.1) !important;
+}
+/* Notification panel */
+#gs-notif-btn{
+  width:34px;height:34px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;font-size:15px;
+  color:var(--ink);
+  background:rgba(255,252,247,.5);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(228,223,214,.85);
+  transition:border-color .2s, box-shadow .2s;
+}
+#gs-notif-btn:hover{border-color:var(--bdr2)}
+#gs-notif-btn .gs-notif-dot{
+  position:absolute;top:6px;right:6px;width:7px;height:7px;
+  border-radius:50%;background:var(--gold);border:1.5px solid var(--surf);
+  display:none;
+}
+#gs-notif-btn.has-new .gs-notif-dot{display:block}
+#gs-notif-panel{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;
+  width:320px;max-width:92vw;max-height:380px;overflow-y:auto;
+  z-index:9980;padding:0;border-radius:10px;
+}
+#gs-notif-panel.open{display:block;animation:gsFadeUp .22s ease both}
+.gs-notif-head{
+  padding:12px 14px;border-bottom:1px solid var(--bdr);
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.gs-notif-item{
+  padding:11px 14px;border-bottom:1px solid var(--bdr);font-size:12px;
+  cursor:default;
+}
+.gs-notif-item:last-child{border-bottom:none}
+.gs-notif-item b{color:var(--ink);font-weight:600}
+.gs-notif-item span{color:var(--mut);font-size:11px;display:block;margin-top:2px}
+/* User profile chip */
+.user-row.gs-glass-user{
+  padding:8px 10px;border-radius:8px;
+  background:rgba(255,255,255,.08);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.12);
+}
+aside.collapsed .user-row.gs-glass-user{padding:6px;border-radius:8px}
+/* Client portal login card */
+.cp-login-card.gs-glass-login{
+  background:rgba(255,255,255,.08) !important;
+  backdrop-filter:blur(18px) saturate(1.3);
+  -webkit-backdrop-filter:blur(18px) saturate(1.3);
+  border:1px solid rgba(255,255,255,.18) !important;
+  box-shadow:0 16px 48px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.12);
+  border-radius:12px !important;
+}
+
+
+/* ── Client Portal elegant login ── */
+.cp-login-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:28px 20px;position:relative;overflow:hidden;
+  background:#1a1f1c;
+}
+.cp-login-blueprint{
+  position:absolute;inset:0;pointer-events:none;opacity:.22;
+  background-color:#1a1f1c;
+  background-image:
+    linear-gradient(rgba(184,151,90,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184,151,90,.07) 1px, transparent 1px),
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-position:center;
+}
+.cp-login-blueprint::after{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 40%, rgba(44,62,45,.45), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(184,151,90,.08), transparent 60%);
+}
+.cp-login-card{
+  position:relative;z-index:1;
+  padding:40px 36px 28px;width:100%;max-width:400px;text-align:center;
+  border-radius:12px !important;
+}
+.cp-login-brand{
+  font-family:var(--font-display),'Playfair Display',serif;
+  font-size:26px;font-weight:600;letter-spacing:.04em;
+  color:var(--gold2,#d4b87a);text-transform:uppercase;line-height:1.2;
+}
+.cp-login-tagline{
+  margin-top:8px;font-size:11px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(255,255,255,.42);
+}
+.cp-login-rule{
+  width:48px;height:1px;margin:22px auto;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+.cp-login-welcome{
+  font-family:var(--font-display),serif;font-size:20px;font-weight:500;
+  color:rgba(255,255,255,.92);margin-bottom:6px;letter-spacing:-.01em;
+}
+.cp-login-access{
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:20px;
+}
+.cp-pin-dots{
+  display:flex;justify-content:center;gap:16px;margin-bottom:22px;
+}
+.cp-login-screen .cp-dot{
+  width:12px;height:12px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.35);background:transparent;
+  transition:background .2s, border-color .2s, transform .2s;
+}
+.cp-login-screen .cp-dot.filled{
+  background:var(--gold,#b8975a);border-color:var(--gold,#b8975a);
+  transform:scale(1.08);
+}
+.cp-numpad{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  max-width:260px;margin:0 auto 18px;
+}
+.cp-login-screen .cp-key{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;color:#fff;font-size:18px;font-weight:600;
+  padding:14px 8px;min-height:48px;cursor:pointer;
+  font-family:var(--font-body),sans-serif;
+  transition:background .15s, border-color .15s, transform .1s;
+}
+.cp-login-screen .cp-key:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.18)}
+.cp-login-screen .cp-key:active{transform:scale(.97)}
+.cp-login-screen .cp-key-ok{
+  background:rgba(184,151,90,.2);border-color:rgba(184,151,90,.35);color:var(--gold2);
+}
+.cp-continue-btn{
+  width:100%;max-width:260px;margin:0 auto 12px;display:block;
+  padding:14px 20px;border:none;border-radius:6px;cursor:pointer;
+  font-family:var(--font-body),sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;
+  background:var(--gold,#b8975a);color:#1a1f1c;
+  transition:filter .2s, transform .1s;
+}
+.cp-continue-btn:hover{filter:brightness(1.06)}
+.cp-continue-btn:active{transform:scale(.98)}
+.cp-login-error{
+  color:#e8a0a0;font-size:12px;margin-bottom:10px;letter-spacing:.02em;
+}
+.cp-login-secure{
+  margin-top:8px;font-size:10px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:rgba(255,255,255,.28);
+}
+.cp-login-back{
+  margin-top:14px;color:rgba(255,255,255,.32);font-size:11px;
+  background:none;border:none;cursor:pointer;font-family:var(--font-body),sans-serif;
+}
+.cp-login-back:hover{color:rgba(255,255,255,.55)}
+
 /* ── MOBILE OVERLAY ── */
 .mob-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:298;backdrop-filter:blur(2px)}
 .mob-bg.on{display:block}
@@ -1085,32 +1309,114 @@ html{transition:background .3s,color .3s}
 [data-theme="dark"] #toast-err{background:#4a1a1a;border-color:#6a2d2d}
 [data-theme="dark"] .skel{background:linear-gradient(90deg,var(--surf2) 25%,var(--bdr) 50%,var(--surf2) 75%)}
 
-/* ── MOBILE RESPONSIVE ── */
+/* ── MOBILE UI (distinct from desktop) ── */
+.mob-bottom-nav{display:none}
+.mob-quick-sheet{display:none}
+
 @media(max-width:768px){
   html,body{overflow:hidden;height:100%}
   aside{
-    position:fixed;top:0;left:-256px;height:100vh;z-index:299;
-    box-shadow:var(--sh2);transition:left .3s ease
+    position:fixed;top:0;left:-280px;height:100vh;z-index:299;
+    width:min(280px,86vw);min-width:0;
+    box-shadow:var(--sh2);transition:left .3s cubic-bezier(.22,1,.36,1);
   }
+  aside.collapsed{width:min(280px,86vw);min-width:0} /* full labels on mobile drawer */
   aside.mob-open{left:0}
   .hamburger{display:flex!important}
   .main-wrap{width:100%}
-  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
-  .g2,.g65,.g3{grid-template-columns:1fr;gap:10px}
-  .cc-grid,.pc-grid{grid-template-columns:1fr}
+  .kpi-grid,#kpi-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px}
+  .g2,.g65,.g3,.dash-viz-grid,.dash-viz-row2{grid-template-columns:1fr!important;gap:12px}
+  .cc-grid,.pc-grid{grid-template-columns:1fr!important}
   .form-row.c2,.form-row.c3{grid-template-columns:1fr}
-  main{padding:14px 14px 80px}
-  header{padding:0 14px;height:54px}
-  #page-title{font-size:15px}
-  .hdr-right .btn{display:none}
-  .hdr-right .btn:last-child{display:inline-flex}
-  .modal-box{width:100%;max-width:100%;border-radius:18px 18px 0 0;margin:auto 0 0}
+  main{padding:12px 14px 88px!important}
+  header{
+    padding:0 12px;height:52px!important;min-height:52px!important;
+    gap:8px;
+  }
+  /* Mobile top bar: brand · notif · menu */
+  .hdr-left #page-title{
+    font-family:var(--font-display),serif;font-size:17px;font-weight:600;
+    letter-spacing:-.02em;
+  }
+  .hdr-left #page-title.mob-brand::before{content:'GH';font-weight:700}
+  .hdr-right .btn{display:none!important}
+  .hdr-right #theme-toggle{display:none}
+  #gs-search-wrap{display:none}
+  .modal-box{width:100%;max-width:100%;border-radius:14px 14px 0 0;margin:auto 0 0}
   .modal-bg{padding:0;align-items:flex-end}
-  .tbl-wrap{border-radius:10px}
+  .tbl-wrap{border-radius:8px}
+  .pd-workspace{max-height:94vh!important;border-radius:14px 14px 0 0!important}
+  .pd-ws-title{font-size:20px!important}
+  .pd-ws-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .pd-kpi-grid{grid-template-columns:1fr 1fr!important}
+
+  /* Bottom navigation */
+  .mob-bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:280;
+    height:64px;padding:0 6px calc(6px + env(safe-area-inset-bottom,0));
+    background:rgba(255,252,247,.92);
+    backdrop-filter:blur(14px) saturate(1.2);
+    -webkit-backdrop-filter:blur(14px) saturate(1.2);
+    border-top:1px solid var(--bdr);
+    align-items:flex-end;justify-content:space-around;
+    box-shadow:0 -4px 24px rgba(28,27,25,.06);
+  }
+  [data-theme="dark"] .mob-bottom-nav{
+    background:rgba(26,28,24,.92);
+  }
+  .mob-nav-item{
+    flex:1;border:none;background:none;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;padding:8px 4px 6px;color:var(--mut);
+    font-family:var(--font-body),sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mob-nav-item.active{color:var(--grn)}
+  .mob-nav-item.active .mob-nav-ico svg{stroke:var(--grn)}
+  .mob-nav-ico{display:flex;line-height:0}
+  .mob-nav-lbl{font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .mob-nav-fab{flex:1.1;position:relative;top:-12px}
+  .mob-nav-fab-btn{
+    width:52px;height:52px;border-radius:50%;
+    background:var(--grn);color:#f7f5f0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;font-weight:400;line-height:1;
+    box-shadow:0 6px 20px rgba(44,62,45,.35);
+    border:3px solid var(--bg);
+  }
+  .mob-nav-fab:active .mob-nav-fab-btn{transform:scale(.95)}
+
+  /* Quick add sheet */
+  .mob-quick-sheet{
+    display:none;position:fixed;inset:0;z-index:350;
+    background:rgba(28,27,25,.4);align-items:flex-end;justify-content:center;
+    padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));
+  }
+  .mob-quick-sheet.open{display:flex}
+  .mob-quick-sheet-inner{
+    width:100%;max-width:400px;border-radius:14px;padding:8px;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .mob-quick-title{
+    font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--mut);padding:10px 12px 6px;
+  }
+  .mob-quick-sheet-inner>button{
+    border:none;background:transparent;text-align:left;
+    padding:14px 14px;font-size:15px;font-weight:600;color:var(--ink);
+    font-family:var(--font-body),sans-serif;border-radius:8px;cursor:pointer;
+  }
+  .mob-quick-sheet-inner>button:active{background:var(--surf2)}
+  .mob-quick-cancel{color:var(--mut)!important;text-align:center!important;font-weight:500!important}
+
+  /* Mobile dashboard hero tighter */
+  #dash-hero>div{border-radius:12px!important;padding:16px 16px!important;flex-direction:column;align-items:flex-start!important;gap:12px}
+  #dash-hero>div>div:last-child{text-align:left!important}
 }
 @media(max-width:480px){
   .kpi-grid{grid-template-columns:1fr 1fr}
   .kpi-val{font-size:19px}
+  .pc-premium .pc-name{font-size:16px}
 }
 </style>
 
@@ -1230,41 +1536,41 @@ html{transition:background .3s,color .3s}
   </div>
   <nav>
     <div class="nav-sec">Main</div>
-    <button class="nav-btn active" data-view="dashboard"><span class="nav-icon">◈</span>Dashboard</button>
-    <button class="nav-btn" data-view="contacts" onclick="switchView('contacts')"><span class="nav-icon">◎</span>Contacts<span class="nav-badge" id="nb-c">0</span></button>
-    <button class="nav-btn" data-view="projects" onclick="switchView('projects')"><span class="nav-icon">⬡</span>Projects<span class="nav-badge" id="nb-p">0</span></button>
+    <button class="nav-btn active" data-view="dashboard"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="0.5"/><rect x="13" y="3" width="8" height="5" rx="0.5"/><rect x="13" y="10" width="8" height="11" rx="0.5"/><rect x="3" y="13" width="8" height="8" rx="0.5"/></svg></span>Dashboard</button>
+    <button class="nav-btn" data-view="contacts" onclick="switchView('contacts')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"/></svg></span>Contacts<span class="nav-badge" id="nb-c">0</span></button>
+    <button class="nav-btn" data-view="projects" onclick="switchView('projects')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M9 11h.01M15 11h.01"/></svg></span>Projects<span class="nav-badge" id="nb-p">0</span></button>
     <div class="nav-sec">Finance</div>
-    <button class="nav-btn" data-view="payments" onclick="switchView('payments')"><span class="nav-icon">◉</span>Payments</button>
-    <button class="nav-btn" data-view="reports" onclick="switchView('reports')"><span class="nav-icon">▤</span>Reports & PDF</button>
+    <button class="nav-btn" data-view="payments" onclick="switchView('payments')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M8 21h8"/><path d="M5 9h14"/><path d="M7 9l-2 6h4L7 9zM17 9l-2 6h4l-2-6z"/></svg></span>Payments</button>
+    <button class="nav-btn" data-view="reports" onclick="switchView('reports')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7V3z"/><path d="M15 3v4h4"/><path d="M10 12h6M10 16h6M10 8h2"/></svg></span>Reports & PDF</button>
     <div class="nav-sec">Tools</div>
-    <button class="nav-btn" data-view="estimates" onclick="switchView('estimates')"><span class="nav-icon">📋</span>Estimates</button>
-    <button class="nav-btn" data-view="expenses" onclick="switchView('expenses')"><span class="nav-icon">💸</span>Expenses</button>
-    <button class="nav-btn" data-view="analytics" onclick="switchView('analytics')"><span class="nav-icon">📈</span>Analytics</button>
-    <button class="nav-btn" data-view="tools" onclick="switchView('tools')"><span class="nav-icon">🔧</span>Tools</button>
+    <button class="nav-btn" data-view="estimates" onclick="switchView('estimates')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L20 4"/><path d="M14 4l6 6"/><path d="M8 10l2 2M11 7l2 2M5 13l2 2"/></svg></span>Estimates</button>
+    <button class="nav-btn" data-view="expenses" onclick="switchView('expenses')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16"/><path d="M6 18V10l3-2 3 2v8"/><path d="M12 18V8l3-2 3 2v10"/></svg></span>Expenses</button>
+    <button class="nav-btn" data-view="analytics" onclick="switchView('analytics')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/><path d="M12 12l4-5M12 12l-2 3"/></svg></span>Analytics</button>
+    <button class="nav-btn" data-view="tools" onclick="switchView('tools')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><path d="M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg></span>Tools</button>
     <div class="nav-sec">Manage</div>
-    <button class="nav-btn" data-view="settings" onclick="switchView('settings')"><span class="nav-icon">⚙</span>Settings & Sync</button>
+    <button class="nav-btn" data-view="settings" onclick="switchView('settings')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8h4v12M10 20V4h4v16M16 20v-7h4v7"/></svg></span>Settings & Sync</button>
     <div style="height:1px;background:rgba(255,255,255,.1);margin:8px 14px"></div>
-    <button class="nav-btn" data-view="clientportal" style="color:var(--gold2);font-weight:700" onclick="openClientPortalMgr()"><span class="nav-icon">👥</span>Client Portal</button>
-    <button class="nav-btn" data-view="udcpr" onclick="switchView('udcpr')"><span class="nav-icon">📏</span>UDCPR Q&A</button>
-    <button class="nav-btn" data-view="agreement" onclick="switchView('agreement')"><span class="nav-icon">📝</span>Agreement</button>
-    <button class="nav-btn" data-view="invoice" onclick="switchView('invoice')"><span class="nav-icon">🧾</span>GST Invoice</button>
-    <button class="nav-btn" data-view="timeline" onclick="switchView('timeline')"><span class="nav-icon">📅</span>Timeline</button>
-    <button class="nav-btn" data-view="materials" onclick="switchView('materials')"><span class="nav-icon">🧱</span>Materials</button>
-    <button class="nav-btn" data-view="interiorest" onclick="switchView('interiorest')"><span class="nav-icon">🛋️</span>Interior Estimate</button>
-    <button class="nav-btn" data-view="completion" onclick="switchView('completion')"><span class="nav-icon">📋</span>Completion Report</button>
-    <button class="nav-btn" data-view="bankest" onclick="switchView('bankest')"><span class="nav-icon">📐</span>Bank Estimate</button>
+    <button class="nav-btn" data-view="clientportal" style="color:var(--gold2);font-weight:700" onclick="openClientPortalMgr()"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="2.5"/><circle cx="16" cy="9" r="2"/><path d="M3 19c.8-2.5 2.5-4 6-4s5 1.5 6 4"/><path d="M14 15c1.5-.6 2.8-.6 4.5.2 1.2.6 2 1.8 2.5 3.8"/></svg></span>Client Portal</button>
+    <button class="nav-btn" data-view="udcpr" onclick="switchView('udcpr')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="1"/><path d="M5 8h3M5 12h2M5 16h3M16 8h3M15 12h4M16 16h3"/></svg></span>UDCPR Q&A</button>
+    <button class="nav-btn" data-view="agreement" onclick="switchView('agreement')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h5"/><path d="M9 9h3"/></svg></span>Agreement</button>
+    <button class="nav-btn" data-view="invoice" onclick="switchView('invoice')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h10v20l-2-1.5L13 22l-2-1.5L9 22l-2-1.5V2z"/><path d="M10 8h4M10 12h4M10 16h3"/></svg></span>GST Invoice</button>
+    <button class="nav-btn" data-view="timeline" onclick="switchView('timeline')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><circle cx="7" cy="12" r="2.5" fill="none"/><circle cx="12" cy="12" r="2.5"/><circle cx="17" cy="12" r="2.5"/></svg></span>Timeline</button>
+    <button class="nav-btn" data-view="materials" onclick="switchView('materials')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l9 5 9-5"/><path d="M3 12l9 5 9-5"/><path d="M3 8l9-5 9 5-9 5L3 8z"/></svg></span>Materials</button>
+    <button class="nav-btn" data-view="interiorest" onclick="switchView('interiorest')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10h16v10"/><path d="M2 10h20"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></span>Interior Estimate</button>
+    <button class="nav-btn" data-view="completion" onclick="switchView('completion')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7V3z"/><path d="M15 3v4h4"/><path d="M9 14l2 2 5-5"/></svg></span>Completion Report</button>
+    <button class="nav-btn" data-view="bankest" onclick="switchView('bankest')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M5 20V10l7-5 7 5v10"/><path d="M9 20v-5h6v5"/></svg></span>Bank Estimate</button>
     <div class="permission-docs-group" id="permission-docs-group">
-      <button class="nav-btn" data-view="nocletter" onclick="switchView('nocletter')"><span class="nav-icon">🏛️</span>Permission Docs <span class="perm-chevron">⌄</span></button>
+      <button class="nav-btn" data-view="nocletter" onclick="switchView('nocletter')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20V9h3v11M11 20V6h3v14M16 20V11h3v9"/><path d="M4 9h16"/></svg></span>Permission Docs <span class="perm-chevron">⌄</span></button>
       <div class="permission-docs-sub">
-        <button class="nav-btn perm-sub-btn" data-view="nocletter" onclick="switchView('nocletter')"><span class="nav-icon">•</span>ना हरकत प्रमाणपत्र (NOC)</button>
-        <button class="nav-btn perm-sub-btn" data-view="clientself" onclick="switchView('clientself')"><span class="nav-icon">•</span>Client Self Declaration</button>
-        <button class="nav-btn perm-sub-btn" data-view="areawarranty" onclick="switchView('areawarranty')"><span class="nav-icon">•</span>क्षेत्रफळाबाबत हमीपत्र</button>
-        <button class="nav-btn perm-sub-btn" data-view="tpabhipray" onclick="switchView('tpabhipray')"><span class="nav-icon">•</span>TP अभिप्राय पत्र</button>
+        <button class="nav-btn perm-sub-btn" data-view="nocletter" onclick="switchView('nocletter')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>ना हरकत प्रमाणपत्र (NOC)</button>
+        <button class="nav-btn perm-sub-btn" data-view="clientself" onclick="switchView('clientself')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>Client Self Declaration</button>
+        <button class="nav-btn perm-sub-btn" data-view="areawarranty" onclick="switchView('areawarranty')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>क्षेत्रफळाबाबत हमीपत्र</button>
+        <button class="nav-btn perm-sub-btn" data-view="tpabhipray" onclick="switchView('tpabhipray')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>TP अभिप्राय पत्र</button>
       </div>
     </div>
   </nav>
   <div class="sidebar-footer">
-    <div class="user-row">
+    <div class="user-row gs-glass-user" title="User profile">
       <div class="user-av">VE</div>
       <div class="user-info"><p>Vijay Edke</p><span>Principal Architect</span></div>
       <div id="sync-dot" class="sync-dot gray" title="Sync Status"></div>
@@ -1284,19 +1590,26 @@ html{transition:background .3s,color .3s}
     <div id="gs-search-wrap" style="flex:1;max-width:380px;position:relative;margin:0 12px">
       <div style="position:relative">
         <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--mut);pointer-events:none">🔍</span>
-        <input id="gs-search-input" type="text" placeholder="Client, Project, Phone... शोधा"
-          style="width:100%;padding:8px 12px 8px 34px;border:1.5px solid var(--bdr);border-radius:22px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;background:var(--surf2);color:var(--ink);outline:none;transition:all .2s"
+        <input id="gs-search-input" class="gs-glass-input" type="text" placeholder="Client, Project, Phone... शोधा"
+          style="width:100%;padding:8px 12px 8px 34px;font-family:var(--font-body),sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s"
           oninput="gsSearch(this.value)"
-          onfocus="this.style.borderColor='var(--grn)';this.style.boxShadow='0 0 0 3px rgba(26,58,42,.1)';document.getElementById('gs-search-results').style.display='block'"
+          onfocus="document.getElementById('gs-search-results').style.display='block'"
           onblur="setTimeout(()=>document.getElementById('gs-search-results').style.display='none',180)"
           autocomplete="off">
       </div>
       <!-- Search Results Dropdown -->
-      <div id="gs-search-results" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surf);border:1.5px solid var(--bdr);border-radius:14px;box-shadow:var(--sh2);z-index:9990;max-height:440px;overflow-y:auto;padding:6px"></div>
+      <div id="gs-search-results" class="gs-glass-panel" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:9990;max-height:440px;overflow-y:auto;padding:6px"></div>
     </div>
 
-    <div class="hdr-right">
-        <button id="theme-toggle" onclick="toggleTheme()" title="Dark / Light mode" style="width:34px;height:34px;border-radius:9px;background:var(--surf2);border:1px solid var(--bdr);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:var(--transition);color:var(--ink)" aria-label="Toggle dark mode">🌙</button>
+    <div class="hdr-right" style="position:relative">
+        <button id="theme-toggle" class="gs-glass" onclick="toggleTheme()" title="Dark / Light mode" style="width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--ink)" aria-label="Toggle dark mode">🌙</button>
+        <div style="position:relative">
+          <button type="button" id="gs-notif-btn" class="gs-glass" title="Notifications" onclick="toggleNotifPanel(event)" aria-label="Notifications">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0112 0c0 7 3 7 3 7H3s3 0 3-7"/><path d="M10 19a2 2 0 004 0"/></svg>
+            <span class="gs-notif-dot"></span>
+          </button>
+          <div id="gs-notif-panel" class="gs-glass-strong"></div>
+        </div>
       <button class="btn btn-s btn-sm" onclick="openModal('m-pay')">+ Payment</button>
       <button class="btn btn-gold btn-sm" onclick="openModal('m-proj')">+ Project</button>
       <button class="btn btn-p btn-sm" onclick="openAddContact()">+ Contact</button>
@@ -2675,6 +2988,50 @@ function showOk(msg){
 }
 function showSuccess(msg){ showOk(msg); }
 function showSaveConfirm(msg){ showOk(msg||'Saved successfully'); }
+
+function toggleNotifPanel(e){
+  if(e) e.stopPropagation();
+  const panel=document.getElementById('gs-notif-panel');
+  if(!panel) return;
+  const open=panel.classList.toggle('open');
+  if(open) renderNotifPanel();
+}
+function renderNotifPanel(){
+  const panel=document.getElementById('gs-notif-panel');
+  if(!panel) return;
+  const items=[];
+  const projs=db.projects||[];
+  projs.forEach(p=>{
+    const bal=typeof pbal==='function'?pbal(p.id):0;
+    if(bal>0) items.push({title:p.name, sub:'₹'+Number(bal).toLocaleString('en-IN')+' outstanding', kind:'pay'});
+    if(p.deadline){
+      const d=new Date(p.deadline);
+      const days=(d-new Date())/86400000;
+      if(days>=0 && days<=7) items.push({title:p.name, sub:'Deadline in '+Math.ceil(days)+' day(s) · '+p.deadline, kind:'deadline'});
+      if(days<0 && bal>0) items.push({title:p.name, sub:'Overdue · '+p.deadline, kind:'over'});
+    }
+  });
+  (db.activities||[]).slice(0,5).forEach(a=>{
+    items.push({title:a.text||a.label||'Activity', sub:a.sub||a.time||a.date||'', kind:'act'});
+  });
+  const btn=document.getElementById('gs-notif-btn');
+  if(btn) btn.classList.toggle('has-new', items.length>0);
+  if(!items.length){
+    panel.innerHTML='<div class="gs-notif-head">Notifications</div><div class="gs-notif-item"><span>All clear — no alerts</span></div>';
+    return;
+  }
+  panel.innerHTML='<div class="gs-notif-head"><span>Notifications</span><span style="font-weight:600;color:var(--ink)">'+items.length+'</span></div>'+
+    items.slice(0,12).map(it=>'<div class="gs-notif-item"><b>'+it.title+'</b><span>'+it.sub+'</span></div>').join('');
+}
+document.addEventListener('click',function(e){
+  const panel=document.getElementById('gs-notif-panel');
+  const btn=document.getElementById('gs-notif-btn');
+  if(!panel||!panel.classList.contains('open')) return;
+  if(btn&&btn.contains(e.target)) return;
+  if(panel.contains(e.target)) return;
+  panel.classList.remove('open');
+});
+
 function showErr(msg){
   var t=document.getElementById('gs-toast-err');
   if(!t)return;
@@ -3419,6 +3776,10 @@ function switchView(v){
   }
   // Update nav
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.mob-nav-item[data-mob]').forEach(function(b){
+    var m=b.getAttribute('data-mob');
+    b.classList.toggle('active', m===v || (m==='dashboard'&&v==='dashboard'));
+  });
   var permissionViews=['nocletter','clientself','areawarranty','tpabhipray'];
   if(permissionViews.indexOf(v)!==-1){
     var pnb=document.querySelector('.permission-docs-group > .nav-btn[data-view="nocletter"]');
@@ -3448,6 +3809,40 @@ function switchView(v){
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
 
 // Mobile sidebar
+
+function mobNav(target){
+  document.querySelectorAll('.mob-nav-item[data-mob]').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-mob')===target);
+  });
+  if(target==='menu'){
+    toggleSidebar();
+    return;
+  }
+  closeSidebar();
+  if(typeof switchView==='function') switchView(target);
+  const title=document.getElementById('page-title');
+  if(title && target==='dashboard'){
+    /* keep title updated by switchView */
+  }
+}
+function mobQuickAdd(){
+  const sheet=document.getElementById('mob-quick-sheet');
+  if(sheet) sheet.classList.add('open');
+}
+function mobQuickAction(type){
+  const sheet=document.getElementById('mob-quick-sheet');
+  if(sheet) sheet.classList.remove('open');
+  if(type==='contact' && typeof openAddContact==='function') openAddContact();
+  else if(type==='project') openModal('m-proj');
+  else if(type==='payment') openModal('m-pay');
+}
+/* Sync bottom nav when switching views from elsewhere */
+(function(){
+  const _sw = typeof switchView==='function' ? switchView : null;
+  if(!_sw) return;
+  // wrap after switchView is defined — use event style on next tick
+})();
+
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('mob-open');document.getElementById('mob-bg').classList.toggle('on');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('mob-open');document.getElementById('mob-bg').classList.remove('on');}
 
@@ -4748,6 +5143,39 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:#1a1a18;background:#fff;-w
 </div>
 
 <script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500));<\/script>
+
+
+<!-- Mobile bottom navigation -->
+<nav id="mob-bottom-nav" class="mob-bottom-nav" aria-label="Mobile navigation">
+  <button type="button" class="mob-nav-item active" data-mob="dashboard" onclick="mobNav('dashboard')">
+    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="0.5"/><rect x="13" y="3" width="8" height="5" rx="0.5"/><rect x="13" y="10" width="8" height="11" rx="0.5"/><rect x="3" y="13" width="8" height="8" rx="0.5"/></svg></span>
+    <span class="mob-nav-lbl">Home</span>
+  </button>
+  <button type="button" class="mob-nav-item" data-mob="projects" onclick="mobNav('projects')">
+    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
+    <span class="mob-nav-lbl">Projects</span>
+  </button>
+  <button type="button" class="mob-nav-item mob-nav-fab" onclick="mobQuickAdd()" title="Add">
+    <span class="mob-nav-fab-btn">+</span>
+  </button>
+  <button type="button" class="mob-nav-item" data-mob="payments" onclick="mobNav('payments')">
+    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M8 21h8"/><path d="M5 9h14"/><path d="M7 9l-2 6h4L7 9zM17 9l-2 6h4l-2-6z"/></svg></span>
+    <span class="mob-nav-lbl">Pay</span>
+  </button>
+  <button type="button" class="mob-nav-item" data-mob="menu" onclick="mobNav('menu')">
+    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
+    <span class="mob-nav-lbl">Menu</span>
+  </button>
+</nav>
+<div id="mob-quick-sheet" class="mob-quick-sheet" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="mob-quick-sheet-inner gs-glass-strong">
+    <div class="mob-quick-title">Quick add</div>
+    <button type="button" onclick="mobQuickAction('contact')">+ Contact</button>
+    <button type="button" onclick="mobQuickAction('project')">+ Project</button>
+    <button type="button" onclick="mobQuickAction('payment')">+ Payment</button>
+    <button type="button" class="mob-quick-cancel" onclick="document.getElementById('mob-quick-sheet').classList.remove('open')">Cancel</button>
+  </div>
+</div>
 
 </body></html>`;
 
@@ -14079,42 +14507,44 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
 <div id="client-portal-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--grn);overflow-y:auto">
 
   <!-- LOGIN SCREEN -->
-  <div id="cp-login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px">
-    <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:36px 32px;width:100%;max-width:380px;text-align:center">
-      <div style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:28px;margin-bottom:4px">Greenhouse Studio</div>
-      <div style="color:rgba(255,255,255,.5);font-size:12px;margin-bottom:32px">Client Project Portal</div>
+  <div id="cp-login-screen" class="cp-login-screen">
+    <div class="cp-login-blueprint" aria-hidden="true"></div>
+    <div class="cp-login-card gs-glass-login">
+      <div class="cp-login-brand">Greenhouse Studio</div>
+      <div class="cp-login-tagline">Architecture · Interiors</div>
+      <div class="cp-login-rule"></div>
 
-      <div style="font-size:40px;margin-bottom:16px">🔐</div>
-      <div style="color:#fff;font-size:15px;font-weight:600;margin-bottom:6px">Enter Your 4-digit PIN</div>
-      <div style="color:rgba(255,255,255,.45);font-size:12px;margin-bottom:24px">Architect ने दिलेला PIN enter करा</div>
+      <div class="cp-login-welcome" id="cp-login-welcome">Welcome</div>
+      <div class="cp-login-access">Project Access PIN</div>
 
-      <!-- PIN dots display -->
-      <div id="cp-pin-dots" style="display:flex;justify-content:center;gap:14px;margin-bottom:24px">
+      <div id="cp-pin-dots" class="cp-pin-dots">
         <div class="cp-dot" id="cd0"></div>
         <div class="cp-dot" id="cd1"></div>
         <div class="cp-dot" id="cd2"></div>
         <div class="cp-dot" id="cd3"></div>
       </div>
 
-      <!-- Numpad -->
-      <div id="cp-numpad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto 16px">
-        <button class="cp-key" onclick="cpKey('1')">1</button>
-        <button class="cp-key" onclick="cpKey('2')">2</button>
-        <button class="cp-key" onclick="cpKey('3')">3</button>
-        <button class="cp-key" onclick="cpKey('4')">4</button>
-        <button class="cp-key" onclick="cpKey('5')">5</button>
-        <button class="cp-key" onclick="cpKey('6')">6</button>
-        <button class="cp-key" onclick="cpKey('7')">7</button>
-        <button class="cp-key" onclick="cpKey('8')">8</button>
-        <button class="cp-key" onclick="cpKey('9')">9</button>
-        <button class="cp-key cp-key-clr" onclick="cpClear()">⌫</button>
-        <button class="cp-key" onclick="cpKey('0')">0</button>
-        <button class="cp-key cp-key-ok" onclick="cpSubmit()">✓</button>
+      <div id="cp-numpad" class="cp-numpad">
+        <button type="button" class="cp-key" onclick="cpKey('1')">1</button>
+        <button type="button" class="cp-key" onclick="cpKey('2')">2</button>
+        <button type="button" class="cp-key" onclick="cpKey('3')">3</button>
+        <button type="button" class="cp-key" onclick="cpKey('4')">4</button>
+        <button type="button" class="cp-key" onclick="cpKey('5')">5</button>
+        <button type="button" class="cp-key" onclick="cpKey('6')">6</button>
+        <button type="button" class="cp-key" onclick="cpKey('7')">7</button>
+        <button type="button" class="cp-key" onclick="cpKey('8')">8</button>
+        <button type="button" class="cp-key" onclick="cpKey('9')">9</button>
+        <button type="button" class="cp-key cp-key-clr" onclick="cpClear()">⌫</button>
+        <button type="button" class="cp-key" onclick="cpKey('0')">0</button>
+        <button type="button" class="cp-key cp-key-ok" onclick="cpSubmit()">→</button>
       </div>
 
-      <div id="cp-error" style="display:none;color:#ff8080;font-size:12px;margin-bottom:12px;animation:shake .4s ease">❌ Incorrect PIN. Try again.</div>
+      <button type="button" class="cp-continue-btn" id="cp-continue-btn" onclick="cpSubmit()">Continue</button>
 
-      <button onclick="closeClientPortal()" style="color:rgba(255,255,255,.35);font-size:11px;background:none;border:none;cursor:pointer;margin-top:8px">← Back to Architect Login</button>
+      <div id="cp-error" class="cp-login-error" style="display:none">Incorrect PIN. Please try again.</div>
+
+      <div class="cp-login-secure">Secure Client Portal</div>
+      <button type="button" class="cp-login-back" onclick="closeClientPortal()">← Architect workspace</button>
     </div>
   </div>
 
