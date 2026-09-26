@@ -10084,6 +10084,35 @@ function udcprUpdateNet(){
   if(el) el.value = g ? net.toFixed(2) : '';
 }
 
+// ── CONGESTED / GAOTHAN MARGINS — UDCPR Table 6-B & 6-C ──
+// Kept separate so the calculator works correctly for Congested / Gaothan.
+function udcprCongFront(roadW, isMixed){
+  const r=Number(roadW)||0;
+  if(r<4.5) return isMixed ? 3.75 : 2.25; // 2.25m + 1.50m for mixed use
+  if(r<6)   return isMixed ? 1.50 : 0.00;
+  if(r<12)  return isMixed ? 2.00 : 1.00;
+  return isMixed ? 2.50 : 2.00;
+}
+
+function udcprCongSideRear(plotArea, plotWidth){
+  const a=Number(plotArea)||0;
+  const w=Number(plotWidth)||0;
+  // Table 6-C: width <= 7.0m → side margin NIL irrespective of area.
+  if(a<=1000) return {s:0,r:0,note:'Table 6-C: Plot up to 1000 sq.m → Side 0.00 m · Rear 0.00 m'};
+  if(a<=4000){
+    const side=(w>0 && w<=7)?0:1;
+    return {
+      s:side,
+      r:1,
+      note: side===0
+        ? 'Table 6-C: Plot 1000–4000 sq.m → Side NIL (plot width ≤7.0 m) · Rear 1.00 m'
+        : 'Table 6-C: Plot above 1000 & up to 4000 sq.m → Side 1.00 m · Rear 1.00 m'
+    };
+  }
+  // Above 4000 sq.m: side/rear follow non-congested regulations.
+  return {s:null,r:null,note:'Plot above 4000 sq.m → Side/Rear as per non-congested regulations'};
+}
+
 function udcprCalculate(){
   udcprUpdateNet();
   const auth   = document.getElementById('u-auth')?.value||'mc_abc';
