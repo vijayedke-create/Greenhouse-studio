@@ -142,13 +142,55 @@ header{
   transform:none;
 }
 .pc-cover{
-  position:relative;height:140px;
+  position:relative;height:168px;
   background:linear-gradient(145deg,var(--grn) 0%,var(--grn2) 55%,#4a6350 100%);
   overflow:hidden;flex-shrink:0;
+  border:none;border-radius:0;
 }
 .pc-cover.has-img{background:var(--surf2)}
 .pc-cover img{
   width:100%;height:100%;object-fit:cover;display:block;
+  border:none;outline:none;
+}
+/* Premium borderless 3D thumbnail on project cards */
+.proj-card.pc-premium{border:none!important;box-shadow:var(--sh2)!important;overflow:hidden}
+.proj-card.pc-premium .pc-cover{margin:0;border:none}
+.proj-card.pc-premium .pc-body{border-top:none}
+/* Cover upload UI */
+.gs-cover-box{border:1px dashed var(--bdr2);border-radius:10px;padding:12px;background:var(--surf2);text-align:center}
+.gs-cover-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;display:block;margin-bottom:10px;border:none}
+.gs-cover-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+/* Client portal — borderless 3D hero background */
+.cp-home-hero{
+  position:relative;border-radius:14px;overflow:hidden;margin-bottom:18px;
+  min-height:168px;border:none;
+  background:linear-gradient(145deg,var(--grn) 0%,var(--grn2) 60%,#3d5340 100%);
+  box-shadow:0 8px 28px rgba(28,27,25,.08);
+}
+.cp-home-hero.has-3d{background-size:cover;background-position:center;background-repeat:no-repeat}
+.cp-home-hero-shade{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(18,20,16,.78) 0%,rgba(18,20,16,.35) 45%,rgba(18,20,16,.12) 100%);
+  pointer-events:none;
+}
+.cp-home-hero-inner{position:relative;z-index:1;padding:22px 18px 18px;color:#f7f5f0}
+.cp-home-hero-inner .cp-home-proj-name{color:#f7f5f0;margin-bottom:4px}
+.cp-home-hero-inner .cp-home-proj-loc{color:rgba(247,245,240,.72);margin:0}
+.cp-home-hero-badge{
+  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 10px;border-radius:4px;margin-bottom:10px;
+  background:rgba(255,252,247,.14);color:var(--gold2,#d4b87a);border:1px solid rgba(255,255,255,.12);
+}
+.cp-home-proj-row.has-thumb{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:12px}
+.cp-home-proj-thumb{
+  width:56px;height:56px;border-radius:10px;background-size:cover;background-position:center;
+  border:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+  background-color:var(--surf2);
+}
+.pd-cover-block{margin-bottom:14px}
+.pd-cover-preview{
+  width:100%;height:180px;object-fit:cover;border-radius:10px;display:block;border:none;
+  background:linear-gradient(145deg,var(--grn),var(--grn2));
 }
 .pc-cover-fallback{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
@@ -3169,6 +3211,21 @@ html{transition:background .3s,color .3s}
           <div><div style="font-size:10px;font-weight:700;color:var(--mut);margin-bottom:7px">Floor Plans Required</div><div id="apt-floors-checks" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
         </div>
         <div class="fg" style="margin-top:12px"><label>Notes <span class="ml">टिपा</span></label><textarea class="fi fi-ta" id="p-notes" placeholder="Additional info..."></textarea></div>
+        <div class="fg" style="margin-top:14px">
+          <label>3D View Thumbnail <span class="ml">थ्रीडी थंबनेल · क्लायंट पोर्टल बॅकग्राउंड</span></label>
+          <div class="gs-cover-box" id="p-cover-box">
+            <img id="p-cover-preview" class="gs-cover-preview" alt="" style="display:none">
+            <div id="p-cover-empty" style="font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.45">प्रोजेक्ट कार्ड आणि क्लायंट पोर्टलसाठी 3D / रेंडर इमेज अपलोड करा · बॉर्डरलेस प्रीमियम लुक</div>
+            <div class="gs-cover-actions">
+              <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">
+                🖼 Upload 3D View
+                <input type="file" id="p-cover-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="gsCoverFilePicked(this)">
+              </label>
+              <button type="button" class="btn btn-s btn-sm" id="p-cover-clear" style="display:none" onclick="gsCoverClear()">Remove</button>
+            </div>
+            <input type="hidden" id="p-cover-data" value="">
+          </div>
+        </div>
       </div>
 
       <!-- STEP 2: PROJECT BRIEF -->
@@ -5317,7 +5374,22 @@ function pdRenderTab(tab){
   if(!body)return;
 
   if(tab==='overview'){
+    const coverUrl=p.cover||p.image||p.photo||'';
     body.innerHTML=`<div class="pd-panel">
+      <div class="pd-section pd-cover-block">
+        <div class="pd-section-title">3D View Thumbnail</div>
+        ${coverUrl
+          ? `<img class="pd-cover-preview" src="${coverUrl}" alt="3D thumbnail" onerror="this.style.display='none'">`
+          : `<div class="pd-cover-preview" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-family:var(--font-display),serif;font-size:28px">${(p.name||'P').slice(0,2).toUpperCase()}</div>`}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
+          <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">
+            🖼 Upload / Change 3D
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="gsProjectCoverUpload('${pid}',this)">
+          </label>
+          ${coverUrl?`<button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="gsProjectCoverRemove('${pid}')">Remove</button>`:''}
+          <span style="font-size:11px;color:var(--mut)">क्लायंट पोर्टल बॅकग्राउंड · बॉर्डरलेस प्रीमियम</span>
+        </div>
+      </div>
       <div class="pd-kpi-grid">
         <div class="pd-kpi"><div class="pd-kpi-lbl">Contract</div><div class="pd-kpi-val">${fmt(p.total)}</div></div>
         <div class="pd-kpi"><div class="pd-kpi-lbl">Received</div><div class="pd-kpi-val green">${fmt(paid)}</div></div>
@@ -6988,6 +7060,8 @@ function resetProjModal(){
   if(empty) empty.style.display = 'block';
   // Reset all inputs in modal
   document.querySelectorAll('#m-proj input.fi, #m-proj select.fi, #m-proj textarea.fi').forEach(e=>e.value='');
+  if(typeof gsCoverClear==='function')gsCoverClear();
+  const _pcd=document.getElementById('p-cover-data');if(_pcd)_pcd.value='';
   document.querySelectorAll('#m-proj input[type=checkbox], #m-proj input[type=radio]').forEach(e=>e.checked=false);
   // Reset UPI chips
   document.querySelectorAll('#p-upi-sub .upi-chip').forEach((c,i)=>c.classList.toggle('on',i===0));
@@ -7012,6 +7086,108 @@ function resetBriefPanel(){
 // ── Edit Project ──
 let _editProjectId = null;
 
+/* ── Project 3D / cover thumbnail ── */
+function gsCoverSetPreview(dataUrl){
+  const img=document.getElementById('p-cover-preview');
+  const empty=document.getElementById('p-cover-empty');
+  const clr=document.getElementById('p-cover-clear');
+  const hid=document.getElementById('p-cover-data');
+  if(hid)hid.value=dataUrl||'';
+  if(dataUrl){
+    if(img){img.src=dataUrl;img.style.display='block';}
+    if(empty)empty.style.display='none';
+    if(clr)clr.style.display='';
+  }else{
+    if(img){img.removeAttribute('src');img.style.display='none';}
+    if(empty)empty.style.display='';
+    if(clr)clr.style.display='none';
+  }
+}
+window.gsCoverClear=function(){
+  gsCoverSetPreview('');
+  const f=document.getElementById('p-cover-file');if(f)f.value='';
+};
+window.gsCoverFilePicked=function(input){
+  const file=input&&input.files&&input.files[0];
+  if(!file)return;
+  if(!file.type||!file.type.startsWith('image/')){alert('Please select an image (JPG / PNG / WebP)');input.value='';return;}
+  if(file.size>4.5*1024*1024){alert('Image too large — please use under 4.5 MB');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const raw=e.target.result;
+    // Downscale large images for localStorage safety
+    const img=new Image();
+    img.onload=function(){
+      const maxW=1400,maxH=900;
+      let w=img.width,h=img.height;
+      if(w>maxW||h>maxH){
+        const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r);
+      }
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      let out=canvas.toDataURL('image/jpeg',0.82);
+      // Further compress if still huge
+      if(out.length>900000){
+        out=canvas.toDataURL('image/jpeg',0.65);
+      }
+      gsCoverSetPreview(out);
+    };
+    img.onerror=function(){gsCoverSetPreview(raw);};
+    img.src=raw;
+  };
+  reader.readAsDataURL(file);
+};
+window.gsProjectCoverUpload=function(pid,input){
+  const p=typeof gp==='function'?gp(pid):null;
+  if(!p){alert('Project not found');return;}
+  const file=input&&input.files&&input.files[0];
+  if(!file)return;
+  if(!file.type||!file.type.startsWith('image/')){alert('Please select an image');input.value='';return;}
+  if(file.size>4.5*1024*1024){alert('Image too large — under 4.5 MB');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const raw=e.target.result;
+    const img=new Image();
+    img.onload=function(){
+      const maxW=1400,maxH=900;
+      let w=img.width,h=img.height;
+      if(w>maxW||h>maxH){const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r);}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      let out=canvas.toDataURL('image/jpeg',0.82);
+      if(out.length>900000)out=canvas.toDataURL('image/jpeg',0.65);
+      p.cover=out;p.updatedAt=new Date().toISOString();
+      try{if(typeof saveAll==='function')saveAll();else saveLocal();}catch(err){try{saveLocal();}catch(e2){}}
+      if(typeof toastOk==='function')toastOk('3D thumbnail saved');
+      else if(typeof showOk==='function')showOk('3D thumbnail saved');
+      if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
+      if(typeof renderProjects==='function')renderProjects();
+      if(typeof renderDashboard==='function')renderDashboard();
+    };
+    img.onerror=function(){
+      p.cover=raw;p.updatedAt=new Date().toISOString();
+      try{saveAll();}catch(err){try{saveLocal();}catch(e2){}}
+      if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
+      if(typeof renderProjects==='function')renderProjects();
+    };
+    img.src=raw;
+  };
+  reader.readAsDataURL(file);
+};
+window.gsProjectCoverRemove=function(pid){
+  const p=typeof gp==='function'?gp(pid):null;
+  if(!p)return;
+  if(!confirm('Remove 3D thumbnail?'))return;
+  p.cover='';p.updatedAt=new Date().toISOString();
+  try{if(typeof saveAll==='function')saveAll();else saveLocal();}catch(err){try{saveLocal();}catch(e2){}}
+  if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
+  if(typeof renderProjects==='function')renderProjects();
+  if(typeof toastOk==='function')toastOk('Thumbnail removed');
+};
+
 function openEditProject(pid){
   const p = gp(pid);
   if(!p) return;
@@ -7035,6 +7211,9 @@ function openEditProject(pid){
     set('p-total', p.total);
     set('p-deadline', p.deadline);
     set('p-notes', p.notes);
+    // 3D cover thumbnail
+    if(typeof gsCoverSetPreview==='function') gsCoverSetPreview(p.cover||p.image||p.photo||'');
+    const cf=document.getElementById('p-cover-file');if(cf)cf.value='';
 
     // Payment mode
     const pmEl = document.getElementById('p-paymode');
@@ -7103,6 +7282,15 @@ function saveProject(){
     p.notes = document.getElementById('p-notes').value.trim();
     p.aptFloors = document.getElementById('apt-floors')?document.getElementById('apt-floors').value:'';
     p.aptParking = document.getElementById('apt-parking')&&document.getElementById('apt-parking').checked;
+    const coverData=(document.getElementById('p-cover-data')||{}).value||'';
+    if(coverData) p.cover=coverData;
+    else if(document.getElementById('p-cover-data')&&!coverData) p.cover=p.cover||'';
+    // If user cleared preview, cover data is empty — treat as clear only when they used Remove
+    if(document.getElementById('p-cover-data')&&coverData===''){
+      // keep existing unless explicitly cleared via gsCoverClear (empty string intentional)
+      const prev=document.getElementById('p-cover-preview');
+      if(prev&&prev.style.display==='none') p.cover='';
+    }
     db.activities.unshift({text:'Project Updated — '+name,sub:'Edited',time:'Just now',color:'#2c5f8a'});
     _editProjectId = null;
     // Reset modal for next use
@@ -7122,12 +7310,14 @@ function saveProject(){
 
   // ── ADD MODE — new project ──
   const pid=uid('P');
+  const coverNew=(document.getElementById('p-cover-data')||{}).value||'';
   const proj={id:pid,name,clientId:cid,
     address:document.getElementById('p-address').value.trim(),
     services:svcs,total,paymode:pmode,
     deadline:document.getElementById('p-deadline').value,
     notes:document.getElementById('p-notes').value.trim(),
     stage:'Concept',files:[],
+    cover:coverNew||'',
     aptFloors:document.getElementById('apt-floors')?document.getElementById('apt-floors').value:'',
     aptParking:document.getElementById('apt-parking')&&document.getElementById('apt-parking').checked
   };
@@ -16216,10 +16406,33 @@ function renderCpOverview(c, projs) {
     const { stage, idx, pct, next, label } = stageMeta(p);
     const bal = pbal(p.id);
     const nextDate = p.deadline || '';
+    let cover3d = p.cover || p.image || p.photo || '';
+    if (!cover3d && p.files && p.files.length) {
+      const imgF = p.files.find(f => {
+        if (f.clientVisible === false) return false;
+        const cat = String(f.cat || '').toLowerCase();
+        const n = String(f.name || '').toLowerCase();
+        const u = String(f.url || f.data || f.src || '');
+        if (cat === '3d_view') return true;
+        if (/3d|render|perspective|view/.test(cat + ' ' + n)) return true;
+        if (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(u) || u.startsWith('data:image')) return true;
+        return false;
+      });
+      if (imgF) cover3d = imgF.url || imgF.data || imgF.src || imgF.thumb || '';
+    }
+    const coverStyle = cover3d
+      ? `background-image:url('${String(cover3d).replace(/'/g, "%27").replace(/\n/g,"")}');`
+      : '';
 
     html += `
-    <div class="cp-home-proj-name">${p.name || 'Project'}</div>
-    <div class="cp-home-proj-loc">${loc}</div>
+    <div class="cp-home-hero${cover3d ? ' has-3d' : ''}" style="${coverStyle}">
+      <div class="cp-home-hero-shade"></div>
+      <div class="cp-home-hero-inner">
+        <span class="cp-home-hero-badge">3D View</span>
+        <div class="cp-home-proj-name">${p.name || 'Project'}</div>
+        <div class="cp-home-proj-loc">${loc}</div>
+      </div>
+    </div>
 
     <div class="cp-tl-wrap">
       <div class="cp-tl-title">Project progress</div>
@@ -16256,8 +16469,15 @@ function renderCpOverview(c, projs) {
       projs.forEach(pp => {
         const m = stageMeta(pp);
         const b = pbal(pp.id);
+        let th = pp.cover || pp.image || pp.photo || '';
+        if (!th && pp.files && pp.files.length) {
+          const f = pp.files.find(x => x.clientVisible !== false && (String(x.cat||'').toLowerCase()==='3d_view' || /\.(jpg|jpeg|png|webp)/i.test(String(x.url||x.name||'')) || String(x.url||'').startsWith('data:image')));
+          if (f) th = f.url || f.data || f.src || f.thumb || '';
+        }
+        const thStyle = th ? `background-image:url('${String(th).replace(/'/g,"%27")}');` : '';
         html += `
-        <div class="cp-home-proj-row">
+        <div class="cp-home-proj-row${th ? ' has-thumb' : ''}">
+          ${th ? `<div class="cp-home-proj-thumb" style="${thStyle}"></div>` : ''}
           <div>
             <div class="cp-home-proj-row-name">${pp.name}</div>
             <div class="cp-home-proj-row-meta">${m.label} · ${m.pct}%</div>
