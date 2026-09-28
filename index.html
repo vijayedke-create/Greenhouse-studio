@@ -142,55 +142,13 @@ header{
   transform:none;
 }
 .pc-cover{
-  position:relative;height:168px;
+  position:relative;height:140px;
   background:linear-gradient(145deg,var(--grn) 0%,var(--grn2) 55%,#4a6350 100%);
   overflow:hidden;flex-shrink:0;
-  border:none;border-radius:0;
 }
 .pc-cover.has-img{background:var(--surf2)}
 .pc-cover img{
   width:100%;height:100%;object-fit:cover;display:block;
-  border:none;outline:none;
-}
-/* Premium borderless 3D thumbnail on project cards */
-.proj-card.pc-premium{border:none!important;box-shadow:var(--sh2)!important;overflow:hidden}
-.proj-card.pc-premium .pc-cover{margin:0;border:none}
-.proj-card.pc-premium .pc-body{border-top:none}
-/* Cover upload UI */
-.gs-cover-box{border:1px dashed var(--bdr2);border-radius:10px;padding:12px;background:var(--surf2);text-align:center}
-.gs-cover-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;display:block;margin-bottom:10px;border:none}
-.gs-cover-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-/* Client portal — borderless 3D hero background */
-.cp-home-hero{
-  position:relative;border-radius:14px;overflow:hidden;margin-bottom:18px;
-  min-height:168px;border:none;
-  background:linear-gradient(145deg,var(--grn) 0%,var(--grn2) 60%,#3d5340 100%);
-  box-shadow:0 8px 28px rgba(28,27,25,.08);
-}
-.cp-home-hero.has-3d{background-size:cover;background-position:center;background-repeat:no-repeat}
-.cp-home-hero-shade{
-  position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(18,20,16,.78) 0%,rgba(18,20,16,.35) 45%,rgba(18,20,16,.12) 100%);
-  pointer-events:none;
-}
-.cp-home-hero-inner{position:relative;z-index:1;padding:22px 18px 18px;color:#f7f5f0}
-.cp-home-hero-inner .cp-home-proj-name{color:#f7f5f0;margin-bottom:4px}
-.cp-home-hero-inner .cp-home-proj-loc{color:rgba(247,245,240,.72);margin:0}
-.cp-home-hero-badge{
-  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  padding:4px 10px;border-radius:4px;margin-bottom:10px;
-  background:rgba(255,252,247,.14);color:var(--gold2,#d4b87a);border:1px solid rgba(255,255,255,.12);
-}
-.cp-home-proj-row.has-thumb{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:12px}
-.cp-home-proj-thumb{
-  width:56px;height:56px;border-radius:10px;background-size:cover;background-position:center;
-  border:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
-  background-color:var(--surf2);
-}
-.pd-cover-block{margin-bottom:14px}
-.pd-cover-preview{
-  width:100%;height:180px;object-fit:cover;border-radius:10px;display:block;border:none;
-  background:linear-gradient(145deg,var(--grn),var(--grn2));
 }
 .pc-cover-fallback{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
@@ -3211,21 +3169,6 @@ html{transition:background .3s,color .3s}
           <div><div style="font-size:10px;font-weight:700;color:var(--mut);margin-bottom:7px">Floor Plans Required</div><div id="apt-floors-checks" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
         </div>
         <div class="fg" style="margin-top:12px"><label>Notes <span class="ml">टिपा</span></label><textarea class="fi fi-ta" id="p-notes" placeholder="Additional info..."></textarea></div>
-        <div class="fg" style="margin-top:14px">
-          <label>3D View Thumbnail <span class="ml">थ्रीडी थंबनेल · क्लायंट पोर्टल बॅकग्राउंड</span></label>
-          <div class="gs-cover-box" id="p-cover-box">
-            <img id="p-cover-preview" class="gs-cover-preview" alt="" style="display:none">
-            <div id="p-cover-empty" style="font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.45">प्रोजेक्ट कार्ड आणि क्लायंट पोर्टलसाठी 3D / रेंडर इमेज अपलोड करा · बॉर्डरलेस प्रीमियम लुक</div>
-            <div class="gs-cover-actions">
-              <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">
-                🖼 Upload 3D View
-                <input type="file" id="p-cover-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="gsCoverFilePicked(this)">
-              </label>
-              <button type="button" class="btn btn-s btn-sm" id="p-cover-clear" style="display:none" onclick="gsCoverClear()">Remove</button>
-            </div>
-            <input type="hidden" id="p-cover-data" value="">
-          </div>
-        </div>
       </div>
 
       <!-- STEP 2: PROJECT BRIEF -->
@@ -5374,22 +5317,7 @@ function pdRenderTab(tab){
   if(!body)return;
 
   if(tab==='overview'){
-    const coverUrl=p.cover||p.image||p.photo||'';
     body.innerHTML=`<div class="pd-panel">
-      <div class="pd-section pd-cover-block">
-        <div class="pd-section-title">3D View Thumbnail</div>
-        ${coverUrl
-          ? `<img class="pd-cover-preview" src="${coverUrl}" alt="3D thumbnail" onerror="this.style.display='none'">`
-          : `<div class="pd-cover-preview" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-family:var(--font-display),serif;font-size:28px">${(p.name||'P').slice(0,2).toUpperCase()}</div>`}
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-          <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">
-            🖼 Upload / Change 3D
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="gsProjectCoverUpload('${pid}',this)">
-          </label>
-          ${coverUrl?`<button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="gsProjectCoverRemove('${pid}')">Remove</button>`:''}
-          <span style="font-size:11px;color:var(--mut)">क्लायंट पोर्टल बॅकग्राउंड · बॉर्डरलेस प्रीमियम</span>
-        </div>
-      </div>
       <div class="pd-kpi-grid">
         <div class="pd-kpi"><div class="pd-kpi-lbl">Contract</div><div class="pd-kpi-val">${fmt(p.total)}</div></div>
         <div class="pd-kpi"><div class="pd-kpi-lbl">Received</div><div class="pd-kpi-val green">${fmt(paid)}</div></div>
@@ -7060,8 +6988,6 @@ function resetProjModal(){
   if(empty) empty.style.display = 'block';
   // Reset all inputs in modal
   document.querySelectorAll('#m-proj input.fi, #m-proj select.fi, #m-proj textarea.fi').forEach(e=>e.value='');
-  if(typeof gsCoverClear==='function')gsCoverClear();
-  const _pcd=document.getElementById('p-cover-data');if(_pcd)_pcd.value='';
   document.querySelectorAll('#m-proj input[type=checkbox], #m-proj input[type=radio]').forEach(e=>e.checked=false);
   // Reset UPI chips
   document.querySelectorAll('#p-upi-sub .upi-chip').forEach((c,i)=>c.classList.toggle('on',i===0));
@@ -7086,108 +7012,6 @@ function resetBriefPanel(){
 // ── Edit Project ──
 let _editProjectId = null;
 
-/* ── Project 3D / cover thumbnail ── */
-function gsCoverSetPreview(dataUrl){
-  const img=document.getElementById('p-cover-preview');
-  const empty=document.getElementById('p-cover-empty');
-  const clr=document.getElementById('p-cover-clear');
-  const hid=document.getElementById('p-cover-data');
-  if(hid)hid.value=dataUrl||'';
-  if(dataUrl){
-    if(img){img.src=dataUrl;img.style.display='block';}
-    if(empty)empty.style.display='none';
-    if(clr)clr.style.display='';
-  }else{
-    if(img){img.removeAttribute('src');img.style.display='none';}
-    if(empty)empty.style.display='';
-    if(clr)clr.style.display='none';
-  }
-}
-window.gsCoverClear=function(){
-  gsCoverSetPreview('');
-  const f=document.getElementById('p-cover-file');if(f)f.value='';
-};
-window.gsCoverFilePicked=function(input){
-  const file=input&&input.files&&input.files[0];
-  if(!file)return;
-  if(!file.type||!file.type.startsWith('image/')){alert('Please select an image (JPG / PNG / WebP)');input.value='';return;}
-  if(file.size>4.5*1024*1024){alert('Image too large — please use under 4.5 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const raw=e.target.result;
-    // Downscale large images for localStorage safety
-    const img=new Image();
-    img.onload=function(){
-      const maxW=1400,maxH=900;
-      let w=img.width,h=img.height;
-      if(w>maxW||h>maxH){
-        const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r);
-      }
-      const canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
-      const ctx=canvas.getContext('2d');
-      ctx.drawImage(img,0,0,w,h);
-      let out=canvas.toDataURL('image/jpeg',0.82);
-      // Further compress if still huge
-      if(out.length>900000){
-        out=canvas.toDataURL('image/jpeg',0.65);
-      }
-      gsCoverSetPreview(out);
-    };
-    img.onerror=function(){gsCoverSetPreview(raw);};
-    img.src=raw;
-  };
-  reader.readAsDataURL(file);
-};
-window.gsProjectCoverUpload=function(pid,input){
-  const p=typeof gp==='function'?gp(pid):null;
-  if(!p){alert('Project not found');return;}
-  const file=input&&input.files&&input.files[0];
-  if(!file)return;
-  if(!file.type||!file.type.startsWith('image/')){alert('Please select an image');input.value='';return;}
-  if(file.size>4.5*1024*1024){alert('Image too large — under 4.5 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const raw=e.target.result;
-    const img=new Image();
-    img.onload=function(){
-      const maxW=1400,maxH=900;
-      let w=img.width,h=img.height;
-      if(w>maxW||h>maxH){const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r);}
-      const canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      let out=canvas.toDataURL('image/jpeg',0.82);
-      if(out.length>900000)out=canvas.toDataURL('image/jpeg',0.65);
-      p.cover=out;p.updatedAt=new Date().toISOString();
-      try{if(typeof saveAll==='function')saveAll();else saveLocal();}catch(err){try{saveLocal();}catch(e2){}}
-      if(typeof toastOk==='function')toastOk('3D thumbnail saved');
-      else if(typeof showOk==='function')showOk('3D thumbnail saved');
-      if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
-      if(typeof renderProjects==='function')renderProjects();
-      if(typeof renderDashboard==='function')renderDashboard();
-    };
-    img.onerror=function(){
-      p.cover=raw;p.updatedAt=new Date().toISOString();
-      try{saveAll();}catch(err){try{saveLocal();}catch(e2){}}
-      if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
-      if(typeof renderProjects==='function')renderProjects();
-    };
-    img.src=raw;
-  };
-  reader.readAsDataURL(file);
-};
-window.gsProjectCoverRemove=function(pid){
-  const p=typeof gp==='function'?gp(pid):null;
-  if(!p)return;
-  if(!confirm('Remove 3D thumbnail?'))return;
-  p.cover='';p.updatedAt=new Date().toISOString();
-  try{if(typeof saveAll==='function')saveAll();else saveLocal();}catch(err){try{saveLocal();}catch(e2){}}
-  if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
-  if(typeof renderProjects==='function')renderProjects();
-  if(typeof toastOk==='function')toastOk('Thumbnail removed');
-};
-
 function openEditProject(pid){
   const p = gp(pid);
   if(!p) return;
@@ -7211,9 +7035,6 @@ function openEditProject(pid){
     set('p-total', p.total);
     set('p-deadline', p.deadline);
     set('p-notes', p.notes);
-    // 3D cover thumbnail
-    if(typeof gsCoverSetPreview==='function') gsCoverSetPreview(p.cover||p.image||p.photo||'');
-    const cf=document.getElementById('p-cover-file');if(cf)cf.value='';
 
     // Payment mode
     const pmEl = document.getElementById('p-paymode');
@@ -7282,15 +7103,6 @@ function saveProject(){
     p.notes = document.getElementById('p-notes').value.trim();
     p.aptFloors = document.getElementById('apt-floors')?document.getElementById('apt-floors').value:'';
     p.aptParking = document.getElementById('apt-parking')&&document.getElementById('apt-parking').checked;
-    const coverData=(document.getElementById('p-cover-data')||{}).value||'';
-    if(coverData) p.cover=coverData;
-    else if(document.getElementById('p-cover-data')&&!coverData) p.cover=p.cover||'';
-    // If user cleared preview, cover data is empty — treat as clear only when they used Remove
-    if(document.getElementById('p-cover-data')&&coverData===''){
-      // keep existing unless explicitly cleared via gsCoverClear (empty string intentional)
-      const prev=document.getElementById('p-cover-preview');
-      if(prev&&prev.style.display==='none') p.cover='';
-    }
     db.activities.unshift({text:'Project Updated — '+name,sub:'Edited',time:'Just now',color:'#2c5f8a'});
     _editProjectId = null;
     // Reset modal for next use
@@ -7310,14 +7122,12 @@ function saveProject(){
 
   // ── ADD MODE — new project ──
   const pid=uid('P');
-  const coverNew=(document.getElementById('p-cover-data')||{}).value||'';
   const proj={id:pid,name,clientId:cid,
     address:document.getElementById('p-address').value.trim(),
     services:svcs,total,paymode:pmode,
     deadline:document.getElementById('p-deadline').value,
     notes:document.getElementById('p-notes').value.trim(),
     stage:'Concept',files:[],
-    cover:coverNew||'',
     aptFloors:document.getElementById('apt-floors')?document.getElementById('apt-floors').value:'',
     aptParking:document.getElementById('apt-parking')&&document.getElementById('apt-parking').checked
   };
@@ -15750,7 +15560,8 @@ function renderCpContent() {
   const el = document.getElementById('cp-content');
   if (!cpCurrentClient) return;
   const c = cpCurrentClient;
-  const projs = (db.projects || []).filter(p => p.clientId === c.id);
+  // Strict client isolation — only projects owned by this contact id
+  const projs = (db.projects || []).filter(p => p && c && p.clientId === c.id);
   if (cpCurrentTab === 'overview' || cpCurrentTab === 'project') el.innerHTML = renderCpOverview(c, projs);
   else if (cpCurrentTab === 'payments') el.innerHTML = renderCpPayments(c, projs);
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
@@ -16256,24 +16067,41 @@ function submitDrawingRequest() {
 
 function buildCpActivityFeed(c, projs) {
   const events = [];
-  const projIds = new Set((projs || []).map(p => p.id));
+  // Strict: only this client's projects (by id). Never mix other clients.
+  const onlyProjs = (projs || []).filter(p => {
+    if (!p || !p.id) return false;
+    if (c && c.id && p.clientId && p.clientId !== c.id) return false;
+    return true;
+  });
+  const projIds = new Set(onlyProjs.map(p => p.id));
+  const projName = id => {
+    const p = onlyProjs.find(x => x.id === id);
+    return p ? (p.name || 'Project') : '';
+  };
 
-  function push(dateStr, text, sortKey) {
+  function push(dateStr, text, sortKey, pid) {
     if (!text) return;
+    // If event is tied to a project, it must belong to this client
+    if (pid && !projIds.has(pid)) return;
     let d = dateStr ? new Date(dateStr) : null;
     if (d && isNaN(d.getTime())) d = null;
     const label = d
       ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
       : (dateStr || '—');
+    const pn = pid ? projName(pid) : '';
+    const full = pn && !String(text).toLowerCase().includes(String(pn).toLowerCase())
+      ? (pn + ' — ' + text)
+      : text;
     events.push({
       sort: d ? d.getTime() : 0,
       dateLabel: label,
-      text: text
+      text: full,
+      projId: pid || null
     });
   }
 
-  (projs || []).forEach(p => {
-    // Files shared with client
+  onlyProjs.forEach(p => {
+    // Files shared with client — this project only
     (p.files || []).forEach(f => {
       if (f.clientVisible === false) return;
       const when = f.date || f.updatedAt || f.uploadedAt || '';
@@ -16282,50 +16110,45 @@ function buildCpActivityFeed(c, projs) {
       const is3d = /3d|render/i.test(String(f.cat || '') + name);
       let msg = is3d ? (name + ' approved') : (name + (rev ? ' ' + String(rev).toUpperCase() : '') + ' uploaded');
       if (/approv/i.test(String(f.status || ''))) msg = name + ' approved';
-      push(when, msg, when);
+      push(when, msg, when, p.id);
     });
-    // Payments
-    const pays = typeof ppays === 'function' ? ppays(p.id) : [];
+    // Payments — this project only
+    const pays = typeof ppays === 'function' ? ppays(p.id) : (db.payments || []).filter(x => x.projectId === p.id);
     pays.forEach(pay => {
-      push(pay.date, (pay.stage || 'Payment') + ' payment received', pay.date);
+      if (pay.projectId && pay.projectId !== p.id) return;
+      push(pay.date, (pay.stage || 'Payment') + ' payment received · ₹' + Number(pay.amount || 0).toLocaleString('en-IN'), pay.date, p.id);
     });
+    // Stage
+    if (p.stage) push(p.updatedAt || p.createdAt || p.deadline || '', 'Stage: ' + p.stage, p.updatedAt || '', p.id);
   });
 
-  // Site visits
+  // Site visits — only for this client's project ids
   (db.siteVisits || []).forEach(v => {
-    if (!projIds.has(v.projId)) return;
-    push(v.date || v.ts, v.notes ? ('Site visit — ' + v.notes) : 'Site visit completed', v.date || v.ts);
+    const pid = v.projId || v.projectId;
+    if (!pid || !projIds.has(pid)) return;
+    push(v.date || v.ts, v.notes ? ('Site visit — ' + v.notes) : 'Site visit completed', v.date || v.ts, pid);
   });
 
-  // Studio activities linked to these projects or client name
+  // Studio activities — ONLY when explicitly linked to this client's project id
+  // (no fuzzy name match — that was leaking other clients' timelines)
   (db.activities || []).forEach(a => {
     const pid = a.projId || a.projectId;
-    const text = a.text || a.label || '';
-    if (pid && projIds.has(pid)) {
-      push(a.date || a.ts || a.time, text, a.date || a.ts);
-      return;
-    }
-    if (c && c.name && text.toLowerCase().includes(String(c.name).toLowerCase().split(' ')[0])) {
-      push(a.date || a.ts || a.time, text, a.date || a.ts);
-    }
-  });
-
-  // Stage as soft event
-  (projs || []).forEach(p => {
-    if (p.stage) push(p.updatedAt || p.deadline || '', 'Stage: ' + p.stage, p.updatedAt || '');
+    if (!pid || !projIds.has(pid)) return;
+    const text = a.text || a.label || a.sub || '';
+    if (!text) return;
+    push(a.date || a.ts || a.time || a.when, text, a.date || a.ts, pid);
   });
 
   events.sort((a, b) => b.sort - a.sort);
-  // Dedupe similar text+date
   const seen = new Set();
   const out = [];
   events.forEach(e => {
-    const k = e.dateLabel + '|' + e.text;
+    const k = e.dateLabel + '|' + e.text + '|' + (e.projId || '');
     if (seen.has(k)) return;
     seen.add(k);
     out.push(e);
   });
-  return out.slice(0, 20);
+  return out.slice(0, 25);
 }
 
 function renderCpOverview(c, projs) {
@@ -16406,33 +16229,10 @@ function renderCpOverview(c, projs) {
     const { stage, idx, pct, next, label } = stageMeta(p);
     const bal = pbal(p.id);
     const nextDate = p.deadline || '';
-    let cover3d = p.cover || p.image || p.photo || '';
-    if (!cover3d && p.files && p.files.length) {
-      const imgF = p.files.find(f => {
-        if (f.clientVisible === false) return false;
-        const cat = String(f.cat || '').toLowerCase();
-        const n = String(f.name || '').toLowerCase();
-        const u = String(f.url || f.data || f.src || '');
-        if (cat === '3d_view') return true;
-        if (/3d|render|perspective|view/.test(cat + ' ' + n)) return true;
-        if (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(u) || u.startsWith('data:image')) return true;
-        return false;
-      });
-      if (imgF) cover3d = imgF.url || imgF.data || imgF.src || imgF.thumb || '';
-    }
-    const coverStyle = cover3d
-      ? `background-image:url('${String(cover3d).replace(/'/g, "%27").replace(/\n/g,"")}');`
-      : '';
 
     html += `
-    <div class="cp-home-hero${cover3d ? ' has-3d' : ''}" style="${coverStyle}">
-      <div class="cp-home-hero-shade"></div>
-      <div class="cp-home-hero-inner">
-        <span class="cp-home-hero-badge">3D View</span>
-        <div class="cp-home-proj-name">${p.name || 'Project'}</div>
-        <div class="cp-home-proj-loc">${loc}</div>
-      </div>
-    </div>
+    <div class="cp-home-proj-name">${p.name || 'Project'}</div>
+    <div class="cp-home-proj-loc">${loc}</div>
 
     <div class="cp-tl-wrap">
       <div class="cp-tl-title">Project progress</div>
@@ -16469,15 +16269,8 @@ function renderCpOverview(c, projs) {
       projs.forEach(pp => {
         const m = stageMeta(pp);
         const b = pbal(pp.id);
-        let th = pp.cover || pp.image || pp.photo || '';
-        if (!th && pp.files && pp.files.length) {
-          const f = pp.files.find(x => x.clientVisible !== false && (String(x.cat||'').toLowerCase()==='3d_view' || /\.(jpg|jpeg|png|webp)/i.test(String(x.url||x.name||'')) || String(x.url||'').startsWith('data:image')));
-          if (f) th = f.url || f.data || f.src || f.thumb || '';
-        }
-        const thStyle = th ? `background-image:url('${String(th).replace(/'/g,"%27")}');` : '';
         html += `
-        <div class="cp-home-proj-row${th ? ' has-thumb' : ''}">
-          ${th ? `<div class="cp-home-proj-thumb" style="${thStyle}"></div>` : ''}
+        <div class="cp-home-proj-row">
           <div>
             <div class="cp-home-proj-row-name">${pp.name}</div>
             <div class="cp-home-proj-row-meta">${m.label} · ${m.pct}%</div>
@@ -16524,6 +16317,148 @@ function renderCpOverview(c, projs) {
 
 
 // ── PAYMENTS TAB ──
+window.cpGeneratePaymentReport = function(projectId) {
+  try {
+    if (!window.cpCurrentClient) { alert('Please login to client portal'); return; }
+    const c = window.cpCurrentClient;
+    let projs = (db.projects || []).filter(p => p && p.clientId === c.id);
+    if (projectId) projs = projs.filter(p => p.id === projectId);
+    if (!projs.length) { alert('No projects found for payment report'); return; }
+    if (!window.jspdf || !window.jspdf.jsPDF) { alert('PDF library not loaded'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageW = 210, pageH = 297;
+    const fmt2 = n => 'Rs.' + Number(n || 0).toLocaleString('en-IN');
+    const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // Header
+    doc.setFillColor(26, 58, 42);
+    doc.rect(0, 0, pageW, 36, 'F');
+    doc.setFillColor(201, 168, 76);
+    doc.rect(0, 34, pageW, 2.2, 'F');
+    if (officeInfo && officeInfo.logo) {
+      try { doc.addImage(officeInfo.logo, 'PNG', 12, 4, 24, 24); } catch (e) {}
+    }
+    const nameX = (officeInfo && officeInfo.logo) ? 40 : 14;
+    doc.setTextColor(201, 168, 76);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(String((officeInfo && officeInfo.name) || 'Greenhouse Studio').toUpperCase(), nameX, 14);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text((officeInfo && officeInfo.arch ? 'Architect: ' + officeInfo.arch : '') + (officeInfo && officeInfo.phone ? '  |  ' + officeInfo.phone : ''), nameX, 22);
+    doc.setTextColor(201, 168, 76);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('PAYMENT REPORT', pageW - 14, 14, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(210, 210, 210);
+    doc.text(today, pageW - 14, 22, { align: 'right' });
+
+    let y = 46;
+    doc.setTextColor(26, 58, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Client: ' + (c.name || '—'), 14, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    if (c.wa || c.phone) doc.text('Contact: ' + (c.wa || c.phone || ''), 14, y);
+    if (c.addr || c.address) { y += 5; doc.text('Address: ' + (c.addr || c.address || ''), 14, y); }
+    y += 10;
+
+    let grandTotal = 0, grandPaid = 0, grandBal = 0;
+
+    projs.forEach((p, idx) => {
+      if (y > 250) { doc.addPage(); y = 20; }
+      const pays = (typeof ppays === 'function' ? ppays(p.id) : (db.payments || []).filter(x => x.projectId === p.id))
+        .slice().sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+      const total = Number(p.total) || 0;
+      const paid = typeof ppaid === 'function' ? ppaid(p.id) : pays.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+      const bal = Math.max(0, total - paid);
+      grandTotal += total; grandPaid += paid; grandBal += bal;
+
+      doc.setFillColor(246, 243, 237);
+      doc.roundedRect(12, y - 3, 186, 18, 2, 2, 'F');
+      doc.setTextColor(26, 58, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text(String(p.name || 'Project'), 16, y + 4);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(80, 80, 80);
+      doc.text('Fee: ' + fmt2(total) + '   |   Received: ' + fmt2(paid) + '   |   Outstanding: ' + fmt2(bal), 16, y + 11);
+      y += 22;
+
+      const rows = pays.length
+        ? pays.map((px, i) => [
+            String(i + 1),
+            String(px.date || '—'),
+            String(px.stage || 'Payment'),
+            String(px.mode || '—'),
+            fmt2(px.amount)
+          ])
+        : [['—', '—', 'No payments recorded', '—', '—']];
+
+      doc.autoTable({
+        startY: y,
+        head: [['#', 'Date', 'Stage / Description', 'Mode', 'Amount']],
+        body: rows,
+        headStyles: { fillColor: [26, 58, 42], textColor: [201, 168, 76], fontStyle: 'bold', fontSize: 8, cellPadding: 2.5 },
+        bodyStyles: { fontSize: 8, cellPadding: 2.5 },
+        alternateRowStyles: { fillColor: [250, 248, 243] },
+        columnStyles: {
+          0: { cellWidth: 10, halign: 'center' },
+          1: { cellWidth: 28 },
+          4: { cellWidth: 32, halign: 'right', fontStyle: 'bold', textColor: [39, 120, 60] }
+        },
+        margin: { left: 12, right: 12 },
+        styles: { lineColor: [220, 215, 205], lineWidth: 0.3 }
+      });
+      y = (doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY : y) + 12;
+    });
+
+    // Summary box
+    if (y > 250) { doc.addPage(); y = 20; }
+    doc.setFillColor(26, 58, 42);
+    doc.roundedRect(12, y, 186, 28, 3, 3, 'F');
+    doc.setTextColor(201, 168, 76);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('SUMMARY', 18, y + 9);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('Contract: ' + fmt2(grandTotal), 18, y + 18);
+    doc.text('Received: ' + fmt2(grandPaid), 80, y + 18);
+    doc.text('Outstanding: ' + fmt2(grandBal), 140, y + 18);
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Confidential — for client use only · Generated from Client Portal', 14, pageH - 8);
+      doc.text('Page ' + i + ' / ' + pageCount, pageW - 14, pageH - 8, { align: 'right' });
+    }
+
+    const safeName = String(c.name || 'Client').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+    const fname = projectId
+      ? ('Payment_Report_' + safeName + '_' + String(projectId).slice(0, 8) + '.pdf')
+      : ('Payment_Report_' + safeName + '.pdf');
+    doc.save(fname);
+    if (typeof toastOk === 'function') toastOk('Payment report downloaded');
+    else if (typeof showOk === 'function') showOk('Payment report downloaded');
+  } catch (err) {
+    console.error(err);
+    alert('Could not generate PDF: ' + (err && err.message ? err.message : err));
+  }
+};
+
 function renderCpPayments(c, projs) {
   const DEFAULT_MILESTONES = ['Agreement', 'Concept', 'Working Drawing', 'Approval', 'Completion'];
 
@@ -16585,7 +16520,11 @@ function renderCpPayments(c, projs) {
     return `<div class="cp-pay-ui"><div class="cp-pay-empty">No projects linked yet</div></div>`;
   }
 
-  let html = `<div class="cp-pay-ui"><div class="cp-pay-page-title">Payments</div>`;
+  let html = `<div class="cp-pay-ui">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+      <div class="cp-pay-page-title" style="margin-bottom:0">Payments</div>
+      <button type="button" class="btn btn-pdf btn-sm" onclick="cpGeneratePaymentReport()" style="flex-shrink:0">📄 Payment Report PDF</button>
+    </div>`;
 
   projs.forEach(p => {
     const pays = (typeof ppays === 'function' ? ppays(p.id) : []).slice().sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
@@ -16597,7 +16536,10 @@ function renderCpPayments(c, projs) {
 
     html += `
     <div class="cp-pay-block">
-      <div class="cp-pay-proj">${p.name || 'Project'}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+        <div class="cp-pay-proj" style="margin-bottom:0">${p.name || 'Project'}</div>
+        <button type="button" class="btn btn-s btn-sm" onclick="cpGeneratePaymentReport('${p.id}')" style="font-size:10px">📄 PDF</button>
+      </div>
 
       <div class="cp-pay-summary">
         <div class="cp-pay-sum-item">
