@@ -142,49 +142,13 @@ header{
   transform:none;
 }
 .pc-cover{
-  position:relative;height:168px;
+  position:relative;height:140px;
   background:linear-gradient(145deg,var(--grn) 0%,var(--grn2) 55%,#4a6350 100%);
   overflow:hidden;flex-shrink:0;
-  border:none;border-radius:0;
 }
 .pc-cover.has-img{background:var(--surf2)}
 .pc-cover img{
   width:100%;height:100%;object-fit:cover;display:block;
-  border:none;outline:none;
-}
-.proj-card.pc-premium{overflow:hidden}
-.gs-cover-box{border:1px dashed var(--bdr2);border-radius:10px;padding:12px;background:var(--surf2);text-align:center;margin-top:4px}
-.gs-cover-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;display:block;margin-bottom:10px;border:none}
-.gs-cover-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center}
-.cp-home-hero{
-  position:relative;border-radius:14px;overflow:hidden;margin-bottom:18px;
-  min-height:168px;border:none;
-  background:linear-gradient(145deg,var(--grn) 0%,var(--grn2) 60%,#3d5340 100%);
-  box-shadow:0 8px 28px rgba(28,27,25,.08);
-}
-.cp-home-hero.has-3d{background-size:cover;background-position:center;background-repeat:no-repeat}
-.cp-home-hero-shade{
-  position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(18,20,16,.78) 0%,rgba(18,20,16,.35) 45%,rgba(18,20,16,.12) 100%);
-  pointer-events:none;
-}
-.cp-home-hero-inner{position:relative;z-index:1;padding:22px 18px 18px;color:#f7f5f0}
-.cp-home-hero-inner .cp-home-proj-name{color:#f7f5f0;margin-bottom:4px}
-.cp-home-hero-inner .cp-home-proj-loc{color:rgba(247,245,240,.72);margin:0}
-.cp-home-hero-badge{
-  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  padding:4px 10px;border-radius:4px;margin-bottom:10px;
-  background:rgba(255,252,247,.14);color:var(--gold2,#d4b87a);border:1px solid rgba(255,255,255,.12);
-}
-.cp-home-proj-row.has-thumb{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:12px}
-.cp-home-proj-thumb{
-  width:56px;height:56px;border-radius:10px;background-size:cover;background-position:center;
-  border:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);background-color:var(--surf2);
-}
-.pd-cover-block{margin-bottom:14px}
-.pd-cover-preview{
-  width:100%;height:180px;object-fit:cover;border-radius:10px;display:block;border:none;
-  background:linear-gradient(145deg,var(--grn),var(--grn2));
 }
 .pc-cover-fallback{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
@@ -984,20 +948,6 @@ aside.collapsed .user-row.gs-glass-user{padding:6px;border-radius:8px}
 
 /* Client Drawings UI */
 .cp-dwg{max-width:560px;margin:0 auto}
-.cp-project-group{margin:0 0 18px;border:1px solid var(--bdr);border-radius:12px;background:var(--surf);overflow:hidden}
-.cp-project-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 15px;background:var(--surf2);border-bottom:1px solid var(--bdr)}
-.cp-project-head-main{min-width:0}
-.cp-project-title{font-family:var(--font-display),serif;font-size:17px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
-.cp-project-sub{font-size:10px;color:var(--mut);margin-top:2px}
-.cp-project-count{font-size:10px;font-weight:700;color:var(--grn);white-space:nowrap}
-.cp-drive-folder{margin:10px 12px 0;border:1px solid var(--bdr);border-radius:9px;background:var(--bg);overflow:hidden}
-.cp-drive-folder-head{display:flex;align-items:center;gap:7px;padding:9px 10px;font-size:11px;font-weight:700;color:var(--ink2);background:var(--surf2);border-bottom:1px solid var(--bdr)}
-.cp-drive-folder-path{font-size:9px;color:var(--mut);font-weight:500;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cp-drive-folder-body{padding:10px}
-.cp-drive-file-list{display:grid;gap:8px}
-.cp-project-files{padding:12px}
-.cp-drive-empty{font-size:11px;color:var(--mut);padding:10px 2px}
-
 .cp-dwg-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px}
 .cp-dwg-title{
   font-family:var(--font-display),serif;font-size:22px;font-weight:600;
@@ -3205,21 +3155,6 @@ html{transition:background .3s,color .3s}
           <div><div style="font-size:10px;font-weight:700;color:var(--mut);margin-bottom:7px">Floor Plans Required</div><div id="apt-floors-checks" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
         </div>
         <div class="fg" style="margin-top:12px"><label>Notes <span class="ml">टिपा</span></label><textarea class="fi fi-ta" id="p-notes" placeholder="Additional info..."></textarea></div>
-        <div class="fg" style="margin-top:14px">
-          <label>3D View Thumbnail <span class="ml">थ्रीडी थंबनेल · क्लायंट पोर्टल बॅकग्राउंड</span></label>
-          <div class="gs-cover-box" id="p-cover-box">
-            <img id="p-cover-preview" class="gs-cover-preview" alt="" style="display:none">
-            <div id="p-cover-empty" style="font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.45">प्रोजेक्ट कार्ड आणि क्लायंट पोर्टलसाठी 3D / रेंडर इमेज अपलोड करा</div>
-            <div class="gs-cover-actions">
-              <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">
-                🖼 Upload 3D View
-                <input type="file" id="p-cover-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="gsCoverFilePicked(this)">
-              </label>
-              <button type="button" class="btn btn-s btn-sm" id="p-cover-clear" style="display:none" onclick="gsCoverClear()">Remove</button>
-            </div>
-            <input type="hidden" id="p-cover-data" value="">
-          </div>
-        </div>
       </div>
 
       <!-- STEP 2: PROJECT BRIEF -->
@@ -3810,9 +3745,6 @@ function loadLocal(){
 // window.storage (artifact) used only as fallback if Firebase not configured
 const IS_ARTIFACT = false; // Force Firebase/localStorage mode for real-time sync
 
-// Firebase database URL is embedded so every PC uses the same central database.
-// Project: greenhouse-studio-509609
-const GS_FIREBASE_URL='https://greenhouse-payment-app-default-rtdb.asia-southeast1.firebasedatabase.app';
 let fbDbUrl=null, fbPollTimer=null, fbLastHash='';
 
 function stripQuotes(s){
@@ -3880,23 +3812,13 @@ async function syncFirebase(){
   }
 }
 async function fbPoll(){
-  if(!fbDbUrl)return false;
+  if(!fbDbUrl)return;
   var url=fbUrl();
-  if(!url)return false;
+  if(!url)return;
   try{
-    var r=await fetch(url,{cache:'no-store'});
-    if(!r.ok){
-      var msg='Firebase Read Error HTTP '+r.status;
-      setSyncStatus('red',msg);
-      console.error(msg,url);
-      return false;
-    }
+    var r=await fetch(url);
+    if(!r.ok)return;
     var data=await r.json();
-    // null means the database/path is reachable but no data has been saved yet.
-    if(data===null){
-      setSyncStatus('green','Firebase Connected — No data yet');
-      return true;
-    }
     if(data&&data.db){
       // Ensure all arrays present
       var d=data.db;
@@ -3914,17 +3836,10 @@ async function fbPoll(){
         if(data.officeInfo) officeInfo=data.officeInfo;
         saveLocal();
         refreshAll();
+        setSyncStatus('green','Live ✓ '+new Date().toLocaleTimeString());
       }
-      setSyncStatus('green','Firebase Live ✓ '+new Date().toLocaleTimeString());
-      return true;
     }
-    setSyncStatus('green','Firebase Connected — No app data');
-    return true;
-  }catch(e){
-    setSyncStatus('red','Firebase Offline / Read Failed');
-    console.error('Firebase read:',e);
-    return false;
-  }
+  }catch(e){ /* network error — silent */ }
 }
 
 // ── FIREBASE CONFIG (standalone only) ────────────
@@ -4039,33 +3954,25 @@ function disconnectFirebase(){
 
 async function loadSavedFirebaseConfig(){
   try{
-    // Always use the central Firebase database so every PC sees the same data.
-    var url=GS_FIREBASE_URL || localStorage.getItem('gs_fb_url');
-    if(!url) return false;
-    fbDbUrl=url.replace(/\/+$/,'');
-    localStorage.setItem('gs_fb_url',fbDbUrl);
+    var url=localStorage.getItem('gs_fb_url');
+    if(!url) return;
+    fbDbUrl=url;
     var inp=document.getElementById('inline-fb-url');
-    if(inp) inp.value=fbDbUrl;
+    if(inp) inp.value=url;
     // ensure db arrays before poll
     if(!db.expenses) db.expenses=[];
     if(!db.estimates) db.estimates=[];
     if(!db.siteVisits) db.siteVisits=[];
     if(!db.activities) db.activities=[];
-    var ok=await fbPoll();
-    if(ok){
-      if(fbPollTimer) clearInterval(fbPollTimer);
-      fbPollTimer=setInterval(pollRemote,6000);
-      var discBtn=document.getElementById('btn-disconnect');
-      if(discBtn) discBtn.style.display='';
-      var badge=document.getElementById('sync-status-badge');
-      if(badge) badge.className='sync-status active';
-    }
-    return ok;
-  }catch(e){
-    setSyncStatus('red','Firebase connection failed');
-    console.warn('Firebase auto-load:',e.message);
-    return false;
-  }
+    await fbPoll();
+    if(fbPollTimer) clearInterval(fbPollTimer);
+    fbPollTimer=setInterval(pollRemote,6000);
+    var discBtn=document.getElementById('btn-disconnect');
+    if(discBtn) discBtn.style.display='';
+    var badge=document.getElementById('sync-status-badge');
+    if(badge){badge.className='sync-status active';badge.textContent='🟢 Firebase Connected';}
+    setSyncStatus('green','Connected ✓');
+  }catch(e){ console.warn('Firebase auto-load:',e.message); }
 }
 function loadFirebaseFormValues(){
   try{document.getElementById('fb-db-url').value=localStorage.getItem('gs_fb_url')||'';}catch(e){}
@@ -5368,22 +5275,7 @@ function pdRenderTab(tab){
   if(!body)return;
 
   if(tab==='overview'){
-    const coverUrl=p.cover||p.image||p.photo||'';
     body.innerHTML=`<div class="pd-panel">
-      <div class="pd-section pd-cover-block">
-        <div class="pd-section-title">3D View Thumbnail</div>
-        ${coverUrl
-          ? `<img class="pd-cover-preview" src="${coverUrl}" alt="3D thumbnail" onerror="this.style.display='none'">`
-          : `<div class="pd-cover-preview" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-family:var(--font-display),serif;font-size:28px">${(p.name||'P').slice(0,2).toUpperCase()}</div>`}
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-          <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">
-            🖼 Upload / Change 3D
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="gsProjectCoverUpload('${pid}',this)">
-          </label>
-          ${coverUrl?`<button class="btn btn-s btn-sm" style="color:var(--red);border-color:var(--red)" onclick="gsProjectCoverRemove('${pid}')">Remove</button>`:''}
-          <span style="font-size:11px;color:var(--mut)">क्लायंट पोर्टल बॅकग्राउंड · बॉर्डरलेस</span>
-        </div>
-      </div>
       <div class="pd-kpi-grid">
         <div class="pd-kpi"><div class="pd-kpi-lbl">Contract</div><div class="pd-kpi-val">${fmt(p.total)}</div></div>
         <div class="pd-kpi"><div class="pd-kpi-lbl">Received</div><div class="pd-kpi-val green">${fmt(paid)}</div></div>
@@ -7054,8 +6946,6 @@ function resetProjModal(){
   if(empty) empty.style.display = 'block';
   // Reset all inputs in modal
   document.querySelectorAll('#m-proj input.fi, #m-proj select.fi, #m-proj textarea.fi').forEach(e=>e.value='');
-  if(typeof gsCoverClear==='function')gsCoverClear();
-  const _pcd=document.getElementById('p-cover-data');if(_pcd)_pcd.value='';
   document.querySelectorAll('#m-proj input[type=checkbox], #m-proj input[type=radio]').forEach(e=>e.checked=false);
   // Reset UPI chips
   document.querySelectorAll('#p-upi-sub .upi-chip').forEach((c,i)=>c.classList.toggle('on',i===0));
@@ -7076,101 +6966,6 @@ function resetBriefPanel(){
   document.querySelectorAll('#project-brief-panel input[type=checkbox], #project-brief-panel input[type=radio]').forEach(e=>e.checked=false);
   document.querySelectorAll('#project-brief-panel input.fi, #project-brief-panel select.fi').forEach(e=>e.value='');
 }
-
-/* ── Project 3D / cover thumbnail ── */
-function gsCoverSetPreview(dataUrl){
-  const img=document.getElementById('p-cover-preview');
-  const empty=document.getElementById('p-cover-empty');
-  const clr=document.getElementById('p-cover-clear');
-  const hid=document.getElementById('p-cover-data');
-  if(hid)hid.value=dataUrl||'';
-  if(dataUrl){
-    if(img){img.src=dataUrl;img.style.display='block';}
-    if(empty)empty.style.display='none';
-    if(clr)clr.style.display='';
-  }else{
-    if(img){img.removeAttribute('src');img.style.display='none';}
-    if(empty)empty.style.display='';
-    if(clr)clr.style.display='none';
-  }
-}
-window.gsCoverClear=function(){
-  gsCoverSetPreview('');
-  const f=document.getElementById('p-cover-file');if(f)f.value='';
-};
-window.gsCoverFilePicked=function(input){
-  const file=input&&input.files&&input.files[0];
-  if(!file)return;
-  if(!file.type||!file.type.startsWith('image/')){alert('Please select an image (JPG / PNG / WebP)');input.value='';return;}
-  if(file.size>4.5*1024*1024){alert('Image too large — please use under 4.5 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const raw=e.target.result;
-    const img=new Image();
-    img.onload=function(){
-      const maxW=1400,maxH=900;
-      let w=img.width,h=img.height;
-      if(w>maxW||h>maxH){const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r);}
-      const canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      let out=canvas.toDataURL('image/jpeg',0.82);
-      if(out.length>900000)out=canvas.toDataURL('image/jpeg',0.65);
-      gsCoverSetPreview(out);
-    };
-    img.onerror=function(){gsCoverSetPreview(raw);};
-    img.src=raw;
-  };
-  reader.readAsDataURL(file);
-};
-window.gsProjectCoverUpload=function(pid,input){
-  const p=typeof gp==='function'?gp(pid):null;
-  if(!p){alert('Project not found');return;}
-  const file=input&&input.files&&input.files[0];
-  if(!file)return;
-  if(!file.type||!file.type.startsWith('image/')){alert('Please select an image');input.value='';return;}
-  if(file.size>4.5*1024*1024){alert('Image too large — under 4.5 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const raw=e.target.result;
-    const img=new Image();
-    img.onload=function(){
-      const maxW=1400,maxH=900;
-      let w=img.width,h=img.height;
-      if(w>maxW||h>maxH){const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r);}
-      const canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      let out=canvas.toDataURL('image/jpeg',0.82);
-      if(out.length>900000)out=canvas.toDataURL('image/jpeg',0.65);
-      p.cover=out;p.updatedAt=new Date().toISOString();
-      try{if(typeof saveAll==='function')saveAll();else saveLocal();}catch(err){try{saveLocal();}catch(e2){}}
-      if(typeof toastOk==='function')toastOk('3D thumbnail saved');
-      else if(typeof showOk==='function')showOk('3D thumbnail saved');
-      if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
-      if(typeof renderProjects==='function')renderProjects();
-      if(typeof renderDashboard==='function')renderDashboard();
-    };
-    img.onerror=function(){
-      p.cover=raw;p.updatedAt=new Date().toISOString();
-      try{saveAll();}catch(err){try{saveLocal();}catch(e2){}}
-      if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
-      if(typeof renderProjects==='function')renderProjects();
-    };
-    img.src=raw;
-  };
-  reader.readAsDataURL(file);
-};
-window.gsProjectCoverRemove=function(pid){
-  const p=typeof gp==='function'?gp(pid):null;
-  if(!p)return;
-  if(!confirm('Remove 3D thumbnail?'))return;
-  p.cover='';p.updatedAt=new Date().toISOString();
-  try{if(typeof saveAll==='function')saveAll();else saveLocal();}catch(err){try{saveLocal();}catch(e2){}}
-  if(window._pdPid===pid&&typeof pdRenderTab==='function')pdRenderTab(window._pdTab||'overview');
-  if(typeof renderProjects==='function')renderProjects();
-  if(typeof toastOk==='function')toastOk('Thumbnail removed');
-};
 
 // ── Edit Project ──
 let _editProjectId = null;
@@ -7198,8 +6993,6 @@ function openEditProject(pid){
     set('p-total', p.total);
     set('p-deadline', p.deadline);
     set('p-notes', p.notes);
-    if(typeof gsCoverSetPreview==='function') gsCoverSetPreview(p.cover||p.image||p.photo||'');
-    const cf=document.getElementById('p-cover-file');if(cf)cf.value='';
 
     // Payment mode
     const pmEl = document.getElementById('p-paymode');
@@ -7268,10 +7061,6 @@ function saveProject(){
     p.notes = document.getElementById('p-notes').value.trim();
     p.aptFloors = document.getElementById('apt-floors')?document.getElementById('apt-floors').value:'';
     p.aptParking = document.getElementById('apt-parking')&&document.getElementById('apt-parking').checked;
-    const coverData=(document.getElementById('p-cover-data')||{}).value||'';
-    const prevImg=document.getElementById('p-cover-preview');
-    if(coverData) p.cover=coverData;
-    else if(prevImg&&prevImg.style.display==='none') p.cover='';
     db.activities.unshift({text:'Project Updated — '+name,sub:'Edited',time:'Just now',color:'#2c5f8a'});
     _editProjectId = null;
     // Reset modal for next use
@@ -7291,14 +7080,12 @@ function saveProject(){
 
   // ── ADD MODE — new project ──
   const pid=uid('P');
-  const coverNew=(document.getElementById('p-cover-data')||{}).value||'';
   const proj={id:pid,name,clientId:cid,
     address:document.getElementById('p-address').value.trim(),
     services:svcs,total,paymode:pmode,
     deadline:document.getElementById('p-deadline').value,
     notes:document.getElementById('p-notes').value.trim(),
     stage:'Concept',files:[],
-    cover:coverNew||'',
     aptFloors:document.getElementById('apt-floors')?document.getElementById('apt-floors').value:'',
     aptParking:document.getElementById('apt-parking')&&document.getElementById('apt-parking').checked
   };
@@ -10125,9 +9912,32 @@ function renderUDCPR(){
           </div>
           <div id="u-frontage-hint" style="font-size:11px;color:var(--mut);line-height:1.5;padding:6px 10px;background:var(--surf2);border-radius:8px;border:1px solid var(--bdr)">समोरच्या रस्त्यावर front margin. बाजू / मागे side-rear margins.</div>
           <input type="checkbox" id="u-corner" style="display:none">
+
+          <div style="height:1px;background:var(--bdr)"></div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--mut)">Client / Site (PDF साठी)</div>
           <div class="form-row c2" style="margin-bottom:0">
-            <div class="fg" style="margin-bottom:0"><label>Plot Width (m)</label><input class="fi" type="number" id="u-pw" placeholder="15" step="0.5"></div>
-            <div class="fg" style="margin-bottom:0"><label>Plot Depth (m)</label><input class="fi" type="number" id="u-pd" placeholder="20" step="0.5"></div>
+            <div class="fg" style="margin-bottom:0"><label>Client Name</label><input class="fi" id="u-client" placeholder="श्री. / सौ. पूर्ण नाव"></div>
+            <div class="fg" style="margin-bottom:0"><label>Phone</label><input class="fi" id="u-phone" placeholder="9XXXXXXXXX"></div>
+          </div>
+          <div class="fg" style="margin-bottom:0"><label>Site Address / Survey No.</label><input class="fi" id="u-site" placeholder="स.नं. / CTS / प्लॉट, गाव, तालुका"></div>
+
+          <div style="height:1px;background:var(--bdr)"></div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--mut)">Amalgamation — किती प्लॉट?</div>
+          <div class="fg" style="margin-bottom:0">
+            <label>Plots (एकत्रीकरण)</label>
+            <select class="fi fi-sel" id="u-plot-count" onchange="udcprPlotCountChange()">
+              <option value="1">1 Plot</option>
+              <option value="2">2 Plots (Amalgamation)</option>
+              <option value="3">3 Plots (Amalgamation)</option>
+              <option value="4">4 Plots (Amalgamation)</option>
+            </select>
+          </div>
+          <div id="u-plots-box" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div style="font-size:10px;color:var(--mut);line-height:1.45">प्रत्येक प्लॉटचे क्षेत्र भरा — Gross area auto-sum होते. एकत्रीकरणानंतरचे एकत्र Width × Depth खाली भरा (footprint / sketch साठी).</div>
+
+          <div class="form-row c2" style="margin-bottom:0">
+            <div class="fg" style="margin-bottom:0"><label>Combined Plot Width (m)</label><input class="fi" type="number" id="u-pw" placeholder="15" step="0.5" oninput="udcprLiveSketch()"></div>
+            <div class="fg" style="margin-bottom:0"><label>Combined Plot Depth (m)</label><input class="fi" type="number" id="u-pd" placeholder="20" step="0.5" oninput="udcprLiveSketch()"></div>
           </div>
           <div class="form-row c2" style="margin-bottom:0">
             <div class="fg" style="margin-bottom:0"><label>Building Height (m)</label><input class="fi" type="number" id="u-ht" placeholder="12" step="0.5"></div>
@@ -10140,6 +9950,12 @@ function renderUDCPR(){
               <option value="prem">Basic + Premium FSI</option>
               <option value="full">Basic + Premium + TDR</option>
             </select>
+          </div>
+          <div style="font-size:10px;color:var(--mut);line-height:1.5;padding:8px 10px;background:rgba(184,151,90,.08);border:1px solid rgba(184,151,90,.25);border-radius:8px">
+            <b style="color:var(--ink)">Closed balcony (footprint मध्ये add):</b><br>
+            · Margin ≥ 4 m → 2 m closed balcony<br>
+            · Front / road margin ≥ 3 m → 1 m projection<br>
+            Max footprint = setback building + closed balcony projections
           </div>
 
           <button onclick="udcprCalculate()" style="width:100%;padding:12px;background:var(--grn);color:#fff;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px" onmouseover="this.style.background='var(--grn2)'" onmouseout="this.style.background='var(--grn)'">
@@ -10255,34 +10071,82 @@ function udcprUpdateNet(){
   if(el) el.value = g ? net.toFixed(2) : '';
 }
 
-// ── CONGESTED / GAOTHAN MARGINS — UDCPR Table 6-B & 6-C ──
-// Kept separate so the calculator works correctly for Congested / Gaothan.
-function udcprCongFront(roadW, isMixed){
-  const r=Number(roadW)||0;
-  if(r<4.5) return isMixed ? 3.75 : 2.25; // 2.25m + 1.50m for mixed use
-  if(r<6)   return isMixed ? 1.50 : 0.00;
-  if(r<12)  return isMixed ? 2.00 : 1.00;
-  return isMixed ? 2.50 : 2.00;
-}
-
-function udcprCongSideRear(plotArea, plotWidth){
-  const a=Number(plotArea)||0;
-  const w=Number(plotWidth)||0;
-  // Table 6-C: width <= 7.0m → side margin NIL irrespective of area.
-  if(a<=1000) return {s:0,r:0,note:'Table 6-C: Plot up to 1000 sq.m → Side 0.00 m · Rear 0.00 m'};
-  if(a<=4000){
-    const side=(w>0 && w<=7)?0:1;
-    return {
-      s:side,
-      r:1,
-      note: side===0
-        ? 'Table 6-C: Plot 1000–4000 sq.m → Side NIL (plot width ≤7.0 m) · Rear 1.00 m'
-        : 'Table 6-C: Plot above 1000 & up to 4000 sq.m → Side 1.00 m · Rear 1.00 m'
-    };
+function udcprPlotCountChange(){
+  const n=Math.max(1,Math.min(4,parseInt(document.getElementById('u-plot-count')?.value||'1',10)));
+  const box=document.getElementById('u-plots-box');
+  if(!box)return;
+  const prev=udcprReadPlots();
+  let html='';
+  for(let i=0;i<n;i++){
+    const p=prev[i]||{label:'',area:''};
+    html+='<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:6px;padding:8px;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px">'
+      +'<div class="fg" style="margin:0"><label style="font-size:10px">Plot '+(i+1)+' — S.No / CTS</label>'
+      +'<input class="fi" id="u-plot-label-'+i+'" value="'+String(p.label||'').replace(/"/g,'&quot;')+'" placeholder="स.नं. '+(i+1)+'" oninput="udcprSumPlotAreas()"></div>'
+      +'<div class="fg" style="margin:0"><label style="font-size:10px">Area (sq.m)</label>'
+      +'<input class="fi" type="number" id="u-plot-area-'+i+'" value="'+(p.area||'')+'" placeholder="0" min="0" step="0.01" oninput="udcprSumPlotAreas()"></div></div>';
   }
-  // Above 4000 sq.m: side/rear follow non-congested regulations.
-  return {s:null,r:null,note:'Plot above 4000 sq.m → Side/Rear as per non-congested regulations'};
+  box.innerHTML=html;
+  udcprSumPlotAreas();
 }
+function udcprReadPlots(){
+  const n=Math.max(1,Math.min(4,parseInt(document.getElementById('u-plot-count')?.value||'1',10)));
+  const arr=[];
+  for(let i=0;i<n;i++){
+    const label=(document.getElementById('u-plot-label-'+i)?.value||'').trim();
+    const area=parseFloat(document.getElementById('u-plot-area-'+i)?.value)||0;
+    arr.push({label:label||('Plot '+(i+1)),area});
+  }
+  return arr;
+}
+function udcprSumPlotAreas(){
+  const plots=udcprReadPlots();
+  const sum=plots.reduce(function(s,p){return s+(Number(p.area)||0);},0);
+  const areaEl=document.getElementById('u-area-sqm');
+  if(areaEl && sum>0){ areaEl.value=sum.toFixed(2); udcprUpdateNet(); }
+}
+function udcprSketchSvg(r, opts){
+  opts=opts||{};
+  const W=opts.w||320, H=opts.h||360;
+  const pw=Number(r.plotW)||0, pd=Number(r.plotD)||0;
+  if(!pw||!pd){
+    return '<div style="text-align:center;padding:24px;color:#6e6960;font-size:12px">Plot Width × Depth भरा — sketch येईल</div>';
+  }
+  const pad=28;
+  const scale=Math.min((W-pad*2)/pw,(H-pad*2-20)/pd);
+  const dw=pw*scale, dh=pd*scale;
+  const ox=(W-dw)/2, oy=pad+8;
+  const fm=Number(r.frontMargin)||0, sm=Number(r.sideMargin)||0, rm=Number(r.rearMargin)||0;
+  const bf=Number(r.balcFront)||0, br=Number(r.balcRear)||0, bl=Number(r.balcSideL)||0, brr=Number(r.balcSideR)||0;
+  const bx=ox+sm*scale, by=oy+fm*scale;
+  const bw=Math.max(0,(pw-sm*2)*scale), bd=Math.max(0,(pd-fm-rm)*scale);
+  const fx=ox+(sm-bl)*scale, fy=oy+(fm-bf)*scale;
+  const fw=Math.max(0,(pw-(sm-bl)-(sm-brr))*scale), fd=Math.max(0,(pd-(fm-bf)-(rm-br))*scale);
+  const roadY=oy-14;
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:'+W+'px;display:block;margin:0 auto;background:#faf8f4;border-radius:10px;border:1px solid #e4dfd6">'
+    +'<defs><pattern id="hatchBalc" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">'
+    +'<line x1="0" y1="0" x2="0" y2="6" stroke="#b8975a" stroke-width="1.5" opacity=".55"/></pattern></defs>'
+    +'<rect x="'+(ox-4)+'" y="'+roadY+'" width="'+(dw+8)+'" height="12" fill="#3a3632" rx="2"/>'
+    +'<text x="'+(ox+dw/2)+'" y="'+(roadY+9)+'" text-anchor="middle" fill="#f7f5f0" font-size="8" font-family="sans-serif" font-weight="700">ROAD '+(r.roadW||'')+' m</text>'
+    +'<rect x="'+ox+'" y="'+oy+'" width="'+dw+'" height="'+dh+'" fill="#fff" stroke="#1c1b19" stroke-width="1.8"/>'
+    +'<rect x="'+ox+'" y="'+oy+'" width="'+dw+'" height="'+Math.max(0,fm*scale)+'" fill="rgba(166,61,50,.08)"/>'
+    +'<rect x="'+ox+'" y="'+(oy+dh-rm*scale)+'" width="'+dw+'" height="'+Math.max(0,rm*scale)+'" fill="rgba(166,61,50,.08)"/>'
+    +'<rect x="'+ox+'" y="'+oy+'" width="'+Math.max(0,sm*scale)+'" height="'+dh+'" fill="rgba(166,61,50,.08)"/>'
+    +'<rect x="'+(ox+dw-sm*scale)+'" y="'+oy+'" width="'+Math.max(0,sm*scale)+'" height="'+dh+'" fill="rgba(166,61,50,.08)"/>'
+    +'<rect x="'+fx+'" y="'+fy+'" width="'+fw+'" height="'+fd+'" fill="url(#hatchBalc)" stroke="#b8975a" stroke-width="1.2" stroke-dasharray="4 2"/>'
+    +'<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bd+'" fill="rgba(44,62,45,.18)" stroke="#2c3e2d" stroke-width="1.5"/>'
+    +'<text x="'+(ox+dw/2)+'" y="'+(oy-3)+'" text-anchor="middle" fill="#6e6960" font-size="9" font-family="sans-serif">W '+pw+' m</text>'
+    +'<text x="'+(ox-6)+'" y="'+(oy+dh/2)+'" text-anchor="middle" fill="#6e6960" font-size="9" font-family="sans-serif" transform="rotate(-90 '+(ox-6)+' '+(oy+dh/2)+')">D '+pd+' m</text>'
+    +'<text x="'+(ox+dw/2)+'" y="'+(oy+Math.max(10,fm*scale/2+3))+'" text-anchor="middle" fill="#a63d32" font-size="8" font-family="sans-serif" font-weight="700">Front '+fm+'m'+(bf?(' +B'+bf):'')+'</text>'
+    +'<text x="'+(ox+dw/2)+'" y="'+(oy+dh-Math.max(4,rm*scale/2-3))+'" text-anchor="middle" fill="#a63d32" font-size="8" font-family="sans-serif" font-weight="700">Rear '+rm+'m'+(br?(' +B'+br):'')+'</text>'
+    +'<text x="'+(bx+bw/2)+'" y="'+(by+bd/2)+'" text-anchor="middle" fill="#1c1b19" font-size="9" font-family="sans-serif" font-weight="700">'+(r.buildW||'—')+' × '+(r.buildD||'—')+' m</text>'
+    +'<rect x="'+pad+'" y="'+(H-22)+'" width="10" height="10" fill="rgba(44,62,45,.18)" stroke="#2c3e2d"/>'
+    +'<text x="'+(pad+14)+'" y="'+(H-14)+'" fill="#3a3632" font-size="8" font-family="sans-serif">Building</text>'
+    +'<rect x="'+(pad+70)+'" y="'+(H-22)+'" width="10" height="10" fill="url(#hatchBalc)" stroke="#b8975a"/>'
+    +'<text x="'+(pad+84)+'" y="'+(H-14)+'" fill="#3a3632" font-size="8" font-family="sans-serif">+ Closed balcony</text>'
+    +'<rect x="'+(pad+180)+'" y="'+(H-22)+'" width="10" height="10" fill="rgba(166,61,50,.12)" stroke="#a63d32"/>'
+    +'<text x="'+(pad+194)+'" y="'+(H-14)+'" fill="#3a3632" font-size="8" font-family="sans-serif">Margin</text></svg>';
+}
+function udcprLiveSketch(){}
 
 function udcprCalculate(){
   udcprUpdateNet();
@@ -10515,7 +10379,15 @@ function udcprCalculate(){
     notes.push('Premium FSI charge = 35% of ASR × Premium BUA (Reg 6.3 Note viii)');
   }
 
-  // Footprint
+  // Footprint (setback building) + Closed balcony projections
+  // Rule (practice): margin ≥4m → 2m closed balcony; road/front ≥3m → 1m out
+  function closedBalcDepth(m, isFront){
+    const mm=Number(m)||0;
+    if(mm>=4) return 2;
+    if(isFront && mm>=3) return 1;
+    if(!isFront && mm>=3) return 1;
+    return 0;
+  }
   let deductW, deductD;
   const smNum=sideMargin, rmNum=rearMargin, fmNum=frontMargin;
   if(isThrough){ deductW=smNum*2; deductD=fmNum+rmNum; }
@@ -10525,8 +10397,40 @@ function udcprCalculate(){
   if(isRowHouse||isRowHouseEWS) deductW = isCorner ? 1.5 : 0;
   const buildW = plotW>0 ? Math.max(0, plotW-deductW) : null;
   const buildD = plotD>0 ? Math.max(0, plotD-deductD) : null;
-  const footprint = (buildW!=null && buildD!=null) ? (buildW*buildD) : null;
+
+  const balcFront = closedBalcDepth(fmNum, true);
+  const balcRear  = closedBalcDepth(rmNum, false);
+  let balcSideL = 0, balcSideR = 0;
+  if(isRowHouse||isRowHouseEWS){
+    balcSideL = balcSideR = 0;
+  } else if(frontage==='three'){
+    balcSideL = closedBalcDepth(smNum, false);
+    balcSideR = closedBalcDepth(fmNum, true); // other road side treated as front-ish
+  } else if(isCorner){
+    balcSideL = closedBalcDepth(smNum, false);
+    balcSideR = closedBalcDepth(Math.max(fmNum,smNum), true);
+  } else {
+    balcSideL = balcSideR = closedBalcDepth(smNum, false);
+  }
+
+  let maxFootW=null, maxFootD=null, footprintCore=null, footprint=null, balcArea=null;
+  if(buildW!=null && buildD!=null){
+    footprintCore = buildW*buildD;
+    maxFootW = Math.min(plotW, buildW + balcSideL + balcSideR);
+    maxFootD = Math.min(plotD, buildD + balcFront + balcRear);
+    footprint = maxFootW * maxFootD;
+    balcArea = Math.max(0, footprint - footprintCore);
+    if(balcArea>0.01){
+      notes.push('Closed balcony: Front '+balcFront+' m · Rear '+balcRear+' m · Sides '+balcSideL+'/'+balcSideR+' m → +'+balcArea.toFixed(1)+' sq.m in max footprint (margin≥4m→2m; road≥3m→1m)');
+    }
+  }
   const coverage = footprint!=null && netA>0 ? (footprint/netA*100) : null;
+
+  // Multi-plot list
+  const plots = udcprReadPlots();
+  const clientName = (document.getElementById('u-client')?.value||'').trim();
+  const clientPhone = (document.getElementById('u-phone')?.value||'').trim();
+  const siteAddr = (document.getElementById('u-site')?.value||'').trim();
 
   const frontageLabel={single:'Single Front',corner:'Corner (Front+Side)',through:'Through (Front+Back)',three:'Three Side'}[frontage]||frontage;
 
@@ -10539,14 +10443,20 @@ function udcprCalculate(){
     ancBUA: +ancBUA.toFixed(2),
     frontMargin, sideMargin, rearMargin,
     footprint: footprint!=null?+footprint.toFixed(2):null,
+    footprintCore: footprintCore!=null?+footprintCore.toFixed(2):null,
+    balcArea: balcArea!=null?+balcArea.toFixed(2):null,
+    balcFront, balcRear, balcSideL, balcSideR,
     buildW: buildW!=null?+buildW.toFixed(2):null,
     buildD: buildD!=null?+buildD.toFixed(2):null,
+    maxFootW: maxFootW!=null?+maxFootW.toFixed(2):null,
+    maxFootD: maxFootD!=null?+maxFootD.toFixed(2):null,
     coverage: coverage!=null?+coverage.toFixed(1):null,
     premCost, tableRef, marginRef, notes,
     roadW, roadW1, roadW2, roadLabel, frontage, frontageLabel,
     plotA: netA, grossA, netA, dpDed, plotW, plotD, bldH, asr,
     auth, areaT, use, fsiT, isMC, isCong, isInd, isTOD, isIT,
-    isCorner, isThrough, isMultiRoad, unauth
+    isCorner, isThrough, isMultiRoad, unauth,
+    clientName, clientPhone, siteAddr, plots
   };
 
   udcprRenderResult(result);
@@ -10604,7 +10514,7 @@ function udcprRenderResult(r){
       ${r.frontageLabel||'Single Front'}${r.isMultiRoad?` · Roads ${r.roadW1} m + ${r.roadW2||'—'} m → FSI on <b>${r.roadW} m</b>`:''}
       ${r.isThrough?' · Reg 6.2.6: front+back = both Front setback':''}
       ${r.isCorner?' · Reg 6.2.6: corner = Front on both streets':''}
-      ${r.footprint?`<br>Buildable footprint ~ <b>${r.footprint} sq.m</b> (${r.buildW} × ${r.buildD} m) · Coverage ${r.coverage}%`:''}
+      ${r.footprint?`<br>Max footprint (core+balcony) ~ <b>${r.footprint} sq.m</b> (${r.maxFootW||r.buildW} × ${r.maxFootD||r.buildD} m) · Core ${r.footprintCore||'—'} + Balc ${r.balcArea||0} · Coverage ${r.coverage}%`:''}
     </div>
   </div>
 
@@ -10673,13 +10583,27 @@ function udcprRenderResult(r){
   </div>`:''}
   <div style="font-size:10px;color:var(--mut);margin-bottom:14px;padding:6px 10px;background:var(--surf2);border-radius:8px">📌 ${r.marginRef}</div>
 
-  <!-- Footprint -->
-  ${r.footprint?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-    <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Build Width</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">${parseFloat(r.buildW).toFixed(2)}m</div></div>
-    <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Build Depth</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">${parseFloat(r.buildD).toFixed(2)}m</div></div>
-    <div style="background:var(--grn);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px">Max Footprint</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold)">${fmt(r.footprint)} sqm</div></div>
-    <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Coverage</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">${r.coverage}%</div></div>
+  <!-- Client / plots summary -->
+  ${(r.clientName||r.siteAddr||(r.plots&&r.plots.length>1))?`<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:12px;line-height:1.7">
+    ${r.clientName?`<div><b>Client:</b> ${r.clientName}${r.clientPhone?' · '+r.clientPhone:''}</div>`:''}
+    ${r.siteAddr?`<div><b>Site:</b> ${r.siteAddr}</div>`:''}
+    ${r.plots&&r.plots.length?`<div><b>Plots:</b> ${r.plots.map(p=>p.label+(p.area?' ('+p.area+' sq.m)':'')).join(' + ')} → Gross ${r.grossA} sq.m</div>`:''}
   </div>`:''}
+
+  <!-- Footprint + closed balcony -->
+  ${r.footprint?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+    <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Build (core)</div><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700">${parseFloat(r.buildW).toFixed(2)} × ${parseFloat(r.buildD).toFixed(2)} m</div><div style="font-size:10px;color:var(--mut);margin-top:2px">${r.footprintCore!=null?fmt(r.footprintCore)+' sqm':''}</div></div>
+    <div style="background:rgba(184,151,90,.12);border:1px solid rgba(184,151,90,.35);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Closed Balcony</div><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:#8a6a2a">+${r.balcArea!=null?fmt(r.balcArea):'0'} sqm</div><div style="font-size:10px;color:var(--mut);margin-top:2px">F${r.balcFront||0}/R${r.balcRear||0}/S${r.balcSideL||0}m</div></div>
+    <div style="background:var(--grn);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px">Max Footprint</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold)">${fmt(r.footprint)} sqm</div><div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:2px">${r.maxFootW||'—'} × ${r.maxFootD||'—'} m</div></div>
+    <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Coverage</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">${r.coverage}%</div></div>
+  </div>
+  <div style="font-size:11px;color:var(--mut);margin-bottom:12px;line-height:1.5">Max footprint = setback building + closed balcony (margin ≥4m → 2m; road ≥3m → 1m projection into margin).</div>`:''}
+
+  <!-- Site sketch -->
+  <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:14px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:10px">📐 Site Sketch — Plot · Margins · Building · Closed Balcony</div>
+    ${typeof udcprSketchSvg==='function'?udcprSketchSvg(r,{w:340,h:380}):''}
+  </div>
 
   <!-- Premium Cost -->
   ${r.premCost?`<div style="background:linear-gradient(135deg,#fffbee,#fff3cc);border:1.5px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:14px">
@@ -10770,6 +10694,7 @@ window.udcprShowTab=function(t){
   }else{
     ask.style.display='none';calc.style.display='block';
     if(tc)tc.classList.add('active');if(ta)ta.classList.remove('active');
+    if(typeof udcprPlotCountChange==='function'){ try{udcprPlotCountChange();}catch(e){} }
   }
 };
 
@@ -10987,11 +10912,28 @@ Ref: UDCPR 2020 (Updated 30 Jan 2025)`;
 function udcprPDF(){
   const r=window._udcprLastResult;
   if(!r){showErr('आधी Calculate करा');return;}
-  // Re-use the existing result HTML for PDF
   const date=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
   const w=window.open('','_blank');
   const aiBit=document.getElementById('udcpr-ai-out')?.innerText||'';
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>UDCPR 2020 Report</title>
+  const sketch=typeof udcprSketchSvg==='function'?udcprSketchSvg(r,{w:280,h:320}):'';
+  const plotsRows=(r.plots||[]).map((p,i)=>'<tr><td>Plot '+(i+1)+' — '+(p.label||'')+'</td><td class="num">'+(p.area||0)+' sq.m</td></tr>').join('');
+  const clientBlock=`
+<div class="box" style="margin-bottom:12px;padding:12px 14px">
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:6px">Client & Site Data</div>
+  <table style="margin:0">
+    <tr><td style="width:28%">Client Name</td><td><b>${r.clientName||'—'}</b></td></tr>
+    <tr><td>Phone</td><td>${r.clientPhone||'—'}</td></tr>
+    <tr><td>Site / Survey</td><td>${r.siteAddr||'—'}</td></tr>
+    <tr><td>Gross Plot Area</td><td class="num">${r.grossA||r.plotA} sq.m</td></tr>
+    <tr><td>Net Plot Area</td><td class="num">${Number(r.netA||r.plotA).toFixed(2)} sq.m ${r.dpDed?('(DP −'+r.dpDed+')'):''}</td></tr>
+    <tr><td>Plot Size (W × D)</td><td class="num">${r.plotW||'—'} × ${r.plotD||'—'} m</td></tr>
+    <tr><td>Road Width</td><td class="num">${r.roadW} m (${r.frontageLabel||r.frontage||''})</td></tr>
+    <tr><td>Building Height</td><td class="num">${r.bldH||'—'} m</td></tr>
+    <tr><td>Authority / Zone</td><td>${r.auth||''} · ${r.areaT||''} · ${r.use||''}</td></tr>
+  </table>
+  ${plotsRows?'<div style="margin-top:8px;font-size:10px;font-weight:700;color:#6b7280">Amalgamated Plots</div><table style="margin:4px 0 0">'+plotsRows+'</table>':''}
+</div>`;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>UDCPR 2020 Report${r.clientName?' — '+r.clientName:''}</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;font-size:12px;color:#1a1a1a}
 .hdr{background:#1a3a2a;padding:18px 28px;display:flex;justify-content:space-between;align-items:flex-start}
 .hdr h1{font-size:18px;color:#c9a84c;font-weight:700}.hdr .sub{color:rgba(255,255,255,.5);font-size:10px;margin-top:2px}
@@ -11018,6 +10960,26 @@ tr:nth-child(even) td{background:#f8f6f2}
 <div class="hdr"><div style="display:flex;align-items:center;gap:10px">${officeInfo.logo?`<img src="${officeInfo.logo}" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1)">`:''}<div><h1>📏 UDCPR 2020 — Building Potential Report</h1><div class="sub">${officeInfo.name||'Greenhouse Studio'} · ${officeInfo.arch||'Vijay Edke'} · ${officeInfo.addr||''}</div></div><div style="text-align:right;color:rgba(255,255,255,.5);font-size:10px">${date}</div></div>
 <div class="gold"></div>
 <div class="body">
+${clientBlock}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:start">
+  <div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:6px">Site Sketch</div>
+    ${sketch}
+  </div>
+  <div>
+    <div class="g3" style="margin-bottom:8px">
+      <div class="box"><div class="lbl">Front Margin</div><div class="val">${typeof r.frontMargin==='number'?r.frontMargin.toFixed(1)+'m':r.frontMargin}</div></div>
+      <div class="box"><div class="lbl">Side Margin</div><div class="val">${typeof r.sideMargin==='number'?r.sideMargin.toFixed(1)+'m':r.sideMargin}</div></div>
+      <div class="box"><div class="lbl">Rear Margin</div><div class="val">${typeof r.rearMargin==='number'?r.rearMargin.toFixed(1)+'m':r.rearMargin}</div></div>
+    </div>
+    ${r.footprint?`<div class="g3">
+      <div class="box"><div class="lbl">Core Footprint</div><div class="val">${r.footprintCore!=null?fmt(r.footprintCore):'—'} sqm</div></div>
+      <div class="box"><div class="lbl">+ Closed Balcony</div><div class="val" style="color:#b8975a">+${r.balcArea!=null?fmt(r.balcArea):0} sqm</div></div>
+      <div class="box" style="background:#1a3a2a;border-color:#1a3a2a"><div class="lbl" style="color:rgba(255,255,255,.5)">Max Footprint</div><div class="val" style="color:#c9a84c">${fmt(r.footprint)} sqm</div></div>
+    </div>
+    <div style="font-size:10px;color:#6b7280;margin-top:6px;line-height:1.5">Closed balcony: Front ${r.balcFront||0}m · Rear ${r.balcRear||0}m · Sides ${r.balcSideL||0}/${r.balcSideR||0}m (margin≥4m→2m; road≥3m→1m)</div>`:''}
+  </div>
+</div>
 ${r.notes.map(n=>`<div class="${n.startsWith('❌')||n.startsWith('🔴')?'alert-red':n.startsWith('⚠️')?'alert-gold':'alert-grn'}">${n}</div>`).join('')}
 <div class="big-box">
   <div><div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Maximum Building Potential</div><div style="font-family:'Courier New',monospace;font-size:28px;font-weight:700;color:#c9a84c">${r.maxPot.toFixed(2)} FSI</div></div>
@@ -14733,16 +14695,18 @@ document.addEventListener('DOMContentLoaded',async ()=>{
     var nc=document.getElementById('nb-c');if(nc)nc.textContent=(db.contacts||[]).length;
     var np=document.getElementById('nb-p');if(np)np.textContent=(db.projects||[]).length;
   }catch(e){}
-  // Load the same Firebase database on every PC before declaring the app ready.
+  // Load Firebase
+  try{loadSavedFirebaseConfig();}catch(e){}
+  setSyncStatus('gray','Ready');
+  // Load remote data async
   setTimeout(async()=>{
     try{
-      await loadSavedFirebaseConfig();
       await loadRemoteData();
       ensureDbExtensions();
       refreshAll();
     }catch(e){console.warn('Remote:',e);}
     setInterval(pollRemote,6000);
-  },300);
+  },500);
 });
 </script>
 
@@ -15608,8 +15572,8 @@ async function cpSubmit() {
     const _params = new URLSearchParams(window.location.search);
     let fbUrl = '';
     // 1. URL ?fb= full URL
-    if(_params.get('fb')) fbUrl = (_params.get('fb')||'').trim().replace(/\/$/,'');
-    // 2. URL ?fbk= short key → lookup (legacy links only)
+    if(_params.get('fb')) fbUrl = decodeURIComponent(_params.get('fb'));
+    // 2. URL ?fbk= short key → lookup
     if(!fbUrl && _params.get('fbk')){
       const key = _params.get('fbk');
       fbUrl = sessionStorage.getItem('fbk_'+key) || localStorage.getItem('fbk_'+key) || '';
@@ -15731,8 +15695,7 @@ function renderCpContent() {
   const el = document.getElementById('cp-content');
   if (!cpCurrentClient) return;
   const c = cpCurrentClient;
-  // Strict client isolation — only projects owned by this contact id
-  const projs = (db.projects || []).filter(p => p && c && p.clientId === c.id);
+  const projs = (db.projects || []).filter(p => p.clientId === c.id);
   if (cpCurrentTab === 'overview' || cpCurrentTab === 'project') el.innerHTML = renderCpOverview(c, projs);
   else if (cpCurrentTab === 'payments') el.innerHTML = renderCpPayments(c, projs);
   else if (cpCurrentTab === 'sitevisits') el.innerHTML = renderCpSiteVisits(c, projs);
@@ -16238,41 +16201,24 @@ function submitDrawingRequest() {
 
 function buildCpActivityFeed(c, projs) {
   const events = [];
-  // Strict: only this client's projects (by id). Never mix other clients.
-  const onlyProjs = (projs || []).filter(p => {
-    if (!p || !p.id) return false;
-    if (c && c.id && p.clientId && p.clientId !== c.id) return false;
-    return true;
-  });
-  const projIds = new Set(onlyProjs.map(p => p.id));
-  const projName = id => {
-    const p = onlyProjs.find(x => x.id === id);
-    return p ? (p.name || 'Project') : '';
-  };
+  const projIds = new Set((projs || []).map(p => p.id));
 
-  function push(dateStr, text, sortKey, pid) {
+  function push(dateStr, text, sortKey) {
     if (!text) return;
-    // If event is tied to a project, it must belong to this client
-    if (pid && !projIds.has(pid)) return;
     let d = dateStr ? new Date(dateStr) : null;
     if (d && isNaN(d.getTime())) d = null;
     const label = d
       ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
       : (dateStr || '—');
-    const pn = pid ? projName(pid) : '';
-    const full = pn && !String(text).toLowerCase().includes(String(pn).toLowerCase())
-      ? (pn + ' — ' + text)
-      : text;
     events.push({
       sort: d ? d.getTime() : 0,
       dateLabel: label,
-      text: full,
-      projId: pid || null
+      text: text
     });
   }
 
-  onlyProjs.forEach(p => {
-    // Files shared with client — this project only
+  (projs || []).forEach(p => {
+    // Files shared with client
     (p.files || []).forEach(f => {
       if (f.clientVisible === false) return;
       const when = f.date || f.updatedAt || f.uploadedAt || '';
@@ -16281,45 +16227,50 @@ function buildCpActivityFeed(c, projs) {
       const is3d = /3d|render/i.test(String(f.cat || '') + name);
       let msg = is3d ? (name + ' approved') : (name + (rev ? ' ' + String(rev).toUpperCase() : '') + ' uploaded');
       if (/approv/i.test(String(f.status || ''))) msg = name + ' approved';
-      push(when, msg, when, p.id);
+      push(when, msg, when);
     });
-    // Payments — this project only
-    const pays = typeof ppays === 'function' ? ppays(p.id) : (db.payments || []).filter(x => x.projectId === p.id);
+    // Payments
+    const pays = typeof ppays === 'function' ? ppays(p.id) : [];
     pays.forEach(pay => {
-      if (pay.projectId && pay.projectId !== p.id) return;
-      push(pay.date, (pay.stage || 'Payment') + ' payment received · ₹' + Number(pay.amount || 0).toLocaleString('en-IN'), pay.date, p.id);
+      push(pay.date, (pay.stage || 'Payment') + ' payment received', pay.date);
     });
-    // Stage
-    if (p.stage) push(p.updatedAt || p.createdAt || p.deadline || '', 'Stage: ' + p.stage, p.updatedAt || '', p.id);
   });
 
-  // Site visits — only for this client's project ids
+  // Site visits
   (db.siteVisits || []).forEach(v => {
-    const pid = v.projId || v.projectId;
-    if (!pid || !projIds.has(pid)) return;
-    push(v.date || v.ts, v.notes ? ('Site visit — ' + v.notes) : 'Site visit completed', v.date || v.ts, pid);
+    if (!projIds.has(v.projId)) return;
+    push(v.date || v.ts, v.notes ? ('Site visit — ' + v.notes) : 'Site visit completed', v.date || v.ts);
   });
 
-  // Studio activities — ONLY when explicitly linked to this client's project id
-  // (no fuzzy name match — that was leaking other clients' timelines)
+  // Studio activities linked to these projects or client name
   (db.activities || []).forEach(a => {
     const pid = a.projId || a.projectId;
-    if (!pid || !projIds.has(pid)) return;
-    const text = a.text || a.label || a.sub || '';
-    if (!text) return;
-    push(a.date || a.ts || a.time || a.when, text, a.date || a.ts, pid);
+    const text = a.text || a.label || '';
+    if (pid && projIds.has(pid)) {
+      push(a.date || a.ts || a.time, text, a.date || a.ts);
+      return;
+    }
+    if (c && c.name && text.toLowerCase().includes(String(c.name).toLowerCase().split(' ')[0])) {
+      push(a.date || a.ts || a.time, text, a.date || a.ts);
+    }
+  });
+
+  // Stage as soft event
+  (projs || []).forEach(p => {
+    if (p.stage) push(p.updatedAt || p.deadline || '', 'Stage: ' + p.stage, p.updatedAt || '');
   });
 
   events.sort((a, b) => b.sort - a.sort);
+  // Dedupe similar text+date
   const seen = new Set();
   const out = [];
   events.forEach(e => {
-    const k = e.dateLabel + '|' + e.text + '|' + (e.projId || '');
+    const k = e.dateLabel + '|' + e.text;
     if (seen.has(k)) return;
     seen.add(k);
     out.push(e);
   });
-  return out.slice(0, 25);
+  return out.slice(0, 20);
 }
 
 function renderCpOverview(c, projs) {
@@ -16400,33 +16351,10 @@ function renderCpOverview(c, projs) {
     const { stage, idx, pct, next, label } = stageMeta(p);
     const bal = pbal(p.id);
     const nextDate = p.deadline || '';
-    let cover3d = p.cover || p.image || p.photo || '';
-    if (!cover3d && p.files && p.files.length) {
-      const imgF = p.files.find(f => {
-        if (f.clientVisible === false) return false;
-        const cat = String(f.cat || '').toLowerCase();
-        const n = String(f.name || '').toLowerCase();
-        const u = String(f.url || f.data || f.src || '');
-        if (cat === '3d_view') return true;
-        if (/3d|render|perspective|view/.test(cat + ' ' + n)) return true;
-        if (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(u) || u.startsWith('data:image')) return true;
-        return false;
-      });
-      if (imgF) cover3d = imgF.url || imgF.data || imgF.src || imgF.thumb || '';
-    }
-    const coverStyle = cover3d
-      ? `background-image:url('${String(cover3d).replace(/'/g, "%27").replace(/\n/g,"")}');`
-      : '';
 
     html += `
-    <div class="cp-home-hero${cover3d ? ' has-3d' : ''}" style="${coverStyle}">
-      <div class="cp-home-hero-shade"></div>
-      <div class="cp-home-hero-inner">
-        <span class="cp-home-hero-badge">3D View</span>
-        <div class="cp-home-proj-name">${p.name || 'Project'}</div>
-        <div class="cp-home-proj-loc">${loc}</div>
-      </div>
-    </div>
+    <div class="cp-home-proj-name">${p.name || 'Project'}</div>
+    <div class="cp-home-proj-loc">${loc}</div>
 
     <div class="cp-tl-wrap">
       <div class="cp-tl-title">Project progress</div>
@@ -16511,148 +16439,6 @@ function renderCpOverview(c, projs) {
 
 
 // ── PAYMENTS TAB ──
-window.cpGeneratePaymentReport = function(projectId) {
-  try {
-    if (!window.cpCurrentClient) { alert('Please login to client portal'); return; }
-    const c = window.cpCurrentClient;
-    let projs = (db.projects || []).filter(p => p && p.clientId === c.id);
-    if (projectId) projs = projs.filter(p => p.id === projectId);
-    if (!projs.length) { alert('No projects found for payment report'); return; }
-    if (!window.jspdf || !window.jspdf.jsPDF) { alert('PDF library not loaded'); return; }
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageW = 210, pageH = 297;
-    const fmt2 = n => 'Rs.' + Number(n || 0).toLocaleString('en-IN');
-    const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-
-    // Header
-    doc.setFillColor(26, 58, 42);
-    doc.rect(0, 0, pageW, 36, 'F');
-    doc.setFillColor(201, 168, 76);
-    doc.rect(0, 34, pageW, 2.2, 'F');
-    if (officeInfo && officeInfo.logo) {
-      try { doc.addImage(officeInfo.logo, 'PNG', 12, 4, 24, 24); } catch (e) {}
-    }
-    const nameX = (officeInfo && officeInfo.logo) ? 40 : 14;
-    doc.setTextColor(201, 168, 76);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.text(String((officeInfo && officeInfo.name) || 'Greenhouse Studio').toUpperCase(), nameX, 14);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.text((officeInfo && officeInfo.arch ? 'Architect: ' + officeInfo.arch : '') + (officeInfo && officeInfo.phone ? '  |  ' + officeInfo.phone : ''), nameX, 22);
-    doc.setTextColor(201, 168, 76);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.text('PAYMENT REPORT', pageW - 14, 14, { align: 'right' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(210, 210, 210);
-    doc.text(today, pageW - 14, 22, { align: 'right' });
-
-    let y = 46;
-    doc.setTextColor(26, 58, 42);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text('Client: ' + (c.name || '—'), 14, y);
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80);
-    if (c.wa || c.phone) doc.text('Contact: ' + (c.wa || c.phone || ''), 14, y);
-    if (c.addr || c.address) { y += 5; doc.text('Address: ' + (c.addr || c.address || ''), 14, y); }
-    y += 10;
-
-    let grandTotal = 0, grandPaid = 0, grandBal = 0;
-
-    projs.forEach((p, idx) => {
-      if (y > 250) { doc.addPage(); y = 20; }
-      const pays = (typeof ppays === 'function' ? ppays(p.id) : (db.payments || []).filter(x => x.projectId === p.id))
-        .slice().sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
-      const total = Number(p.total) || 0;
-      const paid = typeof ppaid === 'function' ? ppaid(p.id) : pays.reduce((a, x) => a + (Number(x.amount) || 0), 0);
-      const bal = Math.max(0, total - paid);
-      grandTotal += total; grandPaid += paid; grandBal += bal;
-
-      doc.setFillColor(246, 243, 237);
-      doc.roundedRect(12, y - 3, 186, 18, 2, 2, 'F');
-      doc.setTextColor(26, 58, 42);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.text(String(p.name || 'Project'), 16, y + 4);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(80, 80, 80);
-      doc.text('Fee: ' + fmt2(total) + '   |   Received: ' + fmt2(paid) + '   |   Outstanding: ' + fmt2(bal), 16, y + 11);
-      y += 22;
-
-      const rows = pays.length
-        ? pays.map((px, i) => [
-            String(i + 1),
-            String(px.date || '—'),
-            String(px.stage || 'Payment'),
-            String(px.mode || '—'),
-            fmt2(px.amount)
-          ])
-        : [['—', '—', 'No payments recorded', '—', '—']];
-
-      doc.autoTable({
-        startY: y,
-        head: [['#', 'Date', 'Stage / Description', 'Mode', 'Amount']],
-        body: rows,
-        headStyles: { fillColor: [26, 58, 42], textColor: [201, 168, 76], fontStyle: 'bold', fontSize: 8, cellPadding: 2.5 },
-        bodyStyles: { fontSize: 8, cellPadding: 2.5 },
-        alternateRowStyles: { fillColor: [250, 248, 243] },
-        columnStyles: {
-          0: { cellWidth: 10, halign: 'center' },
-          1: { cellWidth: 28 },
-          4: { cellWidth: 32, halign: 'right', fontStyle: 'bold', textColor: [39, 120, 60] }
-        },
-        margin: { left: 12, right: 12 },
-        styles: { lineColor: [220, 215, 205], lineWidth: 0.3 }
-      });
-      y = (doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY : y) + 12;
-    });
-
-    // Summary box
-    if (y > 250) { doc.addPage(); y = 20; }
-    doc.setFillColor(26, 58, 42);
-    doc.roundedRect(12, y, 186, 28, 3, 3, 'F');
-    doc.setTextColor(201, 168, 76);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.text('SUMMARY', 18, y + 9);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('Contract: ' + fmt2(grandTotal), 18, y + 18);
-    doc.text('Received: ' + fmt2(grandPaid), 80, y + 18);
-    doc.text('Outstanding: ' + fmt2(grandBal), 140, y + 18);
-
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(7);
-      doc.setTextColor(150, 150, 150);
-      doc.text('Confidential — for client use only · Generated from Client Portal', 14, pageH - 8);
-      doc.text('Page ' + i + ' / ' + pageCount, pageW - 14, pageH - 8, { align: 'right' });
-    }
-
-    const safeName = String(c.name || 'Client').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
-    const fname = projectId
-      ? ('Payment_Report_' + safeName + '_' + String(projectId).slice(0, 8) + '.pdf')
-      : ('Payment_Report_' + safeName + '.pdf');
-    doc.save(fname);
-    if (typeof toastOk === 'function') toastOk('Payment report downloaded');
-    else if (typeof showOk === 'function') showOk('Payment report downloaded');
-  } catch (err) {
-    console.error(err);
-    alert('Could not generate PDF: ' + (err && err.message ? err.message : err));
-  }
-};
-
 function renderCpPayments(c, projs) {
   const DEFAULT_MILESTONES = ['Agreement', 'Concept', 'Working Drawing', 'Approval', 'Completion'];
 
@@ -16714,11 +16500,7 @@ function renderCpPayments(c, projs) {
     return `<div class="cp-pay-ui"><div class="cp-pay-empty">No projects linked yet</div></div>`;
   }
 
-  let html = `<div class="cp-pay-ui">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px">
-      <div class="cp-pay-page-title" style="margin-bottom:0">Payments</div>
-      <button type="button" class="btn btn-pdf btn-sm" onclick="cpGeneratePaymentReport()" style="flex-shrink:0">📄 Payment Report PDF</button>
-    </div>`;
+  let html = `<div class="cp-pay-ui"><div class="cp-pay-page-title">Payments</div>`;
 
   projs.forEach(p => {
     const pays = (typeof ppays === 'function' ? ppays(p.id) : []).slice().sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
@@ -16730,10 +16512,7 @@ function renderCpPayments(c, projs) {
 
     html += `
     <div class="cp-pay-block">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-        <div class="cp-pay-proj" style="margin-bottom:0">${p.name || 'Project'}</div>
-        <button type="button" class="btn btn-s btn-sm" onclick="cpGeneratePaymentReport('${p.id}')" style="font-size:10px">📄 PDF</button>
-      </div>
+      <div class="cp-pay-proj">${p.name || 'Project'}</div>
 
       <div class="cp-pay-summary">
         <div class="cp-pay-sum-item">
@@ -17090,19 +16869,13 @@ function renderCpDrawings(c, projs) {
     if (f.clientVisible) return 'approved';
     return 'review';
   }
-  function escHtml(v) {
-    return String(v == null ? '' : v).replace(/[&<>"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]});
-  }
-  function fileUrl(f) { return f.url || f.link || f.href || ''; }
-  function folderPath(f) {
-    return String(f.driveFolderPath || f.drivePath || f.folderPath || '').trim();
-  }
 
-  // Build exactly from the client's assigned projects. Each project remains isolated.
+  // Collect client-visible files
   let items = [];
   projs.forEach(p => {
-    (p.files || []).filter(f => f.clientVisible !== false && (f.clientVisible || f.url || f.link || f.href)).forEach((f, i) => {
+    (p.files || []).filter(f => f.clientVisible !== false && (f.clientVisible || f.url || f.link)).forEach((f, i) => {
       if (f.clientVisible === false) return;
+      // only show if explicitly client visible when flag exists on any file of project
       items.push({
         ...f,
         _proj: p.name,
@@ -17112,13 +16885,11 @@ function renderCpDrawings(c, projs) {
         _no: parseDrawingNo(f, i),
         _title: titleCase(f.name || f.title),
         _date: f.date || f.updatedAt || f.uploadedAt || '',
-        _url: fileUrl(f),
-        _status: statusOf(f),
-        _drivePath: folderPath(f)
+        _url: f.url || f.link || f.href || '',
+        _status: statusOf(f)
       });
     });
-
-    // Keep legacy payment-linked drawings.
+    // legacy payment drawings as simple cards
     const pays = typeof ppays === 'function' ? ppays(p.id) : [];
     const legacy = [...new Set(pays.flatMap(pay => pay.drawings || []))];
     legacy.forEach((d, i) => {
@@ -17133,19 +16904,27 @@ function renderCpDrawings(c, projs) {
         _date: '',
         _url: '',
         _status: 'approved',
-        _legacy: true,
-        _drivePath: ''
+        _legacy: true
       });
     });
   });
 
+  // Prefer clientVisible true only if any file uses the flag
   const hasFlag = projs.some(p => (p.files || []).some(f => f.clientVisible === true || f.clientVisible === false));
-  if (hasFlag) items = items.filter(f => f._legacy || f.clientVisible === true);
+  if (hasFlag) {
+    items = items.filter(f => f._legacy || f.clientVisible === true);
+  }
+
   window._cpDrawingsCache = items;
 
   function revHistory(item) {
+    // Group by drawing number within same project
     const same = items.filter(x => x._projId === item._projId && x._no === item._no && x._no !== '—');
-    if (same.length > 1) return [...new Set(same.map(x => x._rev))].sort();
+    if (same.length > 1) {
+      const revs = [...new Set(same.map(x => x._rev))].sort();
+      return revs;
+    }
+    // synthesize path up to current rev number
     const n = parseInt(String(item._rev).replace(/\D/g, ''), 10);
     if (isNaN(n) || n < 0) return [item._rev || 'R00'];
     const list = [];
@@ -17156,83 +16935,60 @@ function renderCpDrawings(c, projs) {
   const activeFilter = window._cpDwgFilter || 'all';
   const filtered = activeFilter === 'all' ? items : items.filter(f => f._bucket === activeFilter);
 
-  function fileCard(f) {
-    const revs = revHistory(f);
-    const st = f._status === 'approved'
-      ? '<span class="cp-dwg-status ok">✓ Approved</span>'
-      : '<span class="cp-dwg-status pending">In review</span>';
-    const previewBtn = f._url
-      ? `<a class="cp-dwg-btn" href="${escHtml(f._url)}" target="_blank" rel="noopener">Preview</a>`
-      : `<button type="button" class="cp-dwg-btn muted" disabled>Preview</button>`;
-    const dlBtn = f._url
-      ? `<a class="cp-dwg-btn primary" href="${escHtml(f._url)}" target="_blank" rel="noopener" download>Download</a>`
-      : `<button type="button" class="cp-dwg-btn muted" disabled>Download</button>`;
-    return `<article class="cp-dwg-card" style="margin-bottom:0">
-      <div class="cp-dwg-card-top">
-        <div class="cp-dwg-name">${escHtml(f._title)}</div>
-      </div>
-      <div class="cp-dwg-meta">
-        <span>Drawing No. <b>${escHtml(f._no)}</b></span>
-        <span>Revision <b>${escHtml(f._rev)}</b></span>
-        ${f._date ? `<span>${escHtml(f._date)}</span>` : ''}
-      </div>
-      <div class="cp-dwg-revs" title="Revision history">
-        ${revs.map((r, i) => `<span class="cp-dwg-rev${r === f._rev ? ' current' : (i < revs.indexOf(f._rev) ? ' past' : '')}">${escHtml(r)}</span>${i < revs.length - 1 ? '<span class="cp-dwg-rev-arrow">→</span>' : ''}`).join('')}
-      </div>
-      <div class="cp-dwg-actions">${previewBtn}${dlBtn}${st}</div>
-    </article>`;
-  }
-
-  function renderProject(p) {
-    const pItems = filtered.filter(f => f._projId === p.id);
-    if (!pItems.length) return '';
-    const driveCount = pItems.filter(f => f.source === 'google-drive').length;
-    const groups = {};
-    pItems.forEach(f => {
-      const key = f._drivePath || 'Main Project Folder';
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(f);
-    });
-
-    let body = '';
-    Object.keys(groups).sort((a,b) => a.localeCompare(b)).forEach(path => {
-      const list = groups[path];
-      const isDrive = path !== 'Main Project Folder';
-      body += `<div class="cp-drive-folder">
-        <div class="cp-drive-folder-head"><span>${isDrive ? '📁' : '📂'}</span><span>${escHtml(path.split(' / ').pop() || path)}</span><span class="cp-drive-folder-path">${isDrive ? escHtml(path) : 'Project root'}</span></div>
-        <div class="cp-drive-folder-body"><div class="cp-drive-file-list">${list.map(fileCard).join('')}</div></div>
-      </div>`;
-    });
-
-    return `<section class="cp-project-group">
-      <div class="cp-project-head">
-        <div class="cp-project-head-main"><div class="cp-project-title">📁 ${escHtml(p.name || 'Project')}</div><div class="cp-project-sub">Project-wise drawings & Google Drive folders</div></div>
-        <div class="cp-project-count">${pItems.length} drawing${pItems.length !== 1 ? 's' : ''}${driveCount ? ' · ☁️ '+driveCount : ''}</div>
-      </div>
-      <div class="cp-project-files">${body || '<div class="cp-drive-empty">No client-visible drawings in this project.</div>'}</div>
-    </section>`;
-  }
-
   let html = `<div class="cp-dwg">
     <div class="cp-dwg-head">
       <div class="cp-dwg-title">Drawings</div>
-      <div class="cp-dwg-count">${filtered.length} sheet${filtered.length !== 1 ? 's' : ''} · ${projs.length} project${projs.length !== 1 ? 's' : ''}</div>
+      <div class="cp-dwg-count">${filtered.length} sheet${filtered.length !== 1 ? 's' : ''}</div>
     </div>
     <div class="cp-dwg-filters" role="tablist">
       ${FILTERS.map(f => `<button type="button" class="cp-dwg-filter${activeFilter === f.id ? ' active' : ''}" onclick="cpDwgFilter('${f.id}')">${f.label}</button>`).join('')}
     </div>`;
 
   if (!filtered.length) {
-    html += `<div class="cp-dwg-empty"><div class="cp-dwg-empty-ico">📐</div><p>No drawings in this filter yet</p><p class="cp-dwg-empty-sub">Your architect will share plans here when ready.</p></div></div>`;
+    html += `<div class="cp-dwg-empty">
+      <div class="cp-dwg-empty-ico">📐</div>
+      <p>No drawings in this filter yet</p>
+      <p class="cp-dwg-empty-sub">Your architect will share plans here when ready.</p>
+    </div></div>`;
     return html;
   }
 
-  // Project order follows the Admin panel's project order.
-  projs.forEach(p => { html += renderProject(p); });
+  filtered.forEach((f, idx) => {
+    const revs = revHistory(f);
+    const st = f._status === 'approved'
+      ? '<span class="cp-dwg-status ok">✓ Approved</span>'
+      : '<span class="cp-dwg-status pending">In review</span>';
+    const previewBtn = f._url
+      ? `<a class="cp-dwg-btn" href="${f._url}" target="_blank" rel="noopener">Preview</a>`
+      : `<button type="button" class="cp-dwg-btn muted" disabled>Preview</button>`;
+    const dlBtn = f._url
+      ? `<a class="cp-dwg-btn primary" href="${f._url}" target="_blank" rel="noopener" download>Download</a>`
+      : `<button type="button" class="cp-dwg-btn muted" disabled>Download</button>`;
+    html += `
+    <article class="cp-dwg-card">
+      <div class="cp-dwg-card-top">
+        <div class="cp-dwg-name">${f._title}</div>
+        <div class="cp-dwg-proj">${f._proj || ''}</div>
+      </div>
+      <div class="cp-dwg-meta">
+        <span>Drawing No. <b>${f._no}</b></span>
+        <span>Revision <b>${f._rev}</b></span>
+        ${f._date ? `<span>${f._date}</span>` : ''}
+      </div>
+      <div class="cp-dwg-revs" title="Revision history">
+        ${revs.map((r, i) => `<span class="cp-dwg-rev${r === f._rev ? ' current' : (i < revs.indexOf(f._rev) ? ' past' : '')}">${r}</span>${i < revs.length - 1 ? '<span class="cp-dwg-rev-arrow">→</span>' : ''}`).join('')}
+      </div>
+      <div class="cp-dwg-actions">
+        ${previewBtn}
+        ${dlBtn}
+        ${st}
+      </div>
+    </article>`;
+  });
+
   html += '</div>';
   return html;
 }
-
 function cpDwgFilter(id) {
   window._cpDwgFilter = id;
   if (typeof renderCpContent === 'function') renderCpContent();
@@ -17605,11 +17361,17 @@ function cpWhatsApp(cid) {
   const c = db.contacts.find(x => x.id === cid);
   if (!c || !c.pin) { showErr('PIN set करा आधी'); return; }
   const _base = window.location.href.split('?')[0].split('#')[0];
-  const _fbUrl = (localStorage.getItem('gs_fb_url')||'').trim().replace(/\/$/,'');
-  // IMPORTANT: Client Portal links must carry the exact Firebase URL.
-  // sessionStorage is device/browser-specific, so a short fbk key can fail on the client's mobile.
-  // Use the full URL in the link so the portal works on any phone/browser.
-  const fbParam = _fbUrl ? '&fb=' + encodeURIComponent(_fbUrl) : '';
+  const _fbUrl = localStorage.getItem('gs_fb_url')||'';
+  // Firebase URL hash — short key instead of full URL
+  let fbParam = '';
+  if(_fbUrl){
+    // Extract just the project ID part from Firebase URL for shorter link
+    const fbMatch = _fbUrl.match(/https:\/\/([^.]+)/);
+    const fbKey = fbMatch ? fbMatch[1] : '';
+    // Store full URL with key in a lookup
+    if(fbKey) sessionStorage.setItem('fbk_'+fbKey, _fbUrl);
+    fbParam = fbKey ? '&fbk='+fbKey : '&fb='+encodeURIComponent(_fbUrl);
+  }
   const portalUrl = _base + '?portal=1' + '&pin=' + encodeURIComponent(c.pin) + fbParam;
   const msg = `Dear ${c.name},
 
@@ -18910,11 +18672,11 @@ window.renderNocView=function(){
       <div class="noc-card"><h4 onclick="nocTog(this)">👤 मालक व पत्ता<span class="ar">▼</span></h4><div class="eb">
         <div class="noc-f">
           <label>दिनांक (Date)</label>
-          <input type="date" id="noc-date" oninput="nocRender()" onchange="nocRender()">
+          <input type="date" id="noc-date">
           <label>महानगरपालिका / नगरपालिका / ग्रामपंचायत</label>
-          <input id="noc-corp" placeholder="उदा. सोलापूर महानगरपालिका" oninput="nocRender()">
+          <input id="noc-corp" placeholder="उदा. सोलापूर महानगरपालिका">
           <label>शहर / गाव</label>
-          <input id="noc-city" placeholder="उदा. सोलापूर" oninput="nocRender()">
+          <input id="noc-city" placeholder="उदा. सोलापूर">
           <label>मालकांची नावे (Owners) — एकापेक्षा जास्त असल्यास + ने add करा</label>
           <div id="noc-owners"></div>
           <button class="chip" onclick="nocAddOwner()" style="margin-bottom:9px">+ आणखी एक मालक</button>
@@ -18995,7 +18757,7 @@ const ae=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 const awToday=()=>new Date().toISOString().slice(0,10);
 const awDmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
 
-window.awRender=function awRender(){
+function awRender(){
   if(!awDrawn)return;
   const applicant=ae(av('applicant')||'____________________________');
   const addr=ae(av('addr')||'____________________________');
@@ -19013,8 +18775,7 @@ window.awRender=function awRender(){
   const action=ae(av('action')||'बांधकाम परवानगी / एकत्रीकरण / विभागणी');
   const date=awDmy(av('date'));
 
-  const _awpv=aq('pv');if(!_awpv)return;
-  _awpv.innerHTML=`<div class="cmp-sheet aw"><div class="in aw-frame">
+  aq('pv').innerHTML=`<div class="cmp-sheet aw"><div class="in aw-frame">
     <div class="aw-title">// हमीपत्र //</div>
     <div class="aw-to">प्रति,<br>मा. आयुक्त,<br>सोलापूर महानगरपालिका, सोलापूर.</div>
     <div class="aw-subject">विषय: ${location}, जुना स. नं. ${oldsn}, नवा स. नं. ${newsn}, C.T.S. नं. ${cts}, टी. पी. स्कीम नं. ${tps}, अंतिम भूखंड नं. ${finalplot}, उपभूखंड नं. ${subplot} या जागेतील ${action} बाबत.</div>
@@ -19134,8 +18895,8 @@ const today=()=>new Date().toISOString().slice(0,10);
 const dmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
 function owners(){return csOwners.map(x=>x.trim()).filter(Boolean)}
 function ownerText(){const a=owners();if(!a.length)return 'मी/आम्ही ____________________'; if(a.length===1)return 'मी, '+esc(a[0]); return 'मी/आम्ही, '+a.map(esc).join(' व ');}
-window.csRender=function render(){if(!csDrawn)return;const a=owners();const ltp=esc(gv('ltp')||'____________________');const site=esc(gv('site')||'____________________');const addr=esc(gv('addr')||'____________________');const contact=esc(gv('contact')||'____________________');const city=esc(gv('city')||'सोलापूर');
-const _cspv=q('pv');if(!_cspv)return;_cspv.innerHTML=`<div class="cmp-sheet csd"><div class="in cs-frame">
+function render(){if(!csDrawn)return;const a=owners();const ltp=esc(gv('ltp')||'____________________');const site=esc(gv('site')||'____________________');const addr=esc(gv('addr')||'____________________');const contact=esc(gv('contact')||'____________________');const city=esc(gv('city')||'सोलापूर');
+q('pv').innerHTML=`<div class="cmp-sheet csd"><div class="in cs-frame">
 <div class="cs-title">// स्वयं-घोषणापत्र (मालकाकडून) //</div>
 <div class="cs-to">प्रति,<br>आयुक्त महोदय,<br>सोलापूर महानगरपालिका,<br>${city}.</div>
 <div class="cs-sub">विषय :- मंजूर नकाशानुसार बांधकामाबाबत घोषणा</div>
@@ -19159,7 +18920,7 @@ window.csOwner=(i,v)=>{csOwners[i]=v;render()};window.csAdd=()=>{csOwners.push('
 window.csNew=()=>{q('date').value=today();q('city').value='सोलापूर';q('site').value='';q('addr').value='';q('contact').value='';q('ltp').value='';csOwners=[''];drawOwners();render()};
 window.csToggleLH=v=>{csLH=!!v;localStorage.setItem('gs_cs_lh',v?'1':'0');render()};
 window.csPrint=()=>{const body=q('pv').innerHTML;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups to print.');w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>स्वयं-घोषणापत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>html,body{margin:0;padding:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cmp-sheet.csd{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0 auto!important;padding:18mm 18mm!important;box-sizing:border-box!important;box-shadow:none!important;transform:none!important;overflow:hidden!important;background:#fff!important;color:#111;font-size:14pt;line-height:1.65}.cmp-sheet.csd .cs-title{text-align:center;font-weight:700;font-size:16pt;text-decoration:underline;margin:0 0 18px}@page{size:A4 portrait;margin:0!important}@media print{.cmp-sheet{break-after:auto;page-break-after:auto}}</style></head><body>'+body+'</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},700)};
-window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){render();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="csRender()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="csRender()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="csRender()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="csRender()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="csRender()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="csRender()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
+window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){render();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="render()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="render()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="render()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="render()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="render()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="render()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.clientself='📄 Client Self Declaration';
 })();
 </script>
@@ -19175,7 +18936,7 @@ const tv=id=>{const e=tq(id);return e?e.value:''};
 const te=s=>String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const tpToday=()=>new Date().toISOString().slice(0,10);
 const tpDmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
-window.tpRender=function tpRender(){
+function tpRender(){
   if(!tpDrawn)return;
   const incoming=te(tv('incoming')||'________');
   const date=tpDmy(tv('date'));
@@ -19189,8 +18950,7 @@ window.tpRender=function tpRender(){
   const city=te(tv('city')||'सोलापूर');
   const purpose=te(tv('purpose')||'बांधकाम परवानगी / सुधारीत बांधकाम परवानगी');
   const extra=te(tv('extra')||'');
-  const _tppv=tq('pv');if(!_tppv)return;
-  _tppv.innerHTML=`<div class="tp-sheet"><div class="tp-in">
+  tq('pv').innerHTML=`<div class="tp-sheet"><div class="tp-in">
     <div class="tp-head">आवक नंबर / ${incoming}<br>दि. ${date}</div>
     <div class="tp-office">सोलापूर महानगरपालिका, सोलापूर.</div>
     <div class="tp-to">सहा. अभियंता, (नगर रचना) यांचेकडे,</div>
@@ -19489,78 +19249,6 @@ window.switchView=function(v){
   return _origSwitchView(v);
 };
 
-})();
-</script>
-
-<style id="gs-drive-sync-style">
-.gs-drive-panel{margin:12px 0 0;padding:12px;border:1px solid var(--bdr);border-radius:10px;background:var(--surf2)}
-.gs-drive-title{display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--grn)}
-.gs-drive-status{font-size:10px;font-weight:700;color:var(--mut)}.gs-drive-status.ok{color:var(--rgreen,#4a7c59)}.gs-drive-status.err{color:var(--red,#a63d32)}
-.gs-drive-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.gs-drive-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
-.gs-drive-btn{border:1px solid var(--bdr);background:var(--surf);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer}.gs-drive-btn.primary{background:var(--grn);border-color:var(--grn);color:#fff}.gs-drive-btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}.gs-drive-help{font-size:10px;color:var(--mut);line-height:1.55;margin-top:7px}
-@media(max-width:650px){.gs-drive-grid{grid-template-columns:1fr}}
-</style>
-<script>
-(function(){'use strict';
-var S='https://www.googleapis.com/auth/drive.metadata.readonly',tok=null,exp=0,tc=null,loadP=null,busy=false,timer=null;
-function cid(){return(localStorage.getItem('gs_google_drive_client_id')||'').trim()}
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]})}
-function status(s,k){var e=document.getElementById('gs-drive-status');if(e){e.textContent=s;e.className='gs-drive-status '+(k||'')}}
-function fid(v){var s=String(v||'').trim(),m=s.match(/folders\/([\w-]+)/)||s.match(/[?&]id=([\w-]+)/);return m?m[1]:(/^[\w-]{10,}$/.test(s)?s:'')}
-function gis(){if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();if(loadP)return loadP;loadP=new Promise(function(ok,no){var s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;s.onload=ok;s.onerror=function(){no(Error('Google Identity Services could not load'))};document.head.appendChild(s)});return loadP}
-async function connect(interactive){var c=cid();if(!c)throw Error('Google OAuth Client ID required');await gis();if(!tc)tc=google.accounts.oauth2.initTokenClient({client_id:c,scope:S,callback:function(){}});if(tok&&Date.now()<exp)return tok;return new Promise(function(ok,no){tc.callback=function(r){if(r&&r.access_token){tok=r.access_token;exp=Date.now()+Math.max(30,(+r.expires_in||3600)-60)*1000;ok(tok)}else no(Error('Google authorization was not completed'))};tc.requestAccessToken({prompt:interactive?'consent':''})})}
-async function api(u){await connect(false);var r=await fetch(u,{headers:{Authorization:'Bearer '+tok}});if(r.status===401){tok=null;await connect(true);r=await fetch(u,{headers:{Authorization:'Bearer '+tok}})}if(!r.ok)throw Error('Drive API '+r.status);return r.json()}
-async function children(folder){
-  var out=[];
-  async function walk(fid,path){
-    var page='';
-    do{
-      var q="'"+fid+"' in parents and trashed=false";
-      var u='https://www.googleapis.com/drive/v3/files?'+new URLSearchParams({q:q,pageSize:'1000',fields:'nextPageToken,files(id,name,mimeType,modifiedTime,webViewLink,size)',orderBy:'name',pageToken:page}).toString();
-      var d=await api(u);
-      var folders=[];
-      (d.files||[]).forEach(function(f){
-        if(f.mimeType==='application/vnd.google-apps.folder') folders.push(f);
-        else out.push({file:f,folderPath:path||''});
-      });
-      for(var i=0;i<folders.length;i++){
-        var fp=path ? path+' / '+folders[i].name : folders[i].name;
-        await walk(folders[i].id,fp);
-      }
-      page=d.nextPageToken||'';
-    }while(page);
-  }
-  await walk(folder,'');
-  return out;
-}
-function cat(n,m){n=String(n||'').toLowerCase();if(/structural|column|beam|footing|foundation/.test(n))return'structural';if(/electrical|lighting|power/.test(n))return'electrical';if(/plumbing|water|sanitary|drain/.test(n))return'plumbing';if(/elevation/.test(n))return'elevation';if(/section/.test(n))return'section';if(/3d|render|walkthrough|perspective/.test(n))return'3d_view';if(/floor plan|ground floor|first floor|typical floor|terrace plan|site plan|plan/.test(n))return'floor_plan';if(/photo|jpg|jpeg|png/.test(n)||String(m||'').indexOf('image/')===0)return'site_photo';if(/approval|permission|noc|sanction|municipal|tp /.test(n))return'approval';if(/agreement|contract/.test(n))return'agreement';if(/quotation|estimate/.test(n))return'quotation';if(/invoice/.test(n))return'invoice';if(/receipt|payment/.test(n))return'receipt';if(/site report|progress report|visit report/.test(n))return'site_report';return'other'}
-async function sync(pid,interactive){
-  var p=gp(pid);if(!p||!p.driveFolderId)return null;
-  await connect(!!interactive);
-  var fs=await children(p.driveFolderId);
-  p.files=p.files||[];
-  var map={};p.files.forEach(function(f,i){if(f.source==='google-drive'&&f.driveFileId)map[f.driveFileId]={f:f,i:i}});
-  var add=0,upd=0;
-  fs.forEach(function(item){
-    var f=item.file,folderPath=item.folderPath||'',x=map[f.id],old=x&&x.f;
-    var obj={id:old?old.id:uid('FL'),name:f.name,url:f.webViewLink||'https://drive.google.com/open?id='+f.id,cat:old&&old.cat||cat(f.name,f.mimeType),notes:old&&old.notes||'',clientVisible:old?old.clientVisible:true,date:(f.modifiedTime||new Date().toISOString()).slice(0,10),addedBy:'google-drive',source:'google-drive',driveFileId:f.id,driveMimeType:f.mimeType,driveModifiedTime:f.modifiedTime||'',driveFolderPath:folderPath};
-    if(x){p.files[x.i]=Object.assign({},old,obj);upd++;}else{p.files.push(obj);add++;}
-  });
-  p.driveLastSync=new Date().toISOString();saveAll();
-  if(pid===currentUploadPid){renderFmFiles();renderFmForm();}
-  return{add:add,upd:upd,total:fs.length};
-}
-
-window.gsDriveSaveConfig=function(){var c=(document.getElementById('gs-drive-client-id')||{}).value||'',f=fid((document.getElementById('gs-drive-folder')||{}).value||'');if(!c.trim())return showErr('Google OAuth Client ID टाका.');if(!f)return showErr('Valid Google Drive Folder Link / ID टाका.');localStorage.setItem('gs_google_drive_client_id',c.trim());var p=gp(currentUploadPid);if(!p)return;p.driveFolderId=f;saveAll();renderFmForm();showOk('Google Drive folder saved')}
-window.gsDriveConnectNow=async function(){try{await connect(true);status('🟢 Connected','ok');showOk('Google Drive connected')}catch(e){status('🔴 '+e.message,'err');showErr(e.message)}};
-window.gsDriveSyncNow=async function(){try{var p=gp(currentUploadPid);if(!p||!p.driveFolderId)return showErr('आधी Drive Folder map करा.');status('⏳ Syncing...');var r=await sync(currentUploadPid,true);status('🟢 '+r.total+' files · +'+r.add+' new','ok');showOk('Drive sync complete · '+r.add+' new file(s)')}catch(e){status('🔴 Sync failed','err');showErr('Drive Sync: '+e.message)}};
-window.gsDriveOpenFolder=function(){var p=gp(currentUploadPid);if(p&&p.driveFolderId)window.open('https://drive.google.com/drive/folders/'+encodeURIComponent(p.driveFolderId),'_blank','noopener')};
-function panel(){var p=gp(currentUploadPid);return '<div class="gs-drive-panel"><div class="gs-drive-title"><span>☁️ Google Drive Auto Sync</span><span id="gs-drive-status" class="gs-drive-status">'+(p&&p.driveFolderId?'Folder mapped':'Not configured')+'</span></div><div class="gs-drive-grid"><div class="fg"><label>Google OAuth Client ID</label><input class="fi" id="gs-drive-client-id" value="'+esc(cid())+'" placeholder="xxxxx.apps.googleusercontent.com"></div><div class="fg"><label>Project Google Drive Folder</label><input class="fi" id="gs-drive-folder" value="'+esc(p&&p.driveFolderId||'')+'" placeholder="Paste Drive folder link or ID"></div></div><div class="gs-drive-actions"><button class="gs-drive-btn" onclick="gsDriveSaveConfig()">💾 Save Folder</button><button class="gs-drive-btn primary" onclick="gsDriveConnectNow()">🔐 Connect Google</button><button class="gs-drive-btn gold" onclick="gsDriveSyncNow()">🔄 Sync Now</button><button class="gs-drive-btn" onclick="gsDriveOpenFolder()">📂 Open Folder</button></div><div class="gs-drive-help">Google Drive project folder मध्ये नवीन drawing/file add केल्यावर ते या project च्या Drawings & Files मध्ये import होईल. Existing manual files delete होणार नाहीत. App open असताना auto-sync दर 60 seconds ला तपासतो.</div><div style="margin-top:6px;font-size:9px;color:var(--dim)">Last sync: '+esc(p&&p.driveLastSync?new Date(p.driveLastSync).toLocaleString():'—')+'</div></div>'}
-function inject(){var h=document.getElementById('fm-add-form');if(!h)return;var x=h.querySelector('.gs-drive-panel');if(x)x.remove();h.insertAdjacentHTML('beforeend',panel())}
-var oo=window.openFileManager,of=window.renderFmForm;if(typeof oo==='function')window.openFileManager=function(pid){var r=oo(pid);setTimeout(inject,0);return r};if(typeof of==='function')window.renderFmForm=function(){var r=of();setTimeout(inject,0);return r};
-async function auto(){if(busy||!cid())return;var ps=(db.projects||[]).filter(function(p){return p.driveFolderId});if(!ps.length)return;busy=true;try{for(var i=0;i<ps.length;i++)try{await sync(ps[i].id,false)}catch(e){console.warn('Drive auto-sync',e)}}finally{busy=false}}
-function start(){clearInterval(timer);timer=setInterval(auto,60000);setTimeout(auto,5000)}
-document.addEventListener('DOMContentLoaded',start);window.addEventListener('beforeunload',function(){clearInterval(timer)});
 })();
 </script>
 
