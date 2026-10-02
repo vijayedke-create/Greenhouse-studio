@@ -9940,6 +9940,28 @@ function renderUDCPR(){
             <div class="fg" style="margin-bottom:0"><label>Combined Plot Depth (m)</label><input class="fi" type="number" id="u-pd" placeholder="20" step="0.5" oninput="udcprLiveSketch()"></div>
           </div>
           <div class="form-row c2" style="margin-bottom:0">
+            <div class="fg" style="margin-bottom:0">
+              <label>Front Road faces (दिशा)</label>
+              <select class="fi fi-sel" id="u-road-dir" onchange="udcprLiveSketch()">
+                <option value="N">North (उत्तर)</option>
+                <option value="S">South (दक्षिण)</option>
+                <option value="E">East (पूर्व)</option>
+                <option value="W">West (पश्चिम)</option>
+              </select>
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label>2nd Road faces (Corner)</label>
+              <select class="fi fi-sel" id="u-road-dir2" onchange="udcprLiveSketch()">
+                <option value="">— None —</option>
+                <option value="N">North</option>
+                <option value="S">South</option>
+                <option value="E">East</option>
+                <option value="W">West</option>
+              </select>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--mut);line-height:1.45;margin-top:-4px">Sketch वर <b>North always UP</b>. Front road जिथे आहे त्या बाजूला ROAD mark + North arrow.</div>
+          <div class="form-row c2" style="margin-bottom:0">
             <div class="fg" style="margin-bottom:0"><label>Building Height (m)</label><input class="fi" type="number" id="u-ht" placeholder="12" step="0.5"></div>
             <div class="fg" style="margin-bottom:0"><label>ASR Land Rate (₹/sqm)</label><input class="fi" type="number" id="u-asr" placeholder="25000"></div>
           </div>
@@ -10106,45 +10128,162 @@ function udcprSumPlotAreas(){
 }
 function udcprSketchSvg(r, opts){
   opts=opts||{};
-  const W=opts.w||320, H=opts.h||360;
+  const W=opts.w||340, H=opts.h||400;
   const pw=Number(r.plotW)||0, pd=Number(r.plotD)||0;
   if(!pw||!pd){
     return '<div style="text-align:center;padding:24px;color:#6e6960;font-size:12px">Plot Width × Depth भरा — sketch येईल</div>';
   }
-  const pad=28;
-  const scale=Math.min((W-pad*2)/pw,(H-pad*2-20)/pd);
-  const dw=pw*scale, dh=pd*scale;
-  const ox=(W-dw)/2, oy=pad+8;
+  const roadDir=(r.roadDir||'N').toUpperCase();
+  const roadDir2=(r.roadDir2||'').toUpperCase();
   const fm=Number(r.frontMargin)||0, sm=Number(r.sideMargin)||0, rm=Number(r.rearMargin)||0;
   const bf=Number(r.balcFront)||0, br=Number(r.balcRear)||0, bl=Number(r.balcSideL)||0, brr=Number(r.balcSideR)||0;
-  const bx=ox+sm*scale, by=oy+fm*scale;
-  const bw=Math.max(0,(pw-sm*2)*scale), bd=Math.max(0,(pd-fm-rm)*scale);
-  const fx=ox+(sm-bl)*scale, fy=oy+(fm-bf)*scale;
-  const fw=Math.max(0,(pw-(sm-bl)-(sm-brr))*scale), fd=Math.max(0,(pd-(fm-bf)-(rm-br))*scale);
-  const roadY=oy-14;
-  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:'+W+'px;display:block;margin:0 auto;background:#faf8f4;border-radius:10px;border:1px solid #e4dfd6">'
+
+  /* Local site coords: origin at front-left corner when facing the road.
+     x along frontage (width), y into site (depth). Front edge y=0. */
+  /* Map to North-up: North is +screenY upward? SVG y grows down, so North = decreasing y. */
+  function toScreenLocal(lx, ly){
+    // returns [nx, ny] in meters relative to plot bbox in N-up, origin at SW corner of bounding box
+    // N-up: +X = East, +Y = North (we'll flip Y for SVG later)
+    if(roadDir==='N'){ // front faces N → front is north edge; into site = South
+      return {ex:lx, ny:pd-ly}; // front y=0 → north
+    }
+    if(roadDir==='S'){ // front faces S → front is south edge; into site = North
+      return {ex:pw-lx, ny:ly};
+    }
+    if(roadDir==='E'){ // front faces E → front is east edge; into site = West
+      return {ex:pd-ly, ny:pw-lx};
+    }
+    // W — front faces W → front is west edge; into site = East
+    return {ex:ly, ny:lx};
+  }
+  // Bounding size in N-up meters
+  const boxW = (roadDir==='E'||roadDir==='W') ? pd : pw;
+  const boxD = (roadDir==='E'||roadDir==='W') ? pw : pd;
+
+  const padL=36, padR=36, padT=40, padB=36;
+  const scale=Math.min((W-padL-padR)/boxW, (H-padT-padB)/boxD);
+  const dw=boxW*scale, dh=boxD*scale;
+  const ox=(W-dw)/2, oy=padT;
+
+  function S(lx, ly){
+    const p=toScreenLocal(lx, ly);
+    // SVG: x east, y south (down); north-up means higher ny → smaller svg y
+    return {x: ox + p.ex*scale, y: oy + (boxD - p.ny)*scale};
+  }
+  function poly(pts){
+    return pts.map(function(p){const s=S(p[0],p[1]); return s.x.toFixed(1)+','+s.y.toFixed(1);}).join(' ');
+  }
+
+  // Plot corners in local (front-left, front-right, rear-right, rear-left)
+  const plotPoly = poly([[0,0],[pw,0],[pw,pd],[0,pd]]);
+
+  // Front margin band (y=0 to fm)
+  const frontBand = poly([[0,0],[pw,0],[pw,fm],[0,fm]]);
+  // Rear margin
+  const rearBand = poly([[0,pd-rm],[pw,pd-rm],[pw,pd],[0,pd]]);
+  // Side left (x=0 to sm)
+  const sideLBand = poly([[0,0],[sm,0],[sm,pd],[0,pd]]);
+  // Side right
+  const sideRBand = poly([[pw-sm,0],[pw,0],[pw,pd],[pw-sm,pd]]);
+
+  // Building core (inside pure setbacks)
+  const bx0=sm, by0=fm, bx1=pw-sm, by1=pd-rm;
+  const buildPoly = poly([[bx0,by0],[bx1,by0],[bx1,by1],[bx0,by1]]);
+
+  // Max footprint with balcony
+  const fx0=sm-bl, fy0=fm-bf, fx1=pw-sm+brr, fy1=pd-rm+br;
+  const footPoly = poly([
+    [Math.max(0,fx0), Math.max(0,fy0)],
+    [Math.min(pw,fx1), Math.max(0,fy0)],
+    [Math.min(pw,fx1), Math.min(pd,fy1)],
+    [Math.max(0,fx0), Math.min(pd,fy1)]
+  ]);
+
+  // Road strip outside front edge
+  const roadOff = 14/scale; // ~14px in meters
+  let roadPoly;
+  if(roadDir==='N'){
+    roadPoly = poly([[-0.3,-roadOff],[pw+0.3,-roadOff],[pw+0.3,0],[-0.3,0]]);
+  } else if(roadDir==='S'){
+    roadPoly = poly([[-0.3,pd],[pw+0.3,pd],[pw+0.3,pd+roadOff],[-0.3,pd+roadOff]]);
+  } else if(roadDir==='E'){
+    roadPoly = poly([[pw, -0.3],[pw+roadOff,-0.3],[pw+roadOff,pd+0.3],[pw,pd+0.3]]);
+  } else {
+    roadPoly = poly([[-roadOff,-0.3],[0,-0.3],[0,pd+0.3],[-roadOff,pd+0.3]]);
+  }
+
+  // Second road for corner
+  let road2Poly = '';
+  if(roadDir2 && roadDir2!==roadDir){
+    if(roadDir2==='N') road2Poly = poly([[-0.3,-roadOff],[pw+0.3,-roadOff],[pw+0.3,0],[-0.3,0]]);
+    else if(roadDir2==='S') road2Poly = poly([[-0.3,pd],[pw+0.3,pd],[pw+0.3,pd+roadOff],[-0.3,pd+roadOff]]);
+    else if(roadDir2==='E') road2Poly = poly([[pw,-0.3],[pw+roadOff,-0.3],[pw+roadOff,pd+0.3],[pw,pd+0.3]]);
+    else if(roadDir2==='W') road2Poly = poly([[-roadOff,-0.3],[0,-0.3],[0,pd+0.3],[-roadOff,pd+0.3]]);
+  }
+
+  // Label positions
+  const midFront = S(pw/2, Math.min(fm/2, 0.8));
+  const midRear = S(pw/2, pd - Math.min(rm/2, 0.8));
+  const midBuild = S((bx0+bx1)/2, (by0+by1)/2);
+  const midRoad = (function(){
+    if(roadDir==='N') return S(pw/2, -roadOff/2);
+    if(roadDir==='S') return S(pw/2, pd+roadOff/2);
+    if(roadDir==='E') return S(pw+roadOff/2, pd/2);
+    return S(-roadOff/2, pd/2);
+  })();
+
+  // Dimension labels at edges
+  const dimW1 = S(0, pd/2), dimW2 = S(pw, pd/2);
+  const dimD1 = S(pw/2, 0), dimD2 = S(pw/2, pd);
+
+  // North arrow — fixed top-right of SVG (always points up = North)
+  const nx = W - 28, ny = 28;
+  const northArrow =
+    '<g transform="translate('+nx+','+ny+')">'
+    +'<circle cx="0" cy="0" r="16" fill="#fff" stroke="#1c1b19" stroke-width="1.2"/>'
+    +'<polygon points="0,-12 4,-2 0,-4 -4,-2" fill="#1c1b19"/>'
+    +'<line x1="0" y1="-2" x2="0" y2="10" stroke="#1c1b19" stroke-width="1.5" stroke-linecap="round"/>'
+    +'<text x="0" y="-14" text-anchor="middle" fill="#1c1b19" font-size="9" font-weight="800" font-family="sans-serif">N</text>'
+    +'</g>';
+
+  const dirLabel = {N:'उत्तर / N',S:'दक्षिण / S',E:'पूर्व / E',W:'पश्चिम / W'};
+
+  let svg = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:'+W+'px;display:block;margin:0 auto;background:#faf8f4;border-radius:10px;border:1px solid #e4dfd6">'
     +'<defs><pattern id="hatchBalc" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">'
     +'<line x1="0" y1="0" x2="0" y2="6" stroke="#b8975a" stroke-width="1.5" opacity=".55"/></pattern></defs>'
-    +'<rect x="'+(ox-4)+'" y="'+roadY+'" width="'+(dw+8)+'" height="12" fill="#3a3632" rx="2"/>'
-    +'<text x="'+(ox+dw/2)+'" y="'+(roadY+9)+'" text-anchor="middle" fill="#f7f5f0" font-size="8" font-family="sans-serif" font-weight="700">ROAD '+(r.roadW||'')+' m</text>'
-    +'<rect x="'+ox+'" y="'+oy+'" width="'+dw+'" height="'+dh+'" fill="#fff" stroke="#1c1b19" stroke-width="1.8"/>'
-    +'<rect x="'+ox+'" y="'+oy+'" width="'+dw+'" height="'+Math.max(0,fm*scale)+'" fill="rgba(166,61,50,.08)"/>'
-    +'<rect x="'+ox+'" y="'+(oy+dh-rm*scale)+'" width="'+dw+'" height="'+Math.max(0,rm*scale)+'" fill="rgba(166,61,50,.08)"/>'
-    +'<rect x="'+ox+'" y="'+oy+'" width="'+Math.max(0,sm*scale)+'" height="'+dh+'" fill="rgba(166,61,50,.08)"/>'
-    +'<rect x="'+(ox+dw-sm*scale)+'" y="'+oy+'" width="'+Math.max(0,sm*scale)+'" height="'+dh+'" fill="rgba(166,61,50,.08)"/>'
-    +'<rect x="'+fx+'" y="'+fy+'" width="'+fw+'" height="'+fd+'" fill="url(#hatchBalc)" stroke="#b8975a" stroke-width="1.2" stroke-dasharray="4 2"/>'
-    +'<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bd+'" fill="rgba(44,62,45,.18)" stroke="#2c3e2d" stroke-width="1.5"/>'
-    +'<text x="'+(ox+dw/2)+'" y="'+(oy-3)+'" text-anchor="middle" fill="#6e6960" font-size="9" font-family="sans-serif">W '+pw+' m</text>'
-    +'<text x="'+(ox-6)+'" y="'+(oy+dh/2)+'" text-anchor="middle" fill="#6e6960" font-size="9" font-family="sans-serif" transform="rotate(-90 '+(ox-6)+' '+(oy+dh/2)+')">D '+pd+' m</text>'
-    +'<text x="'+(ox+dw/2)+'" y="'+(oy+Math.max(10,fm*scale/2+3))+'" text-anchor="middle" fill="#a63d32" font-size="8" font-family="sans-serif" font-weight="700">Front '+fm+'m'+(bf?(' +B'+bf):'')+'</text>'
-    +'<text x="'+(ox+dw/2)+'" y="'+(oy+dh-Math.max(4,rm*scale/2-3))+'" text-anchor="middle" fill="#a63d32" font-size="8" font-family="sans-serif" font-weight="700">Rear '+rm+'m'+(br?(' +B'+br):'')+'</text>'
-    +'<text x="'+(bx+bw/2)+'" y="'+(by+bd/2)+'" text-anchor="middle" fill="#1c1b19" font-size="9" font-family="sans-serif" font-weight="700">'+(r.buildW||'—')+' × '+(r.buildD||'—')+' m</text>'
-    +'<rect x="'+pad+'" y="'+(H-22)+'" width="10" height="10" fill="rgba(44,62,45,.18)" stroke="#2c3e2d"/>'
-    +'<text x="'+(pad+14)+'" y="'+(H-14)+'" fill="#3a3632" font-size="8" font-family="sans-serif">Building</text>'
-    +'<rect x="'+(pad+70)+'" y="'+(H-22)+'" width="10" height="10" fill="url(#hatchBalc)" stroke="#b8975a"/>'
-    +'<text x="'+(pad+84)+'" y="'+(H-14)+'" fill="#3a3632" font-size="8" font-family="sans-serif">+ Closed balcony</text>'
-    +'<rect x="'+(pad+180)+'" y="'+(H-22)+'" width="10" height="10" fill="rgba(166,61,50,.12)" stroke="#a63d32"/>'
-    +'<text x="'+(pad+194)+'" y="'+(H-14)+'" fill="#3a3632" font-size="8" font-family="sans-serif">Margin</text></svg>';
+    // Compass hint
+    +'<text x="12" y="16" fill="#6e6960" font-size="9" font-family="sans-serif" font-weight="600">North ↑</text>'
+    // Road
+    +'<polygon points="'+roadPoly+'" fill="#3a3632"/>'
+    +(road2Poly?'<polygon points="'+road2Poly+'" fill="#3a3632"/>':'')
+    +'<text x="'+midRoad.x.toFixed(1)+'" y="'+(midRoad.y+3).toFixed(1)+'" text-anchor="middle" fill="#f7f5f0" font-size="8" font-family="sans-serif" font-weight="700">ROAD '+ (r.roadW||'') +'m · '+(dirLabel[roadDir]||roadDir)+'</text>'
+    +(roadDir2?'<text x="12" y="'+(H-28)+'" fill="#3a3632" font-size="8" font-family="sans-serif" font-weight="700">2nd ROAD: '+(dirLabel[roadDir2]||roadDir2)+'</text>':'')
+    // Margins
+    +'<polygon points="'+frontBand+'" fill="rgba(166,61,50,.10)"/>'
+    +'<polygon points="'+rearBand+'" fill="rgba(166,61,50,.08)"/>'
+    +'<polygon points="'+sideLBand+'" fill="rgba(166,61,50,.08)"/>'
+    +'<polygon points="'+sideRBand+'" fill="rgba(166,61,50,.08)"/>'
+    // Footprint + building
+    +'<polygon points="'+footPoly+'" fill="url(#hatchBalc)" stroke="#b8975a" stroke-width="1.2" stroke-dasharray="4 2"/>'
+    +'<polygon points="'+buildPoly+'" fill="rgba(44,62,45,.18)" stroke="#2c3e2d" stroke-width="1.5"/>'
+    // Plot outline
+    +'<polygon points="'+plotPoly+'" fill="none" stroke="#1c1b19" stroke-width="1.8"/>'
+    // Labels
+    +'<text x="'+midFront.x.toFixed(1)+'" y="'+midFront.y.toFixed(1)+'" text-anchor="middle" fill="#a63d32" font-size="8" font-family="sans-serif" font-weight="700">Front '+fm+'m'+(bf?(' +B'+bf):'')+'</text>'
+    +'<text x="'+midRear.x.toFixed(1)+'" y="'+midRear.y.toFixed(1)+'" text-anchor="middle" fill="#a63d32" font-size="8" font-family="sans-serif" font-weight="700">Rear '+rm+'m'+(br?(' +B'+br):'')+'</text>'
+    +'<text x="'+midBuild.x.toFixed(1)+'" y="'+midBuild.y.toFixed(1)+'" text-anchor="middle" fill="#1c1b19" font-size="9" font-family="sans-serif" font-weight="700">'+(r.buildW||'—')+' × '+(r.buildD||'—')+' m</text>'
+    // Size callout
+    +'<text x="'+(ox+dw/2).toFixed(1)+'" y="'+(oy-8).toFixed(1)+'" text-anchor="middle" fill="#6e6960" font-size="9" font-family="sans-serif">Plot '+pw+' × '+pd+' m · Front→'+(dirLabel[roadDir]||roadDir)+'</text>'
+    // Legend
+    +'<rect x="12" y="'+(H-18)+'" width="9" height="9" fill="rgba(44,62,45,.18)" stroke="#2c3e2d"/>'
+    +'<text x="24" y="'+(H-10)+'" fill="#3a3632" font-size="8" font-family="sans-serif">Building</text>'
+    +'<rect x="78" y="'+(H-18)+'" width="9" height="9" fill="url(#hatchBalc)" stroke="#b8975a"/>'
+    +'<text x="90" y="'+(H-10)+'" fill="#3a3632" font-size="8" font-family="sans-serif">+ Closed balcony</text>'
+    +'<rect x="180" y="'+(H-18)+'" width="9" height="9" fill="rgba(166,61,50,.12)" stroke="#a63d32"/>'
+    +'<text x="192" y="'+(H-10)+'" fill="#3a3632" font-size="8" font-family="sans-serif">Margin</text>'
+    + northArrow
+    +'</svg>';
+  return svg;
 }
 function udcprLiveSketch(){}
 
@@ -10431,8 +10570,22 @@ function udcprCalculate(){
   const clientName = (document.getElementById('u-client')?.value||'').trim();
   const clientPhone = (document.getElementById('u-phone')?.value||'').trim();
   const siteAddr = (document.getElementById('u-site')?.value||'').trim();
+  const roadDir = (document.getElementById('u-road-dir')?.value||'N').toUpperCase();
+  let roadDir2 = (document.getElementById('u-road-dir2')?.value||'').toUpperCase();
+  if(frontage==='single') roadDir2 = '';
+  // Auto-suggest if empty: through = opposite; corner = 90° turn
+  if(!roadDir2){
+    if(frontage==='through'){
+      const opp={N:'S',S:'N',E:'W',W:'E'};
+      roadDir2 = opp[roadDir]||'';
+    } else if(frontage==='corner'||frontage==='three'){
+      const turn={N:'E',E:'S',S:'W',W:'N'};
+      roadDir2 = turn[roadDir]||'';
+    }
+  }
 
   const frontageLabel={single:'Single Front',corner:'Corner (Front+Side)',through:'Through (Front+Back)',three:'Three Side'}[frontage]||frontage;
+  const dirLabel={N:'North',S:'South',E:'East',W:'West'};
 
   const result = {
     basicFSI, premFSI, tdrFSI, maxPot,
@@ -10453,6 +10606,8 @@ function udcprCalculate(){
     coverage: coverage!=null?+coverage.toFixed(1):null,
     premCost, tableRef, marginRef, notes,
     roadW, roadW1, roadW2, roadLabel, frontage, frontageLabel,
+    roadDir, roadDir2, roadDirLabel: dirLabel[roadDir]||roadDir,
+    roadDir2Label: roadDir2?(dirLabel[roadDir2]||roadDir2):'',
     plotA: netA, grossA, netA, dpDed, plotW, plotD, bldH, asr,
     auth, areaT, use, fsiT, isMC, isCong, isInd, isTOD, isIT,
     isCorner, isThrough, isMultiRoad, unauth,
@@ -10601,8 +10756,13 @@ function udcprRenderResult(r){
 
   <!-- Site sketch -->
   <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:14px;margin-bottom:14px">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:10px">📐 Site Sketch — Plot · Margins · Building · Closed Balcony</div>
-    ${typeof udcprSketchSvg==='function'?udcprSketchSvg(r,{w:340,h:380}):''}
+    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:6px">📐 Site Sketch — North UP · Road · Margins · Building</div>
+    <div style="font-size:12px;color:var(--ink2);margin-bottom:10px;line-height:1.5">
+      Front road faces <b>${r.roadDirLabel||r.roadDir||'North'}</b>
+      ${r.roadDir2?` · 2nd road <b>${r.roadDir2Label||r.roadDir2}</b>`:''}
+      · North arrow वरती / वरच्या बाजूला
+    </div>
+    ${typeof udcprSketchSvg==='function'?udcprSketchSvg(r,{w:340,h:400}):''}
   </div>
 
   <!-- Premium Cost -->
@@ -10928,6 +11088,7 @@ function udcprPDF(){
     <tr><td>Net Plot Area</td><td class="num">${Number(r.netA||r.plotA).toFixed(2)} sq.m ${r.dpDed?('(DP −'+r.dpDed+')'):''}</td></tr>
     <tr><td>Plot Size (W × D)</td><td class="num">${r.plotW||'—'} × ${r.plotD||'—'} m</td></tr>
     <tr><td>Road Width</td><td class="num">${r.roadW} m (${r.frontageLabel||r.frontage||''})</td></tr>
+    <tr><td>Front Road faces</td><td><b>${r.roadDirLabel||r.roadDir||'North'}</b>${r.roadDir2?(' · 2nd: '+(r.roadDir2Label||r.roadDir2)):''}</td></tr>
     <tr><td>Building Height</td><td class="num">${r.bldH||'—'} m</td></tr>
     <tr><td>Authority / Zone</td><td>${r.auth||''} · ${r.areaT||''} · ${r.use||''}</td></tr>
   </table>
