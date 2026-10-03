@@ -9985,11 +9985,20 @@ function renderUDCPR(){
               <option value="full">Basic + Premium + TDR</option>
             </select>
           </div>
-          <div style="font-size:10px;color:var(--mut);line-height:1.5;padding:8px 10px;background:rgba(184,151,90,.08);border:1px solid rgba(184,151,90,.25);border-radius:8px">
-            <b style="color:var(--ink)">Closed balcony (footprint मध्ये add):</b><br>
-            · Margin ≥ 4 m → 2 m closed balcony<br>
-            · Front / road margin ≥ 3 m → 1 m projection<br>
-            Max footprint = setback building + closed balcony projections
+          <div style="padding:10px 12px;background:rgba(184,151,90,.08);border:1px solid rgba(184,151,90,.25);border-radius:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+              <b style="color:var(--ink);font-size:12px">Closed balcony — प्रत्येक दिशेला (m)</b>
+              <button type="button" onclick="udcprFillMaxBalc()" style="padding:5px 10px;font-size:11px;font-weight:700;border-radius:7px;border:1px solid rgba(184,151,90,.5);background:#fff;color:#8a6a2a;cursor:pointer">⚡ Auto max</button>
+            </div>
+            <div class="form-row c2" style="margin-bottom:6px">
+              <div class="fg" style="margin-bottom:0"><label>Front (road) बाजू</label><input class="fi" type="number" id="u-balc-f" placeholder="0" min="0" step="0.1" title="Front closed balcony depth"></div>
+              <div class="fg" style="margin-bottom:0"><label>Rear बाजू</label><input class="fi" type="number" id="u-balc-r" placeholder="0" min="0" step="0.1"></div>
+            </div>
+            <div class="form-row c2" style="margin-bottom:6px">
+              <div class="fg" style="margin-bottom:0"><label>Left side</label><input class="fi" type="number" id="u-balc-l" placeholder="0" min="0" step="0.1"></div>
+              <div class="fg" style="margin-bottom:0"><label>Right side</label><input class="fi" type="number" id="u-balc-rg" placeholder="0" min="0" step="0.1"></div>
+            </div>
+            <div id="u-balc-hint" style="font-size:10px;color:var(--mut);line-height:1.45">Rule: margin ≥4m → max 2m · ≥3m → max 1m. Auto max दाबा किंवा स्वतः भरा. Drawing वर balcony + उरलेला margin दिसेल.</div>
           </div>
 
           <button onclick="udcprCalculate()" style="width:100%;padding:12px;background:var(--grn);color:#fff;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px" onmouseover="this.style.background='var(--grn2)'" onmouseout="this.style.background='var(--grn)'">
@@ -10140,19 +10149,14 @@ function udcprSumPlotAreas(){
 }
 function udcprSketchSvg(r, opts){
   opts = opts || {};
-  const W = opts.w || 420, H = opts.h || 480;
-  /* Resolve frontage from length/breadth + which edge has the road */
+  const W = opts.w || 520, H = opts.h || 580;
   const len = Number(r.plotLen != null ? r.plotLen : r.plotW) || 0;
   const brd = Number(r.plotBrd != null ? r.plotBrd : r.plotD) || 0;
   const edge = (r.roadEdge || 'length').toLowerCase();
-  let pw, pd; /* pw = along road (frontage), pd = into site (depth) */
+  let pw, pd;
   if (edge === 'breadth') { pw = brd; pd = len; }
   else { pw = len; pd = brd; }
-  /* fallback if only plotW/plotD set from calc */
-  if (!pw || !pd) {
-    pw = Number(r.plotW) || 0;
-    pd = Number(r.plotD) || 0;
-  }
+  if (!pw || !pd) { pw = Number(r.plotW) || 0; pd = Number(r.plotD) || 0; }
   if (!pw || !pd) {
     return '<div style="text-align:center;padding:28px;color:#6e6960;font-size:12px">Plot Length × Breadth भरा — sketch येईल</div>';
   }
@@ -10163,31 +10167,61 @@ function udcprSketchSvg(r, opts){
   const sm = Number(r.sideMargin) || 0;
   const rm = Number(r.rearMargin) || 0;
   const bf = Number(r.balcFront) || 0;
-  const br = Number(r.balcRear) || 0;
+  const brBalc = Number(r.balcRear) || 0;
   const bl = Number(r.balcSideL) || 0;
   const brr = Number(r.balcSideR) || 0;
   const roadW = r.roadW || '';
+  const roadW2 = r.roadW2 || '';
   const dirFull = { N: 'उत्तर / NORTH', S: 'दक्षिण / SOUTH', E: 'पूर्व / EAST', W: 'पश्चिम / WEST' };
+  const opp = { N:'S', S:'N', E:'W', W:'E' };
+  const leftOf = { N:'W', E:'N', S:'E', W:'S' }; /* left when facing that direction */
+  const into = opp[roadDir];           /* into site from front */
+  const leftDir = leftOf[into];        /* left edge of drawing */
+  const rightDir = opp[leftDir];       /* right edge */
+  const rearDir = into;                /* rear outward */
 
-  /* Layout: FRONT at TOP of drawing. Generous padding for dimension lines. */
-  const padL = 56, padR = 52, padT = 56, padB = 52;
+  /* Where is 2nd road relative to front-at-top drawing? */
+  let side2 = ''; /* 'left' | 'right' | 'rear' */
+  if (roadDir2 && roadDir2 !== roadDir) {
+    if (roadDir2 === leftDir) side2 = 'left';
+    else if (roadDir2 === rightDir) side2 = 'right';
+    else if (roadDir2 === rearDir) side2 = 'rear';
+    else side2 = 'left'; /* fallback */
+  }
+
+  /* Corner: 2nd-road edge uses front margin */
+  const isCornerSketch = !!(r.isCorner || (roadDir2 && roadDir2 !== roadDir && side2 !== 'rear'));
+  let mLeft = sm, mRight = sm, mFront = fm, mRear = rm;
+  let balcL = bl, balcR = brr, balcF = bf, balcRear = brBalc;
+  if (side2 === 'left') {
+    mLeft = fm; /* front setback on side road */
+    balcL = bf;
+  } else if (side2 === 'right') {
+    mRight = fm;
+    balcR = bf;
+  } else if (side2 === 'rear') {
+    mRear = fm;
+    balcRear = bf;
+  }
+
+  const padL = 64, padR = 88, padT = 72, padB = 80;
   const scale = Math.min((W - padL - padR) / pw, (H - padT - padB) / pd);
   const dw = pw * scale, dh = pd * scale;
   const ox = padL + ((W - padL - padR) - dw) / 2;
   const oy = padT;
-
   const X = function (m) { return ox + m * scale; };
-  const Y = function (m) { return oy + m * scale; }; /* m from front toward rear */
+  const Y = function (m) { return oy + m * scale; };
+  const roadH = 18;
 
-  /* Dimension line helpers (outside plot) */
   function dimH(x1, x2, y, label, color) {
     color = color || '#3a3632';
     const xa = Math.min(x1, x2), xb = Math.max(x1, x2);
     const mid = (xa + xb) / 2;
+    const tw = Math.max(36, label.length * 5.4 + 8);
     return '<line x1="' + xa + '" y1="' + y + '" x2="' + xb + '" y2="' + y + '" stroke="' + color + '" stroke-width="0.9"/>'
       + '<line x1="' + xa + '" y1="' + (y - 3.5) + '" x2="' + xa + '" y2="' + (y + 3.5) + '" stroke="' + color + '" stroke-width="0.9"/>'
       + '<line x1="' + xb + '" y1="' + (y - 3.5) + '" x2="' + xb + '" y2="' + (y + 3.5) + '" stroke="' + color + '" stroke-width="0.9"/>'
-      + '<rect x="' + (mid - label.length * 2.6 - 3) + '" y="' + (y - 9) + '" width="' + (label.length * 5.2 + 6) + '" height="11" fill="#faf8f4"/>'
+      + '<rect x="' + (mid - tw / 2) + '" y="' + (y - 10) + '" width="' + tw + '" height="12" fill="#faf8f4"/>'
       + '<text x="' + mid + '" y="' + (y - 1) + '" text-anchor="middle" fill="' + color + '" font-size="9" font-family="sans-serif" font-weight="700">' + label + '</text>';
   }
   function dimV(y1, y2, x, label, color) {
@@ -10197,22 +10231,119 @@ function udcprSketchSvg(r, opts){
     return '<line x1="' + x + '" y1="' + ya + '" x2="' + x + '" y2="' + yb + '" stroke="' + color + '" stroke-width="0.9"/>'
       + '<line x1="' + (x - 3.5) + '" y1="' + ya + '" x2="' + (x + 3.5) + '" y2="' + ya + '" stroke="' + color + '" stroke-width="0.9"/>'
       + '<line x1="' + (x - 3.5) + '" y1="' + yb + '" x2="' + (x + 3.5) + '" y2="' + yb + '" stroke="' + color + '" stroke-width="0.9"/>'
-      + '<rect x="' + (x - 22) + '" y="' + (mid - 6) + '" width="20" height="12" fill="#faf8f4"/>'
-      + '<text x="' + (x - 3) + '" y="' + (mid + 3) + '" text-anchor="end" fill="' + color + '" font-size="9" font-family="sans-serif" font-weight="700">' + label + '</text>';
+      + '<rect x="' + (x - 28) + '" y="' + (mid - 7) + '" width="26" height="13" fill="#faf8f4"/>'
+      + '<text x="' + (x - 4) + '" y="' + (mid + 3) + '" text-anchor="end" fill="' + color + '" font-size="9" font-family="sans-serif" font-weight="700">' + label + '</text>';
   }
 
-  /* Building core + max footprint with balcony */
-  const bx0 = sm, by0 = fm, bx1 = Math.max(sm, pw - sm), by1 = Math.max(fm, pd - rm);
-  const fx0 = Math.max(0, sm - bl), fy0 = Math.max(0, fm - bf);
-  const fx1 = Math.min(pw, pw - sm + brr), fy1 = Math.min(pd, pd - rm + br);
+  /* Building / footprint with corner-adjusted margins */
+  const bx0 = mLeft, by0 = mFront, bx1 = Math.max(mLeft, pw - mRight), by1 = Math.max(mFront, pd - mRear);
+  const fx0 = Math.max(0, mLeft - balcL), fy0 = Math.max(0, mFront - balcF);
+  const fx1 = Math.min(pw, pw - mRight + balcR), fy1 = Math.min(pd, pd - mRear + balcRear);
 
-  /* North arrow rotation: arrow points toward North on the page.
-     Front is TOP of drawing. If road faces North, front=North → North is UP (0°).
-     If road faces South, front=South → North is DOWN (180°).
-     If road faces East, front=East → North is LEFT (-90° / 270°).
-     If road faces West, front=West → North is RIGHT (90°). */
+  /* Primary road (front = top) */
+  let roads = '<rect x="' + (ox - 2) + '" y="' + (oy - roadH - 2) + '" width="' + (dw + 4) + '" height="' + roadH + '" fill="#2c2a28" rx="2"/>'
+    + '<text x="' + (ox + dw / 2) + '" y="' + (oy - 6) + '" text-anchor="middle" fill="#f7f5f0" font-size="10" font-family="sans-serif" font-weight="700">'
+    + 'ROAD' + (roadW ? (' ' + roadW + 'm') : '') + ' · ' + (dirFull[roadDir] || roadDir) + '</text>';
+
+  /* Second road — actual strip on left / right / rear */
+  if (side2 === 'left') {
+    roads += '<rect x="' + (ox - roadH - 2) + '" y="' + oy + '" width="' + roadH + '" height="' + dh + '" fill="#2c2a28" rx="2"/>'
+      + '<text x="' + (ox - roadH / 2 - 1) + '" y="' + (oy + dh / 2) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700" transform="rotate(-90 ' + (ox - roadH / 2 - 1) + ' ' + (oy + dh / 2) + ')">'
+      + '2nd ROAD' + (roadW2 ? (' ' + roadW2 + 'm') : '') + ' · ' + (dirFull[roadDir2] || roadDir2) + '</text>';
+  } else if (side2 === 'right') {
+    roads += '<rect x="' + (ox + dw + 2) + '" y="' + oy + '" width="' + roadH + '" height="' + dh + '" fill="#2c2a28" rx="2"/>'
+      + '<text x="' + (ox + dw + roadH / 2 + 1) + '" y="' + (oy + dh / 2) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700" transform="rotate(90 ' + (ox + dw + roadH / 2 + 1) + ' ' + (oy + dh / 2) + ')">'
+      + '2nd ROAD' + (roadW2 ? (' ' + roadW2 + 'm') : '') + ' · ' + (dirFull[roadDir2] || roadDir2) + '</text>';
+  } else if (side2 === 'rear') {
+    roads += '<rect x="' + (ox - 2) + '" y="' + (oy + dh + 2) + '" width="' + (dw + 4) + '" height="' + roadH + '" fill="#2c2a28" rx="2"/>'
+      + '<text x="' + (ox + dw / 2) + '" y="' + (oy + dh + roadH - 5) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700">'
+      + '2nd ROAD' + (roadW2 ? (' ' + roadW2 + 'm') : '') + ' · ' + (dirFull[roadDir2] || roadDir2) + '</text>';
+  }
+
+  const mFill = 'rgba(166,61,50,.10)';
+  const margins =
+    '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + dw + '" height="' + Math.max(0, mFront * scale) + '" fill="' + mFill + '"/>'
+    + '<rect x="' + X(0) + '" y="' + Y(pd - mRear) + '" width="' + dw + '" height="' + Math.max(0, mRear * scale) + '" fill="' + mFill + '"/>'
+    + '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + Math.max(0, mLeft * scale) + '" height="' + dh + '" fill="' + mFill + '"/>'
+    + '<rect x="' + X(pw - mRight) + '" y="' + Y(0) + '" width="' + Math.max(0, mRight * scale) + '" height="' + dh + '" fill="' + mFill + '"/>';
+
+  const foot =
+    '<rect x="' + X(fx0) + '" y="' + Y(fy0) + '" width="' + Math.max(0, (fx1 - fx0) * scale) + '" height="' + Math.max(0, (fy1 - fy0) * scale) + '" fill="url(#hatchBalc)" stroke="#b8975a" stroke-width="1.2" stroke-dasharray="4 2"/>';
+  const build =
+    '<rect x="' + X(bx0) + '" y="' + Y(by0) + '" width="' + Math.max(0, (bx1 - bx0) * scale) + '" height="' + Math.max(0, (by1 - by0) * scale) + '" fill="rgba(44,62,45,.22)" stroke="#2c3e2d" stroke-width="1.6"/>';
+  const outline = '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + dw + '" height="' + dh + '" fill="none" stroke="#1c1b19" stroke-width="2"/>';
+
+  /* Remaining margin after balcony (prefer result fields) */
+  const remF = (r.remFront != null) ? Number(r.remFront) : Math.max(0, mFront - balcF);
+  const remRe = (r.remRear != null) ? Number(r.remRear) : Math.max(0, mRear - balcRear);
+  const remL = (r.remSideL != null) ? Number(r.remSideL) : Math.max(0, mLeft - balcL);
+  const remRg = (r.remSideR != null) ? Number(r.remSideR) : Math.max(0, mRight - balcR);
+
+  /* Dimensions — overall + margin split (Balc | Rem) */
+  let dims = '';
+  dims += dimH(X(0), X(pw), oy - roadH - 16, pw.toFixed(2) + ' m (frontage)', '#1c1b19');
+  dims += dimV(Y(0), Y(pd), ox - (side2 === 'left' ? roadH + 22 : 30), pd.toFixed(2) + ' m', '#1c1b19');
+
+  const dimSideX = ox + dw + (side2 === 'right' ? roadH + 14 : 14);
+  const dimBotY = oy + dh + (side2 === 'rear' ? roadH + 14 : 16);
+
+  /* Front margin: full + split Balc / Rem if balcony */
+  if (mFront > 0.05) {
+    dims += dimV(Y(0), Y(mFront), dimSideX, 'F ' + mFront.toFixed(1), '#a63d32');
+    if (balcF > 0.05) {
+      dims += dimV(Y(mFront - balcF), Y(mFront), dimSideX + 22, 'B+' + balcF.toFixed(1), '#8a6a2a');
+      if (remF > 0.05) dims += dimV(Y(0), Y(remF), dimSideX + 22, 'rem ' + remF.toFixed(1), '#6e6960');
+    }
+  }
+  if (mRear > 0.05) {
+    const tag = side2 === 'rear' ? 'F ' : 'R ';
+    dims += dimV(Y(pd - mRear), Y(pd), dimSideX, tag + mRear.toFixed(1), '#a63d32');
+    if (balcRear > 0.05) {
+      dims += dimV(Y(pd - mRear), Y(pd - mRear + balcRear), dimSideX + 22, 'B+' + balcRear.toFixed(1), '#8a6a2a');
+      if (remRe > 0.05) dims += dimV(Y(pd - remRe), Y(pd), dimSideX + 22, 'rem ' + remRe.toFixed(1), '#6e6960');
+    }
+  }
+  if (mLeft > 0.05) {
+    const tag = side2 === 'left' ? 'F ' : 'S ';
+    dims += dimH(X(0), X(mLeft), dimBotY, tag + mLeft.toFixed(1), '#a63d32');
+    if (balcL > 0.05) {
+      dims += dimH(X(mLeft - balcL), X(mLeft), dimBotY + 14, 'B+' + balcL.toFixed(1), '#8a6a2a');
+      if (remL > 0.05) dims += dimH(X(0), X(remL), dimBotY + 14, 'rem ' + remL.toFixed(1), '#6e6960');
+    }
+  }
+  if (mRight > 0.05) {
+    const tag = side2 === 'right' ? 'F ' : 'S ';
+    dims += dimH(X(pw - mRight), X(pw), dimBotY, tag + mRight.toFixed(1), '#a63d32');
+    if (balcR > 0.05) {
+      dims += dimH(X(pw - mRight), X(pw - mRight + balcR), dimBotY + 14, 'B+' + balcR.toFixed(1), '#8a6a2a');
+      if (remRg > 0.05) dims += dimH(X(pw - remRg), X(pw), dimBotY + 14, 'rem ' + remRg.toFixed(1), '#6e6960');
+    }
+  }
+
+  const bcx = (X(bx0) + X(bx1)) / 2, bcy = (Y(by0) + Y(by1)) / 2;
+  const buildLabel = (r.buildW != null && r.buildD != null)
+    ? (Number(r.buildW).toFixed(2) + ' × ' + Number(r.buildD).toFixed(2) + ' m')
+    : ((bx1 - bx0).toFixed(2) + ' × ' + (by1 - by0).toFixed(2) + ' m');
+  const buildTxt = '<text x="' + bcx + '" y="' + bcy + '" text-anchor="middle" fill="#1c1b19" font-size="11" font-family="sans-serif" font-weight="700">' + buildLabel + '</text>'
+    + '<text x="' + bcx + '" y="' + (bcy + 13) + '" text-anchor="middle" fill="#5a7260" font-size="8" font-family="sans-serif">BUILDING</text>';
+
+  let balcTxt = '';
+  if (balcF > 0.05) {
+    balcTxt += '<text x="' + bcx + '" y="' + (Y(mFront - balcF / 2) + 3) + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700">Balcony +' + balcF.toFixed(1) + 'm (front)</text>';
+  }
+  if (balcL > 0.05) {
+    balcTxt += '<text x="' + X(mLeft - balcL / 2) + '" y="' + bcy + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700" transform="rotate(-90 ' + X(mLeft - balcL / 2) + ' ' + bcy + ')">Balc +' + balcL.toFixed(1) + 'm</text>';
+  }
+  if (balcR > 0.05) {
+    balcTxt += '<text x="' + X(pw - mRight + balcR / 2) + '" y="' + bcy + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700" transform="rotate(90 ' + X(pw - mRight + balcR / 2) + ' ' + bcy + ')">Balc +' + balcR.toFixed(1) + 'm</text>';
+  }
+  if (balcRear > 0.05) {
+    balcTxt += '<text x="' + bcx + '" y="' + (Y(pd - mRear + balcRear / 2) + 3) + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700">Balcony +' + balcRear.toFixed(1) + 'm (rear)</text>';
+  }
+
+  /* North arrow */
   const nRot = { N: 0, S: 180, E: -90, W: 90 }[roadDir] || 0;
-  const nx = W - 34, ny = 34;
+  const nx = W - 36, ny = 36;
   const northSym =
     '<g transform="translate(' + nx + ',' + ny + ') rotate(' + nRot + ')">'
     + '<circle cx="0" cy="0" r="18" fill="#fff" stroke="#1c1b19" stroke-width="1.3"/>'
@@ -10222,91 +10353,76 @@ function udcprSketchSvg(r, opts){
     + '</g>'
     + '<text x="' + nx + '" y="' + (ny + 32) + '" text-anchor="middle" fill="#6e6960" font-size="8" font-family="sans-serif">NORTH</text>';
 
-  /* Road strip above front */
-  const roadH = 16;
-  const roadRect = '<rect x="' + (ox - 2) + '" y="' + (oy - roadH - 2) + '" width="' + (dw + 4) + '" height="' + roadH + '" fill="#2c2a28" rx="2"/>'
-    + '<text x="' + (ox + dw / 2) + '" y="' + (oy - 6) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700">'
-    + 'ROAD' + (roadW ? (' ' + roadW + 'm') : '') + ' · ' + (dirFull[roadDir] || roadDir) + '</text>';
+  const title = '<text x="' + (W / 2) + '" y="18" text-anchor="middle" fill="#1c1b19" font-size="12" font-family="sans-serif" font-weight="700">SITE SKETCH · Front road वरती · 2nd road बाजूला · North arrow</text>';
 
-  /* Optional 2nd road label */
-  let road2 = '';
-  if (roadDir2 && roadDir2 !== roadDir) {
-    road2 = '<text x="' + (ox + dw / 2) + '" y="' + (H - 14) + '" text-anchor="middle" fill="#3a3632" font-size="9" font-family="sans-serif" font-weight="700">2nd ROAD → ' + (dirFull[roadDir2] || roadDir2) + '</text>';
-  }
-
-  /* Margin fills */
-  const mFill = 'rgba(166,61,50,.09)';
-  const margins =
-    /* front */ '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + dw + '" height="' + Math.max(0, fm * scale) + '" fill="' + mFill + '"/>'
-    + /* rear */ '<rect x="' + X(0) + '" y="' + Y(pd - rm) + '" width="' + dw + '" height="' + Math.max(0, rm * scale) + '" fill="' + mFill + '"/>'
-    + /* left */ '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + Math.max(0, sm * scale) + '" height="' + dh + '" fill="' + mFill + '"/>'
-    + /* right */ '<rect x="' + X(pw - sm) + '" y="' + Y(0) + '" width="' + Math.max(0, sm * scale) + '" height="' + dh + '" fill="' + mFill + '"/>';
-
-  /* Closed balcony (hatched) then building core */
-  const foot =
-    '<rect x="' + X(fx0) + '" y="' + Y(fy0) + '" width="' + Math.max(0, (fx1 - fx0) * scale) + '" height="' + Math.max(0, (fy1 - fy0) * scale) + '" fill="url(#hatchBalc)" stroke="#b8975a" stroke-width="1.2" stroke-dasharray="4 2"/>';
-  const build =
-    '<rect x="' + X(bx0) + '" y="' + Y(by0) + '" width="' + Math.max(0, (bx1 - bx0) * scale) + '" height="' + Math.max(0, (by1 - by0) * scale) + '" fill="rgba(44,62,45,.2)" stroke="#2c3e2d" stroke-width="1.6"/>';
-
-  const outline = '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + dw + '" height="' + dh + '" fill="none" stroke="#1c1b19" stroke-width="2"/>';
-
-  /* Dimension lines — outer overall + margin ticks */
-  let dims = '';
-  /* Overall frontage (top, above road) */
-  dims += dimH(X(0), X(pw), oy - roadH - 14, pw.toFixed(2) + ' m (frontage)', '#1c1b19');
-  /* Overall depth (left) */
-  dims += dimV(Y(0), Y(pd), ox - 28, pd.toFixed(2) + ' m', '#1c1b19');
-  /* Front margin (right side of plot) */
-  if (fm > 0.05) dims += dimV(Y(0), Y(fm), ox + dw + 14, 'F ' + fm.toFixed(1), '#a63d32');
-  /* Rear margin */
-  if (rm > 0.05) dims += dimV(Y(pd - rm), Y(pd), ox + dw + 14, 'R ' + rm.toFixed(1), '#a63d32');
-  /* Side margins along bottom */
-  if (sm > 0.05) {
-    dims += dimH(X(0), X(sm), oy + dh + 16, 'S ' + sm.toFixed(1), '#a63d32');
-    dims += dimH(X(pw - sm), X(pw), oy + dh + 16, 'S ' + sm.toFixed(1), '#a63d32');
-  }
-  /* Building size inside */
-  const bcx = (X(bx0) + X(bx1)) / 2, bcy = (Y(by0) + Y(by1)) / 2;
-  const buildLabel = (r.buildW != null && r.buildD != null)
-    ? (Number(r.buildW).toFixed(2) + ' × ' + Number(r.buildD).toFixed(2) + ' m')
-    : ((bx1 - bx0).toFixed(2) + ' × ' + (by1 - by0).toFixed(2) + ' m');
-  const buildTxt = '<text x="' + bcx + '" y="' + bcy + '" text-anchor="middle" fill="#1c1b19" font-size="10" font-family="sans-serif" font-weight="700">' + buildLabel + '</text>'
-    + '<text x="' + bcx + '" y="' + (bcy + 12) + '" text-anchor="middle" fill="#5a7260" font-size="8" font-family="sans-serif">BUILDING</text>';
-
-  /* Closed balcony callouts — only if projection > 0 */
-  let balcTxt = '';
-  if (bf > 0.05) {
-    balcTxt += '<text x="' + bcx + '" y="' + (Y(fm - bf / 2) + 3) + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700">Balcony +' + bf.toFixed(1) + 'm (road)</text>';
-  }
-  if (bl > 0.05) {
-    balcTxt += '<text x="' + X(sm - bl / 2) + '" y="' + bcy + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700" transform="rotate(-90 ' + X(sm - bl / 2) + ' ' + bcy + ')">Balc +' + bl.toFixed(1) + 'm</text>';
-  }
-  if (brr > 0.05) {
-    balcTxt += '<text x="' + X(pw - sm + brr / 2) + '" y="' + bcy + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700" transform="rotate(90 ' + X(pw - sm + brr / 2) + ' ' + bcy + ')">Balc +' + brr.toFixed(1) + 'm</text>';
-  }
-  if (br > 0.05) {
-    balcTxt += '<text x="' + bcx + '" y="' + (Y(pd - rm + br / 2) + 3) + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700">Balcony +' + br.toFixed(1) + 'm (rear)</text>';
-  }
-
-  /* Title strip */
-  const title = '<text x="' + (W / 2) + '" y="16" text-anchor="middle" fill="#1c1b19" font-size="11" font-family="sans-serif" font-weight="700">SITE SKETCH · Front/Road वरती · North arrow = दिशा</text>';
-
-  /* Legend bottom-left */
   const legend =
-    '<rect x="12" y="' + (H - 20) + '" width="9" height="9" fill="rgba(44,62,45,.2)" stroke="#2c3e2d"/>'
-    + '<text x="24" y="' + (H - 12) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Building</text>'
-    + '<rect x="78" y="' + (H - 20) + '" width="9" height="9" fill="url(#hatchBalc)" stroke="#b8975a"/>'
-    + '<text x="90" y="' + (H - 12) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Closed balcony</text>'
-    + '<rect x="175" y="' + (H - 20) + '" width="9" height="9" fill="rgba(166,61,50,.12)" stroke="#a63d32"/>'
-    + '<text x="187" y="' + (H - 12) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Margin</text>';
+    '<rect x="12" y="' + (H - 18) + '" width="9" height="9" fill="rgba(44,62,45,.22)" stroke="#2c3e2d"/>'
+    + '<text x="24" y="' + (H - 10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Building</text>'
+    + '<rect x="78" y="' + (H - 18) + '" width="9" height="9" fill="url(#hatchBalc)" stroke="#b8975a"/>'
+    + '<text x="90" y="' + (H - 10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Closed balcony</text>'
+    + '<rect x="175" y="' + (H - 18) + '" width="9" height="9" fill="rgba(166,61,50,.12)" stroke="#a63d32"/>'
+    + '<text x="187" y="' + (H - 10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Margin</text>'
+    + '<rect x="235" y="' + (H - 18) + '" width="9" height="9" fill="#2c2a28"/>'
+    + '<text x="247" y="' + (H - 10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Road</text>';
 
-  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="max-width:' + W + 'px;display:block;margin:0 auto;background:#faf8f4;border-radius:10px;border:1px solid #e4dfd6">'
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="max-width:100%;display:block;margin:0 auto;background:#faf8f4;border-radius:10px;border:1px solid #e4dfd6">'
     + '<defs><pattern id="hatchBalc" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">'
     + '<line x1="0" y1="0" x2="0" y2="6" stroke="#b8975a" stroke-width="1.5" opacity=".55"/></pattern></defs>'
-    + title + roadRect + margins + foot + build + outline + dims + buildTxt + balcTxt + road2 + legend + northSym
+    + title + roads + margins + foot + build + outline + dims + buildTxt + balcTxt + legend + northSym
     + '</svg>';
 }
 function udcprLiveSketch(){}
+
+function udcprClosedBalcMax(m){
+  const mm=Math.round((Number(m)||0)*10)/10;
+  if(mm>=4) return 2;
+  if(mm>=3) return 1;
+  return 0;
+}
+/** Estimate current margins without full calc — for Auto max button */
+function udcprEstimateMargins(){
+  try{
+    const auth=document.getElementById('u-auth')?.value||'mc_abc';
+    const areaT=document.getElementById('u-area')?.value||'non_cong';
+    const use=document.getElementById('u-use')?.value||'residential';
+    const roadW=parseFloat(document.getElementById('u-road')?.value)||0;
+    const bldH=parseFloat(document.getElementById('u-ht')?.value)||0;
+    const frontage=document.getElementById('u-frontage')?.value||'single';
+    const isMC=auth.startsWith('mc');
+    const isCong=areaT==='cong';
+    // simplified: call same path as calculate by temporarily running key parts
+    // Use last result if available
+    if(window._udcprLastResult){
+      const r=window._udcprLastResult;
+      return {fm:r.frontMargin,sm:r.sideMargin,rm:r.rearMargin,isCorner:!!r.isCorner,isThrough:!!r.isThrough};
+    }
+    // rough defaults from road width tables (non-cong residential)
+    let fm=3, sm=3, rm=3;
+    if(roadW>=24){ fm=6; sm=6; rm=6; }
+    else if(roadW>=18){ fm=4.5; sm=3; rm=3; }
+    else if(roadW>=12){ fm=3; sm=3; rm=3; }
+    else { fm=3; sm=1.5; rm=1.5; }
+    if(bldH>15){ const h5=bldH/5; sm=Math.max(sm,h5); rm=Math.max(rm,h5); }
+    return {fm,sm,rm,isCorner:frontage==='corner'||frontage==='three',isThrough:frontage==='through'};
+  }catch(e){ return {fm:3,sm:3,rm:3,isCorner:false,isThrough:false}; }
+}
+function udcprFillMaxBalc(){
+  const m=udcprEstimateMargins();
+  const maxF=udcprClosedBalcMax(m.fm);
+  const maxR=udcprClosedBalcMax(m.rm);
+  const maxS=udcprClosedBalcMax(m.sm);
+  // corner: side toward 2nd road uses front max
+  const maxL=maxS, maxRg=m.isCorner?udcprClosedBalcMax(Math.max(m.fm,m.sm)):maxS;
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+  set('u-balc-f', maxF);
+  set('u-balc-r', maxR);
+  set('u-balc-l', maxL);
+  set('u-balc-rg', maxRg);
+  const hint=document.getElementById('u-balc-hint');
+  if(hint){
+    hint.innerHTML='Max: Front <b>'+maxF+'m</b> (margin '+Number(m.fm).toFixed(1)+') · Rear <b>'+maxR+'m</b> · Left <b>'+maxL+'m</b> · Right <b>'+maxRg+'m</b>. Calculate दाबा.';
+  }
+}
 
 function udcprCalculate(){
   udcprUpdateNet();
@@ -10546,10 +10662,9 @@ function udcprCalculate(){
   // Footprint (setback building) + Closed balcony projections
   // Rule (practice): margin ≥4m → 2m closed balcony; road/front ≥3m → 1m out
   function closedBalcDepth(m, isFront){
-    const mm=Number(m)||0;
+    const mm=Math.round((Number(m)||0)*10)/10; /* 3.99 → 4.0 for H/5 */
     if(mm>=4) return 2;
-    if(isFront && mm>=3) return 1;
-    if(!isFront && mm>=3) return 1;
+    if(mm>=3) return 1; /* road or side ≥3m → 1m projection */
     return 0;
   }
   let deductW, deductD;
@@ -10562,20 +10677,39 @@ function udcprCalculate(){
   const buildW = plotW>0 ? Math.max(0, plotW-deductW) : null;
   const buildD = plotD>0 ? Math.max(0, plotD-deductD) : null;
 
-  const balcFront = closedBalcDepth(fmNum, true);
-  const balcRear  = closedBalcDepth(rmNum, false);
-  let balcSideL = 0, balcSideR = 0;
+  const maxBalcF = closedBalcDepth(fmNum, true);
+  const maxBalcR = closedBalcDepth(rmNum, false);
+  let maxBalcL = 0, maxBalcRg = 0;
   if(isRowHouse||isRowHouseEWS){
-    balcSideL = balcSideR = 0;
+    maxBalcL = maxBalcRg = 0;
   } else if(frontage==='three'){
-    balcSideL = closedBalcDepth(smNum, false);
-    balcSideR = closedBalcDepth(fmNum, true); // other road side treated as front-ish
+    maxBalcL = closedBalcDepth(smNum, false);
+    maxBalcRg = closedBalcDepth(fmNum, true);
   } else if(isCorner){
-    balcSideL = closedBalcDepth(smNum, false);
-    balcSideR = closedBalcDepth(Math.max(fmNum,smNum), true);
+    maxBalcL = closedBalcDepth(smNum, false);
+    maxBalcRg = closedBalcDepth(Math.max(fmNum,smNum), true);
   } else {
-    balcSideL = balcSideR = closedBalcDepth(smNum, false);
+    maxBalcL = maxBalcRg = closedBalcDepth(smNum, false);
   }
+
+  function readBalc(id, maxV){
+    const el=document.getElementById(id);
+    const raw=el && el.value!=='' ? parseFloat(el.value) : NaN;
+    if(isNaN(raw)) return maxV; /* empty → use max allowed */
+    return Math.max(0, Math.min(maxV, raw));
+  }
+  const balcFront = readBalc('u-balc-f', maxBalcF);
+  const balcRear  = readBalc('u-balc-r', maxBalcR);
+  const balcSideL = readBalc('u-balc-l', maxBalcL);
+  const balcSideR = readBalc('u-balc-rg', maxBalcRg);
+  // Sync capped values back to inputs so user sees applied numbers
+  [['u-balc-f',balcFront],['u-balc-r',balcRear],['u-balc-l',balcSideL],['u-balc-rg',balcSideR]].forEach(function(p){
+    const el=document.getElementById(p[0]); if(el) el.value=p[1];
+  });
+  const remFront = Math.max(0, fmNum - balcFront);
+  const remRear  = Math.max(0, rmNum - balcRear);
+  const remSideL = Math.max(0, smNum - balcSideL);
+  const remSideR = Math.max(0, (isCorner?Math.max(fmNum,smNum):smNum) - balcSideR);
 
   let maxFootW=null, maxFootD=null, footprintCore=null, footprint=null, balcArea=null;
   if(buildW!=null && buildD!=null){
@@ -10584,8 +10718,12 @@ function udcprCalculate(){
     maxFootD = Math.min(plotD, buildD + balcFront + balcRear);
     footprint = maxFootW * maxFootD;
     balcArea = Math.max(0, footprint - footprintCore);
-    if(balcArea>0.01){
-      notes.push('Closed balcony: Front '+balcFront+' m · Rear '+balcRear+' m · Sides '+balcSideL+'/'+balcSideR+' m → +'+balcArea.toFixed(1)+' sq.m in max footprint (margin≥4m→2m; road≥3m→1m)');
+    if(balcArea>0.01 || balcFront+balcRear+balcSideL+balcSideR>0){
+      notes.push('Closed balcony: F '+balcFront+'m (rem '+remFront.toFixed(1)+') · R '+balcRear+'m (rem '+remRear.toFixed(1)+') · L '+balcSideL+'m / Rg '+balcSideR+'m → +'+(balcArea||0).toFixed(1)+' sq.m');
+    }
+    const hint=document.getElementById('u-balc-hint');
+    if(hint){
+      hint.innerHTML='Applied: F <b>'+balcFront+'</b> (max '+maxBalcF+', rem margin '+remFront.toFixed(1)+'m) · R <b>'+balcRear+'</b> · L <b>'+balcSideL+'</b> · Rg <b>'+balcSideR+'</b>';
     }
   }
   const coverage = footprint!=null && netA>0 ? (footprint/netA*100) : null;
@@ -10624,6 +10762,8 @@ function udcprCalculate(){
     footprintCore: footprintCore!=null?+footprintCore.toFixed(2):null,
     balcArea: balcArea!=null?+balcArea.toFixed(2):null,
     balcFront, balcRear, balcSideL, balcSideR,
+    remFront, remRear, remSideL, remSideR,
+    maxBalcF, maxBalcR, maxBalcL, maxBalcRg,
     buildW: buildW!=null?+buildW.toFixed(2):null,
     buildD: buildD!=null?+buildD.toFixed(2):null,
     maxFootW: maxFootW!=null?+maxFootW.toFixed(2):null,
@@ -10640,6 +10780,7 @@ function udcprCalculate(){
     clientName, clientPhone, siteAddr, plots
   };
 
+  window._udcprLastResult=result;
   udcprRenderResult(result);
   if(typeof udcprSaveToProject==='function') udcprSaveToProject(result);
 
@@ -10774,7 +10915,7 @@ function udcprRenderResult(r){
   <!-- Footprint + closed balcony -->
   ${r.footprint?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px">
     <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Build (core)</div><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700">${parseFloat(r.buildW).toFixed(2)} × ${parseFloat(r.buildD).toFixed(2)} m</div><div style="font-size:10px;color:var(--mut);margin-top:2px">${r.footprintCore!=null?fmt(r.footprintCore)+' sqm':''}</div></div>
-    <div style="background:rgba(184,151,90,.12);border:1px solid rgba(184,151,90,.35);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Closed Balcony</div><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:#8a6a2a">+${r.balcArea!=null?fmt(r.balcArea):'0'} sqm</div><div style="font-size:10px;color:var(--mut);margin-top:2px">F${r.balcFront||0}/R${r.balcRear||0}/S${r.balcSideL||0}m</div></div>
+    <div style="background:rgba(184,151,90,.12);border:1px solid rgba(184,151,90,.35);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Closed Balcony</div><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:#8a6a2a">+${r.balcArea!=null?fmt(r.balcArea):'0'} sqm</div><div style="font-size:10px;color:var(--mut);margin-top:2px;line-height:1.45">F ${r.balcFront||0}m (rem ${r.remFront!=null?Number(r.remFront).toFixed(1):'—'}) · R ${r.balcRear||0}m · L ${r.balcSideL||0}/Rg ${r.balcSideR||0}m</div></div>
     <div style="background:var(--grn);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px">Max Footprint</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold)">${fmt(r.footprint)} sqm</div><div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:2px">${r.maxFootW||'—'} × ${r.maxFootD||'—'} m</div></div>
     <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:3px">Coverage</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700">${r.coverage}%</div></div>
   </div>
@@ -10789,7 +10930,7 @@ function udcprRenderResult(r){
       · Frontage ${r.plotW||'—'} m × Depth ${r.plotD||'—'} m
       ${r.balcArea?` · Closed balcony +${r.balcArea} sq.m`:''}
     </div>
-    ${typeof udcprSketchSvg==='function'?udcprSketchSvg(r,{w:420,h:480}):''}
+    ${typeof udcprSketchSvg==='function'?udcprSketchSvg(r,{w:520,h:580}):''}
   </div>
 
   <!-- Premium Cost -->
@@ -11102,7 +11243,8 @@ function udcprPDF(){
   const date=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
   const w=window.open('','_blank');
   const aiBit=document.getElementById('udcpr-ai-out')?.innerText||'';
-  const sketch=typeof udcprSketchSvg==='function'?udcprSketchSvg(r,{w:280,h:320}):'';
+  const sketch=typeof udcprSketchSvg==='function'?udcprSketchSvg(r,{w:700,h:780}):'';
+  const afmt=n=>{const x=Number(n);return isNaN(x)?'—':x.toLocaleString('en-IN',{maximumFractionDigits:2});};
   const plotsRows=(r.plots||[]).map((p,i)=>'<tr><td>Plot '+(i+1)+' — '+(p.label||'')+'</td><td class="num">'+(p.area||0)+' sq.m</td></tr>').join('');
   const clientBlock=`
 <div class="box" style="margin-bottom:12px;padding:12px 14px">
@@ -11150,29 +11292,25 @@ tr:nth-child(even) td{background:#f8f6f2}
 <div class="gold"></div>
 <div class="body">
 ${clientBlock}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:start">
-  <div>
-    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:6px">Site Sketch</div>
-    ${sketch}
-  </div>
-  <div>
-    <div class="g3" style="margin-bottom:8px">
-      <div class="box"><div class="lbl">Front Margin</div><div class="val">${typeof r.frontMargin==='number'?r.frontMargin.toFixed(1)+'m':r.frontMargin}</div></div>
-      <div class="box"><div class="lbl">Side Margin</div><div class="val">${typeof r.sideMargin==='number'?r.sideMargin.toFixed(1)+'m':r.sideMargin}</div></div>
-      <div class="box"><div class="lbl">Rear Margin</div><div class="val">${typeof r.rearMargin==='number'?r.rearMargin.toFixed(1)+'m':r.rearMargin}</div></div>
-    </div>
-    ${r.footprint?`<div class="g3">
-      <div class="box"><div class="lbl">Core Footprint</div><div class="val">${r.footprintCore!=null?fmt(r.footprintCore):'—'} sqm</div></div>
-      <div class="box"><div class="lbl">+ Closed Balcony</div><div class="val" style="color:#b8975a">+${r.balcArea!=null?fmt(r.balcArea):0} sqm</div></div>
-      <div class="box" style="background:#1a3a2a;border-color:#1a3a2a"><div class="lbl" style="color:rgba(255,255,255,.5)">Max Footprint</div><div class="val" style="color:#c9a84c">${fmt(r.footprint)} sqm</div></div>
-    </div>
-    <div style="font-size:10px;color:#6b7280;margin-top:6px;line-height:1.5">Closed balcony: Front ${r.balcFront||0}m · Rear ${r.balcRear||0}m · Sides ${r.balcSideL||0}/${r.balcSideR||0}m (margin≥4m→2m; road≥3m→1m)</div>`:''}
-  </div>
+<div class="g3" style="margin-bottom:12px">
+  <div class="box"><div class="lbl">Front Margin</div><div class="val">${typeof r.frontMargin==='number'?r.frontMargin.toFixed(1)+'m':r.frontMargin}</div></div>
+  <div class="box"><div class="lbl">Side Margin</div><div class="val">${typeof r.sideMargin==='number'?r.sideMargin.toFixed(1)+'m':r.sideMargin}</div></div>
+  <div class="box"><div class="lbl">Rear Margin</div><div class="val">${typeof r.rearMargin==='number'?r.rearMargin.toFixed(1)+'m':r.rearMargin}</div></div>
 </div>
+${r.footprint?`<div class="g3" style="margin-bottom:8px">
+  <div class="box"><div class="lbl">Core Footprint</div><div class="val">${afmt(r.footprintCore)} sqm</div></div>
+  <div class="box"><div class="lbl">+ Closed Balcony</div><div class="val" style="color:#b8975a">+${afmt(r.balcArea)} sqm</div></div>
+  <div class="box" style="background:#1a3a2a;border-color:#1a3a2a"><div class="lbl" style="color:rgba(255,255,255,.5)">Max Footprint</div><div class="val" style="color:#c9a84c">${afmt(r.footprint)} sqm</div></div>
+</div>
+<div style="font-size:10px;color:#6b7280;margin-bottom:12px;line-height:1.5">Closed balcony: F ${r.balcFront||0}m (rem ${r.remFront!=null?Number(r.remFront).toFixed(1):'—'}m) · R ${r.balcRear||0}m (rem ${r.remRear!=null?Number(r.remRear).toFixed(1):'—'}m) · L ${r.balcSideL||0}m / Rg ${r.balcSideR||0}m · Road ${r.roadDirLabel||r.roadDir||''}${r.roadDir2?(' · 2nd '+ (r.roadDir2Label||r.roadDir2)):''}</div>`:''}
+<div style="page-break-before:always;break-before:page;margin:0 0 10px"></div>
+<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#1a3a2a;margin-bottom:10px">Site Sketch — Full Page</div>
+<div style="width:100%;max-width:100%">${sketch}</div>
+<div style="page-break-after:always;break-after:page;height:8px"></div>
 ${r.notes.map(n=>`<div class="${n.startsWith('❌')||n.startsWith('🔴')?'alert-red':n.startsWith('⚠️')?'alert-gold':'alert-grn'}">${n}</div>`).join('')}
 <div class="big-box">
   <div><div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Maximum Building Potential</div><div style="font-family:'Courier New',monospace;font-size:28px;font-weight:700;color:#c9a84c">${r.maxPot.toFixed(2)} FSI</div></div>
-  <div style="text-align:right"><div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Max Built-up Area</div><div style="font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:#fff">${fmt(r.maxBUA)} sqm</div><div style="font-size:10px;color:rgba(255,255,255,.4)">${fmt(Math.round(parseFloat(r.maxBUA)*10.764))} sq.ft</div></div>
+  <div style="text-align:right"><div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Max Built-up Area</div><div style="font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:#fff">${afmt(r.maxBUA)} sqm</div><div style="font-size:10px;color:rgba(255,255,255,.4)">${afmt(Math.round(parseFloat(r.maxBUA)*10.764))} sq.ft</div></div>
 </div>
 <div class="g4">
   <div class="box"><div class="lbl">Basic FSI</div><div class="val">${r.basicFSI.toFixed(2)}</div></div>
@@ -11181,17 +11319,17 @@ ${r.notes.map(n=>`<div class="${n.startsWith('❌')||n.startsWith('🔴')?'alert
   <div class="box"><div class="lbl">Ancillary FSI</div><div class="val">${r.ancFSI.toFixed(2)}</div></div>
 </div>
 <table><tr><th>FSI Type</th><th>FSI Value</th><th style="text-align:right">BUA (sq.m.)</th><th style="text-align:right">BUA (sq.ft)</th></tr>
-<tr><td>Basic FSI only</td><td class="num">${r.basicFSI.toFixed(2)}</td><td class="num">${fmt(r.basicBUA)}</td><td class="num">${fmt(Math.round(parseFloat(r.basicBUA)*10.764))}</td></tr>
-${r.premFSI>0?`<tr><td>Basic + Premium</td><td class="num">${(r.basicFSI+r.premFSI).toFixed(2)}</td><td class="num">${fmt(((r.basicFSI+r.premFSI)*r.plotA).toFixed(1))}</td><td class="num">${fmt(Math.round((r.basicFSI+r.premFSI)*r.plotA*10.764))}</td></tr>`:''}
-${r.tdrFSI>0?`<tr><td>Basic + Premium + TDR</td><td class="num">${r.maxPot.toFixed(2)}</td><td class="num">${fmt(r.maxBUA)}</td><td class="num">${fmt(Math.round(parseFloat(r.maxBUA)*10.764))}</td></tr>`:''}
-<tr style="background:#fffbee"><td><b>+ Ancillary FSI</b></td><td class="num">${r.ancFSI.toFixed(2)}</td><td class="num">${fmt(r.ancBUA)}</td><td class="num">${fmt(Math.round(parseFloat(r.ancBUA)*10.764))}</td></tr>
+<tr><td>Basic FSI only</td><td class="num">${r.basicFSI.toFixed(2)}</td><td class="num">${afmt(r.basicBUA)}</td><td class="num">${afmt(Math.round(parseFloat(r.basicBUA)*10.764))}</td></tr>
+${r.premFSI>0?`<tr><td>Basic + Premium</td><td class="num">${(r.basicFSI+r.premFSI).toFixed(2)}</td><td class="num">${afmt(((r.basicFSI+r.premFSI)*r.plotA).toFixed(1))}</td><td class="num">${afmt(Math.round((r.basicFSI+r.premFSI)*r.plotA*10.764))}</td></tr>`:''}
+${r.tdrFSI>0?`<tr><td>Basic + Premium + TDR</td><td class="num">${r.maxPot.toFixed(2)}</td><td class="num">${afmt(r.maxBUA)}</td><td class="num">${afmt(Math.round(parseFloat(r.maxBUA)*10.764))}</td></tr>`:''}
+<tr style="background:#fffbee"><td><b>+ Ancillary FSI</b></td><td class="num">${r.ancFSI.toFixed(2)}</td><td class="num">${afmt(r.ancBUA)}</td><td class="num">${afmt(Math.round(parseFloat(r.ancBUA)*10.764))}</td></tr>
 </table>
 <div class="g3">
   <div class="box"><div class="lbl">🔴 Front Margin</div><div class="val">${typeof r.frontMargin==='number'?r.frontMargin.toFixed(1)+'m':r.frontMargin}</div></div>
   <div class="box"><div class="lbl">🟡 Side Margin</div><div class="val">${typeof r.sideMargin==='number'?r.sideMargin.toFixed(1)+'m':r.sideMargin}</div></div>
   <div class="box"><div class="lbl">🟢 Rear Margin</div><div class="val">${typeof r.rearMargin==='number'?r.rearMargin.toFixed(1)+'m':r.rearMargin}</div></div>
 </div>
-${r.footprint?`<div class="g4"><div class="box"><div class="lbl">Build Width</div><div class="val">${parseFloat(r.buildW).toFixed(2)}m</div></div><div class="box"><div class="lbl">Build Depth</div><div class="val">${parseFloat(r.buildD).toFixed(2)}m</div></div><div class="box" style="background:#1a3a2a;border-color:#1a3a2a"><div class="lbl" style="color:rgba(255,255,255,.5)">Max Footprint</div><div class="val" style="color:#c9a84c">${fmt(r.footprint)} sqm</div></div><div class="box"><div class="lbl">Coverage</div><div class="val">${r.coverage}%</div></div></div>`:''}
+${r.footprint?`<div class="g4"><div class="box"><div class="lbl">Build Width</div><div class="val">${parseFloat(r.buildW).toFixed(2)}m</div></div><div class="box"><div class="lbl">Build Depth</div><div class="val">${parseFloat(r.buildD).toFixed(2)}m</div></div><div class="box" style="background:#1a3a2a;border-color:#1a3a2a"><div class="lbl" style="color:rgba(255,255,255,.5)">Max Footprint</div><div class="val" style="color:#c9a84c">${afmt(r.footprint)} sqm</div></div><div class="box"><div class="lbl">Coverage</div><div class="val">${r.coverage}%</div></div></div>`:''}
 ${r.premCost?`<div style="background:#fffbee;border:1.5px solid #c9a84c;border-radius:10px;padding:12px 14px;margin-bottom:14px"><div style="font-size:10px;font-weight:700;color:#7a5a00;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">💰 Premium Cost Estimate</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"><div><div style="font-size:9px;color:#7a5a00">Area</div><div style="font-family:'Courier New',monospace;font-size:14px;font-weight:700">${fmt((r.premFSI*r.plotA).toFixed(1))} sqm</div></div><div><div style="font-size:9px;color:#7a5a00">Rate (35% ASR)</div><div style="font-family:'Courier New',monospace;font-size:14px;font-weight:700">₹${fmt(Math.round(r.asr*0.35))}/sqm</div></div><div><div style="font-size:9px;color:#7a5a00">Estimated Premium</div><div style="font-family:'Courier New',monospace;font-size:16px;font-weight:700;color:#1a3a2a">${r.premCost>=1e7?'₹'+(r.premCost/1e7).toFixed(2)+' Cr':r.premCost>=1e5?'₹'+(r.premCost/1e5).toFixed(2)+' L':'₹'+fmt(Math.round(r.premCost))}</div></div></div></div>`:''}
 ${aiBit?`<div style="background:#f0f8f4;border:1px solid #1a3a2a;border-radius:8px;padding:12px 14px;margin-bottom:14px"><div style="font-size:10px;font-weight:700;color:#1a3a2a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🤖 AI Explanation (Claude)</div><div style="font-size:11px;line-height:1.8;color:#2a3a2a">${aiBit}</div></div>`:''}
 <div class="ref"><b>📚 References:</b> ${r.isCong?'Reg 6.1.1 Table 6-A (Congested), Table 6-B/C (Margins)':r.isInd?'Reg 6.4 Table 6-H (Industrial)':r.isTOD?'Reg 14.6 (TOD Zone)':r.isIT?'Reg 12.1 (IT/ITES)':'Reg 6.3 Table 6-G (Non-Congested), Reg 6.2.1 Table 6-D (Margins)'}${r.bldH>15&&!r.isCong?' | Reg 6.2.3 (H/5 Higher Height Margins)':''} | Reg 6.3 Note (i) Ancillary FSI | Reg 6.3 Note (viii) Premium 35% ASR | Reg 3.3.9 Special Buildings<br>Source: UDCPR 2020 (Updated 30 January 2025)</div>
