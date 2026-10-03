@@ -10149,11 +10149,11 @@ function udcprSumPlotAreas(){
 }
 function udcprSketchSvg(r, opts){
   opts = opts || {};
-  const W = opts.w || 520, H = opts.h || 580;
+  const W = opts.w || 560, H = opts.h || 620;
   const len = Number(r.plotLen != null ? r.plotLen : r.plotW) || 0;
   const brd = Number(r.plotBrd != null ? r.plotBrd : r.plotD) || 0;
   const edge = (r.roadEdge || 'length').toLowerCase();
-  let pw, pd;
+  let pw, pd; /* pw=frontage along road, pd=depth into site */
   if (edge === 'breadth') { pw = brd; pd = len; }
   else { pw = len; pd = brd; }
   if (!pw || !pd) { pw = Number(r.plotW) || 0; pd = Number(r.plotD) || 0; }
@@ -10174,44 +10174,64 @@ function udcprSketchSvg(r, opts){
   const roadW2 = r.roadW2 || '';
   const dirFull = { N: 'उत्तर / NORTH', S: 'दक्षिण / SOUTH', E: 'पूर्व / EAST', W: 'पश्चिम / WEST' };
   const opp = { N:'S', S:'N', E:'W', W:'E' };
-  const leftOf = { N:'W', E:'N', S:'E', W:'S' }; /* left when facing that direction */
-  const into = opp[roadDir];           /* into site from front */
-  const leftDir = leftOf[into];        /* left edge of drawing */
-  const rightDir = opp[leftDir];       /* right edge */
-  const rearDir = into;                /* rear outward */
 
-  /* Where is 2nd road relative to front-at-top drawing? */
-  let side2 = ''; /* 'left' | 'right' | 'rear' */
+  /*
+   * NORTH-UP plan.
+   * Local: x along frontage (0=front-left from road), y into site from front.
+   * Front-left = viewer's left when standing on road looking at plot.
+   * Convert local → (east, north) metres.
+   */
+  function toEN(lx, ly) {
+    if (roadDir === 'N') {
+      /* front=N, into=S; viewer looks S → left=E → front-left=NE */
+      return { e: pw - lx, n: pd - ly };
+    }
+    if (roadDir === 'S') {
+      /* front=S, into=N; viewer looks N → left=W → front-left=SW */
+      return { e: lx, n: ly };
+    }
+    if (roadDir === 'E') {
+      /* front=E, into=W; viewer looks W → left=S → front-left=SE */
+      return { e: pd - ly, n: lx };
+    }
+    /* W: front=W, into=E; viewer looks E → left=N → front-left=NW */
+    return { e: ly, n: pw - lx };
+  }
+
+  /* Bounding box in east/north metres */
+  const boxW = (roadDir === 'E' || roadDir === 'W') ? pd : pw; /* span east */
+  const boxD = (roadDir === 'E' || roadDir === 'W') ? pw : pd; /* span north */
+
+  /* Corner: which drawing edge has 2nd road — use cardinal match */
+  /* Margin assignment in LOCAL coords (front/rear/left/right from road view) */
+  let mFront = fm, mRear = rm, mLeft = sm, mRight = sm;
+  let balcF = bf, balcRear = brBalc, balcL = bl, balcR = brr;
   if (roadDir2 && roadDir2 !== roadDir) {
-    if (roadDir2 === leftDir) side2 = 'left';
-    else if (roadDir2 === rightDir) side2 = 'right';
-    else if (roadDir2 === rearDir) side2 = 'rear';
-    else side2 = 'left'; /* fallback */
+    /* leftDir relative to front */
+    const into = opp[roadDir];
+    const leftOf = { N:'W', E:'N', S:'E', W:'S' };
+    const leftDir = leftOf[into];
+    const rightDir = opp[leftDir];
+    const rearDir = into;
+    if (roadDir2 === leftDir) { mLeft = fm; balcL = bf; }
+    else if (roadDir2 === rightDir) { mRight = fm; balcR = bf; }
+    else if (roadDir2 === rearDir) { mRear = fm; balcRear = bf; }
   }
 
-  /* Corner: 2nd-road edge uses front margin */
-  const isCornerSketch = !!(r.isCorner || (roadDir2 && roadDir2 !== roadDir && side2 !== 'rear'));
-  let mLeft = sm, mRight = sm, mFront = fm, mRear = rm;
-  let balcL = bl, balcR = brr, balcF = bf, balcRear = brBalc;
-  if (side2 === 'left') {
-    mLeft = fm; /* front setback on side road */
-    balcL = bf;
-  } else if (side2 === 'right') {
-    mRight = fm;
-    balcR = bf;
-  } else if (side2 === 'rear') {
-    mRear = fm;
-    balcRear = bf;
-  }
-
-  const padL = 64, padR = 88, padT = 72, padB = 80;
-  const scale = Math.min((W - padL - padR) / pw, (H - padT - padB) / pd);
-  const dw = pw * scale, dh = pd * scale;
+  const padL = 70, padR = 70, padT = 70, padB = 70;
+  const scale = Math.min((W - padL - padR) / boxW, (H - padT - padB) / boxD);
+  const dw = boxW * scale, dh = boxD * scale;
   const ox = padL + ((W - padL - padR) - dw) / 2;
   const oy = padT;
-  const X = function (m) { return ox + m * scale; };
-  const Y = function (m) { return oy + m * scale; };
-  const roadH = 18;
+
+  /* Screen: +x east, +y south (SVG down). north-up → higher n = smaller svg y */
+  function S(lx, ly) {
+    const p = toEN(lx, ly);
+    return { x: ox + p.e * scale, y: oy + (boxD - p.n) * scale };
+  }
+  function poly(pts) {
+    return pts.map(function (p) { const s = S(p[0], p[1]); return s.x.toFixed(1) + ',' + s.y.toFixed(1); }).join(' ');
+  }
 
   function dimH(x1, x2, y, label, color) {
     color = color || '#3a3632';
@@ -10235,158 +10255,155 @@ function udcprSketchSvg(r, opts){
       + '<text x="' + (x - 4) + '" y="' + (mid + 3) + '" text-anchor="end" fill="' + color + '" font-size="9" font-family="sans-serif" font-weight="700">' + label + '</text>';
   }
 
-  /* Building / footprint with corner-adjusted margins */
+  /* Geometry in local coords */
+  const plotPts = [[0,0],[pw,0],[pw,pd],[0,pd]];
   const bx0 = mLeft, by0 = mFront, bx1 = Math.max(mLeft, pw - mRight), by1 = Math.max(mFront, pd - mRear);
   const fx0 = Math.max(0, mLeft - balcL), fy0 = Math.max(0, mFront - balcF);
   const fx1 = Math.min(pw, pw - mRight + balcR), fy1 = Math.min(pd, pd - mRear + balcRear);
 
-  /* Primary road (front = top) */
-  let roads = '<rect x="' + (ox - 2) + '" y="' + (oy - roadH - 2) + '" width="' + (dw + 4) + '" height="' + roadH + '" fill="#2c2a28" rx="2"/>'
-    + '<text x="' + (ox + dw / 2) + '" y="' + (oy - 6) + '" text-anchor="middle" fill="#f7f5f0" font-size="10" font-family="sans-serif" font-weight="700">'
-    + 'ROAD' + (roadW ? (' ' + roadW + 'm') : '') + ' · ' + (dirFull[roadDir] || roadDir) + '</text>';
+  const plotPoly = poly(plotPts);
+  const buildPoly = poly([[bx0,by0],[bx1,by0],[bx1,by1],[bx0,by1]]);
+  const footPoly = poly([[fx0,fy0],[fx1,fy0],[fx1,fy1],[fx0,fy1]]);
+  const frontBand = poly([[0,0],[pw,0],[pw,mFront],[0,mFront]]);
+  const rearBand = poly([[0,pd-mRear],[pw,pd-mRear],[pw,pd],[0,pd]]);
+  const leftBand = poly([[0,0],[mLeft,0],[mLeft,pd],[0,pd]]);
+  const rightBand = poly([[pw-mRight,0],[pw,0],[pw,pd],[pw-mRight,pd]]);
 
-  /* Second road — actual strip on left / right / rear */
-  if (side2 === 'left') {
-    roads += '<rect x="' + (ox - roadH - 2) + '" y="' + oy + '" width="' + roadH + '" height="' + dh + '" fill="#2c2a28" rx="2"/>'
-      + '<text x="' + (ox - roadH / 2 - 1) + '" y="' + (oy + dh / 2) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700" transform="rotate(-90 ' + (ox - roadH / 2 - 1) + ' ' + (oy + dh / 2) + ')">'
-      + '2nd ROAD' + (roadW2 ? (' ' + roadW2 + 'm') : '') + ' · ' + (dirFull[roadDir2] || roadDir2) + '</text>';
-  } else if (side2 === 'right') {
-    roads += '<rect x="' + (ox + dw + 2) + '" y="' + oy + '" width="' + roadH + '" height="' + dh + '" fill="#2c2a28" rx="2"/>'
-      + '<text x="' + (ox + dw + roadH / 2 + 1) + '" y="' + (oy + dh / 2) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700" transform="rotate(90 ' + (ox + dw + roadH / 2 + 1) + ' ' + (oy + dh / 2) + ')">'
-      + '2nd ROAD' + (roadW2 ? (' ' + roadW2 + 'm') : '') + ' · ' + (dirFull[roadDir2] || roadDir2) + '</text>';
-  } else if (side2 === 'rear') {
-    roads += '<rect x="' + (ox - 2) + '" y="' + (oy + dh + 2) + '" width="' + (dw + 4) + '" height="' + roadH + '" fill="#2c2a28" rx="2"/>'
-      + '<text x="' + (ox + dw / 2) + '" y="' + (oy + dh + roadH - 5) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700">'
-      + '2nd ROAD' + (roadW2 ? (' ' + roadW2 + 'm') : '') + ' · ' + (dirFull[roadDir2] || roadDir2) + '</text>';
+  /* Road strips outside front / 2nd-road edges (in local, then transform) */
+  const roadOff = 16 / scale;
+  function roadStrip(side) {
+    /* side: front | rear | left | right in local */
+    if (side === 'front') return poly([[-0.2,-roadOff],[pw+0.2,-roadOff],[pw+0.2,0],[-0.2,0]]);
+    if (side === 'rear') return poly([[-0.2,pd],[pw+0.2,pd],[pw+0.2,pd+roadOff],[-0.2,pd+roadOff]]);
+    if (side === 'left') return poly([[-roadOff,-0.2],[0,-0.2],[0,pd+0.2],[-roadOff,pd+0.2]]);
+    return poly([[pw,-0.2],[pw+roadOff,-0.2],[pw+roadOff,pd+0.2],[pw,pd+0.2]]);
+  }
+  function midOf(side) {
+    if (side === 'front') return S(pw/2, -roadOff/2);
+    if (side === 'rear') return S(pw/2, pd + roadOff/2);
+    if (side === 'left') return S(-roadOff/2, pd/2);
+    return S(pw + roadOff/2, pd/2);
+  }
+
+  let roads = '<polygon points="' + roadStrip('front') + '" fill="#2c2a28"/>';
+  const midF = midOf('front');
+  roads += '<text x="' + midF.x.toFixed(1) + '" y="' + (midF.y+3).toFixed(1) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700">'
+    + 'ROAD' + (roadW ? (' ' + roadW + 'm') : '') + ' · ' + (dirFull[roadDir]||roadDir) + '</text>';
+
+  /* 2nd road */
+  let side2 = '';
+  if (roadDir2 && roadDir2 !== roadDir) {
+    const into = opp[roadDir];
+    const leftOf = { N:'W', E:'N', S:'E', W:'S' };
+    const leftDir = leftOf[into];
+    const rightDir = opp[leftDir];
+    const rearDir = into;
+    if (roadDir2 === leftDir) side2 = 'left';
+    else if (roadDir2 === rightDir) side2 = 'right';
+    else if (roadDir2 === rearDir) side2 = 'rear';
+    else side2 = 'left';
+    roads += '<polygon points="' + roadStrip(side2) + '" fill="#2c2a28"/>';
+    const mid2 = midOf(side2);
+    const rot2 = (side2 === 'left') ? -90 : (side2 === 'right') ? 90 : 0;
+    roads += '<text x="' + mid2.x.toFixed(1) + '" y="' + (mid2.y+3).toFixed(1) + '" text-anchor="middle" fill="#f7f5f0" font-size="9" font-family="sans-serif" font-weight="700"'
+      + (rot2 ? (' transform="rotate(' + rot2 + ' ' + mid2.x.toFixed(1) + ' ' + mid2.y.toFixed(1) + ')"') : '') + '>'
+      + '2nd ROAD' + (roadW2 ? (' ' + roadW2 + 'm') : '') + ' · ' + (dirFull[roadDir2]||roadDir2) + '</text>';
   }
 
   const mFill = 'rgba(166,61,50,.10)';
   const margins =
-    '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + dw + '" height="' + Math.max(0, mFront * scale) + '" fill="' + mFill + '"/>'
-    + '<rect x="' + X(0) + '" y="' + Y(pd - mRear) + '" width="' + dw + '" height="' + Math.max(0, mRear * scale) + '" fill="' + mFill + '"/>'
-    + '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + Math.max(0, mLeft * scale) + '" height="' + dh + '" fill="' + mFill + '"/>'
-    + '<rect x="' + X(pw - mRight) + '" y="' + Y(0) + '" width="' + Math.max(0, mRight * scale) + '" height="' + dh + '" fill="' + mFill + '"/>';
+    '<polygon points="' + frontBand + '" fill="' + mFill + '"/>'
+    + '<polygon points="' + rearBand + '" fill="' + mFill + '"/>'
+    + '<polygon points="' + leftBand + '" fill="' + mFill + '"/>'
+    + '<polygon points="' + rightBand + '" fill="' + mFill + '"/>';
 
-  const foot =
-    '<rect x="' + X(fx0) + '" y="' + Y(fy0) + '" width="' + Math.max(0, (fx1 - fx0) * scale) + '" height="' + Math.max(0, (fy1 - fy0) * scale) + '" fill="url(#hatchBalc)" stroke="#b8975a" stroke-width="1.2" stroke-dasharray="4 2"/>';
-  const build =
-    '<rect x="' + X(bx0) + '" y="' + Y(by0) + '" width="' + Math.max(0, (bx1 - bx0) * scale) + '" height="' + Math.max(0, (by1 - by0) * scale) + '" fill="rgba(44,62,45,.22)" stroke="#2c3e2d" stroke-width="1.6"/>';
-  const outline = '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + dw + '" height="' + dh + '" fill="none" stroke="#1c1b19" stroke-width="2"/>';
+  const foot = '<polygon points="' + footPoly + '" fill="url(#hatchBalc)" stroke="#b8975a" stroke-width="1.2" stroke-dasharray="4 2"/>';
+  const build = '<polygon points="' + buildPoly + '" fill="rgba(44,62,45,.22)" stroke="#2c3e2d" stroke-width="1.6"/>';
+  const outline = '<polygon points="' + plotPoly + '" fill="none" stroke="#1c1b19" stroke-width="2"/>';
 
-  /* Remaining margin after balcony (prefer result fields) */
+  /* Dimensions — overall box in screen space */
+  let dims = '';
+  dims += dimH(ox, ox + dw, oy - 14, boxW.toFixed(2) + ' m', '#1c1b19');
+  dims += dimV(oy, oy + dh, ox - 28, boxD.toFixed(2) + ' m', '#1c1b19');
+
+  /* Margin dims using local midpoints projected to screen */
+  function segLabel(a, b, label, color, offset) {
+    const sa = S(a[0], a[1]), sb = S(b[0], b[1]);
+    const mx = (sa.x + sb.x) / 2, my = (sa.y + sb.y) / 2;
+    const dx = sb.x - sa.x, dy = sb.y - sa.y;
+    const len = Math.sqrt(dx*dx+dy*dy) || 1;
+    const nx = -dy / len * (offset || 12), ny = dx / len * (offset || 12);
+    const x1 = sa.x + nx, y1 = sa.y + ny, x2 = sb.x + nx, y2 = sb.y + ny;
+    const horizontal = Math.abs(dx) >= Math.abs(dy);
+    if (horizontal) return dimH(x1, x2, (y1+y2)/2, label, color);
+    return dimV(y1, y2, (x1+x2)/2, label, color);
+  }
+
+  if (mFront > 0.05) dims += segLabel([pw/2,0],[pw/2,mFront], 'F '+mFront.toFixed(1), '#a63d32', 14);
+  if (mRear > 0.05) dims += segLabel([pw/2,pd-mRear],[pw/2,pd], (side2==='rear'?'F ':'R ')+mRear.toFixed(1), '#a63d32', 14);
+  if (mLeft > 0.05) dims += segLabel([0,pd/2],[mLeft,pd/2], (side2==='left'?'F ':'S ')+mLeft.toFixed(1), '#a63d32', 14);
+  if (mRight > 0.05) dims += segLabel([pw-mRight,pd/2],[pw,pd/2], (side2==='right'?'F ':'S ')+mRight.toFixed(1), '#a63d32', 14);
+
+  /* Balcony + remaining */
   const remF = (r.remFront != null) ? Number(r.remFront) : Math.max(0, mFront - balcF);
   const remRe = (r.remRear != null) ? Number(r.remRear) : Math.max(0, mRear - balcRear);
   const remL = (r.remSideL != null) ? Number(r.remSideL) : Math.max(0, mLeft - balcL);
   const remRg = (r.remSideR != null) ? Number(r.remSideR) : Math.max(0, mRight - balcR);
 
-  /* Dimensions — overall + margin split (Balc | Rem) */
-  let dims = '';
-  dims += dimH(X(0), X(pw), oy - roadH - 16, pw.toFixed(2) + ' m (frontage)', '#1c1b19');
-  dims += dimV(Y(0), Y(pd), ox - (side2 === 'left' ? roadH + 22 : 30), pd.toFixed(2) + ' m', '#1c1b19');
+  if (balcF > 0.05) dims += segLabel([pw/2, mFront-balcF],[pw/2, mFront], 'B+'+balcF.toFixed(1), '#8a6a2a', 28);
+  if (balcF > 0.05 && remF > 0.05) dims += segLabel([pw/2, 0],[pw/2, remF], 'rem '+remF.toFixed(1), '#6e6960', 28);
+  if (balcRear > 0.05) dims += segLabel([pw/2, pd-mRear],[pw/2, pd-mRear+balcRear], 'B+'+balcRear.toFixed(1), '#8a6a2a', 28);
+  if (balcL > 0.05) dims += segLabel([mLeft-balcL, pd/2],[mLeft, pd/2], 'B+'+balcL.toFixed(1), '#8a6a2a', 28);
+  if (balcR > 0.05) dims += segLabel([pw-mRight, pd/2],[pw-mRight+balcR, pd/2], 'B+'+balcR.toFixed(1), '#8a6a2a', 28);
 
-  const dimSideX = ox + dw + (side2 === 'right' ? roadH + 14 : 14);
-  const dimBotY = oy + dh + (side2 === 'rear' ? roadH + 14 : 16);
-
-  /* Front margin: full + split Balc / Rem if balcony */
-  if (mFront > 0.05) {
-    dims += dimV(Y(0), Y(mFront), dimSideX, 'F ' + mFront.toFixed(1), '#a63d32');
-    if (balcF > 0.05) {
-      dims += dimV(Y(mFront - balcF), Y(mFront), dimSideX + 22, 'B+' + balcF.toFixed(1), '#8a6a2a');
-      if (remF > 0.05) dims += dimV(Y(0), Y(remF), dimSideX + 22, 'rem ' + remF.toFixed(1), '#6e6960');
-    }
-  }
-  if (mRear > 0.05) {
-    const tag = side2 === 'rear' ? 'F ' : 'R ';
-    dims += dimV(Y(pd - mRear), Y(pd), dimSideX, tag + mRear.toFixed(1), '#a63d32');
-    if (balcRear > 0.05) {
-      dims += dimV(Y(pd - mRear), Y(pd - mRear + balcRear), dimSideX + 22, 'B+' + balcRear.toFixed(1), '#8a6a2a');
-      if (remRe > 0.05) dims += dimV(Y(pd - remRe), Y(pd), dimSideX + 22, 'rem ' + remRe.toFixed(1), '#6e6960');
-    }
-  }
-  if (mLeft > 0.05) {
-    const tag = side2 === 'left' ? 'F ' : 'S ';
-    dims += dimH(X(0), X(mLeft), dimBotY, tag + mLeft.toFixed(1), '#a63d32');
-    if (balcL > 0.05) {
-      dims += dimH(X(mLeft - balcL), X(mLeft), dimBotY + 14, 'B+' + balcL.toFixed(1), '#8a6a2a');
-      if (remL > 0.05) dims += dimH(X(0), X(remL), dimBotY + 14, 'rem ' + remL.toFixed(1), '#6e6960');
-    }
-  }
-  if (mRight > 0.05) {
-    const tag = side2 === 'right' ? 'F ' : 'S ';
-    dims += dimH(X(pw - mRight), X(pw), dimBotY, tag + mRight.toFixed(1), '#a63d32');
-    if (balcR > 0.05) {
-      dims += dimH(X(pw - mRight), X(pw - mRight + balcR), dimBotY + 14, 'B+' + balcR.toFixed(1), '#8a6a2a');
-      if (remRg > 0.05) dims += dimH(X(pw - remRg), X(pw), dimBotY + 14, 'rem ' + remRg.toFixed(1), '#6e6960');
-    }
-  }
-
-  const bcx = (X(bx0) + X(bx1)) / 2, bcy = (Y(by0) + Y(by1)) / 2;
+  const midB = S((bx0+bx1)/2, (by0+by1)/2);
   const buildLabel = (r.buildW != null && r.buildD != null)
     ? (Number(r.buildW).toFixed(2) + ' × ' + Number(r.buildD).toFixed(2) + ' m')
-    : ((bx1 - bx0).toFixed(2) + ' × ' + (by1 - by0).toFixed(2) + ' m');
-  const buildTxt = '<text x="' + bcx + '" y="' + bcy + '" text-anchor="middle" fill="#1c1b19" font-size="11" font-family="sans-serif" font-weight="700">' + buildLabel + '</text>'
-    + '<text x="' + bcx + '" y="' + (bcy + 13) + '" text-anchor="middle" fill="#5a7260" font-size="8" font-family="sans-serif">BUILDING</text>';
+    : ((bx1-bx0).toFixed(2) + ' × ' + (by1-by0).toFixed(2) + ' m');
+  const buildTxt = '<text x="' + midB.x.toFixed(1) + '" y="' + midB.y.toFixed(1) + '" text-anchor="middle" fill="#1c1b19" font-size="11" font-family="sans-serif" font-weight="700">' + buildLabel + '</text>'
+    + '<text x="' + midB.x.toFixed(1) + '" y="' + (midB.y+13).toFixed(1) + '" text-anchor="middle" fill="#5a7260" font-size="8" font-family="sans-serif">BUILDING</text>';
 
-  let balcTxt = '';
-  if (balcF > 0.05) {
-    balcTxt += '<text x="' + bcx + '" y="' + (Y(mFront - balcF / 2) + 3) + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700">Balcony +' + balcF.toFixed(1) + 'm (front)</text>';
-  }
-  if (balcL > 0.05) {
-    balcTxt += '<text x="' + X(mLeft - balcL / 2) + '" y="' + bcy + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700" transform="rotate(-90 ' + X(mLeft - balcL / 2) + ' ' + bcy + ')">Balc +' + balcL.toFixed(1) + 'm</text>';
-  }
-  if (balcR > 0.05) {
-    balcTxt += '<text x="' + X(pw - mRight + balcR / 2) + '" y="' + bcy + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700" transform="rotate(90 ' + X(pw - mRight + balcR / 2) + ' ' + bcy + ')">Balc +' + balcR.toFixed(1) + 'm</text>';
-  }
-  if (balcRear > 0.05) {
-    balcTxt += '<text x="' + bcx + '" y="' + (Y(pd - mRear + balcRear / 2) + 3) + '" text-anchor="middle" fill="#8a6a2a" font-size="8" font-family="sans-serif" font-weight="700">Balcony +' + balcRear.toFixed(1) + 'm (rear)</text>';
-  }
+  /* Cardinal labels at mid of each plot edge (true N-up) */
+  const nEdge = S(pw/2, 0);  /* will place by actual north side of bbox */
+  /* Midpoints of bounding box edges in screen */
+  const cardN = '<text x="' + (ox+dw/2).toFixed(1) + '" y="' + (oy+14).toFixed(1) + '" text-anchor="middle" fill="#1c1b19" font-size="11" font-weight="800" font-family="sans-serif">N</text>';
+  const cardS = '<text x="' + (ox+dw/2).toFixed(1) + '" y="' + (oy+dh-6).toFixed(1) + '" text-anchor="middle" fill="#1c1b19" font-size="11" font-weight="800" font-family="sans-serif">S</text>';
+  const cardW = '<text x="' + (ox+12).toFixed(1) + '" y="' + (oy+dh/2+4).toFixed(1) + '" text-anchor="middle" fill="#1c1b19" font-size="11" font-weight="800" font-family="sans-serif">W</text>';
+  const cardE = '<text x="' + (ox+dw-12).toFixed(1) + '" y="' + (oy+dh/2+4).toFixed(1) + '" text-anchor="middle" fill="#1c1b19" font-size="11" font-weight="800" font-family="sans-serif">E</text>';
 
-  /* North arrow */
-  /* Front at TOP. Arrow points to true North on page: W→left(-90), E→right(90) */
-  const nRot = { N: 0, S: 180, E: 90, W: -90 }[roadDir] || 0;
-  const nx = W - 36, ny = 36;
-  /* Cardinal labels on plot edges (front-at-top plan) */
-  const topCard = roadDir;           /* front edge faces this */
-  const botCard = rearDir;
-  const leftCard = leftDir;
-  const rightCard = rightDir;
-  const cardLbl = function(txt, x, y, rot){
-    rot = rot || 0;
-    return '<text x="' + x + '" y="' + y + '" text-anchor="middle" fill="#1c1b19" font-size="10" font-weight="800" font-family="sans-serif"'
-      + (rot ? (' transform="rotate(' + rot + ' ' + x + ' ' + y + ')"') : '') + '>' + txt + '</text>';
-  };
-  const edgeCards =
-    cardLbl(topCard, ox + dw / 2, oy + 12, 0)
-    + cardLbl(botCard, ox + dw / 2, oy + dh - 6, 0)
-    + cardLbl(leftCard, ox + 10, oy + dh / 2, -90)
-    + cardLbl(rightCard, ox + dw - 10, oy + dh / 2, 90);
-
+  /* Classic compass rose — North always UP (matches standard drawing) */
+  const nx = W - 40, ny = 42;
   const northSym =
-    '<g transform="translate(' + nx + ',' + ny + ') rotate(' + nRot + ')">'
-    + '<circle cx="0" cy="0" r="18" fill="#fff" stroke="#1c1b19" stroke-width="1.3"/>'
-    + '<polygon points="0,-13 5,-1 0,-3.5 -5,-1" fill="#1c1b19"/>'
-    + '<line x1="0" y1="-1" x2="0" y2="11" stroke="#1c1b19" stroke-width="1.6" stroke-linecap="round"/>'
-    + '<text x="0" y="-15" text-anchor="middle" fill="#1c1b19" font-size="10" font-weight="800" font-family="sans-serif">N</text>'
-    + '</g>'
-    + '<text x="' + nx + '" y="' + (ny + 32) + '" text-anchor="middle" fill="#6e6960" font-size="8" font-family="sans-serif">NORTH</text>'
-    + edgeCards;
+    '<g transform="translate(' + nx + ',' + ny + ')">'
+    + '<circle cx="0" cy="0" r="22" fill="#fff" stroke="#1c1b19" stroke-width="1.2"/>'
+    /* N point up */
+    + '<polygon points="0,-18 4,-2 0,-5 -4,-2" fill="#1c1b19"/>'
+    + '<polygon points="0,18 4,2 0,5 -4,2" fill="#ccc"/>'
+    + '<polygon points="18,0 2,4 5,0 2,-4" fill="#ccc"/>'
+    + '<polygon points="-18,0 -2,4 -5,0 -2,-4" fill="#ccc"/>'
+    + '<text x="0" y="-20" text-anchor="middle" fill="#1c1b19" font-size="10" font-weight="800" font-family="sans-serif">N</text>'
+    + '<text x="0" y="28" text-anchor="middle" fill="#6e6960" font-size="8" font-family="sans-serif">S</text>'
+    + '<text x="24" y="3" text-anchor="start" fill="#6e6960" font-size="8" font-family="sans-serif">E</text>'
+    + '<text x="-24" y="3" text-anchor="end" fill="#6e6960" font-size="8" font-family="sans-serif">W</text>'
+    + '</g>';
 
-  const title = '<text x="' + (W / 2) + '" y="18" text-anchor="middle" fill="#1c1b19" font-size="12" font-family="sans-serif" font-weight="700">SITE SKETCH · Front road वरती · 2nd road बाजूला · North arrow</text>';
+  const title = '<text x="' + (W/2) + '" y="18" text-anchor="middle" fill="#1c1b19" font-size="12" font-family="sans-serif" font-weight="700">SITE SKETCH · North UP · Road on correct side</text>';
 
   const legend =
-    '<rect x="12" y="' + (H - 18) + '" width="9" height="9" fill="rgba(44,62,45,.22)" stroke="#2c3e2d"/>'
-    + '<text x="24" y="' + (H - 10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Building</text>'
-    + '<rect x="78" y="' + (H - 18) + '" width="9" height="9" fill="url(#hatchBalc)" stroke="#b8975a"/>'
-    + '<text x="90" y="' + (H - 10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Closed balcony</text>'
-    + '<rect x="175" y="' + (H - 18) + '" width="9" height="9" fill="rgba(166,61,50,.12)" stroke="#a63d32"/>'
-    + '<text x="187" y="' + (H - 10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Margin</text>'
-    + '<rect x="235" y="' + (H - 18) + '" width="9" height="9" fill="#2c2a28"/>'
-    + '<text x="247" y="' + (H - 10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Road</text>';
+    '<rect x="12" y="' + (H-18) + '" width="9" height="9" fill="rgba(44,62,45,.22)" stroke="#2c3e2d"/>'
+    + '<text x="24" y="' + (H-10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Building</text>'
+    + '<rect x="78" y="' + (H-18) + '" width="9" height="9" fill="url(#hatchBalc)" stroke="#b8975a"/>'
+    + '<text x="90" y="' + (H-10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Closed balcony</text>'
+    + '<rect x="175" y="' + (H-18) + '" width="9" height="9" fill="rgba(166,61,50,.12)" stroke="#a63d32"/>'
+    + '<text x="187" y="' + (H-10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Margin</text>'
+    + '<rect x="235" y="' + (H-18) + '" width="9" height="9" fill="#2c2a28"/>'
+    + '<text x="247" y="' + (H-10) + '" fill="#3a3632" font-size="8" font-family="sans-serif">Road</text>';
 
   return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="max-width:100%;display:block;margin:0 auto;background:#faf8f4;border-radius:10px;border:1px solid #e4dfd6">'
     + '<defs><pattern id="hatchBalc" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">'
     + '<line x1="0" y1="0" x2="0" y2="6" stroke="#b8975a" stroke-width="1.5" opacity=".55"/></pattern></defs>'
-    + title + roads + margins + foot + build + outline + dims + buildTxt + balcTxt + legend + northSym
+    + title + roads + margins + foot + build + outline + dims + buildTxt
+    + cardN + cardS + cardW + cardE + legend + northSym
     + '</svg>';
 }
 function udcprLiveSketch(){}
