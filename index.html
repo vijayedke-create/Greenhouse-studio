@@ -19083,6 +19083,19 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.completion='📋 Completion Report'
 #est-body .irow .move button{border:1px solid var(--bdr);background:var(--surf2);border-radius:5px;width:22px;height:18px;font-size:10px;cursor:pointer;color:var(--ink2);padding:0;line-height:1}
 #est-body .irow .move button:hover{background:var(--grn);color:#fff;border-color:var(--grn)}
 #est-body .irow{grid-template-columns:22px 24px minmax(0,1fr)!important}
+#est-body .qcalc{margin-top:6px;padding:8px 8px 6px;background:var(--surf2);border:1px dashed var(--bdr2);border-radius:8px}
+#est-body .qcalc .qc-h{font-size:10px;font-weight:700;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+#est-body .qcalc .qc-h b{color:var(--grn3);font-size:11px;letter-spacing:0;text-transform:none}
+#est-body .qcalc .qc-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:5px;align-items:end}
+#est-body .qcalc .qc-row.qc-3{grid-template-columns:repeat(3,minmax(0,1fr)) auto}
+#est-body .qcalc .qc-row.qc-2{grid-template-columns:repeat(2,minmax(0,1fr)) auto}
+#est-body .qcalc .qc-row.qc-1{grid-template-columns:minmax(0,1fr) auto}
+#est-body .qcalc label{display:block;font-size:9px;font-weight:700;color:var(--mut);margin-bottom:2px}
+#est-body .qcalc input{width:100%;font-size:11.5px;padding:5px 6px;border:1px solid var(--bdr2);border-radius:6px;background:var(--surf);color:var(--ink);font-family:inherit;text-align:right}
+#est-body .qcalc .qc-out{font-size:11px;font-weight:700;color:var(--ink2);white-space:nowrap;padding-bottom:5px}
+#est-body .qcalc .qc-btn{border:0;background:var(--grn);color:#fff;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+#est-body .qcalc .qc-btn:hover{filter:brightness(1.08)}
+
 
 #est-body .chip:hover{border-color:var(--grn3);color:var(--grn3)}
 #est-body .tot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:9px 12px;background:var(--grn);color:#fff;border-radius:9px}
@@ -19563,6 +19576,95 @@ window.estPickLibItem=function(src,i){
   estDrawSecs();estRender();
 };
 
+
+/** Quantity calculator mode from item category / unit */
+function estQtyMode(it){
+  const cat=(typeof estItemCat==='function'?estItemCat(it):'')||'';
+  const u=String((it&&it.u)||'').toLowerCase();
+  const t=String((it&&it.d)||'').toLowerCase();
+  if(/l-?s|lump/.test(u)) return {mode:'none', fields:[], formula:'', unitHint:''};
+  if(/cu\.?mt|cum|m3|cubic/.test(u) || /EXCAVATION|PCC|RCC|MASONRY|FILLING|PILING/.test(cat) || /excav|pcc|concrete|masonry|filling|murum/.test(t)){
+    return {mode:'volume', fields:['L','B','D','Nos'], formula:'L × B × D × Nos', unitHint:'Cu.mt'};
+  }
+  if(/sq\.?mt|sqm|m2|square/.test(u) || /PLASTER|FLOORING|PAINTING|WATERPROOF|DOORS/.test(cat) || /plaster|floor|paint|tile|waterproof/.test(t)){
+    return {mode:'area', fields:['L','H','Nos'], formula:'L × H × Nos', unitHint:'Sq.mt'};
+  }
+  if(/rmt|rft|running|rmt|metre|meter/.test(u) || /PILING|COMPOUND/.test(cat) || /pile|railing|pipe|skirting|dado/.test(t)){
+    return {mode:'length', fields:['L','Nos'], formula:'L × Nos', unitHint:'Rmt'};
+  }
+  if(/m\.?t|mt|kg|tonne|ton/.test(u) || /STEEL|REINFORCEMENT/.test(cat) || /tmt|reinforce|steel\s*bar/.test(t)){
+    return {mode:'steel', fields:['L','Kg/m','Nos'], formula:'L × Kg/m × Nos ÷ 1000', unitHint:'M.T'};
+  }
+  if(/nos|no\.|number|each/.test(u) || /door|window|ventilator/.test(t)){
+    return {mode:'nos', fields:['Nos'], formula:'Nos', unitHint:'Nos'};
+  }
+  /* default volume-like */
+  return {mode:'volume', fields:['L','B','D','Nos'], formula:'L × B × D × Nos', unitHint:it&&it.u?it.u:'Cu.mt'};
+}
+function estQtyCalc(mode, vals){
+  const n=function(k){const v=parseFloat(vals[k]); return isNaN(v)?0:v;};
+  if(mode==='volume') return n('L')*n('B')*n('D')*(n('Nos')||1);
+  if(mode==='area') return n('L')*n('H')*(n('Nos')||1);
+  if(mode==='length') return n('L')*(n('Nos')||1);
+  if(mode==='steel') return (n('L')*n('Kg/m')*(n('Nos')||1))/1000;
+  if(mode==='nos') return n('Nos')||0;
+  return 0;
+}
+function estQtyHtml(si,i,it){
+  const m=estQtyMode(it);
+  if(m.mode==='none') return '';
+  const d=it.dims||{};
+  const labels={L:'L (m)',B:'B (m)',D:'D (m)',H:'H (m)','Kg/m':'Kg/m',Nos:'Nos'};
+  const cols=m.fields.length<=1?'qc-1':m.fields.length===2?'qc-2':m.fields.length===3?'qc-3':'';
+  const fields=m.fields.map(function(f){
+    const v=d[f]!=null?d[f]:(f==='Nos'?'1':'');
+    return '<div><label>'+labels[f]+'</label><input type="number" step="any" min="0" id="qc-'+si+'-'+i+'-'+f.replace('/','')+'" value="'+String(v).replace(/"/g,'&quot;')+'" oninput="estQtyLive('+si+','+i+')"></div>';
+  }).join('');
+  const q0=estQtyCalc(m.mode, d);
+  const qShow=q0? (Math.round(q0*1000)/1000) : '—';
+  return '<div class="qcalc">'+
+    '<div class="qc-h"><span>📐 '+m.formula+' → '+m.unitHint+'</span><b id="qc-out-'+si+'-'+i+'">'+qShow+' '+m.unitHint+'</b></div>'+
+    '<div class="qc-row '+cols+'">'+fields+
+    '<button type="button" class="qc-btn" onclick="estQtyApply('+si+','+i+')">Add qty</button>'+
+    '</div></div>';
+}
+window.estQtyLive=function(si,i){
+  const it=estSec[si]&&estSec[si].items[i]; if(!it) return;
+  const m=estQtyMode(it);
+  const vals={};
+  m.fields.forEach(function(f){
+    const el=document.getElementById('qc-'+si+'-'+i+'-'+f.replace('/',''));
+    vals[f]=el?el.value:'';
+  });
+  const q=estQtyCalc(m.mode, vals);
+  const out=document.getElementById('qc-out-'+si+'-'+i);
+  if(out) out.textContent=(q? (Math.round(q*1000)/1000) : '—')+' '+(m.unitHint||'');
+};
+window.estQtyApply=function(si,i){
+  const it=estSec[si]&&estSec[si].items[i]; if(!it) return;
+  const m=estQtyMode(it);
+  const vals={};
+  m.fields.forEach(function(f){
+    const el=document.getElementById('qc-'+si+'-'+i+'-'+f.replace('/',''));
+    vals[f]=el?parseFloat(el.value)||0:0;
+  });
+  const q=estQtyCalc(m.mode, vals);
+  if(!q){ alert('Dimensions टाका — quantity 0 येत आहे.'); return; }
+  it.dims=vals;
+  /* Add to existing qty if already has value */
+  const prev=parseFloat(it.q);
+  const next=(!isNaN(prev) && prev>0) ? (prev+q) : q;
+  it.q=String(Math.round(next*1000)/1000);
+  if(m.unitHint && (!it.u || it.u==='L-S')){
+    if(m.mode==='volume') it.u='Cu.mt';
+    else if(m.mode==='area') it.u='Sq.mt';
+    else if(m.mode==='length') it.u='Rmt';
+    else if(m.mode==='steel') it.u='M.T';
+    else if(m.mode==='nos') it.u='Nos';
+  }
+  estDrawSecs();estRender();
+};
+
 function estDrawSecs(){
   const el=document.getElementById('est-secs');if(!el)return;
   el.innerHTML=estSec.map((s,si)=>`
@@ -19593,6 +19695,7 @@ function estDrawSecs(){
             <div class="tail"><span class="amt" id="est-amt-${si}-${i}">${e2(estAmt(it))}</span>
               <button class="xb" title="Remove item" onclick="estDelItem(${si},${i})">×</button></div>
           </div>
+          ${estQtyHtml(si,i,it)}
         </div>
       </div>`;
     }).join('')}
