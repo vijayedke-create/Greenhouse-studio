@@ -4532,7 +4532,7 @@ function renderView(v){
     timeline:renderTimelineView,
     materials:renderMaterialsView,interiorest:renderInteriorEstList,intcomm:renderIntComm,
     completion:function(){if(window.renderCompletionView)renderCompletionView();},
-    bankest:function(){if(window.renderBankEstView)renderBankEstView();},
+    bankest:function(){if(window.renderBankEstView){renderBankEstView();}else{var b=document.getElementById('est-body');if(b)b.innerHTML='<div class="sec-head"><div class="sec-title">📐 Bank Estimate</div></div><div class="card" style="padding:20px"><p>Module load झाला नाही. <b>Ctrl+Shift+R</b> (hard refresh) करा. तरी नसेल तर index.html पुन्हा deploy करा.</p></div>';}},
     nocletter:function(){if(window.renderNocView)renderNocView();},
     clientself:function(){if(window.renderClientSelfView)renderClientSelfView();},
     areawarranty:function(){if(window.renderAreaWarrantyView)renderAreaWarrantyView();},
@@ -19272,7 +19272,8 @@ function estTotals(){
 window.renderBankEstView=function(){
   const box=document.getElementById('est-body');
   if(!box)return;
-  if(estDrawn){estRender();return;}
+  if(estDrawn && box.querySelector('.est-grid')){estRender();return;}
+  estDrawn=false;
   box.innerHTML=`
   <div class="sec-head">
     <div class="sec-title">📐 Bank Loan Estimate</div>
@@ -20214,7 +20215,7 @@ window.estOpenSchedule=function(type){
   var m=document.getElementById('est-sched-modal');
   if(!m){
     m=document.createElement('div'); m.id='est-sched-modal';
-    m.innerHTML='<div class="box"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b id="est-sched-title">Schedule</b><button class="btn btn-s btn-sm" onclick="document.getElementById(\\'est-sched-modal\\').style.display=\\'none\\'">Close</button></div><div id="est-sched-body"></div><div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-gold" onclick="estSchedApply()">Add quantities to estimate</button></div></div>';
+    m.innerHTML='<div class="box"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b id="est-sched-title">Schedule</b><button class="btn btn-s btn-sm" onclick="document.getElementById(\'est-sched-modal\').style.display=\'none\'">Close</button></div><div id="est-sched-body"></div><div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-gold" onclick="estSchedApply()">Add quantities to estimate</button></div></div>';
     m.addEventListener('click',function(e){ if(e.target===m) m.style.display='none'; });
     document.body.appendChild(m);
   }
