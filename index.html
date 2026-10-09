@@ -19095,6 +19095,17 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.completion='📋 Completion Report'
 #est-body .qcalc .qc-out{font-size:11px;font-weight:700;color:var(--ink2);white-space:nowrap;padding-bottom:5px}
 #est-body .qcalc .qc-btn{border:0;background:var(--grn);color:#fff;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
 #est-body .qcalc .qc-btn:hover{filter:brightness(1.08)}
+#est-body .est-speed{margin-bottom:12px;padding:12px;background:linear-gradient(180deg,var(--surf2),var(--surf));border:1px solid var(--bdr);border-radius:12px}
+#est-body .est-speed-h{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:8px}
+#est-body .est-speed-lbl{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:8px 0 5px}
+#est-body .est-speed-row{display:flex;gap:6px;align-items:center}
+#est-sched-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;display:none;align-items:center;justify-content:center;padding:16px}
+#est-sched-modal .box{background:var(--surf);border-radius:14px;width:min(720px,100%);max-height:88vh;overflow:auto;padding:16px}
+#est-sched-modal table{width:100%;border-collapse:collapse;font-size:12px}
+#est-sched-modal th,#est-sched-modal td{border:1px solid var(--bdr);padding:6px;text-align:left}
+#est-sched-modal th{background:var(--surf2);font-size:10px;text-transform:uppercase}
+#est-sched-modal input{width:100%;padding:5px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;font-size:12px}
+
 
 
 #est-body .chip:hover{border-color:var(--grn3);color:var(--grn3)}
@@ -19293,9 +19304,51 @@ window.renderBankEstView=function(){
 
       <div class="est-card"><h4 onclick="estTog(this)">📑 Abstract sections<span class="ar">▼</span></h4><div class="eb">
         <div style="margin-bottom:12px;padding:12px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px">
-          <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Foundation Type</div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Foundation Type / Soil</div>
           <div id="est-found-types" style="display:flex;flex-direction:column;gap:8px"></div>
           <div id="est-found-hint" style="font-size:11px;color:var(--mut);margin-top:8px;line-height:1.45"></div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--bdr)">
+            <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:8px">My soil + floor templates</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+              <input id="est-tpl-name" class="fi" placeholder="e.g. Hard Murum G+1 my rates" style="flex:1;min-width:140px">
+              <button type="button" class="btn btn-gold btn-sm" onclick="estSaveSoilFloorTpl()">Save template</button>
+            </div>
+            <label style="font-size:11px;color:var(--mut);display:flex;align-items:center;gap:6px;margin-bottom:8px;cursor:pointer">
+              <input type="checkbox" id="est-tpl-keep-qty" style="width:14px;height:14px;margin:0"> Keep quantities (else only items + rates)
+            </label>
+            <div id="est-tpl-list"></div>
+          </div>
+        </div>
+        <div class="est-speed" id="est-speed">
+          <div class="est-speed-h">⚡ Speed tools</div>
+          <div class="est-speed-row">
+            <input id="est-quick-bar" class="fi" placeholder='Quick qty: "excavation 12 x 1 x 1.5 x 4" or "plaster 10 x 3 x 2"' style="flex:1;min-width:160px" onkeydown="if(event.key===\'Enter\')estQuickQty()">
+            <button class="btn btn-gold btn-sm" onclick="estQuickQty()">Apply</button>
+          </div>
+          <div class="est-speed-lbl">Standard packages</div>
+          <div class="chips" style="margin-bottom:8px">
+            <button class="chip" onclick="estLoadPackage(\'b1_hm\')">1BHK · Hard Murum</button>
+            <button class="chip" onclick="estLoadPackage(\'b1_bc\')">1BHK · Black Cotton</button>
+            <button class="chip" onclick="estLoadPackage(\'g1_hm\')">G+1 · Hard Murum</button>
+            <button class="chip" onclick="estLoadPackage(\'g1_bc\')">G+1 · Black Cotton</button>
+          </div>
+          <div class="est-speed-lbl">Member schedule → qty</div>
+          <div class="chips" style="margin-bottom:8px">
+            <button class="chip" onclick="estOpenSchedule(\'footing\')">Footing schedule</button>
+            <button class="chip" onclick="estOpenSchedule(\'column\')">Column schedule</button>
+            <button class="chip" onclick="estOpenSchedule(\'beam\')">Beam schedule</button>
+            <button class="chip" onclick="estOpenSchedule(\'slab\')">Slab schedule</button>
+            <button class="chip" onclick="estOpenSchedule(\'steel\')">Steel helper</button>
+            <button class="chip" onclick="estOpenSchedule(\'deduct\')">Plaster deduction</button>
+          </div>
+          <div class="est-speed-lbl">Typical presets (add qty to matching item)</div>
+          <div class="chips" style="margin-bottom:8px" id="est-presets"></div>
+          <div class="est-speed-row" style="margin-top:4px;flex-wrap:wrap">
+            <button class="btn btn-s btn-sm" onclick="estDupFloor()">Copy GF → next floor</button>
+            <button class="btn btn-s btn-sm" onclick="estExportCsv()">⬇ CSV Export</button>
+            <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">⬆ CSV Import<input type="file" accept=".csv,text/csv" style="display:none" onchange="estImportCsv(event)"></label>
+            <button class="btn btn-s btn-sm" onclick="estApplyRateMemory()">Apply saved rates</button>
+          </div>
         </div>
         <div class="chips">
           <button class="chip" onclick="estAddTpl('ground')">+ Ground Floor</button>
@@ -19323,7 +19376,10 @@ window.renderBankEstView=function(){
         </div>
       </div></div>
 
-      <div class="est-card cl"><h4 onclick="estTog(this)">💾 Saved estimates<span class="ar">▼</span></h4><div class="eb"><div id="est-saved"></div></div></div>
+      <div class="est-card cl"><h4 onclick="estTog(this)">💾 Saved estimates / Client history<span class="ar">▼</span></h4><div class="eb">
+        <input class="fi" placeholder="Search client / project…" style="margin-bottom:8px;width:100%" oninput="estFilterSaved(this.value)">
+        <div id="est-saved"></div>
+      </div></div>
     </div>
 
     <div class="est-pane-preview">
@@ -19350,7 +19406,7 @@ window.renderBankEstView=function(){
   eq('ref').value=estNextRef();
   eq('ptitle').value='Proposed Estimate of Residential Building';
   estEx=[{name:'Electrification (4%)',pct:4},{name:'Plumbing (4%)',pct:4}];
-  estFillPicker();estDrawFoundTypes();estDrawSecs();estDrawEx();estDrawSaved();estRender();
+  estFillPicker();estDrawFoundTypes();estDrawSoilFloorTpls();estDrawPresets();estDrawSecs();estDrawEx();estDrawSaved();estRender();
 };
 window.estTog=function(h){h.parentElement.classList.toggle('cl');};
 
@@ -19415,6 +19471,87 @@ window.estAddTpl=function(k){
   estSec.push({name:t.name,area:'',bldg:t.bldg,items:(pick||[]).map(estLibRow)});
   estDrawSecs();estRender();
 };
+
+const EST_TPL_KEY='gs_est_soil_floor_tpls';
+function estSoilFloorTpls(){
+  try{
+    if(typeof db==='object'&&db){
+      if(!db.estTemplates) db.estTemplates=[];
+      /* migrate from localStorage once */
+      var loc=JSON.parse(localStorage.getItem(EST_TPL_KEY)||'[]');
+      if(loc.length && !db.estTemplates.length){ db.estTemplates=loc; if(typeof estSaveDb==='function') estSaveDb(); }
+      return db.estTemplates;
+    }
+  }catch(e){}
+  try{ return JSON.parse(localStorage.getItem(EST_TPL_KEY)||'[]'); }catch(e2){ return []; }
+}
+function estSoilFloorTplsSave(arr){
+  try{
+    if(typeof db==='object'&&db){ db.estTemplates=arr; if(typeof estSaveDb==='function') estSaveDb(); }
+  }catch(e){}
+  try{ localStorage.setItem(EST_TPL_KEY, JSON.stringify(arr)); }catch(e2){}
+}
+window.estSaveSoilFloorTpl=function(){
+  var name=((document.getElementById('est-tpl-name')||{}).value||'').trim();
+  if(!name){ name=prompt('Template name (e.g. Hard Murum G+1)'); if(!name) return; }
+  if(!estSec.length){ estToast('First add floor sections'); return; }
+  var keepQty=!!((document.getElementById('est-tpl-keep-qty')||{}).checked);
+  var sections=JSON.parse(JSON.stringify(estSec)).map(function(s){
+    s.items=(s.items||[]).map(function(it){
+      var row={d:it.d,u:it.u,r:it.r,cat:it.cat||'',q:keepQty?(it.q||''):''};
+      if(keepQty && it.dims) row.dims=it.dims;
+      return row;
+    });
+    return s;
+  });
+  var arr=estSoilFloorTpls();
+  var rec={
+    id:'TPL-'+Date.now(),
+    name:name,
+    found:estFoundType||'footing',
+    foundLabel:(EST_FOUNDATION[estFoundType]||{}).label||estFoundType,
+    sections:sections,
+    floors:sections.map(function(s){return s.name;}).join(', '),
+    saved:new Date().toISOString()
+  };
+  /* replace same name */
+  arr=arr.filter(function(t){ return t.name!==name; });
+  arr.unshift(rec);
+  estSoilFloorTplsSave(arr);
+  estDrawSoilFloorTpls();
+  estToast('Template saved: '+name);
+  var inp=document.getElementById('est-tpl-name'); if(inp) inp.value='';
+};
+window.estLoadSoilFloorTpl=function(id){
+  var t=estSoilFloorTpls().find(function(x){return x.id===id;});
+  if(!t) return;
+  if(estSec.length && !confirm('Replace current sections with template "'+t.name+'"?')) return;
+  estFoundType=t.found||'footing';
+  estDrawFoundTypes();
+  estSec=JSON.parse(JSON.stringify(t.sections||[]));
+  estDrawSecs(); estRender();
+  estToast('Loaded: '+t.name+' ('+(t.foundLabel||t.found)+')');
+};
+window.estDelSoilFloorTpl=function(id){
+  if(!confirm('Delete this template?')) return;
+  estSoilFloorTplsSave(estSoilFloorTpls().filter(function(t){return t.id!==id;}));
+  estDrawSoilFloorTpls();
+};
+function estDrawSoilFloorTpls(){
+  var el=document.getElementById('est-tpl-list'); if(!el) return;
+  var arr=estSoilFloorTpls();
+  if(!arr.length){
+    el.innerHTML='<div style="font-size:11px;color:var(--mut);padding:6px 0">No saved templates yet — set soil type, add floors, then Save.</div>';
+    return;
+  }
+  el.innerHTML=arr.map(function(t){
+    return '<div style="display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--bdr)">'
+      +'<div style="flex:1;min-width:0"><b style="font-size:12px;color:var(--ink)">'+ece(t.name)+'</b>'
+      +'<div style="font-size:10px;color:var(--mut)">'+ece(t.foundLabel||t.found)+' · '+ece(t.floors||'')+'</div></div>'
+      +'<button type="button" class="btn btn-s btn-sm" onclick="estLoadSoilFloorTpl(\''+t.id+'\')">Load</button>'
+      +'<button type="button" class="btn btn-s btn-sm" onclick="estDelSoilFloorTpl(\''+t.id+'\')">×</button></div>';
+  }).join('');
+}
 function estDrawFoundTypes(){
   const box=document.getElementById('est-found-types');
   const hint=document.getElementById('est-found-hint');
@@ -19429,6 +19566,8 @@ function estDrawFoundTypes(){
     const f=EST_FOUNDATION[estFoundType];
     hint.textContent=f?(f.label+' — Ground Floor template will use these foundation items first.'):'';
   }
+
+  if(typeof estDrawSoilFloorTpls==='function') estDrawSoilFloorTpls();
 }
 window.estMoveItem=function(si,i,dir){
   const items=estSec[si]&&estSec[si].items;
@@ -19910,6 +20049,353 @@ window.estPrint=function(){
   '</style></head><body>'+body+'</body></html>');
   w.document.close();
   setTimeout(function(){w.focus();w.print();},900);
+};
+
+
+/* ══════════════════ SPEED TOOLS ══════════════════ */
+const EST_RATE_MEM_KEY='gs_est_rate_mem';
+function estRateMem(){ try{ return JSON.parse(localStorage.getItem(EST_RATE_MEM_KEY)||'{}'); }catch(e){ return {}; } }
+function estRateMemSave(map){ localStorage.setItem(EST_RATE_MEM_KEY, JSON.stringify(map)); }
+function estRateKey(it){
+  const d=String((it&&it.d)||'').toLowerCase().replace(/\s+/g,' ').slice(0,120);
+  return d;
+}
+function estRememberRate(it){
+  if(!it||!it.d||!it.r) return;
+  const m=estRateMem(); m[estRateKey(it)]=parseFloat(it.r)||0; estRateMemSave(m);
+}
+window.estApplyRateMemory=function(){
+  const m=estRateMem(); let n=0;
+  estSec.forEach(function(s){ (s.items||[]).forEach(function(it){
+    const k=estRateKey(it); if(m[k]!=null){ it.r=String(m[k]); n++; }
+  }); });
+  estDrawSecs(); estRender();
+  estToast(n?('Saved rates applied to '+n+' items'):'No saved rates matched');
+};
+/* remember rates when item rate changes */
+(function(){
+  const _upd=window.estItemUpd;
+  window.estItemUpd=function(si,i,k,v){
+    _upd(si,i,k,v);
+    if(k==='r'){ try{ estRememberRate(estSec[si].items[i]); }catch(e){} }
+  };
+})();
+
+const EST_PRESETS=[
+  {label:'Col 230×450×3.0 ×12', cat:/column/i, L:0.23, B:0.45, D:3.0, Nos:12, mode:'volume'},
+  {label:'Col 230×230×3.0 ×8', cat:/column/i, L:0.23, B:0.23, D:3.0, Nos:8, mode:'volume'},
+  {label:'Footing 1.2×1.2×0.45 ×8', cat:/footing|raft/i, L:1.2, B:1.2, D:0.45, Nos:8, mode:'volume'},
+  {label:'Footing 1.5×1.5×0.5 ×6', cat:/footing|raft/i, L:1.5, B:1.5, D:0.5, Nos:6, mode:'volume'},
+  {label:'Beam 230×450 ×20m', cat:/beam|lintel/i, L:20, B:0.23, D:0.45, Nos:1, mode:'volume'},
+  {label:'Slab 100mm ×80㎡', cat:/slab/i, L:80, B:1, D:0.10, Nos:1, mode:'volume'},
+  {label:'Plaster 10×3 ×2 sides', cat:/plaster/i, L:10, H:3, Nos:2, mode:'area'},
+  {label:'Excav 12×0.9×1.5 ×1', cat:/excav/i, L:12, B:0.9, D:1.5, Nos:1, mode:'volume'},
+  {label:'PCC 12×0.9×0.15', cat:/pcc|bedding|m-?\s*10/i, L:12, B:0.9, D:0.15, Nos:1, mode:'volume'},
+  {label:'Brick wall 230 ×30㎡', cat:/brick|masonry/i, L:30, B:0.23, D:1, Nos:1, mode:'volume'}
+];
+
+function estDrawPresets(){
+  const el=document.getElementById('est-presets'); if(!el) return;
+  el.innerHTML=EST_PRESETS.map(function(p,i){
+    return '<button class="chip" onclick="estApplyPreset('+i+')">'+p.label+'</button>';
+  }).join('');
+}
+window.estApplyPreset=function(idx){
+  const p=EST_PRESETS[idx]; if(!p) return;
+  if(!estSec.length){ estToast('First add a section (Ground Floor)'); return; }
+  let target=null, tsi=-1, tii=-1;
+  estSec.forEach(function(s,si){ (s.items||[]).forEach(function(it,i){
+    if(target) return;
+    if(p.cat.test(String(it.d||'')+' '+estItemCat(it))){ target=it; tsi=si; tii=i; }
+  }); });
+  if(!target){
+    /* create item in first section */
+    tsi=0; 
+    const q = p.mode==='area' ? (p.L*p.H*(p.Nos||1)) : (p.L*p.B*p.D*(p.Nos||1));
+    estSec[0].items.push({d:p.label, u:p.mode==='area'?'Sq.mt':'Cu.mt', q:String(Math.round(q*1000)/1000), r:'', cat:'', dims:p});
+    estDrawSecs(); estRender(); estToast('New item added with qty'); return;
+  }
+  const q = p.mode==='area' ? (p.L*(p.H||p.B||0)*(p.Nos||1)) : (p.L*p.B*p.D*(p.Nos||1));
+  const prev=parseFloat(target.q)||0;
+  target.q=String(Math.round((prev+q)*1000)/1000);
+  target.dims={L:p.L,B:p.B,D:p.D,H:p.H,Nos:p.Nos};
+  estDrawSecs(); estRender();
+  estToast('Added '+q.toFixed(3)+' to item');
+};
+
+window.estDupFloor=function(){
+  if(!estSec.length){ estToast('No section to copy'); return; }
+  const src=estSec.find(function(s){return /ground/i.test(s.name);})||estSec[0];
+  const foundRe=/site\s*clean|line\s*out|excav|pile|p\.?\s*c\.?\s*c|pcc|footing|raft|bedding|murum|anti.?termite/i;
+  const items=(src.items||[]).filter(function(it){ return !foundRe.test(String(it.d||'')); })
+    .map(function(it){ return Object.assign({}, it, {dims:it.dims?Object.assign({},it.dims):undefined}); });
+  const floorN=estSec.filter(function(s){return s.bldg;}).length;
+  const name=floorN<=1?'First Floor':(floorN===2?'Second Floor':'Floor '+(floorN+1));
+  estSec.push({name:name, area:src.area||'', bldg:true, items:items});
+  estDrawSecs(); estRender();
+  estToast(name+' added (foundation items removed)');
+};
+
+window.estQuickQty=function(){
+  const raw=((document.getElementById('est-quick-bar')||{}).value||'').trim();
+  if(!raw){ estToast('Type e.g. excavation 12 x 1 x 1.5 x 4'); return; }
+  const low=raw.toLowerCase();
+  /* extract numbers */
+  const nums=low.match(/(\d+(?:\.\d+)?)/g); if(!nums||!nums.length){ estToast('No numbers found'); return; }
+  const n=nums.map(Number);
+  let catRe=null, mode='volume', q=0, dims={};
+  if(/plaster|paint|floor|tile|waterproof/.test(low)){
+    mode='area'; catRe=/plaster|paint|floor|tile|waterproof/i;
+    dims={L:n[0]||0, H:n[1]||0, Nos:n[2]||1}; q=dims.L*dims.H*dims.Nos;
+  } else if(/steel|tmt|bar/.test(low)){
+    mode='steel'; catRe=/steel|tmt|reinforce/i;
+    dims={L:n[0]||0, 'Kg/m':n[1]||0, Nos:n[2]||1}; q=(dims.L*dims['Kg/m']*dims.Nos)/1000;
+  } else if(/door|window|nos/.test(low) && n.length===1){
+    mode='nos'; catRe=/door|window/i; dims={Nos:n[0]}; q=n[0];
+  } else if(/pile|railing|pipe|rmt/.test(low)){
+    mode='length'; catRe=/pile|railing|pipe/i;
+    dims={L:n[0]||0, Nos:n[1]||1}; q=dims.L*dims.Nos;
+  } else {
+    /* volume default — excavation/pcc/rcc/column */
+    if(/excav/.test(low)) catRe=/excav/i;
+    else if(/pcc|bedding/.test(low)) catRe=/pcc|bedding|m-?\s*10/i;
+    else if(/column/.test(low)) catRe=/column/i;
+    else if(/footing|raft/.test(low)) catRe=/footing|raft/i;
+    else if(/beam/.test(low)) catRe=/beam|lintel/i;
+    else if(/slab/.test(low)) catRe=/slab/i;
+    else if(/brick|masonry/.test(low)) catRe=/brick|masonry/i;
+    else catRe=/.*/;
+    dims={L:n[0]||0, B:n[1]||0, D:n[2]||0, Nos:n[3]||1};
+    q=dims.L*dims.B*dims.D*dims.Nos;
+  }
+  if(!estSec.length){ estAddTpl('ground'); }
+  let target=null;
+  estSec.forEach(function(s){ (s.items||[]).forEach(function(it){
+    if(target) return;
+    if(catRe.test(String(it.d||''))) target=it;
+  }); });
+  if(!target){
+    const u=mode==='area'?'Sq.mt':mode==='steel'?'M.T':mode==='length'?'Rmt':mode==='nos'?'Nos':'Cu.mt';
+    estSec[0].items.push({d:raw, u:u, q:String(Math.round(q*1000)/1000), r:'', dims:dims, cat:''});
+  } else {
+    const prev=parseFloat(target.q)||0;
+    target.q=String(Math.round((prev+q)*1000)/1000);
+    target.dims=dims;
+  }
+  estDrawSecs(); estRender();
+  estToast('Qty '+q.toFixed(3)+' applied');
+  const bar=document.getElementById('est-quick-bar'); if(bar) bar.value='';
+};
+
+/* Packages */
+window.estLoadPackage=function(key){
+  const packs={
+    b1_hm:{found:'footing', floors:['ground'], title:'1BHK Bungalow — Hard Murum', area:'55'},
+    b1_bc:{found:'pile', floors:['ground'], title:'1BHK Bungalow — Black Cotton', area:'55'},
+    g1_hm:{found:'footing', floors:['ground','first'], title:'G+1 Residence — Hard Murum', area:'110'},
+    g1_bc:{found:'pile', floors:['ground','first'], title:'G+1 Residence — Black Cotton', area:'110'}
+  };
+  const p=packs[key]; if(!p) return;
+  if(estSec.length && !confirm('Replace current sections with package?')) return;
+  estFoundType=p.found;
+  estDrawFoundTypes();
+  estSec=[];
+  p.floors.forEach(function(f){ estAddTpl(f); });
+  if(estSec[0]){ estSec[0].area=p.area; }
+  if(p.floors.length>1 && estSec[1]){ estSec[1].area=String(Math.round(parseFloat(p.area)/2)); }
+  eq('ptitle').value='Proposed Estimate of '+p.title;
+  estApplyRateMemory();
+  estDrawSecs(); estRender();
+  estToast(p.title+' loaded');
+};
+
+/* Schedule modal */
+window.estOpenSchedule=function(type){
+  var m=document.getElementById('est-sched-modal');
+  if(!m){
+    m=document.createElement('div'); m.id='est-sched-modal';
+    m.innerHTML='<div class="box"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b id="est-sched-title">Schedule</b><button class="btn btn-s btn-sm" onclick="document.getElementById(\\'est-sched-modal\\').style.display=\\'none\\'">Close</button></div><div id="est-sched-body"></div><div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-gold" onclick="estSchedApply()">Add quantities to estimate</button></div></div>';
+    m.addEventListener('click',function(e){ if(e.target===m) m.style.display='none'; });
+    document.body.appendChild(m);
+  }
+  window._estSchedType=type;
+  var title={footing:'Footing schedule',column:'Column schedule',beam:'Beam schedule',slab:'Slab schedule',steel:'Steel (TMT) helper',deduct:'Plaster deduction'}[type]||type;
+  document.getElementById('est-sched-title').textContent=title;
+  var body=document.getElementById('est-sched-body');
+  if(type==='steel'){
+    body.innerHTML='<p style="font-size:12px;color:var(--mut);margin:0 0 8px">Dia (mm) · Spacing (mm) · Length (m) · Members — weight = area×L×7850/1e9 × nos, or use kg/m</p>'+
+      '<table><thead><tr><th>Dia mm</th><th>Spacing mm</th><th>Length m</th><th>Members</th><th>Kg/m (auto)</th></tr></thead><tbody id="est-sched-rows">'+
+      estSchedRowHtml(type, {dia:12,sp:150,L:20,nos:1})+estSchedRowHtml(type,{dia:8,sp:150,L:15,nos:1})+
+      '</tbody></table><button class="btn btn-s btn-sm" style="margin-top:8px" onclick="estSchedAddRow()">+ Row</button>';
+  } else if(type==='deduct'){
+    body.innerHTML='<p style="font-size:12px;color:var(--mut)">Gross plaster area − openings (doors/windows)</p>'+
+      '<div class="est-f" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+      '<div class="fg"><label>Gross L (m)</label><input id="ded-L" type="number" value="12" step="any"></div>'+
+      '<div class="fg"><label>Gross H (m)</label><input id="ded-H" type="number" value="3" step="any"></div>'+
+      '<div class="fg"><label>Sides / faces</label><input id="ded-N" type="number" value="1" step="1"></div>'+
+      '<div class="fg"><label>Door openings ㎡</label><input id="ded-D" type="number" value="2.1" step="any"></div>'+
+      '<div class="fg"><label>Window openings ㎡</label><input id="ded-W" type="number" value="3.0" step="any"></div>'+
+      '</div><p style="margin-top:10px;font-weight:700">Net area: <span id="ded-out">—</span> Sq.mt</p>'+
+      '<button class="btn btn-s btn-sm" onclick="estDedLive()">Calculate</button>';
+    setTimeout(estDedLive, 50);
+  } else if(type==='slab'){
+    body.innerHTML='<table><thead><tr><th>Label</th><th>Area ㎡</th><th>Thickness m</th><th>Nos</th></tr></thead><tbody id="est-sched-rows">'+
+      estSchedRowHtml(type,{label:'GF slab',A:55,D:0.12,nos:1})+
+      '</tbody></table><button class="btn btn-s btn-sm" style="margin-top:8px" onclick="estSchedAddRow()">+ Row</button>';
+  } else {
+    /* footing / column / beam — L B D Nos */
+    var headers=type==='beam'
+      ? '<th>Label</th><th>Length m</th><th>Width m</th><th>Depth m</th><th>Nos</th>'
+      : '<th>Label</th><th>L / a m</th><th>B / b m</th><th>D / Ht m</th><th>Nos</th>';
+    body.innerHTML='<table><thead><tr>'+headers+'</tr></thead><tbody id="est-sched-rows">'+
+      estSchedRowHtml(type, type==='footing'?{label:'F1',L:1.2,B:1.2,D:0.45,nos:1}:type==='column'?{label:'C1',L:0.23,B:0.45,D:3.0,nos:1}:{label:'B1',L:4.5,B:0.23,D:0.45,nos:1})+
+      estSchedRowHtml(type, type==='footing'?{label:'F2',L:1.5,B:1.5,D:0.5,nos:1}:type==='column'?{label:'C2',L:0.23,B:0.23,D:3.0,nos:1}:{label:'B2',L:3.2,B:0.23,D:0.375,nos:1})+
+      '</tbody></table><button class="btn btn-s btn-sm" style="margin-top:8px" onclick="estSchedAddRow()">+ Row</button>';
+  }
+  m.style.display='flex';
+};
+function estSchedRowHtml(type, v){
+  v=v||{};
+  if(type==='steel'){
+    var kgm = v.dia? (Math.PI*(v.dia/1000)*(v.dia/1000)/4*7850) : (v.kgm||0);
+    return '<tr class="sr">'+
+      '<td><input data-k="dia" type="number" value="'+(v.dia||12)+'" oninput="estSteelRow(this)"></td>'+
+      '<td><input data-k="sp" type="number" value="'+(v.sp||150)+'"></td>'+
+      '<td><input data-k="L" type="number" value="'+(v.L||10)+'" step="any"></td>'+
+      '<td><input data-k="nos" type="number" value="'+(v.nos||1)+'"></td>'+
+      '<td><input data-k="kgm" type="number" value="'+kgm.toFixed(3)+'" step="any"></td></tr>';
+  }
+  if(type==='slab'){
+    return '<tr class="sr"><td><input data-k="label" value="'+(v.label||'Slab')+'"></td>'+
+      '<td><input data-k="A" type="number" value="'+(v.A||50)+'" step="any"></td>'+
+      '<td><input data-k="D" type="number" value="'+(v.D||0.12)+'" step="any"></td>'+
+      '<td><input data-k="nos" type="number" value="'+(v.nos||1)+'"></td></tr>';
+  }
+  return '<tr class="sr"><td><input data-k="label" value="'+(v.label||'')+'"></td>'+
+    '<td><input data-k="L" type="number" value="'+(v.L||1)+'" step="any"></td>'+
+    '<td><input data-k="B" type="number" value="'+(v.B||1)+'" step="any"></td>'+
+    '<td><input data-k="D" type="number" value="'+(v.D||0.3)+'" step="any"></td>'+
+    '<td><input data-k="nos" type="number" value="'+(v.nos||1)+'"></td></tr>';
+}
+window.estSchedAddRow=function(){
+  var t=window._estSchedType; var tb=document.getElementById('est-sched-rows'); if(!tb) return;
+  tb.insertAdjacentHTML('beforeend', estSchedRowHtml(t, {}));
+};
+window.estSteelRow=function(el){
+  var tr=el.closest('tr'); if(!tr) return;
+  var dia=parseFloat(tr.querySelector('[data-k=dia]').value)||0;
+  var kgm=Math.PI*(dia/1000)*(dia/1000)/4*7850;
+  tr.querySelector('[data-k=kgm]').value=kgm.toFixed(3);
+};
+window.estDedLive=function(){
+  var L=parseFloat((document.getElementById('ded-L')||{}).value)||0;
+  var H=parseFloat((document.getElementById('ded-H')||{}).value)||0;
+  var N=parseFloat((document.getElementById('ded-N')||{}).value)||1;
+  var D=parseFloat((document.getElementById('ded-D')||{}).value)||0;
+  var W=parseFloat((document.getElementById('ded-W')||{}).value)||0;
+  var net=Math.max(0, L*H*N - D - W);
+  var o=document.getElementById('ded-out'); if(o) o.textContent=net.toFixed(3);
+  window._estDedNet=net;
+};
+window.estSchedApply=function(){
+  var type=window._estSchedType;
+  if(!estSec.length) estAddTpl('ground');
+  var totalQ=0, catRe=/.*/;
+  if(type==='deduct'){
+    estDedLive();
+    totalQ=window._estDedNet||0;
+    catRe=/plaster/i;
+  } else {
+    var rows=[].slice.call(document.querySelectorAll('#est-sched-rows tr.sr'));
+    rows.forEach(function(tr){
+      var g=function(k){ var el=tr.querySelector('[data-k="'+k+'"]'); return el?parseFloat(el.value)||0:0; };
+      var gs=function(k){ var el=tr.querySelector('[data-k="'+k+'"]'); return el?el.value:''; };
+      if(type==='steel'){
+        totalQ += (g('L')*g('kgm')*g('nos'))/1000;
+        catRe=/steel|tmt|reinforce/i;
+      } else if(type==='slab'){
+        totalQ += g('A')*g('D')*g('nos');
+        catRe=/slab/i;
+      } else {
+        totalQ += g('L')*g('B')*g('D')*g('nos');
+        if(type==='footing') catRe=/footing|raft/i;
+        else if(type==='column') catRe=/column/i;
+        else if(type==='beam') catRe=/beam|lintel/i;
+      }
+    });
+  }
+  if(!totalQ){ estToast('Quantity 0 — check inputs'); return; }
+  var target=null;
+  estSec.forEach(function(s){ (s.items||[]).forEach(function(it){
+    if(!target && catRe.test(String(it.d||''))) target=it;
+  }); });
+  var unit = type==='steel'?'M.T': type==='deduct'?'Sq.mt':'Cu.mt';
+  if(!target){
+    estSec[0].items.push({d:type+' schedule total', u:unit, q:String(Math.round(totalQ*1000)/1000), r:'', cat:''});
+  } else {
+    var prev=parseFloat(target.q)||0;
+    target.q=String(Math.round((prev+totalQ)*1000)/1000);
+    if(!target.u||target.u==='L-S') target.u=unit;
+  }
+  document.getElementById('est-sched-modal').style.display='none';
+  estDrawSecs(); estRender();
+  estToast('Added '+totalQ.toFixed(3)+' '+unit);
+};
+
+/* CSV export / import */
+window.estExportCsv=function(){
+  var lines=['Section,ItemNo,Description,Unit,Qty,Rate,Amount'];
+  estSec.forEach(function(s){
+    (s.items||[]).forEach(function(it,i){
+      var desc='"'+String(it.d||'').replace(/"/g,'""')+'"';
+      lines.push([s.name,i+1,desc,it.u||'',it.q||'',it.r||'',estAmt(it)].join(','));
+    });
+  });
+  var blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='bank-estimate.csv'; a.click();
+  estToast('CSV downloaded');
+};
+window.estImportCsv=function(ev){
+  var f=ev.target.files&&ev.target.files[0]; if(!f) return;
+  var reader=new FileReader();
+  reader.onload=function(){
+    var text=String(reader.result||'');
+    var rows=text.split(/\r?\n/).filter(Boolean);
+    if(rows.length<2){ estToast('Empty CSV'); return; }
+    /* expect Section,ItemNo,Description,Unit,Qty,Rate */
+    var map={};
+    for(var i=1;i<rows.length;i++){
+      var cols=rows[i].match(/(?:\"([^\"]*)\")|([^,]+)/g); if(!cols||cols.length<5) continue;
+      cols=cols.map(function(c){ return c.replace(/^\"|\"$/g,'').trim(); });
+      var sec=cols[0]||'Imported', desc=cols[2]||cols[1], unit=cols[3]||'Cu.mt', qty=cols[4]||'', rate=cols[5]||'';
+      if(!map[sec]) map[sec]=[];
+      map[sec].push({d:desc,u:unit,q:qty,r:rate,cat:''});
+    }
+    Object.keys(map).forEach(function(name){
+      estSec.push({name:name, area:'', bldg:true, items:map[name]});
+    });
+    estDrawSecs(); estRender();
+    estToast('CSV imported');
+    ev.target.value='';
+  };
+  reader.readAsText(f);
+};
+
+/* enhance saved list filter by client name — search already via open/copy */
+window.estFilterSaved=function(q){
+  q=(q||'').toLowerCase();
+  const el=document.getElementById('est-saved'); if(!el) return;
+  const a=estAll().filter(function(r){
+    if(!q) return true;
+    return ((r.owner1||'')+(r.owner2||'')+(r.ptitle||'')+(r.loc1||'')).toLowerCase().indexOf(q)>-1;
+  });
+  el.innerHTML=a.length?a.map(r=>`<div class="sv"><div class="m"><b>${ece(r.owner1||r.ptitle||'Untitled')}</b>
+    <small>₹ ${e0(r.total||0)} · ${ece(edmy(r.date))} · ${ece(r.ptitle||'')}</small></div>
+    <button class="btn btn-sm" onclick="estLoad('${r.id}')">Open</button>
+    <button class="btn btn-sm" onclick="estCopy('${r.id}')">Copy</button>
+    <button class="btn btn-sm" onclick="estDel('${r.id}')">×</button></div>`).join('')
+    :'<div class="empty-state" style="padding:14px"><p>No matching estimates</p></div>';
 };
 
 /* ══════════════════ save / load ══════════════════ */
