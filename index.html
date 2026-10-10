@@ -3015,12 +3015,12 @@ html{transition:background .3s,color .3s}
                 <textarea class="fi fi-ta" id="fp-notes" rows="2" placeholder="e.g. Client has elderly parents, needs ground floor bedroom. Corner plot. West side neighbour wall..."></textarea>
               </div>
 
-              <div id="fp-key-warning" style="display:none;padding:8px 12px;background:#fff8e0;border:1px solid var(--gold);border-radius:8px;font-size:11px;color:#7a5a00;margin-bottom:2px">
-                ⚠️ Claude API key नाही — <button onclick="switchView('settings')" style="background:none;border:none;color:var(--grn);font-weight:700;cursor:pointer;font-size:11px;text-decoration:underline">Settings मध्ये add करा</button>
+              <div id="fp-key-warning" style="display:none;padding:8px 12px;background:#e8f4ee;border:1px solid #c0dbc8;border-radius:8px;font-size:11px;color:var(--grn);margin-bottom:2px">
+                ✅ Offline floor plan available · AI advice optional — <button onclick="switchView('settings')" style="background:none;border:none;color:var(--grn);font-weight:700;cursor:pointer;font-size:11px;text-decoration:underline">Claude key (Settings)</button>
               </div>
               <button onclick="fpGenerate()" id="fp-gen-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--grn),var(--grn2));color:#fff;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">
                 <span id="fp-btn-icon">✨</span>
-                <span id="fp-btn-text">Generate Floor Plan Advice</span>
+                <span id="fp-btn-text">Generate Floor Plan</span>
               </button>
 
               <!-- History -->
@@ -3036,8 +3036,8 @@ html{transition:background .3s,color .3s}
               <!-- Empty state -->
               <div id="fp-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;color:var(--mut)">
                 <div style="font-size:52px;margin-bottom:16px;opacity:.25">🏛</div>
-                <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px">AI Floor Plan Assistant</div>
-                <div style="font-size:12px;line-height:1.7;max-width:320px">Plot details भरा आणि <b>Generate</b> दाबा.<br>Claude Sonnet — room layout, Vastu compliance, staircase position, dimensions सगळं suggest करेल.</div>
+                <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px">Floor Plan Generator</div>
+                <div style="font-size:12px;line-height:1.7;max-width:320px">Plot size + rooms भरा आणि <b>Generate</b> दाबा.<br>Offline concept layout + room sizes + Vastu check — API key नसतानाही चालते.</div>
                 <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
                   <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;font-size:11px">📐 Room Dimensions</div>
                   <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;font-size:11px">🧭 Vastu Zones</div>
@@ -3083,6 +3083,97 @@ html{transition:background .3s,color .3s}
         </div>
       </div>
       <!-- ═══ END AI FLOOR PLAN ═══ -->
+
+      <!-- ═══ PLAN PRESENTATION ═══ -->
+      <div class="card" style="margin-bottom:16px;border:1.5px solid var(--bdr);overflow:hidden">
+        <div class="card-head" style="background:linear-gradient(135deg,var(--grn),var(--grn2));border-bottom:none;padding:16px 18px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:16px">📋</div>
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--gold)">Plan Presentation</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px">AutoCAD plan → title block · area statement · client PDF</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-s btn-sm" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7);background:rgba(255,255,255,.06)" onclick="ppReset()">Clear</button>
+            <button class="btn btn-sm" style="background:var(--gold);color:var(--grn);font-weight:800" onclick="ppExportPdf()">📄 Export PDF</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div style="display:grid;grid-template-columns:minmax(280px,380px) 1fr;min-height:480px">
+            <!-- LEFT: form -->
+            <div style="padding:16px;border-right:1px solid var(--bdr);display:flex;flex-direction:column;gap:12px;background:var(--surf)">
+              <div class="section-label" style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:0">Sheet info</div>
+              <div class="form-row c2" style="margin:0">
+                <div class="fg" style="margin:0">
+                  <label>Client</label>
+                  <select class="fi fi-sel" id="pp-client-sel" onchange="ppFromClient()">
+                    <option value="">— Select client —</option>
+                  </select>
+                </div>
+                <div class="fg" style="margin:0">
+                  <label>Project</label>
+                  <select class="fi fi-sel" id="pp-project" onchange="ppFromProject()">
+                    <option value="">— Select project —</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row c2" style="margin:0">
+                <div class="fg" style="margin:0"><label>Client name (auto-fill)</label><input class="fi" id="pp-client" placeholder="Auto from client / project" oninput="ppPreview()"></div>
+                <div class="fg" style="margin:0"><label>Date</label><input class="fi" id="pp-date" type="date" oninput="ppPreview()"></div>
+              </div>
+              <div class="fg" style="margin:0">
+                <label>Project / sheet title</label>
+                <input class="fi" id="pp-title" placeholder="Proposed G+1 Residence — Ground Floor Plan" oninput="ppPreview()">
+              </div>
+              <div class="form-row c2" style="margin:0">
+                <div class="fg" style="margin:0">
+                  <label>Scale</label>
+                  <select class="fi fi-sel" id="pp-scale" onchange="ppPreview()">
+                    <option>1:50</option><option selected>1:100</option><option>1:150</option><option>1:200</option><option>NTS</option>
+                  </select>
+                </div>
+                <div class="fg" style="margin:0">
+                  <label>North</label>
+                  <select class="fi fi-sel" id="pp-north" onchange="ppPreview()">
+                    <option>Up</option><option>Down</option><option>Left</option><option>Right</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row c2" style="margin:0">
+                <div class="fg" style="margin:0"><label>Sheet no.</label><input class="fi" id="pp-sheet" placeholder="A-01" oninput="ppPreview()"></div>
+                <div class="fg" style="margin:0"><label>Drawn by</label><input class="fi" id="pp-drawn" placeholder="Vijay Edke" oninput="ppPreview()"></div>
+              </div>
+
+              <div class="section-label" style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:4px 0 0">Plan image</div>
+              <div id="pp-drop" onclick="document.getElementById('pp-file').click()" style="border:1.5px dashed var(--bdr2);border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--surf2);transition:border-color .15s">
+                <div style="font-size:22px;margin-bottom:4px">📎</div>
+                <div style="font-size:12px;font-weight:600;color:var(--ink)">AutoCAD export image / PDF screenshot</div>
+                <div style="font-size:10px;color:var(--mut);margin-top:2px">PNG, JPG, WEBP — click to upload</div>
+                <input type="file" id="pp-file" accept="image/*" style="display:none" onchange="ppLoadImage(event)">
+              </div>
+              <div id="pp-img-name" style="font-size:11px;color:var(--mut);display:none"></div>
+
+              <div class="section-label" style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:4px 0 0">Area statement</div>
+              <div id="pp-rooms" style="display:flex;flex-direction:column;gap:6px"></div>
+              <button type="button" class="btn btn-s btn-sm" onclick="ppAddRoom()" style="align-self:start">+ Room</button>
+              <div style="font-size:12px;font-weight:700;color:var(--ink2)">Total carpet: <span id="pp-total-area">0</span> sq.ft</div>
+
+              <div class="fg" style="margin:0">
+                <label>Notes for client</label>
+                <textarea class="fi fi-ta" id="pp-notes" rows="2" placeholder="Revisions, options, next steps…" oninput="ppPreview()"></textarea>
+              </div>
+            </div>
+
+            <!-- RIGHT: live preview -->
+            <div style="padding:16px;background:var(--surf2);overflow:auto;display:flex;flex-direction:column;gap:10px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mut)">Preview — presentation sheet</div>
+              <div id="pp-preview" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;box-shadow:var(--sh);min-height:420px;overflow:hidden"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ═══ END PLAN PRESENTATION ═══ -->
 
       <div class="g2">
         <!-- Area Calculator -->
@@ -4804,9 +4895,12 @@ function renderDashboard(){
     return s;
   },0);
 
-  // Featured project: prefer one with image
+  // Featured project: user pick (localStorage) → else prefer one with image
   var withImg=projects.filter(function(p){return !!coverOf(p);});
-  var featured=withImg.find(function(p){return p.stage!=="Completed";})||withImg[0]||projects[projects.length-1]||null;
+  var savedFeatId=null;
+  try{ savedFeatId=localStorage.getItem('gs_featured_project'); }catch(e){}
+  var featured=(savedFeatId&&projects.find(function(p){return p.id===savedFeatId;}))||null;
+  if(!featured) featured=withImg.find(function(p){return p.stage!=="Completed";})||withImg[0]||projects[projects.length-1]||null;
   var featCover=coverOf(featured);
   var featPct=featured?stagePct(featured.stage):0;
   var featStages=["Design","Approval","Working Drawing","Site","Completed"];
@@ -4880,7 +4974,10 @@ function renderDashboard(){
   html+='<div class="dv2-feat" '+(featured?'onclick="if(typeof openPD===\'function\')openPD(\''+featured.id+'\')" style="cursor:pointer"':'')+">";
   if(featCover) html+='<div class="dv2-feat-bg" style="background-image:url(\''+String(featCover).replace(/'/g,"%27")+'\')"></div>';
   html+='<div class="dv2-feat-shade"></div><div class="dv2-feat-body">';
-  html+='<div class="dv2-feat-tag">Featured Project</div>';
+  html+='<div class="dv2-feat-tag" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;box-sizing:border-box">';
+  html+='<span>Featured Project</span>';
+  html+='<button type="button" onclick="event.stopPropagation();ppOpenFeaturedPicker()" style="border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.25);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer;font-family:inherit">Change</button>';
+  html+='</div>';
   if(featured){
     html+="<h2>"+esc(featured.name)+"</h2>";
     html+='<div class="dv2-feat-meta">'+esc(clientName(featured.clientId))+" · "+esc(featured.address||featured.city||"Solapur")+"</div>";
@@ -9976,6 +10073,178 @@ function fpBuildSchematic(inp){
 </div>`;
 }
 
+// ── LOCAL ROOM LAYOUT ENGINE (works without API key) ──
+function fpBuildRoomPlan(inp){
+  if(!inp.len||!inp.wid) return '';
+  const plotL=inp.len, plotW=inp.wid;
+  const rooms=inp.rooms.slice();
+  const road=inp.road||'North';
+  // Building setbacks (ft) — simplified residential
+  const setF=6, setS=3, setR=3;
+  const bL=Math.max(10, plotL-setS*2);
+  const bW=Math.max(10, plotW-setF-setR);
+  // SVG canvas
+  const W=520, H=400, pad=36;
+  const scale=Math.min((W-pad*2)/plotL,(H-pad*2)/plotW);
+  const ox=(W-plotL*scale)/2, oy=(H-plotW*scale)/2;
+  // Map plot coords: x along length, y along width. Road side at top of SVG for North, etc.
+  // We'll keep plot origin top-left of plot rect; road edge highlighted.
+  const roadEdge={North:'top',South:'bottom',East:'right',West:'left'}[road]||'top';
+
+  // Build room list with target areas (sq ft)
+  const catalog={
+    'Master Bedroom':{a:160,c:'#d4e8d8'},
+    'Bedroom 2':{a:120,c:'#e0ecd8'},
+    'Bedroom 3':{a:110,c:'#e8f0e0'},
+    'Living Room':{a:200,c:'#fff3d6'},
+    'Kitchen':{a:100,c:'#ffe0c8'},
+    'Dining':{a:100,c:'#ffe8d0'},
+    'Pooja Room':{a:40,c:'#fff8c8'},
+    'Study Room':{a:80,c:'#e0e8f8'},
+    '2 Bathrooms':{a:70,c:'#d8e8f0',split:2},
+    '3 Bathrooms':{a:100,c:'#d8e8f0',split:3},
+    'Parking':{a:140,c:'#e8e8e8'},
+    'Terrace Garden':{a:80,c:'#d0f0d0'},
+    'Store Room':{a:40,c:'#ece4d8'},
+    'Servant Quarter':{a:90,c:'#e8e0f0'}
+  };
+  let units=[];
+  rooms.forEach(r=>{
+    const cat=catalog[r]||{a:100,c:'#f0f0f0'};
+    if(cat.split){
+      for(let i=1;i<=cat.split;i++) units.push({name:'Bath '+i, a:Math.round(cat.a/cat.split), c:cat.c});
+    } else units.push({name:r, a:cat.a, c:cat.c});
+  });
+  // Always ensure circulation
+  if(!units.find(u=>/Living/i.test(u.name))) units.unshift({name:'Living Room',a:180,c:'#fff3d6'});
+  // Stair if multi-floor
+  if(/G\+/.test(inp.floors||'')) units.push({name:'Staircase',a:50,c:'#f0e0d0'});
+
+  // Pack rooms into building footprint using simple shelf (row) packing
+  const buildX=setS, buildY=setF;
+  const packW=bL, packH=bW;
+  const totalA=units.reduce((s,u)=>s+u.a,0);
+  const scaleA=(packW*packH)/Math.max(totalA,1)*0.92;
+  let placed=[], row=[], rowH=0, rowW=0, curY=0;
+  function flushRow(){
+    if(!row.length) return;
+    let x=0;
+    row.forEach(u=>{
+      placed.push({name:u.name,c:u.c,x:buildX+x,y:buildY+curY,w:u.w,h:rowH});
+      x+=u.w;
+    });
+    curY+=rowH; row=[]; rowW=0; rowH=0;
+  }
+  units.forEach(u=>{
+    const area=u.a*scaleA;
+    let w=Math.sqrt(area*1.3), h=area/w;
+    if(w>packW*0.55){w=packW*0.55;h=area/w;}
+    if(h>packH*0.45){h=packH*0.45;w=area/h;}
+    w=Math.max(6,Math.min(w,packW)); h=Math.max(5,Math.min(h,packH));
+    if(rowW+w>packW+0.5 && row.length){ flushRow(); }
+    if(curY+h>packH+0.5 && placed.length){
+      // shrink remaining to fit
+      h=Math.max(5,packH-curY); w=Math.min(w,packW-rowW);
+    }
+    row.push({name:u.name,c:u.c,w:w,h:h});
+    rowW+=w; rowH=Math.max(rowH,h);
+  });
+  flushRow();
+
+  // Vastu scoring helpers
+  function zoneOf(cx,cy){
+    // relative to building center; map to cardinal assuming North is -Y (top)
+    const rx=(cx-buildX)/packW, ry=(cy-buildY)/packH;
+    const col=rx<0.33?'W':rx>0.66?'E':'C';
+    const row=ry<0.33?'N':ry>0.66?'S':'C';
+    if(row==='N'&&col==='W')return 'NW';
+    if(row==='N'&&col==='C')return 'N';
+    if(row==='N'&&col==='E')return 'NE';
+    if(row==='C'&&col==='W')return 'W';
+    if(row==='C'&&col==='E')return 'E';
+    if(row==='S'&&col==='W')return 'SW';
+    if(row==='S'&&col==='C')return 'S';
+    if(row==='S'&&col==='E')return 'SE';
+    return 'Center';
+  }
+  const vastuIdeal={
+    'Kitchen':'SE','Pooja Room':'NE','Master Bedroom':'SW','Living Room':'N','Living Room':'E',
+    'Staircase':'SW','Bath 1':'NW','Bath 2':'W','Parking':'NE'
+  };
+
+  // Draw SVG
+  let svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;background:var(--surf2);border-radius:10px">`;
+  // Plot boundary
+  svg+=`<rect x="${ox}" y="${oy}" width="${plotL*scale}" height="${plotW*scale}" fill="#f5f2eb" stroke="var(--grn)" stroke-width="2.5" rx="2"/>`;
+  // Setback building
+  svg+=`<rect x="${ox+buildX*scale}" y="${oy+buildY*scale}" width="${packW*scale}" height="${packH*scale}" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  // Rooms
+  placed.forEach(r=>{
+    const x=ox+r.x*scale, y=oy+r.y*scale, w=r.w*scale, h=r.h*scale;
+    svg+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${r.c}" stroke="#3a3632" stroke-width="1.2" rx="2"/>`;
+    const fs=Math.max(8,Math.min(11,Math.min(w,h)/5));
+    if(w>28&&h>16){
+      svg+=`<text x="${x+w/2}" y="${y+h/2-2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#1c1b19" font-family="Plus Jakarta Sans,sans-serif">${r.name}</text>`;
+      svg+=`<text x="${x+w/2}" y="${y+h/2+fs}" text-anchor="middle" font-size="${fs-1}" fill="#6e6960" font-family="JetBrains Mono,monospace">${r.w.toFixed(1)}×${r.h.toFixed(1)} ft</text>`;
+    }
+  });
+  // Road label
+  const roadLabels={
+    top:{x:ox+plotL*scale/2,y:oy-10,t:'ROAD (N)'},
+    bottom:{x:ox+plotL*scale/2,y:oy+plotW*scale+16,t:'ROAD (S)'},
+    left:{x:ox-8,y:oy+plotW*scale/2,t:'ROAD'},
+    right:{x:ox+plotL*scale+8,y:oy+plotW*scale/2,t:'ROAD'}
+  };
+  // Remap road edge based on facing
+  const edgeMap={North:'top',South:'bottom',East:'right',West:'left'};
+  const rl=roadLabels[edgeMap[road]||'top'];
+  svg+=`<text x="${rl.x}" y="${rl.y}" text-anchor="middle" font-size="11" font-weight="800" fill="var(--gold)" font-family="Plus Jakarta Sans,sans-serif">ROAD · ${road}</text>`;
+  // North arrow
+  svg+=`<text x="${W-24}" y="${oy+14}" text-anchor="middle" font-size="14" font-weight="800" fill="var(--grn)">N</text>`;
+  svg+=`<text x="${W-24}" y="${oy+28}" text-anchor="middle" font-size="12" fill="var(--grn)">↑</text>`;
+  // Dimensions
+  svg+=`<text x="${ox+plotL*scale/2}" y="${oy+plotW*scale+28}" text-anchor="middle" font-size="10" fill="var(--mut)" font-family="JetBrains Mono,monospace">${plotL} × ${plotW} ft · ${(plotL*plotW).toFixed(0)} sq.ft · ${inp.floors}</text>`;
+  svg+=`</svg>`;
+
+  // Advice table
+  let table='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:12px"><thead><tr style="background:var(--grn);color:var(--gold)"><th style="padding:8px;text-align:left">Room</th><th style="padding:8px">Size (ft)</th><th style="padding:8px">Area</th><th style="padding:8px">Zone</th><th style="padding:8px">Vastu</th></tr></thead><tbody>';
+  placed.forEach(r=>{
+    const z=zoneOf(r.x+r.w/2,r.y+r.h/2);
+    let ok='⚠️ Acceptable';
+    if(/Kitchen/i.test(r.name)&&z==='SE') ok='✅ Vastu OK';
+    else if(/Pooja/i.test(r.name)&&z==='NE') ok='✅ Vastu OK';
+    else if(/Master/i.test(r.name)&&z==='SW') ok='✅ Vastu OK';
+    else if(/Living/i.test(r.name)&&(z==='N'||z==='E'||z==='NE')) ok='✅ Vastu OK';
+    else if(/Bath/i.test(r.name)&&(z==='NW'||z==='W')) ok='✅ Vastu OK';
+    else if(/Stair/i.test(r.name)&&(z==='SW'||z==='S')) ok='✅ Vastu OK';
+    else if(/Kitchen/i.test(r.name)&&z!=='SE') ok='❌ Prefer SE';
+    else if(/Pooja/i.test(r.name)&&z!=='NE') ok='❌ Prefer NE';
+    table+=`<tr style="border-bottom:1px solid var(--bdr)"><td style="padding:7px 8px;font-weight:600">${r.name}</td><td style="padding:7px 8px;text-align:center">${r.w.toFixed(1)}×${r.h.toFixed(1)}</td><td style="padding:7px 8px;text-align:center">${(r.w*r.h).toFixed(0)} sq.ft</td><td style="padding:7px 8px;text-align:center">${z}</td><td style="padding:7px 8px;text-align:center">${ok}</td></tr>`;
+  });
+  table+='</tbody></table>';
+
+  const tips=`<div style="margin-top:14px">
+    <h3 style="font-size:14px;color:var(--grn3);margin:0 0 8px">🧭 Vastu & Design Notes</h3>
+    <ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.7;color:var(--ink2)">
+      <li><strong>Road facing ${road}</strong> — entrance ideally on ${road==='North'||road==='East'?'this side (auspicious)':'North or East if secondary access allows'}.</li>
+      <li><strong>Kitchen</strong> → Southeast (Agni); <strong>Pooja</strong> → Northeast; <strong>Master bedroom</strong> → Southwest.</li>
+      <li><strong>Staircase</strong> → South / Southwest; avoid center (Brahmasthana).</li>
+      <li><strong>Toilets</strong> → West / Northwest; never Northeast.</li>
+      <li>Front setback ~${setF} ft, sides ~${setS} ft — adjust to your actual UDCPR margins.</li>
+      <li>This is a <strong>working concept layout</strong> for client discussion — refine in CAD for sanction drawings.</li>
+    </ul>
+    <p style="font-size:11px;color:var(--mut);margin-top:10px">Generated offline · Greenhouse Studio local engine. Claude API key optional for deeper AI advice.</p>
+  </div>`;
+
+  return `<div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin-bottom:8px">🏠 Concept Floor Plan — Room Layout</div>
+    ${svg}
+    <h3 style="font-size:14px;color:var(--grn3);margin:16px 0 8px">📐 Room Schedule</h3>
+    ${table}
+    ${tips}
+  </div>`;
+}
+
 // ── MAIN GENERATE ──
 async function fpGenerate(){
   const inputs = fpGetInputs();
@@ -9992,17 +10261,32 @@ async function fpGenerate(){
   btn.disabled = true;
   document.getElementById('fp-btn-icon').textContent = '⏳';
   document.getElementById('fp-btn-text').textContent = 'Generating...';
-  fpSetLoading(true, 'Analyzing plot dimensions...');
-
-  // Reset conversation for fresh generation
-  const systemPrompt = fpBuildSystemPrompt();
-  const userPrompt = fpBuildUserPrompt(inputs);
-  fpConversation = [{role: 'user', content: userPrompt}];
+  fpSetLoading(true, 'Planning room layout...');
 
   // Save to history
   fpQueryHistory.unshift(`${inputs.len}×${inputs.wid} ft · ${inputs.road} Road · ${inputs.floors}`);
   if(fpQueryHistory.length > 5) fpQueryHistory.pop();
   fpRenderHistory();
+
+  // Always build local floor plan (works offline)
+  const localHtml = fpBuildRoomPlan(inputs);
+  const hasKey = typeof getApiKey==='function' && !!getApiKey();
+
+  if(!hasKey){
+    // Offline mode — local plan only
+    fpConversation = [];
+    fpSetResult(localHtml);
+    showOk('✅ Floor plan ready (offline mode)');
+    btn.disabled = false;
+    document.getElementById('fp-btn-icon').textContent = '✨';
+    document.getElementById('fp-btn-text').textContent = 'Generate Floor Plan';
+    return;
+  }
+
+  // With API key — local plan + Claude advice
+  const systemPrompt = fpBuildSystemPrompt();
+  const userPrompt = fpBuildUserPrompt(inputs);
+  fpConversation = [{role: 'user', content: userPrompt}];
 
   try {
     const data = await claudeFetch({
@@ -10012,23 +10296,23 @@ async function fpGenerate(){
         messages: fpConversation
       });
     const aiText = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
-
-    // Add assistant response to conversation history
     fpConversation.push({role: 'assistant', content: aiText});
-
-    fpSetResult(aiText);
-    showOk('✅ Floor plan advice ready!');
+    fpSetResult(localHtml + '<hr style="margin:20px 0;border:none;border-top:1px solid var(--bdr)">' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin-bottom:8px">🤖 AI Architect Advice</div>' + aiText);
+    showOk('✅ Floor plan + AI advice ready!');
   } catch(err) {
-    fpSetLoading(false);
-    document.getElementById('fp-empty').style.display = 'flex';
-    if(err.message!=='NO_API_KEY'){
-      showErr('API Error: ' + err.message);
-    }
+    // API failed — still show local plan
     console.error('FP API error:', err);
+    fpSetResult(localHtml + '<p style="font-size:12px;color:var(--mut);margin-top:12px">AI advice unavailable: '+(err.message||'error')+'. Showing local layout.</p>');
+    if(err.message!=='NO_API_KEY'){
+      showErr('AI advice failed — local floor plan shown');
+    } else {
+      showOk('✅ Floor plan ready (offline)');
+    }
   } finally {
     btn.disabled = false;
     document.getElementById('fp-btn-icon').textContent = '✨';
-    document.getElementById('fp-btn-text').textContent = 'Generate Floor Plan Advice';
+    document.getElementById('fp-btn-text').textContent = 'Generate Floor Plan';
   }
 }
 
@@ -10196,8 +10480,462 @@ ${fpLastResult.html}
 
 
 // ════════════════════════════════════════════════
-// UDCPR 2020 ENGINE — Full Embedded Calculator
+// PLAN PRESENTATION — AutoCAD plan → client PDF
 // ════════════════════════════════════════════════
+let ppImageData = null;
+let ppRooms = [];
+
+// ── Dashboard Featured Project picker ──
+function ppOpenFeaturedPicker(){
+  const projects = (typeof db!=='undefined' && db.projects) ? db.projects.slice() : [];
+  if(!projects.length){
+    if(typeof showErr==='function') showErr('No projects to feature');
+    else alert('No projects');
+    return;
+  }
+  let saved='';
+  try{ saved=localStorage.getItem('gs_featured_project')||''; }catch(e){}
+  // Remove old modal if any
+  const old=document.getElementById('m-featured-picker');
+  if(old) old.remove();
+  const overlay=document.createElement('div');
+  overlay.id='m-featured-picker';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.onclick=function(e){ if(e.target===overlay) overlay.remove(); };
+  const opts=projects.map(p=>{
+    const c=(typeof gc==='function')?gc(p.clientId):null;
+    const sel=p.id===saved?'border:2px solid var(--gold);background:var(--gold-bg)':'border:1px solid var(--bdr)';
+    return `<button type="button" onclick="setFeaturedProject('${p.id}')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;border-radius:10px;cursor:pointer;background:var(--surf);${sel}">
+      <div style="font-weight:700;font-size:13px;color:var(--ink)">${(p.name||'Project').replace(/</g,'')}</div>
+      <div style="font-size:11px;color:var(--mut);margin-top:2px">${c?(c.name||''):'—'} · ${p.stage||''}</div>
+    </button>`;
+  }).join('');
+  overlay.innerHTML=`<div style="background:var(--surf);border-radius:14px;max-width:400px;width:100%;max-height:80vh;overflow:auto;box-shadow:var(--sh2);padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-family:var(--font-display),serif;font-size:16px;font-weight:700;color:var(--ink)">Featured Project</div>
+      <button type="button" onclick="document.getElementById('m-featured-picker').remove()" style="border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--mut)">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--mut);margin:0 0 12px">Dashboard वर दाखवायचा project निवडा</p>
+    ${opts}
+    <button type="button" onclick="setFeaturedProject('')" style="width:100%;margin-top:4px;padding:10px;border-radius:10px;border:1px dashed var(--bdr);background:transparent;color:var(--mut);font-size:12px;cursor:pointer">Clear (auto select)</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function setFeaturedProject(pid){
+  try{
+    if(pid) localStorage.setItem('gs_featured_project', pid);
+    else localStorage.removeItem('gs_featured_project');
+  }catch(e){}
+  const m=document.getElementById('m-featured-picker');
+  if(m) m.remove();
+  if(typeof renderDashboard==='function') renderDashboard();
+  if(typeof showOk==='function') showOk(pid?'Featured project updated':'Featured cleared (auto)');
+}
+
+function ppInit(){
+  const cSel = document.getElementById('pp-client-sel');
+  const pSel = document.getElementById('pp-project');
+  if(!pSel && !cSel) return;
+
+  // Fill clients dropdown
+  if(cSel){
+    const contacts = (typeof db!=='undefined' && db.contacts) ? db.contacts.slice() : [];
+    contacts.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const curC = cSel.value;
+    cSel.innerHTML = '<option value="">— Select client —</option>' +
+      contacts.map(c=>`<option value="${c.id}">${(c.name||'Client').replace(/</g,'')}</option>`).join('');
+    if(curC) cSel.value = curC;
+  }
+
+  // Fill projects dropdown (optionally filtered by client)
+  ppFillProjects();
+
+  const dateEl = document.getElementById('pp-date');
+  if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+  const drawn = document.getElementById('pp-drawn');
+  if(drawn && !drawn.value && typeof officeInfo==='object') drawn.value = officeInfo.arch || 'Vijay Edke';
+  if(!ppRooms.length){
+    ppRooms = [
+      {name:'Living', L:'', B:''},
+      {name:'Kitchen', L:'', B:''},
+      {name:'Master Bedroom', L:'', B:''},
+      {name:'Bedroom 2', L:'', B:''}
+    ];
+  }
+  ppDrawRooms();
+  ppPreview();
+}
+
+function ppFillProjects(clientId){
+  const pSel = document.getElementById('pp-project');
+  if(!pSel) return;
+  let projs = (typeof db!=='undefined' && db.projects) ? db.projects.slice() : [];
+  if(clientId) projs = projs.filter(p=>p.clientId===clientId);
+  const cur = pSel.value;
+  pSel.innerHTML = '<option value="">— Select project —</option>' +
+    projs.map(p=>{
+      const c = (typeof gc==='function') ? gc(p.clientId) : null;
+      const label = (p.name||'Project') + (c && !clientId ? ' — '+(c.name||'') : '');
+      return `<option value="${p.id}">${label.replace(/</g,'')}</option>`;
+    }).join('');
+  if(cur && projs.some(p=>p.id===cur)) pSel.value = cur;
+}
+
+function ppFromClient(){
+  const cid = (document.getElementById('pp-client-sel')||{}).value;
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
+  if(!cid){
+    set('pp-client','');
+    ppFillProjects();
+    ppPreview();
+    return;
+  }
+  const c = (typeof gc==='function') ? gc(cid) : ((db.contacts||[]).find(x=>x.id===cid));
+  set('pp-client', c ? (c.name||'') : '');
+  // Filter projects for this client + auto-pick if only one
+  ppFillProjects(cid);
+  const projs = (db.projects||[]).filter(p=>p.clientId===cid);
+  if(projs.length===1){
+    const pSel = document.getElementById('pp-project');
+    if(pSel) pSel.value = projs[0].id;
+    set('pp-title', (projs[0].name||'') + ' — Floor Plan');
+  } else if(projs.length>1){
+    // Keep title empty unless already set
+    const titleEl = document.getElementById('pp-title');
+    if(titleEl && !titleEl.value) set('pp-title', (c.name||'Client') + ' — Floor Plan');
+  } else {
+    set('pp-title', (c && c.name ? c.name+' — Floor Plan' : ''));
+  }
+  ppPreview();
+}
+
+function ppFromProject(){
+  const id = (document.getElementById('pp-project')||{}).value;
+  if(!id) return;
+  const p = (typeof gp==='function') ? gp(id) : ((db.projects||[]).find(x=>x.id===id));
+  if(!p) return;
+  const c = (typeof gc==='function') ? gc(p.clientId) : ((db.contacts||[]).find(x=>x.id===p.clientId));
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
+  // Auto-fill client name + client dropdown
+  set('pp-client', c ? (c.name||'') : '');
+  const cSel = document.getElementById('pp-client-sel');
+  if(cSel && p.clientId) cSel.value = p.clientId;
+  set('pp-title', (p.name||'') + ' — Floor Plan');
+  ppPreview();
+}
+
+function ppLoadImage(ev){
+  const f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  if(!/^image\//.test(f.type)){
+    if(typeof showErr==='function') showErr('Please upload an image (PNG/JPG). Export plot from AutoCAD as image.');
+    else alert('Please upload PNG or JPG');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(){
+    ppImageData = reader.result;
+    const nm = document.getElementById('pp-img-name');
+    if(nm){ nm.style.display='block'; nm.textContent = '✓ '+f.name; }
+    const drop = document.getElementById('pp-drop');
+    if(drop) drop.style.borderColor = 'var(--gold)';
+    ppPreview();
+  };
+  reader.readAsDataURL(f);
+}
+
+function ppAddRoom(){
+  ppRooms.push({name:'', L:'', B:''});
+  ppDrawRooms();
+  ppPreview();
+}
+
+function ppDelRoom(i){
+  ppRooms.splice(i,1);
+  ppDrawRooms();
+  ppPreview();
+}
+
+function ppRoomUpd(i,k,v){
+  if(!ppRooms[i]) return;
+  ppRooms[i][k]=v;
+  ppPreview();
+}
+
+function ppDrawRooms(){
+  const el = document.getElementById('pp-rooms');
+  if(!el) return;
+  el.innerHTML = ppRooms.map((r,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 56px 56px 28px;gap:5px;align-items:center">
+      <input class="fi" style="font-size:12px;padding:6px 8px" placeholder="Room" value="${(r.name||'').replace(/"/g,'&quot;')}" oninput="ppRoomUpd(${i},'name',this.value)">
+      <input class="fi" style="font-size:12px;padding:6px 8px;text-align:right" type="number" step="any" placeholder="L" value="${r.L||''}" oninput="ppRoomUpd(${i},'L',this.value)">
+      <input class="fi" style="font-size:12px;padding:6px 8px;text-align:right" type="number" step="any" placeholder="B" value="${r.B||''}" oninput="ppRoomUpd(${i},'B',this.value)">
+      <button type="button" onclick="ppDelRoom(${i})" style="border:0;background:transparent;color:var(--red);cursor:pointer;font-size:16px;line-height:1">×</button>
+    </div>`).join('');
+}
+
+function ppGetData(){
+  const g = id => (document.getElementById(id)||{}).value || '';
+  const rooms = ppRooms.map(r=>{
+    const L=parseFloat(r.L)||0, B=parseFloat(r.B)||0;
+    return {name:r.name||'Room', L, B, area: Math.round(L*B*100)/100};
+  }).filter(r=>r.name || r.area);
+  const total = rooms.reduce((s,r)=>s+r.area,0);
+  return {
+    client: g('pp-client'),
+    date: g('pp-date'),
+    title: g('pp-title') || 'Floor Plan Presentation',
+    scale: g('pp-scale') || '1:100',
+    north: g('pp-north') || 'Up',
+    sheet: g('pp-sheet') || 'A-01',
+    drawn: g('pp-drawn') || ((typeof officeInfo==='object'&&officeInfo.arch)||'Architect'),
+    notes: g('pp-notes'),
+    rooms, total: Math.round(total*100)/100,
+    office: (typeof officeInfo==='object'&&officeInfo.name)||'Greenhouse Studio',
+    image: ppImageData
+  };
+}
+
+function ppNorthSvg(dir){
+  // Simple north arrow; rotation by direction meaning "north is toward..."
+  const rot = {Up:0, Right:90, Down:180, Left:270}[dir]||0;
+  return `<svg width="36" height="36" viewBox="0 0 36 36" style="transform:rotate(${rot}deg)">
+    <polygon points="18,4 22,22 18,18 14,22" fill="#1a3a2a"/>
+    <text x="18" y="33" text-anchor="middle" font-size="9" font-weight="800" fill="#1a3a2a" font-family="sans-serif">N</text>
+  </svg>`;
+}
+
+function ppPreview(){
+  const d = ppGetData();
+  const totEl = document.getElementById('pp-total-area');
+  if(totEl) totEl.textContent = d.total.toLocaleString('en-IN');
+  const el = document.getElementById('pp-preview');
+  if(!el) return;
+  const dateStr = d.date ? d.date.split('-').reverse().join('-') : '';
+  const roomRows = d.rooms.length
+    ? d.rooms.map((r,i)=>`<tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #e8e4dc">${i+1}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e8e4dc">${r.name}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e8e4dc;text-align:center">${r.L||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e8e4dc;text-align:center">${r.B||'—'}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e8e4dc;text-align:right;font-weight:700">${r.area?r.area.toFixed(1):'—'}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="5" style="padding:12px;text-align:center;color:#888">Add rooms in the area statement</td></tr>`;
+
+  el.innerHTML = `
+  <div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#1c1b19">
+    <!-- Title block header -->
+    <div style="background:#1a3a2a;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+      <div>
+        <div style="font-family:Georgia,serif;font-size:15px;color:#c9a84c;font-weight:700">${d.office}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:2px">Architecture · Planning · Interiors</div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:rgba(255,255,255,.7)">
+        <div>Sheet <b style="color:#c9a84c">${d.sheet}</b></div>
+        <div>${dateStr}</div>
+      </div>
+    </div>
+    <div style="height:3px;background:#c9a84c"></div>
+    <div style="padding:12px 16px 8px">
+      <div style="font-size:14px;font-weight:800;color:#1a3a2a;margin-bottom:4px">${d.title}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px 20px;font-size:11px;color:#555">
+        <span><b>Client:</b> ${d.client||'—'}</span>
+        <span><b>Scale:</b> ${d.scale}</span>
+        <span><b>Drawn:</b> ${d.drawn}</span>
+      </div>
+    </div>
+    <!-- Plan image -->
+    <div style="padding:0 16px 12px;position:relative">
+      <div style="border:1px solid #ddd;background:#faf8f4;min-height:220px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:4px;overflow:hidden">
+        ${d.image
+          ? `<img src="${d.image}" style="max-width:100%;max-height:360px;display:block;margin:0 auto" alt="Plan">`
+          : `<div style="text-align:center;color:#aaa;padding:40px 20px;font-size:12px">Plan image here<br><span style="font-size:11px">Upload AutoCAD export (PNG/JPG)</span></div>`}
+        <div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);border-radius:8px;padding:4px;border:1px solid #e0dcd4">${ppNorthSvg(d.north)}</div>
+      </div>
+    </div>
+    <!-- Area table -->
+    <div style="padding:0 16px 12px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6e6960;margin-bottom:6px">Area Statement</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="background:#1a3a2a;color:#c9a84c">
+          <th style="padding:7px 8px;text-align:left">No</th>
+          <th style="padding:7px 8px;text-align:left">Room</th>
+          <th style="padding:7px 8px;text-align:center">L (ft)</th>
+          <th style="padding:7px 8px;text-align:center">B (ft)</th>
+          <th style="padding:7px 8px;text-align:right">Area (sq.ft)</th>
+        </tr></thead>
+        <tbody>${roomRows}</tbody>
+        <tfoot><tr style="background:#f3f0ea;font-weight:800">
+          <td colspan="4" style="padding:8px;text-align:right">Total Carpet Area</td>
+          <td style="padding:8px;text-align:right;color:#1a3a2a">${d.total.toFixed(1)} sq.ft</td>
+        </tr></tfoot>
+      </table>
+    </div>
+    ${d.notes ? `<div style="padding:0 16px 14px"><div style="background:#fff8e0;border-left:3px solid #c9a84c;padding:10px 12px;font-size:11px;line-height:1.55;color:#5a4a20"><b>Notes:</b> ${d.notes.replace(/</g,'&lt;')}</div></div>` : ''}
+    <div style="padding:10px 16px;border-top:1px solid #e8e4dc;display:flex;justify-content:space-between;font-size:10px;color:#888">
+      <span>For presentation / discussion — not a sanction drawing</span>
+      <span>${d.office}</span>
+    </div>
+  </div>`;
+}
+
+function ppReset(){
+  ppImageData = null;
+  ppRooms = [
+    {name:'Living', L:'', B:''},
+    {name:'Kitchen', L:'', B:''},
+    {name:'Master Bedroom', L:'', B:''},
+    {name:'Bedroom 2', L:'', B:''}
+  ];
+  ['pp-client','pp-title','pp-sheet','pp-notes'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const f=document.getElementById('pp-file'); if(f) f.value='';
+  const nm=document.getElementById('pp-img-name'); if(nm){nm.style.display='none';nm.textContent='';}
+  const drop=document.getElementById('pp-drop'); if(drop) drop.style.borderColor='';
+  const sel=document.getElementById('pp-project'); if(sel) sel.value='';
+  ppDrawRooms();
+  ppPreview();
+}
+
+function ppExportPdf(){
+  const d = ppGetData();
+  if(!d.image && !d.rooms.some(r=>r.area)){
+    if(typeof showErr==='function') showErr('Plan image किंवा area statement भरा');
+    else alert('Add plan image or room areas first');
+    return;
+  }
+  try{
+    const jsPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+    if(!jsPDF){
+      // Fallback: print preview window
+      ppPrintFallback(d);
+      return;
+    }
+    const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+    const pageW = doc.internal.pageSize.getWidth();
+    let y = 12;
+
+    // Header bar
+    doc.setFillColor(26,58,42);
+    doc.rect(0,0,pageW,22,'F');
+    doc.setFillColor(201,168,76);
+    doc.rect(0,22,pageW,1.5,'F');
+    doc.setTextColor(201,168,76);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    doc.text(d.office, 12, 10);
+    doc.setFontSize(8);
+    doc.setTextColor(200,200,200);
+    doc.text('Architecture · Planning · Interiors', 12, 16);
+    doc.setTextColor(201,168,76);
+    doc.setFontSize(9);
+    doc.text('Sheet '+d.sheet, pageW-12, 10, {align:'right'});
+    doc.setTextColor(180,180,180);
+    doc.setFontSize(8);
+    const dateStr = d.date ? d.date.split('-').reverse().join('-') : '';
+    doc.text(dateStr, pageW-12, 16, {align:'right'});
+
+    y = 30;
+    doc.setTextColor(26,58,42);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.text(d.title, 12, y);
+    y += 6;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(80,80,80);
+    doc.text('Client: '+(d.client||'—')+'    Scale: '+d.scale+'    Drawn: '+d.drawn, 12, y);
+    y += 6;
+
+    // Image
+    if(d.image){
+      try{
+        const maxImgH = 110;
+        const maxImgW = pageW - 24;
+        // Approximate placement; jsPDF will scale
+        doc.addImage(d.image, 'JPEG', 12, y, maxImgW, maxImgH);
+        y += maxImgH + 6;
+      }catch(e){
+        doc.setFontSize(9);
+        doc.setTextColor(150,80,80);
+        doc.text('(Plan image could not be embedded — use PNG/JPG)', 12, y+6);
+        y += 12;
+      }
+    }
+
+    // Area table
+    if(y > 240){ doc.addPage(); y = 16; }
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(26,58,42);
+    doc.text('AREA STATEMENT', 12, y);
+    y += 3;
+
+    const body = d.rooms.map((r,i)=>[String(i+1), r.name, r.L?String(r.L):'—', r.B?String(r.B):'—', r.area?r.area.toFixed(1):'—']);
+    if(typeof doc.autoTable==='function'){
+      doc.autoTable({
+        startY: y,
+        head:[['No','Room','L (ft)','B (ft)','Area (sq.ft)']],
+        body: body.length?body:[['—','No rooms','—','—','—']],
+        foot:[['','','','Total', d.total.toFixed(1)]],
+        headStyles:{fillColor:[26,58,42], textColor:[201,168,76], fontStyle:'bold', fontSize:8},
+        footStyles:{fillColor:[243,240,234], textColor:[26,58,42], fontStyle:'bold', fontSize:8},
+        bodyStyles:{fontSize:8, cellPadding:2.5},
+        alternateRowStyles:{fillColor:[250,248,243]},
+        margin:{left:12, right:12},
+        styles:{lineColor:[220,215,205], lineWidth:0.2}
+      });
+      y = doc.lastAutoTable.finalY + 8;
+    } else {
+      y += 6;
+      body.forEach(row=>{
+        doc.setFontSize(8);
+        doc.text(row.join('  |  '), 12, y);
+        y += 5;
+      });
+      doc.setFont('helvetica','bold');
+      doc.text('Total: '+d.total.toFixed(1)+' sq.ft', 12, y);
+      y += 8;
+    }
+
+    if(d.notes){
+      if(y > 270){ doc.addPage(); y = 16; }
+      doc.setFillColor(255,248,224);
+      doc.roundedRect(12, y, pageW-24, 18, 2, 2, 'F');
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(90,74,32);
+      const noteLines = doc.splitTextToSize('Notes: '+d.notes, pageW-32);
+      doc.text(noteLines, 16, y+6);
+      y += 22;
+    }
+
+    doc.setFontSize(7);
+    doc.setTextColor(140,140,140);
+    doc.text('For presentation / client discussion — not a municipal sanction drawing.  ·  '+d.office, 12, 287);
+
+    const fname = (d.title||'plan-presentation').replace(/[^\w\-]+/g,'_').slice(0,40) + '.pdf';
+    doc.save(fname);
+    if(typeof showOk==='function') showOk('PDF downloaded');
+  }catch(err){
+    console.error(err);
+    ppPrintFallback(ppGetData());
+  }
+}
+
+function ppPrintFallback(d){
+  const w = window.open('','_blank');
+  if(!w){ alert('Popup blocked'); return; }
+  const prev = document.getElementById('pp-preview');
+  w.document.write('<!DOCTYPE html><html><head><title>'+(d.title||'Plan')+'</title><style>body{margin:0;font-family:system-ui,sans-serif}@media print{body{-webkit-print-color-adjust:exact}}</style></head><body>');
+  w.document.write(prev ? prev.innerHTML : '<p>No preview</p>');
+  w.document.write('<script>window.onload=function(){window.print()}<\/script></body></html>');
+  w.document.close();
+}
+
+
 
 // ── DATA TABLES (from UDCPR 2020, Updated 30 Jan 2025) ──
 const UDCPR_6G = [ // Non-Congested, Reg 6.3
@@ -14993,8 +15731,9 @@ function renderToolsView(){
   // Show API key warning if not set
   setTimeout(()=>{
     const w=document.getElementById('fp-key-warning');
-    if(w) w.style.display=getApiKey()?'none':'block';
+    if(w) w.style.display=(typeof getApiKey==='function'&&getApiKey())?'none':'block';
   },100);
+  try{ if(typeof ppInit==='function') ppInit(); }catch(e){}
 }
 
 // ════════════════════════════════════════════════
