@@ -4631,7 +4631,20 @@ function renderView(v){
     clientself:function(){if(window.renderClientSelfView)renderClientSelfView();},
     areawarranty:function(){if(window.renderAreaWarrantyView)renderAreaWarrantyView();},
     tpabhipray:function(){if(window.renderTPAbhiprayView)renderTPAbhiprayView();},
-    permcase:function(){if(window.renderPermCaseView)renderPermCaseView();}
+    permcase:function(){
+      try{
+        if(typeof window.renderPermCaseView==='function') window.renderPermCaseView();
+        else if(typeof renderPermCaseView==='function') renderPermCaseView();
+        else {
+          var b=document.getElementById('permcase-body');
+          if(b) b.innerHTML='<div class="card" style="padding:20px"><p><b>Permission Case File</b> load झाले नाही. <b>Ctrl+Shift+R</b> hard refresh करा. GitHub वर latest index.html deploy आहे का ते check करा.</p></div>';
+        }
+      }catch(err){
+        console.error('permcase',err);
+        var b2=document.getElementById('permcase-body');
+        if(b2) b2.innerHTML='<div class="card" style="padding:20px"><p style="color:var(--red)">Error: '+(err&&err.message?err.message:err)+'</p><p>Hard refresh (Ctrl+Shift+R) करा.</p></div>';
+      }
+    }
   };
   var fn=renderMap[v];
   if(typeof fn==='function') fn();
@@ -10545,7 +10558,7 @@ window._pcPid=null;
 function renderPermCaseView(){
   const el=document.getElementById('permcase-body');
   if(!el) return;
-  const projects=(db.projects||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const projects=((typeof db!=='undefined'&&db&&db.projects)?db.projects:[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const pid=window._pcPid || (projects[0]&&projects[0].id) || null;
   window._pcPid=pid;
 
@@ -10705,10 +10718,13 @@ function pcSelectProject(pid){
 }
 
 function pcGet(){
-  const p=gp(window._pcPid);
+  const p=(typeof gp==='function')?gp(window._pcPid):((typeof db!=='undefined'&&db.projects||[]).find(x=>x.id===window._pcPid));
   if(!p) return null;
   return {p, pc:pcEnsure(p)};
 }
+
+// Ensure global for renderMap
+window.renderPermCaseView=renderPermCaseView;
 
 function pcField(key,val){
   const o=pcGet(); if(!o) return;
