@@ -2361,6 +2361,7 @@ html{transition:background .3s,color .3s}
         <button class="nav-btn perm-sub-btn" data-view="clientself" onclick="switchView('clientself')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>Client Self Declaration</button>
         <button class="nav-btn perm-sub-btn" data-view="areawarranty" onclick="switchView('areawarranty')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>क्षेत्रफळाबाबत हमीपत्र</button>
         <button class="nav-btn perm-sub-btn" data-view="tpabhipray" onclick="switchView('tpabhipray')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>TP अभिप्राय पत्र</button>
+        <button class="nav-btn perm-sub-btn" data-view="permcase" onclick="switchView('permcase')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v4H8z"/><path d="M6 7h12v14H6z"/><path d="M9 12h6M9 16h4"/></svg></span>Permission Case File</button>
       </div>
     </div>
   </nav>
@@ -2889,6 +2890,7 @@ html{transition:background .3s,color .3s}
     <div id="view-clientself" class="view-section"><div id="clientself-body"></div></div>
     <div id="view-areawarranty" class="view-section"><div id="areawarranty-body"></div></div>
     <div id="view-tpabhipray" class="view-section"><div id="tpabhipray-body"></div></div>
+    <div id="view-permcase" class="view-section"><div id="permcase-body"></div></div>
     <div id="view-interiorest" class="view-section">
       <div class="sec-head">
         <div class="sec-title">🛋️ Interior Work Estimate</div>
@@ -3728,7 +3730,8 @@ const DRAWINGS=[
 ];
 const VIEW_TITLES={
   dashboard:'Dashboard',contacts:'Contacts',projects:'Projects',
-  payments:'Payment Records',reports:'Reports & PDF',settings:'Settings & Sync'
+  payments:'Payment Records',reports:'Reports & PDF',settings:'Settings & Sync',
+  permcase:'Permission Case File'
 };
 
 // ════════════════════════════════════════════════
@@ -4627,7 +4630,8 @@ function renderView(v){
     nocletter:function(){if(window.renderNocView)renderNocView();},
     clientself:function(){if(window.renderClientSelfView)renderClientSelfView();},
     areawarranty:function(){if(window.renderAreaWarrantyView)renderAreaWarrantyView();},
-    tpabhipray:function(){if(window.renderTPAbhiprayView)renderTPAbhiprayView();}
+    tpabhipray:function(){if(window.renderTPAbhiprayView)renderTPAbhiprayView();},
+    permcase:function(){if(window.renderPermCaseView)renderPermCaseView();}
   };
   var fn=renderMap[v];
   if(typeof fn==='function') fn();
@@ -4654,7 +4658,7 @@ function switchView(v){
     var m=b.getAttribute('data-mob');
     b.classList.toggle('active', m===v || (m==='dashboard'&&v==='dashboard'));
   });
-  var permissionViews=['nocletter','clientself','areawarranty','tpabhipray'];
+  var permissionViews=['nocletter','clientself','areawarranty','tpabhipray','permcase'];
   if(permissionViews.indexOf(v)!==-1){
     var pnb=document.querySelector('.permission-docs-group > .nav-btn[data-view="nocletter"]');
     if(pnb) pnb.classList.add('active');
@@ -5461,6 +5465,7 @@ function openPD(pid){
         <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openEditProject('${pid}')">Edit</button>
         <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openFileManager('${pid}')">Files</button>
         <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openSiteVisitModal('${pid}')">Site Visit</button>
+        <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');window._pcPid='${pid}';switchView('permcase')">Permission Case</button>
         <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openProjAgreement('${pid}')">Agreement</button>
         <button class="btn-wa btn-sm" onclick="sendWA('${pid}',null)">WhatsApp</button>
         <button class="btn-pdf btn-sm" onclick="generateAndDownloadPDF('${pid}')">PDF</button>
@@ -10478,6 +10483,372 @@ ${fpLastResult.html}
   w.document.close();
 }
 
+
+// ════════════════════════════════════════════════
+// PERMISSION CASE FILE — BPMS / TP workflow helper
+// ════════════════════════════════════════════════
+const PC_STAGES=[
+  {id:'docs',label:'Docs Collect'},
+  {id:'bpms',label:'BPMS Entry'},
+  {id:'tp',label:'TP Line'},
+  {id:'submit',label:'Final Submit'},
+  {id:'upload',label:'Docs Upload'},
+  {id:'approved',label:'Approved'}
+];
+const PC_DOCS=[
+  {id:'saleDeed',label:'Sale Deed / खरेदीखत'},
+  {id:'satbara',label:'7/12 उतारा (सातबारा)'},
+  {id:'propertyCard',label:'Property Card / शहर सर्वे'},
+  {id:'naOrder',label:'N.A. Order'},
+  {id:'taxReceipt',label:'Tax Receipt'},
+  {id:'powerOfAttorney',label:'Power of Attorney'},
+  {id:'architectAuth',label:'Architect Authorization'},
+  {id:'sitePhotos',label:'Site Photos'},
+  {id:'other',label:'Other Docs'}
+];
+
+function pcDefault(){
+  const docs={};
+  PC_DOCS.forEach(d=>docs[d.id]='pending');
+  return {
+    ownerName:'', ownerMobile:'', ownerEmail:'', ownerAddress:'',
+    surveyNo:'', gatNo:'', ctsNo:'', village:'', taluka:'', district:'Solapur',
+    plotArea:'', zone:'', roadWidth:'', landType:'',
+    bpmsAppNo:'', bpmsDate:'', authority:'',
+    stage:'docs', docs, notes:'', architectLicense:''
+  };
+}
+
+function pcEnsure(p){
+  if(!p) return pcDefault();
+  if(!p.permCase) p.permCase=pcDefault();
+  const pc=p.permCase;
+  if(!pc.docs) pc.docs={};
+  PC_DOCS.forEach(d=>{ if(pc.docs[d.id]===undefined) pc.docs[d.id]='pending'; });
+  if(!pc.stage) pc.stage='docs';
+  return pc;
+}
+
+function pcSeedFromProject(p){
+  const pc=pcEnsure(p);
+  const c=(typeof gc==='function')?gc(p.clientId):null;
+  if(!pc.ownerName && c) pc.ownerName=c.name||'';
+  if(!pc.ownerMobile && c) pc.ownerMobile=c.wa||c.phone||'';
+  if(!pc.ownerAddress && c) pc.ownerAddress=c.address||'';
+  if(!pc.ownerAddress && p.address) pc.ownerAddress=p.address;
+  if(!pc.village && (p.city||p.location)) pc.village=p.city||p.location||'';
+  return pc;
+}
+
+window._pcPid=null;
+
+function renderPermCaseView(){
+  const el=document.getElementById('permcase-body');
+  if(!el) return;
+  const projects=(db.projects||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const pid=window._pcPid || (projects[0]&&projects[0].id) || null;
+  window._pcPid=pid;
+
+  // Pipeline summary
+  const stageCounts={};
+  PC_STAGES.forEach(s=>stageCounts[s.id]=0);
+  projects.forEach(p=>{
+    const st=(p.permCase&&p.permCase.stage)||'docs';
+    stageCounts[st]=(stageCounts[st]||0)+1;
+  });
+
+  let html=`<div class="sec-head" style="margin-bottom:12px;flex-wrap:wrap;gap:10px">
+    <div class="sec-title">📁 Permission Case File</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select class="fi fi-sel" id="pc-project" style="min-width:220px" onchange="pcSelectProject(this.value)">
+        <option value="">— Project निवडा —</option>
+        ${projects.map(p=>{
+          const c=gc(p.clientId);
+          const st=(p.permCase&&p.permCase.stage)||'docs';
+          const lab=PC_STAGES.find(x=>x.id===st);
+          return `<option value="${p.id}" ${p.id===pid?'selected':''}>${(p.name||'').replace(/</g,'')}${c?' — '+(c.name||''):''} [${lab?lab.label:st}]</option>`;
+        }).join('')}
+      </select>
+    </div>
+  </div>`;
+
+  // Stage pipeline overview
+  html+=`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px">
+    ${PC_STAGES.map(s=>`<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
+      <div style="font-size:18px;font-weight:800;color:var(--grn)">${stageCounts[s.id]||0}</div>
+      <div style="font-size:10px;font-weight:700;color:var(--mut);margin-top:2px">${s.label}</div>
+    </div>`).join('')}
+  </div>`;
+
+  if(!pid){
+    html+=`<div class="card" style="padding:32px;text-align:center;color:var(--mut)">
+      <div style="font-size:36px;margin-bottom:8px">📁</div>
+      <p>Project निवडा — BPMS / TP case file उघडेल</p>
+    </div>`;
+    el.innerHTML=html;
+    return;
+  }
+
+  const p=gp(pid);
+  if(!p){ el.innerHTML=html+'<p>Project not found</p>'; return; }
+  const pc=pcSeedFromProject(p);
+  const c=gc(p.clientId);
+  const stageIdx=Math.max(0,PC_STAGES.findIndex(s=>s.id===pc.stage));
+  const docsDone=PC_DOCS.filter(d=>pc.docs[d.id]==='received').length;
+  const docsTotal=PC_DOCS.length;
+
+  // Stage tracker
+  html+=`<div class="card" style="margin-bottom:14px;padding:14px 16px">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:10px">Workflow Stage</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+      ${PC_STAGES.map((s,i)=>{
+        const on=i<=stageIdx;
+        const cur=i===stageIdx;
+        return `<button type="button" onclick="pcSetStage('${s.id}')" style="padding:7px 12px;border-radius:20px;border:1.5px solid ${cur?'var(--gold)':on?'var(--grn)':'var(--bdr)'};background:${cur?'var(--gold)':on?'#e8f4ee':'var(--surf2)'};color:${cur?'var(--grn)':on?'var(--grn)':'var(--mut)'};font-size:11px;font-weight:700;cursor:pointer">${i+1}. ${s.label}</button>${i<PC_STAGES.length-1?'<span style="color:var(--dim)">→</span>':''}`;
+      }).join('')}
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--mut)">Docs: <b style="color:var(--ink)">${docsDone}/${docsTotal}</b> received · Project: <b style="color:var(--ink)">${(p.name||'').replace(/</g,'')}</b>${c?' · Client: <b style="color:var(--ink)">'+(c.name||'')+'</b>':''}</div>
+  </div>`;
+
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">`;
+
+  // LEFT: Owner + Site + BPMS
+  html+=`<div class="card" style="padding:16px">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:12px">Owner / Applicant (BPMS)</div>
+    <div class="form-row c2" style="margin-bottom:8px">
+      <div class="fg" style="margin:0"><label>Owner name</label><input class="fi" id="pc-ownerName" value="${escPc(pc.ownerName)}" oninput="pcField('ownerName',this.value)"></div>
+      <div class="fg" style="margin:0"><label>Mobile</label><input class="fi" id="pc-ownerMobile" value="${escPc(pc.ownerMobile)}" oninput="pcField('ownerMobile',this.value)"></div>
+    </div>
+    <div class="form-row c2" style="margin-bottom:8px">
+      <div class="fg" style="margin:0"><label>Email</label><input class="fi" id="pc-ownerEmail" value="${escPc(pc.ownerEmail)}" oninput="pcField('ownerEmail',this.value)"></div>
+      <div class="fg" style="margin:0"><label>Architect license / COA</label><input class="fi" id="pc-architectLicense" value="${escPc(pc.architectLicense)}" oninput="pcField('architectLicense',this.value)"></div>
+    </div>
+    <div class="fg" style="margin-bottom:12px"><label>Owner address</label><textarea class="fi fi-ta" id="pc-ownerAddress" rows="2" oninput="pcField('ownerAddress',this.value)">${escPc(pc.ownerAddress)}</textarea></div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:8px 0 12px">Site / Plot</div>
+    <div class="form-row c3" style="margin-bottom:8px">
+      <div class="fg" style="margin:0"><label>Survey no.</label><input class="fi" value="${escPc(pc.surveyNo)}" oninput="pcField('surveyNo',this.value)"></div>
+      <div class="fg" style="margin:0"><label>Gat no.</label><input class="fi" value="${escPc(pc.gatNo)}" oninput="pcField('gatNo',this.value)"></div>
+      <div class="fg" style="margin:0"><label>CTS no.</label><input class="fi" value="${escPc(pc.ctsNo)}" oninput="pcField('ctsNo',this.value)"></div>
+    </div>
+    <div class="form-row c3" style="margin-bottom:8px">
+      <div class="fg" style="margin:0"><label>Village</label><input class="fi" value="${escPc(pc.village)}" oninput="pcField('village',this.value)"></div>
+      <div class="fg" style="margin:0"><label>Taluka</label><input class="fi" value="${escPc(pc.taluka)}" oninput="pcField('taluka',this.value)"></div>
+      <div class="fg" style="margin:0"><label>District</label><input class="fi" value="${escPc(pc.district)}" oninput="pcField('district',this.value)"></div>
+    </div>
+    <div class="form-row c3" style="margin-bottom:8px">
+      <div class="fg" style="margin:0"><label>Plot area</label><input class="fi" value="${escPc(pc.plotArea)}" placeholder="sq.m / sq.ft" oninput="pcField('plotArea',this.value)"></div>
+      <div class="fg" style="margin:0"><label>Zone</label><input class="fi" value="${escPc(pc.zone)}" placeholder="R1 / R2 / Commercial" oninput="pcField('zone',this.value)"></div>
+      <div class="fg" style="margin:0"><label>Road width (m)</label><input class="fi" value="${escPc(pc.roadWidth)}" oninput="pcField('roadWidth',this.value)"></div>
+    </div>
+    <div class="form-row c2" style="margin-bottom:8px">
+      <div class="fg" style="margin:0"><label>Land type</label><input class="fi" value="${escPc(pc.landType)}" placeholder="Non-agri / Gaothan / ..." oninput="pcField('landType',this.value)"></div>
+      <div class="fg" style="margin:0"><label>Authority</label><input class="fi" value="${escPc(pc.authority)}" placeholder="Solapur MC / TP cell" oninput="pcField('authority',this.value)"></div>
+    </div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:12px 0">BPMS Application</div>
+    <div class="form-row c2" style="margin-bottom:8px">
+      <div class="fg" style="margin:0"><label>BPMS App No.</label><input class="fi" value="${escPc(pc.bpmsAppNo)}" oninput="pcField('bpmsAppNo',this.value)"></div>
+      <div class="fg" style="margin:0"><label>BPMS Date</label><input class="fi" type="date" value="${escPc(pc.bpmsDate)}" oninput="pcField('bpmsDate',this.value)"></div>
+    </div>
+    <div class="fg" style="margin:0"><label>Notes</label><textarea class="fi fi-ta" rows="2" oninput="pcField('notes',this.value)">${escPc(pc.notes)}</textarea></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-gold btn-sm" onclick="pcSave()">💾 Save Case File</button>
+      <button class="btn btn-s btn-sm" onclick="pcCopyBpms()">📋 Copy BPMS Sheet</button>
+      <button class="btn btn-s btn-sm" onclick="pcExportPdf()">📄 PDF</button>
+    </div>
+  </div>`;
+
+  // RIGHT: Document checklist
+  html+=`<div class="card" style="padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)">Document Checklist</div>
+      <div style="font-size:11px;font-weight:700;color:var(--grn)">${docsDone}/${docsTotal}</div>
+    </div>
+    ${PC_DOCS.map(d=>{
+      const st=pc.docs[d.id]||'pending';
+      const ok=st==='received';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px;background:${ok?'#e8f4ee':'var(--surf2)'}">
+        <div style="font-size:13px;font-weight:600;color:var(--ink)">${d.label}</div>
+        <div style="display:flex;gap:6px">
+          <button type="button" onclick="pcSetDoc('${d.id}','received')" style="padding:5px 10px;border-radius:8px;border:1px solid ${ok?'var(--grn)':'var(--bdr)'};background:${ok?'var(--grn)':'transparent'};color:${ok?'#fff':'var(--mut)'};font-size:11px;font-weight:700;cursor:pointer">✓ Received</button>
+          <button type="button" onclick="pcSetDoc('${d.id}','pending')" style="padding:5px 10px;border-radius:8px;border:1px solid ${!ok?'var(--red)':'var(--bdr)'};background:${!ok?'#fde8e6':'transparent'};color:${!ok?'var(--red)':'var(--mut)'};font-size:11px;font-weight:700;cursor:pointer">Pending</button>
+        </div>
+      </div>`;
+    }).join('')}
+    <div style="margin-top:14px;padding:12px;background:#fff8e0;border:1px solid var(--gold);border-radius:10px;font-size:11px;color:#7a5a00;line-height:1.55">
+      <b>Workflow tip:</b> Client docs → BPMS data entry (Copy BPMS Sheet) → TP Line (layers / report) → Final submit → BPMS वर 7/12, sale deed upload → Approved.
+    </div>
+  </div>`;
+
+  html+=`</div>`; // end grid
+
+  // BPMS fill sheet preview
+  html+=`<div class="card" style="margin-top:14px;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)">BPMS Fill Sheet (copy-ready)</div>
+      <button class="btn btn-s btn-sm" onclick="pcCopyBpms()">📋 Copy all</button>
+    </div>
+    <pre id="pc-bpms-sheet" style="margin:0;padding:14px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;font-size:12px;line-height:1.7;white-space:pre-wrap;font-family:var(--font-mono),monospace;color:var(--ink)">${escPc(pcBuildSheet(p,pc))}</pre>
+  </div>`;
+
+  el.innerHTML=html;
+}
+
+function escPc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+function pcSelectProject(pid){
+  window._pcPid=pid||null;
+  renderPermCaseView();
+}
+
+function pcGet(){
+  const p=gp(window._pcPid);
+  if(!p) return null;
+  return {p, pc:pcEnsure(p)};
+}
+
+function pcField(key,val){
+  const o=pcGet(); if(!o) return;
+  o.pc[key]=val;
+  const sheet=document.getElementById('pc-bpms-sheet');
+  if(sheet) sheet.textContent=pcBuildSheet(o.p,o.pc);
+}
+
+function pcSetStage(stage){
+  const o=pcGet(); if(!o) return;
+  o.pc.stage=stage;
+  pcSave(true);
+  renderPermCaseView();
+}
+
+function pcSetDoc(docId,status){
+  const o=pcGet(); if(!o) return;
+  if(!o.pc.docs) o.pc.docs={};
+  o.pc.docs[docId]=status;
+  pcSave(true);
+  renderPermCaseView();
+}
+
+function pcSave(silent){
+  const o=pcGet(); if(!o) return;
+  try{
+    if(typeof saveAll==='function') saveAll();
+    else if(typeof saveLocal==='function') saveLocal();
+  }catch(e){ try{saveLocal();}catch(e2){} }
+  if(!silent && typeof showOk==='function') showOk('Permission case saved');
+}
+
+function pcBuildSheet(p,pc){
+  const c=gc(p.clientId);
+  const lines=[
+    '═══ BPMS / PERMISSION FILL SHEET ═══',
+    'Project: '+(p.name||''),
+    'Client (CRM): '+(c?c.name:'—'),
+    '',
+    '── Applicant / Owner ──',
+    'Name: '+(pc.ownerName||''),
+    'Mobile: '+(pc.ownerMobile||''),
+    'Email: '+(pc.ownerEmail||''),
+    'Address: '+(pc.ownerAddress||''),
+    '',
+    '── Site ──',
+    'Survey No: '+(pc.surveyNo||''),
+    'Gat No: '+(pc.gatNo||''),
+    'CTS No: '+(pc.ctsNo||''),
+    'Village: '+(pc.village||''),
+    'Taluka: '+(pc.taluka||''),
+    'District: '+(pc.district||''),
+    'Plot Area: '+(pc.plotArea||''),
+    'Zone: '+(pc.zone||''),
+    'Road Width: '+(pc.roadWidth||''),
+    'Land Type: '+(pc.landType||''),
+    '',
+    '── BPMS ──',
+    'Authority: '+(pc.authority||''),
+    'App No: '+(pc.bpmsAppNo||''),
+    'Date: '+(pc.bpmsDate||''),
+    'Architect License: '+(pc.architectLicense||''),
+    'Stage: '+(pc.stage||''),
+    '',
+    '── Documents ──',
+    ...PC_DOCS.map(d=>'  '+(pc.docs&&pc.docs[d.id]==='received'?'[✓]':'[ ]')+' '+d.label),
+    '',
+    'Notes: '+(pc.notes||''),
+    '═══ Greenhouse Studio ═══'
+  ];
+  return lines.join('\n');
+}
+
+function pcCopyBpms(){
+  const o=pcGet(); if(!o) return;
+  const text=pcBuildSheet(o.p,o.pc);
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      if(typeof showOk==='function') showOk('BPMS sheet copied');
+    }).catch(()=>pcCopyFallback(text));
+  } else pcCopyFallback(text);
+}
+
+function pcCopyFallback(text){
+  const ta=document.createElement('textarea');
+  ta.value=text; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); if(typeof showOk==='function') showOk('Copied'); }
+  catch(e){ alert(text); }
+  document.body.removeChild(ta);
+}
+
+function pcExportPdf(){
+  const o=pcGet(); if(!o) return;
+  const {p,pc}=o;
+  const c=gc(p.clientId);
+  const w=window.open('','_blank');
+  if(!w){ alert('Popup blocked'); return; }
+  const docsHtml=PC_DOCS.map(d=>{
+    const ok=pc.docs&&pc.docs[d.id]==='received';
+    return `<tr><td style="padding:6px 10px;border-bottom:1px solid #e8e4dc">${d.label}</td><td style="padding:6px 10px;border-bottom:1px solid #e8e4dc;font-weight:700;color:${ok?'#1a3a2a':'#a63d32'}">${ok?'Received':'Pending'}</td></tr>`;
+  }).join('');
+  const stageLab=(PC_STAGES.find(s=>s.id===pc.stage)||{}).label||pc.stage;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Permission Case — ${(p.name||'').replace(/</g,'')}</title>
+<style>
+body{font-family:system-ui,sans-serif;color:#1c1b19;margin:0;padding:24px}
+.hdr{background:#1a3a2a;color:#c9a84c;padding:16px 20px;border-radius:8px 8px 0 0}
+.hdr h1{margin:0;font-size:18px}.hdr p{margin:4px 0 0;font-size:11px;color:rgba(255,255,255,.55)}
+.gold{height:3px;background:#c9a84c}
+.sec{margin:16px 0}.sec h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6e6960;margin:0 0 8px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:13px}
+.g2 b{color:#6e6960;font-weight:600;display:inline-block;min-width:110px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#1a3a2a;color:#c9a84c;text-align:left;padding:8px 10px}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div class="hdr"><h1>Permission Case File</h1><p>${(typeof officeInfo==='object'&&officeInfo.name)||'Greenhouse Studio'} · ${p.name||''}</p></div>
+<div class="gold"></div>
+<div class="sec"><h3>Project</h3>
+<div class="g2"><div><b>Project</b> ${p.name||'—'}</div><div><b>Client</b> ${c?c.name:'—'}</div>
+<div><b>Stage</b> ${stageLab||'—'}</div><div><b>BPMS No.</b> ${pc.bpmsAppNo||'—'}</div></div></div>
+<div class="sec"><h3>Owner / Applicant</h3>
+<div class="g2"><div><b>Name</b> ${pc.ownerName||'—'}</div><div><b>Mobile</b> ${pc.ownerMobile||'—'}</div>
+<div><b>Email</b> ${pc.ownerEmail||'—'}</div><div><b>License</b> ${pc.architectLicense||'—'}</div></div>
+<p style="font-size:13px;margin:8px 0 0"><b style="color:#6e6960">Address</b> ${pc.ownerAddress||'—'}</p></div>
+<div class="sec"><h3>Site</h3>
+<div class="g2">
+<div><b>Survey</b> ${pc.surveyNo||'—'}</div><div><b>Gat</b> ${pc.gatNo||'—'}</div>
+<div><b>CTS</b> ${pc.ctsNo||'—'}</div><div><b>Plot area</b> ${pc.plotArea||'—'}</div>
+<div><b>Village</b> ${pc.village||'—'}</div><div><b>Taluka</b> ${pc.taluka||'—'}</div>
+<div><b>District</b> ${pc.district||'—'}</div><div><b>Zone</b> ${pc.zone||'—'}</div>
+<div><b>Road width</b> ${pc.roadWidth||'—'}</div><div><b>Land type</b> ${pc.landType||'—'}</div>
+<div><b>Authority</b> ${pc.authority||'—'}</div><div><b>BPMS date</b> ${pc.bpmsDate||'—'}</div>
+</div></div>
+<div class="sec"><h3>Documents</h3>
+<table><thead><tr><th>Document</th><th>Status</th></tr></thead><tbody>${docsHtml}</tbody></table></div>
+${pc.notes?`<div class="sec"><h3>Notes</h3><p style="font-size:13px">${pc.notes}</p></div>`:''}
+<script>window.onload=function(){window.print()}<\/script>
+</body></html>`);
+  w.document.close();
+}
 
 // ════════════════════════════════════════════════
 // PLAN PRESENTATION — AutoCAD plan → client PDF
