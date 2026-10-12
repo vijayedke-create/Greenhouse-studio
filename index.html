@@ -746,6 +746,60 @@ aside.collapsed .nav-icon svg{width:20px;height:20px}
 
 
 
+
+/* Daily work / drawing delivery tasks */
+.dv2-tasks{
+  margin:18px 0 8px;
+  background:rgba(255,252,247,.88);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.75);
+  border-radius:18px;
+  padding:16px 18px 14px;
+  box-shadow:0 4px 20px rgba(28,27,25,.04);
+}
+.dv2-tasks-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;
+}
+.dv2-tasks-head h2{
+  font-family:var(--font-display),serif;font-size:18px;font-weight:600;margin:0;letter-spacing:-.02em;color:var(--ink);
+}
+.dv2-tasks-filters{display:flex;gap:6px;flex-wrap:wrap}
+.tk-filter{
+  border:none;background:transparent;border-radius:999px;padding:6px 12px;font-size:11px;font-weight:700;
+  color:var(--mut);cursor:pointer;font-family:inherit;
+}
+.tk-filter.active{background:var(--ink);color:#f7f5f0}
+.tk-list{display:flex;flex-direction:column;gap:8px}
+.tk-item{
+  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+  padding:12px 14px;border-radius:14px;border:1px solid var(--bdr);
+  background:var(--surf);transition:transform .15s,box-shadow .15s;
+}
+.tk-item:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(28,27,25,.06)}
+.tk-item.done{opacity:.55}
+.tk-item.done .tk-title{text-decoration:line-through}
+.tk-check{
+  width:22px;height:22px;border-radius:50%;border:2px solid var(--bdr2);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;
+}
+.tk-item.done .tk-check{background:var(--rgreen);border-color:var(--rgreen);color:#fff;font-size:11px}
+.tk-title{font-size:13px;font-weight:700;color:var(--ink)}
+.tk-meta{font-size:11px;color:var(--mut);margin-top:3px;display:flex;flex-wrap:wrap;gap:8px}
+.tk-badge{
+  font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;
+}
+.tk-badge.urgent{background:rgba(166,61,50,.12);color:var(--red)}
+.tk-badge.high{background:rgba(184,151,90,.18);color:#8a6a28}
+.tk-badge.normal{background:rgba(44,62,45,.1);color:var(--grn)}
+.tk-badge.low{background:var(--surf2);color:var(--mut)}
+.tk-due{font-family:var(--font-display),serif;font-size:12px;font-weight:600;white-space:nowrap}
+.tk-due.overdue{color:var(--red)}
+.tk-due.soon{color:#8a6a28}
+.tk-actions{display:flex;gap:4px}
+.tk-empty{text-align:center;padding:20px;color:var(--mut);font-size:13px}
+#m-task .modal-box{max-width:520px}
+
 /* ═══════════════════════════════════════════
    CONTACTS — premium studio theme
 ═══════════════════════════════════════════ */
@@ -4186,6 +4240,7 @@ let firebaseDb=null,firebaseRef=null,fbListener=null;
 // ════════════════════════════════════════════════
 function saveLocal(){
   try{
+    if(!db.tasks)db.tasks=[];
     localStorage.setItem('gs_db',JSON.stringify(db));
     localStorage.setItem('gs_office',JSON.stringify(officeInfo));
     localStorage.setItem('gs_saved',new Date().toLocaleString());
@@ -4195,9 +4250,12 @@ function loadLocal(){
   try{
     const d=localStorage.getItem('gs_db');
     if(d) db=JSON.parse(d);
+    if(!db.tasks) db.tasks=[];
+    if(!Array.isArray(db.tasks)) db.tasks=[];
     const o=localStorage.getItem('gs_office');
     if(o) officeInfo=JSON.parse(o);
   }catch(e){}
+  if(typeof db!=='undefined' && !db.tasks) db.tasks=[];
 }
 
 
@@ -5403,6 +5461,10 @@ function renderDashboard(){
   });
   html+="</div></div>";
 
+
+  // Daily work / drawing delivery tasks block
+  html += (typeof buildTasksDashboardHTML==='function' ? buildTasksDashboardHTML() : (typeof window.buildTasksDashboardHTML==='function' ? window.buildTasksDashboardHTML() : ''));
+
   root.innerHTML=html;
   var kg=document.getElementById("kpi-grid"); if(kg) kg.innerHTML="";
   var hero=document.getElementById("dash-hero"); if(hero) hero.innerHTML="";
@@ -6016,6 +6078,7 @@ function pdRenderTab(tab){
     body.innerHTML=`<div class="pd-panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
         <div class="pd-section-title" style="margin:0">${label}</div>
+        <button class="btn btn-gold btn-sm" onclick="closeModal('m-pd');openFileManager('${pid}')">📤 Upload Drawing</button>
         <button class="btn btn-s btn-sm" onclick="closeModal('m-pd');openFileManager('${pid}')">Manage files</button>
       </div>
       <div class="pd-section" style="padding-top:4px;padding-bottom:4px">
@@ -6026,7 +6089,7 @@ function pdRenderTab(tab){
               <div style="font-size:13px;font-weight:600">${f.name||f.title||'File'}</div>
               <div style="font-size:11px;color:var(--mut)">${f.cat||f.category||'—'} ${f.date?'· '+f.date:''}</div>
             </div>
-            ${f.url||f.link?`<a href="${f.url||f.link}" target="_blank" rel="noopener" class="btn btn-s btn-sm" onclick="event.stopPropagation()">Open</a>`:''}
+            ${(f.data||f.url||f.link)?`<a href="${f.data||f.url||f.link}" target="_blank" rel="noopener" class="btn btn-s btn-sm" download="${(f.name||'file').replace(/"/g,'')}" onclick="event.stopPropagation()">Open</a>`:''}
           </div>`).join(''):`<div class="pd-empty"><div class="pd-empty-icon">📁</div>No ${label.toLowerCase()} yet.<br><span style="font-size:12px">Use Manage files to add Drive links.</span></div>`}
       </div>
     </div>`;
@@ -16558,114 +16621,220 @@ function openFileManager(pid){
 
 function renderFmFiles(){
   const el=document.getElementById('fm-files-list');
-  const p=gp(currentUploadPid);
+  if(!el) return;
+  const p=typeof gp==='function'?gp(currentUploadPid):null;
   const files=(p&&p.files)||[];
   if(!files.length){
     el.innerHTML=`<div style="text-align:center;padding:24px 0;color:var(--mut)">
       <div style="font-size:32px;margin-bottom:8px">📁</div>
-      <p style="font-size:13px">No files added yet — add Google Drive links below</p>
+      <p style="font-size:13px">No drawings yet — upload file or paste Drive link below</p>
     </div>`;
     return;
   }
-  // Group by category
+  function catMeta(catId){
+    if(typeof getCatById==='function') return getCatById(catId);
+    return {icon:'📄',label:catId||'File',color:'#6e6960'};
+  }
   const grouped={};
-  files.forEach((f,i)=>{grouped[f.cat]=grouped[f.cat]||[];grouped[f.cat].push({...f,_idx:i});});
-  el.innerHTML=Object.entries(grouped).map(([catId,items])=>{
-    const cat=getCatById(catId);
+  files.forEach((f,i)=>{ const k=f.cat||'other'; grouped[k]=grouped[k]||[]; grouped[k].push(Object.assign({},f,{_idx:i})); });
+  el.innerHTML=Object.keys(grouped).map(function(catId){
+    const items=grouped[catId];
+    const cat=catMeta(catId);
     return `<div style="margin-bottom:14px">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${cat.color};margin-bottom:6px;display:flex;align-items:center;gap:6px">
         ${cat.icon} ${cat.label} <span style="color:var(--mut);font-weight:400">(${items.length})</span>
       </div>
-      ${items.map(f=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;margin-bottom:6px">
+      ${items.map(function(f){
+        const href=f.data||f.url||f.link||'';
+        const isLocal=!!f.data;
+        const vis=f.clientVisible!==false && f.clientVisible!=='0' && f.clientVisible!==0;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;margin-bottom:6px">
           <div style="width:32px;height:32px;border-radius:8px;background:${cat.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${cat.icon}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div>
-            <div style="font-size:10px;color:var(--mut);margin-top:1px">${f.date||''}${f.notes?' · '+f.notes:''}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name||'File'}${f.rev?' · '+f.rev:''}</div>
+            <div style="font-size:10px;color:var(--mut);margin-top:1px">${f.date||''}${f.notes?' · '+f.notes:''}${isLocal?' · 📤 Uploaded':''}${vis?' · 👁 Client':' · 🔒 Private'}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:${f.clientVisible?'#e8f4ee':'#f0f0f0'};color:${f.clientVisible?'var(--grn)':'var(--mut)'}">
-              ${f.clientVisible?'👁 Client':'🔒 Private'}
-            </span>
-            <a href="${f.url}" target="_blank" style="background:var(--grn);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer">↗ Open</a>
-            <button onclick="fmToggleVisibility(${f._idx})" style="background:none;border:1px solid var(--bdr);border-radius:7px;padding:5px 8px;font-size:11px;cursor:pointer;color:var(--mut)" title="${f.clientVisible?'Make Private':'Show to Client'}">${f.clientVisible?'🔒':'👁'}</button>
-            <button onclick="fmDeleteFile(${f._idx})" style="background:none;border:1px solid var(--red);border-radius:7px;padding:5px 8px;font-size:11px;cursor:pointer;color:var(--red)">✕</button>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            ${href?`<a class="btn btn-s btn-sm" href="${href}" target="_blank" rel="noopener" download="${(f.name||'drawing').replace(/"/g,'')}">Open</a>`:''}
+            <button type="button" class="btn btn-s btn-sm" style="color:var(--red)" onclick="fmDeleteFile(${f._idx})">🗑</button>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>`;
   }).join('');
 }
 
+
 function renderFmForm(){
   const el=document.getElementById('fm-add-form');
+  if(!el) return;
+  const cats = (typeof FILE_CATS!=='undefined'?FILE_CATS:null) || [
+    {id:'plans',label:'Plans',icon:'📐',color:'#2c3e2d'},
+    {id:'elevations',label:'Elevations',icon:'🏢',color:'#3d5a6c'},
+    {id:'sections',label:'Sections',icon:'📏',color:'#4a7c59'},
+    {id:'details',label:'Details',icon:'🔍',color:'#a67c52'},
+    {id:'3d',label:'3D / Renders',icon:'🎨',color:'#b8975a'},
+    {id:'working',label:'Working Drawing',icon:'✏️',color:'#2c3e2d'},
+    {id:'submission',label:'Submission',icon:'📤',color:'#3d5a6c'},
+    {id:'other',label:'Other',icon:'📄',color:'#6e6960'}
+  ];
   el.innerHTML=`
-    <div style="border-top:1px solid var(--bdr);padding-top:14px;margin-top:4px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grn);margin-bottom:12px">+ Add Google Drive Link</div>
-      <div style="display:grid;gap:10px">
-        <div class="form-row c2">
-          <div class="fg" style="margin-bottom:0">
-            <label>File Type / Category</label>
-            <select class="fi fi-sel" id="fm-cat">
-              ${FILE_CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')}
-            </select>
-          </div>
-          <div class="fg" style="margin-bottom:0">
-            <label>File Name</label>
-            <input class="fi" id="fm-name" placeholder="Ground Floor Plan — Rev 2">
-          </div>
+    <div style="border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-top:12px;background:var(--surf)">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--ink)">+ Add Drawing / File</div>
+
+      <!-- Upload zone -->
+      <div id="fm-drop" onclick="document.getElementById('fm-file-input').click()"
+        style="border:2px dashed var(--bdr2);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;background:var(--surf2);margin-bottom:14px;transition:border-color .15s,background .15s">
+        <div style="font-size:28px;margin-bottom:6px">📤</div>
+        <div style="font-size:13px;font-weight:700;color:var(--ink)">Click to upload drawing</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:4px">PDF · JPG · PNG · WEBP · max 1.5 MB</div>
+        <input type="file" id="fm-file-input" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,application/pdf,image/*" style="display:none" onchange="fmOnFileSelected(this)">
+      </div>
+      <div id="fm-file-preview" style="display:none;margin-bottom:12px;padding:10px 12px;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;font-size:12px"></div>
+
+      <div class="fg"><label>File / Drawing name *</label>
+        <input class="fi" id="fm-name" placeholder="e.g. Ground Floor Plan — A-101"></div>
+      <div class="form-row c2">
+        <div class="fg"><label>Category</label>
+          <select class="fi fi-sel" id="fm-cat">
+            ${cats.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label>Revision</label>
+          <input class="fi" id="fm-rev" placeholder="R00 / R01 / R02" value="R00">
+        </div>
+      </div>
+      <div class="fg"><label>Google Drive link <span style="color:var(--mut);font-weight:400">(optional if file uploaded)</span></label>
+        <input class="fi" id="fm-url" placeholder="https://drive.google.com/file/d/..." type="url">
+        <div style="font-size:10px;color:var(--mut);margin-top:4px">मोठ्या files साठी Drive link वापरा</div>
+      </div>
+      <div class="form-row c2">
+        <div class="fg" style="margin-bottom:0">
+          <label>Notes</label>
+          <input class="fi" id="fm-notes" placeholder="Rev notes, client comments...">
         </div>
         <div class="fg" style="margin-bottom:0">
-          <label>Google Drive Link (or any URL)</label>
-          <input class="fi" id="fm-url" placeholder="https://drive.google.com/file/d/..." type="url">
-          <div style="font-size:10px;color:var(--mut);margin-top:4px">💡 Drive → Share → "Anyone with link" → Copy link</div>
+          <label>Client Visibility</label>
+          <select class="fi fi-sel" id="fm-visible">
+            <option value="1">👁 Visible to Client</option>
+            <option value="0">🔒 Private (Architect only)</option>
+          </select>
         </div>
-        <div class="form-row c2">
-          <div class="fg" style="margin-bottom:0">
-            <label>Notes (optional)</label>
-            <input class="fi" id="fm-notes" placeholder="Rev 2, updated dimensions...">
-          </div>
-          <div class="fg" style="margin-bottom:0">
-            <label>Client Visibility</label>
-            <select class="fi fi-sel" id="fm-visible">
-              <option value="1">👁 Visible to Client</option>
-              <option value="0">🔒 Private (Architect only)</option>
-            </select>
-          </div>
-        </div>
-        <button onclick="fmAddFile()" style="background:var(--grn);color:#fff;border:none;border-radius:10px;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%">✅ Add File</button>
       </div>
+      <button type="button" onclick="fmAddFile()" style="background:var(--grn);color:#fff;border:none;border-radius:10px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:8px">✅ Add Drawing / File</button>
     </div>`;
+  // drag-drop
+  const drop=document.getElementById('fm-drop');
+  if(drop){
+    ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,function(e){e.preventDefault();drop.style.borderColor='var(--grn)';drop.style.background='rgba(44,62,45,.06)';}));
+    ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,function(e){e.preventDefault();drop.style.borderColor='';drop.style.background='';}));
+    drop.addEventListener('drop',function(e){
+      const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+      if(f) fmHandleFile(f);
+    });
+  }
 }
 
+
 function fmAddFile(){
-  const url=document.getElementById('fm-url').value.trim();
-  const name=document.getElementById('fm-name').value.trim();
-  if(!url||!name){showErr('Name आणि Link दोन्ही आवश्यक आहेत');return;}
-  if(!url.startsWith('http')){showErr('Valid URL paste करा (https://...)');return;}
-  const p=gp(currentUploadPid);if(!p)return;
-  if(!p.files)p.files=[];
-  // Convert Google Drive view link to direct link for easier access
-  let finalUrl=url;
-  const driveMatch=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if(driveMatch){finalUrl='https://drive.google.com/file/d/'+driveMatch[1]+'/view';}
-  p.files.push({
-    id:uid('FL'),
-    name,
-    url:finalUrl,
-    cat:document.getElementById('fm-cat').value,
-    notes:document.getElementById('fm-notes').value.trim(),
-    clientVisible:document.getElementById('fm-visible').value==='1',
-    date:new Date().toISOString().split('T')[0],
-    addedBy:'architect'
-  });
-  saveAll();
-  renderFmFiles();
-  // Reset form fields
-  document.getElementById('fm-url').value='';
-  document.getElementById('fm-name').value='';
-  document.getElementById('fm-notes').value='';
-  showOk('✅ File added!');
+  const p=typeof gp==='function'?gp(currentUploadPid):null;
+  if(!p){alert('Project not found');return;}
+  if(!p.files) p.files=[];
+  const name=(document.getElementById('fm-name').value||'').trim();
+  let url=(document.getElementById('fm-url').value||'').trim();
+  const pending=window._fmPendingFile||null;
+  if(!name){ if(typeof showErr==='function') showErr('File name लिहा'); else alert('Name required'); return; }
+  if(!url && !pending){ if(typeof showErr==='function') showErr('File upload करा किंवा Drive link द्या'); else alert('Upload or link required'); return; }
+
+  // normalize drive links
+  if(url){
+    const driveMatch=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if(driveMatch) url='https://drive.google.com/file/d/'+driveMatch[1]+'/view';
+  }
+
+  const file={
+    id: typeof uid==='function'?uid('FL'):('FL-'+Date.now()),
+    name: name,
+    url: url || '',
+    data: pending ? pending.data : '',
+    type: pending ? (pending.type||'') : '',
+    size: pending ? (pending.size||0) : 0,
+    cat: (document.getElementById('fm-cat')||{}).value || 'plans',
+    rev: (document.getElementById('fm-rev')||{}).value || '',
+    notes: (document.getElementById('fm-notes')||{}).value.trim(),
+    clientVisible: (document.getElementById('fm-visible')||{}).value==='1',
+    date: new Date().toISOString().split('T')[0],
+    addedBy: 'architect'
+  };
+  p.files.push(file);
+  if(typeof saveAll==='function') saveAll();
+  window._fmPendingFile=null;
+  if(typeof renderFmFiles==='function') renderFmFiles();
+  // reset form fields
+  const nameEl=document.getElementById('fm-name'); if(nameEl) nameEl.value='';
+  const urlEl=document.getElementById('fm-url'); if(urlEl) urlEl.value='';
+  const notesEl=document.getElementById('fm-notes'); if(notesEl) notesEl.value='';
+  const revEl=document.getElementById('fm-rev'); if(revEl) revEl.value='R00';
+  const prev=document.getElementById('fm-file-preview'); if(prev){ prev.style.display='none'; prev.innerHTML=''; }
+  const fin=document.getElementById('fm-file-input'); if(fin) fin.value='';
+  if(typeof showOk==='function') showOk('Drawing / file added');
+  // refresh project workspace if open
+  if(window._pdPid===currentUploadPid && typeof pdRenderTab==='function'){
+    try{ pdRenderTab(window._pdTab||'drawings'); }catch(e){}
+  }
 }
+
+function fmOnFileSelected(input){
+  const f=input.files&&input.files[0];
+  if(f) fmHandleFile(f);
+}
+
+function fmHandleFile(file){
+  const max=1.5*1024*1024; // 1.5 MB
+  if(file.size>max){
+    if(typeof showErr==='function') showErr('File 1.5 MB पेक्षा मोठी आहे. Google Drive link वापरा.');
+    else alert('File too large (max 1.5 MB). Use Google Drive link.');
+    return;
+  }
+  const okType=/pdf|image\/(jpeg|jpg|png|webp|gif)/i.test(file.type) || /\.(pdf|jpg|jpeg|png|webp|gif)$/i.test(file.name);
+  if(!okType){
+    if(typeof showErr==='function') showErr('PDF किंवा image file निवडा');
+    else alert('PDF or image only');
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=function(e){
+    window._fmPendingFile={
+      data: e.target.result,
+      type: file.type||'',
+      size: file.size||0,
+      name: file.name||''
+    };
+    const nameEl=document.getElementById('fm-name');
+    if(nameEl && !nameEl.value.trim()){
+      nameEl.value=file.name.replace(/\.[^.]+$/,'');
+    }
+    const prev=document.getElementById('fm-file-preview');
+    if(prev){
+      const kb=Math.round(file.size/1024);
+      const isImg=/image/i.test(file.type);
+      prev.style.display='block';
+      prev.innerHTML='<div style="display:flex;align-items:center;gap:10px">'+
+        (isImg?'<img src="'+e.target.result+'" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr)">':'<span style="font-size:28px">📄</span>')+
+        '<div><b>'+file.name+'</b><div style="color:var(--mut);font-size:11px">'+kb+' KB · ready to add</div></div>'+
+        '<button type="button" class="btn btn-s btn-sm" style="margin-left:auto" onclick="fmClearPending()">✕</button></div>';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function fmClearPending(){
+  window._fmPendingFile=null;
+  const prev=document.getElementById('fm-file-preview');
+  if(prev){ prev.style.display='none'; prev.innerHTML=''; }
+  const fin=document.getElementById('fm-file-input'); if(fin) fin.value='';
+}
+
 
 function fmToggleVisibility(idx){
   const p=gp(currentUploadPid);if(!p||!p.files[idx])return;
@@ -17934,8 +18103,8 @@ Estimated execution timeline: 30–45 days after final design approval.</textare
 
       <!-- Info banner -->
       <div style="background:#fffbee;border:1px solid var(--gold,#c9a84c);border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:12px;color:#7a5a00;line-height:1.7">
-        📂 <b>Google Drive</b> वर file upload करा → link copy करा → इथे paste करा.<br>
-        Client ला 👁 <b>Visible</b> set केलेल्या files त्यांच्या portal मध्ये दिसतात.
+        📤 <b>Device वरून upload</b> करा (PDF, JPG, PNG, WEBP — max ~1.5 MB) <b>किंवा</b> Google Drive link paste करा.<br>
+        Client ला 👁 <b>Visible</b> files Client Portal मध्ये दिसतात.
       </div>
 
       <!-- Files list -->
@@ -22955,6 +23124,256 @@ window.apPrint=function(){
 };
 
 if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Projection हमीपत्र';
+})();
+</script>
+
+
+<div class="modal-bg" id="m-task">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="m-task-title">+ Daily Work / Drawing</div>
+      <button class="modal-x" onclick="closeModal('m-task')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tk-id">
+      <div class="fg"><label>काम / Drawing *</label><input class="fi" id="tk-title" placeholder="उदा. Working Drawing Sheet 3, 3D View, Sanction Plan..."></div>
+      <div class="form-row c2">
+        <div class="fg"><label>Client</label>
+          <select class="fi fi-sel" id="tk-client"><option value="">— Select —</option></select>
+        </div>
+        <div class="fg"><label>Project</label>
+          <select class="fi fi-sel" id="tk-project"><option value="">— Select —</option></select>
+        </div>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>Drawing / Type</label>
+          <select class="fi fi-sel" id="tk-dtype">
+            <option value="Working Drawing">Working Drawing</option>
+            <option value="Sanction / Submission">Sanction / Submission</option>
+            <option value="3D / Presentation">3D / Presentation</option>
+            <option value="Site Visit">Site Visit</option>
+            <option value="Revision">Revision</option>
+            <option value="Structural Coord">Structural Coord</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="fg"><label>Urgency</label>
+          <select class="fi fi-sel" id="tk-urgency">
+            <option value="urgent">🔴 Urgent</option>
+            <option value="high">🟠 High</option>
+            <option value="normal" selected>🟢 Normal</option>
+            <option value="low">⚪ Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>Due date *</label><input class="fi" type="date" id="tk-due"></div>
+        <div class="fg"><label>Status</label>
+          <select class="fi fi-sel" id="tk-status">
+            <option value="pending">Pending</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>Notes</label><textarea class="fi" id="tk-notes" rows="2" placeholder="Client feedback, sheet nos..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('m-task')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveTask()">Save</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  if(!window.db) return;
+  if(!db.tasks) db.tasks = [];
+
+  function daysUntil(due){
+    if(!due) return null;
+    var t0 = new Date(); t0.setHours(0,0,0,0);
+    var t1 = new Date(due); t1.setHours(0,0,0,0);
+    return Math.round((t1 - t0) / 86400000);
+  }
+  function urgencyLabel(u){
+    return ({urgent:'Urgent',high:'High',normal:'Normal',low:'Low'})[u] || u;
+  }
+  function clientName(id){
+    if(!id || !db.contacts) return '';
+    var c = db.contacts.find(function(x){ return x.id===id; });
+    return c ? c.name : '';
+  }
+  function projectName(id){
+    if(!id || !db.projects) return '';
+    var p = db.projects.find(function(x){ return x.id===id; });
+    return p ? p.name : '';
+  }
+
+  window._tkFilter = window._tkFilter || 'pending';
+
+  window.buildTasksDashboardHTML = function(){
+    if(!db.tasks) db.tasks = [];
+    var filter = window._tkFilter || 'pending';
+    var list = db.tasks.slice();
+    // sort: pending first by due date, urgency
+    var urgOrder = {urgent:0, high:1, normal:2, low:3};
+    list.sort(function(a,b){
+      if((a.status==='done')!==(b.status==='done')) return a.status==='done' ? 1 : -1;
+      var da = a.due || '9999', db_ = b.due || '9999';
+      if(da !== db_) return da < db_ ? -1 : 1;
+      return (urgOrder[a.urgency]||9) - (urgOrder[b.urgency]||9);
+    });
+    if(filter==='pending') list = list.filter(function(x){ return x.status!=='done'; });
+    else if(filter==='done') list = list.filter(function(x){ return x.status==='done'; });
+    else if(filter==='urgent') list = list.filter(function(x){ return x.status!=='done' && (x.urgency==='urgent'||x.urgency==='high'); });
+    else if(filter==='today'){
+      var today = new Date().toISOString().slice(0,10);
+      list = list.filter(function(x){ return x.status!=='done' && x.due === today; });
+    }
+
+    var html = '<div class="dv2-tasks" id="dv2-tasks">';
+    html += '<div class="dv2-tasks-head">';
+    html += '<h2>📋 आजचे काम · Drawing Delivery</h2>';
+    html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+    html += '<div class="dv2-tasks-filters">';
+    [['pending','Pending'],['today','Today'],['urgent','Urgent'],['done','Done'],['all','All']].forEach(function(f){
+      html += '<button type="button" class="tk-filter'+(filter===f[0]?' active':'')+'" onclick="setTkFilter(\''+f[0]+'\')">'+f[1]+'</button>';
+    });
+    html += '</div>';
+    html += '<button type="button" class="btn btn-gold btn-sm" onclick="openTaskModal()">+ Add Work</button>';
+    html += '</div></div>';
+
+    if(!list.length){
+      html += '<div class="tk-empty">No items — <b onclick="openTaskModal()" style="cursor:pointer;color:var(--grn)">+ Add</b> daily drawing / client delivery work</div>';
+    } else {
+      html += '<div class="tk-list">';
+      list.forEach(function(tk){
+        var d = daysUntil(tk.due);
+        var dueCls = '', dueTxt = '';
+        if(tk.status==='done'){ dueTxt = 'Done'; }
+        else if(d===null){ dueTxt = 'No date'; }
+        else if(d<0){ dueCls='overdue'; dueTxt = Math.abs(d)+'d overdue'; }
+        else if(d===0){ dueCls='soon'; dueTxt = 'Today'; }
+        else if(d===1){ dueCls='soon'; dueTxt = 'Tomorrow'; }
+        else { dueTxt = d+' days'; }
+        var cn = clientName(tk.clientId);
+        var pn = projectName(tk.projectId);
+        html += '<div class="tk-item'+(tk.status==='done'?' done':'')+'" data-id="'+tk.id+'">';
+        html += '<div class="tk-check" onclick="toggleTaskDone(\''+tk.id+'\')" title="Mark done">'+(tk.status==='done'?'✓':'')+'</div>';
+        html += '<div>';
+        html += '<div class="tk-title">'+esc(tk.title||'')+'</div>';
+        html += '<div class="tk-meta">';
+        html += '<span class="tk-badge '+(tk.urgency||'normal')+'">'+urgencyLabel(tk.urgency)+'</span>';
+        if(tk.dtype) html += '<span>'+esc(tk.dtype)+'</span>';
+        if(cn) html += '<span>· '+esc(cn)+'</span>';
+        if(pn) html += '<span>· '+esc(pn)+'</span>';
+        html += '</div></div>';
+        html += '<div style="text-align:right">';
+        html += '<div class="tk-due '+dueCls+'">'+dueTxt+'</div>';
+        html += '<div class="tk-actions" style="margin-top:6px;justify-content:flex-end">';
+        html += '<button type="button" class="btn btn-s btn-sm" onclick="openTaskModal(\''+tk.id+'\')">Edit</button>';
+        html += '<button type="button" class="btn btn-s btn-sm" onclick="deleteTask(\''+tk.id+'\')">🗑</button>';
+        html += '</div></div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  };
+
+  window.setTkFilter = function(f){
+    window._tkFilter = f;
+    if(typeof renderDashboard==='function') renderDashboard();
+  };
+
+  window.openTaskModal = function(id){
+    if(!db.tasks) db.tasks = [];
+    var titleEl = document.getElementById('m-task-title');
+    var idEl = document.getElementById('tk-id');
+    var cl = document.getElementById('tk-client');
+    var pr = document.getElementById('tk-project');
+    if(cl){
+      cl.innerHTML = '<option value="">— Select —</option>';
+      (db.contacts||[]).forEach(function(c){
+        cl.innerHTML += '<option value="'+c.id+'">'+esc(c.name)+'</option>';
+      });
+    }
+    if(pr){
+      pr.innerHTML = '<option value="">— Select —</option>';
+      (db.projects||[]).forEach(function(p){
+        pr.innerHTML += '<option value="'+p.id+'">'+esc(p.name)+'</option>';
+      });
+    }
+    var tk = id ? db.tasks.find(function(x){ return x.id===id; }) : null;
+    if(idEl) idEl.value = tk ? tk.id : '';
+    if(titleEl) titleEl.textContent = tk ? 'Edit Work / Drawing' : '+ Daily Work / Drawing';
+    document.getElementById('tk-title').value = tk ? (tk.title||'') : '';
+    if(cl) cl.value = tk ? (tk.clientId||'') : '';
+    if(pr) pr.value = tk ? (tk.projectId||'') : '';
+    document.getElementById('tk-dtype').value = tk ? (tk.dtype||'Working Drawing') : 'Working Drawing';
+    document.getElementById('tk-urgency').value = tk ? (tk.urgency||'normal') : 'normal';
+    document.getElementById('tk-due').value = tk ? (tk.due||'') : new Date().toISOString().slice(0,10);
+    document.getElementById('tk-status').value = tk ? (tk.status||'pending') : 'pending';
+    document.getElementById('tk-notes').value = tk ? (tk.notes||'') : '';
+    if(typeof openModal==='function') openModal('m-task');
+    else {
+      var m = document.getElementById('m-task');
+      if(m) m.classList.add('open');
+    }
+  };
+
+  window.saveTask = function(){
+    if(!db.tasks) db.tasks = [];
+    var title = (document.getElementById('tk-title').value||'').trim();
+    if(!title){ if(typeof showErr==='function') showErr('काम / Drawing लिहा'); else alert('Title required'); return; }
+    var due = document.getElementById('tk-due').value;
+    if(!due){ if(typeof showErr==='function') showErr('Due date आवश्यक'); else alert('Due date required'); return; }
+    var id = document.getElementById('tk-id').value;
+    var data = {
+      title: title,
+      clientId: document.getElementById('tk-client').value||'',
+      projectId: document.getElementById('tk-project').value||'',
+      dtype: document.getElementById('tk-dtype').value||'',
+      urgency: document.getElementById('tk-urgency').value||'normal',
+      due: due,
+      status: document.getElementById('tk-status').value||'pending',
+      notes: (document.getElementById('tk-notes').value||'').trim(),
+      updatedAt: new Date().toISOString()
+    };
+    if(id){
+      var ix = db.tasks.findIndex(function(x){ return x.id===id; });
+      if(ix>=0){ data.id = id; data.createdAt = db.tasks[ix].createdAt; db.tasks[ix] = data; }
+    } else {
+      data.id = 'TK-'+Date.now().toString(36).toUpperCase();
+      data.createdAt = new Date().toISOString();
+      db.tasks.unshift(data);
+    }
+    if(typeof saveAll==='function') saveAll();
+    if(typeof closeModal==='function') closeModal('m-task');
+    else { var m=document.getElementById('m-task'); if(m) m.classList.remove('open'); }
+    if(typeof showOk==='function') showOk('Saved');
+    if(typeof renderDashboard==='function') renderDashboard();
+  };
+
+  window.toggleTaskDone = function(id){
+    if(!db.tasks) return;
+    var tk = db.tasks.find(function(x){ return x.id===id; });
+    if(!tk) return;
+    tk.status = tk.status==='done' ? 'pending' : 'done';
+    tk.updatedAt = new Date().toISOString();
+    if(typeof saveAll==='function') saveAll();
+    if(typeof renderDashboard==='function') renderDashboard();
+  };
+
+  window.deleteTask = function(id){
+    if(!db.tasks) return;
+    if(!confirm('Delete this work item?')) return;
+    db.tasks = db.tasks.filter(function(x){ return x.id!==id; });
+    if(typeof saveAll==='function') saveAll();
+    if(typeof showOk==='function') showOk('Deleted');
+    if(typeof renderDashboard==='function') renderDashboard();
+  };
 })();
 </script>
 
