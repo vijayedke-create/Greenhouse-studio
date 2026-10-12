@@ -749,7 +749,8 @@ aside.collapsed .nav-icon svg{width:20px;height:20px}
 
 /* Daily work / drawing delivery tasks */
 .dv2-tasks{
-  margin:18px 0 8px;
+  margin:16px 0 18px;
+  border-color:rgba(184,151,90,.35);
   background:rgba(255,252,247,.88);
   backdrop-filter:blur(12px);
   border:1px solid rgba(255,255,255,.75);
@@ -5283,6 +5284,8 @@ function renderDashboard(){
   // Quick interactive chips
   html += '<div class="dv2-chips">';
   html += '<button type="button" class="dv2-chip" onclick="switchView(\'projects\')">📁 All Projects</button>';
+  html += '<button type="button" class="dv2-chip gold" onclick="openTaskModal()">📋 Daily Work</button>';
+  
   html += '<button type="button" class="dv2-chip" onclick="dashGoPayments(\'overdue\')">💸 Overdue Payments</button>';
   html += '<button type="button" class="dv2-chip" onclick="dashGoStage(\'Working Drawing\')">✏️ Working Drawing</button>';
   html += '<button type="button" class="dv2-chip" onclick="dashGoStage(\'Submission\')">📤 Submission</button>';
@@ -5300,6 +5303,17 @@ function renderDashboard(){
   html += '<div class="dv2-kpi dv2-card-3d" onclick="dashGoPayments(\'due\')" title="Balance due projects"><div class="dv2-kpi-top"><div class="dv2-kpi-ico" style="background:#fdecea">&#9203;</div><div><div class="dv2-kpi-val" style="font-size:18px;color:var(--red)">' + fmtRs(tb) + '</div><div class="dv2-kpi-lbl">Balance Due</div></div></div><div class="dv2-kpi-sub red">' + dueCount + ' projects</div><div class="dv2-kpi-bar"><i style="width:'+(tv?Math.min(100,Math.round(tb/tv*100)):0)+'%;background:#a63d32"></i></div>' + spark('#a63d32',4) + '</div>';
   html += '<div class="dv2-kpi dv2-card-3d" onclick="switchView(\'contacts\')" title="Clients"><div class="dv2-kpi-top"><div class="dv2-kpi-ico" style="background:#eef0fe">&#128101;</div><div><div class="dv2-kpi-val">' + contacts.length + '</div><div class="dv2-kpi-lbl">Clients</div></div></div><div class="dv2-kpi-sub">' + (overduePay ? ('! ' + overduePay + ' overdue') : 'All clear') + '</div><div class="dv2-kpi-bar"><i style="width:'+(contacts.length?Math.min(100,Math.round((contacts.length-overduePay)/Math.max(contacts.length,1)*100)):0)+'%;background:#5a7a9a"></i></div>' + spark('#5a7a9a',5) + '</div>';
   html += '</div>';
+
+  // Daily work tasks — prominent position after KPIs
+  try {
+    if (typeof window.buildTasksDashboardHTML === 'function') {
+      html += window.buildTasksDashboardHTML() || '';
+    } else {
+      html += '<div class="dv2-tasks"><div class="dv2-tasks-head"><h2>📋 आजचे काम · Drawing Delivery</h2>'+
+        '<button type="button" class="btn btn-gold btn-sm" onclick="openTaskModal()">+ Add Work</button></div>'+
+        '<div class="tk-empty">Loading tasks… refresh if this stays</div></div>';
+    }
+  } catch (e) { console.warn('tasks render', e); }
 
   // MAIN ROW: Featured | Pipeline+Actions | Calendar+Upcoming
   html+='<div class="dv2-row dv2-row-main">';
@@ -5463,8 +5477,6 @@ function renderDashboard(){
 
 
   // Daily work / drawing delivery tasks block
-  html += (typeof buildTasksDashboardHTML==='function' ? buildTasksDashboardHTML() : (typeof window.buildTasksDashboardHTML==='function' ? window.buildTasksDashboardHTML() : ''));
-
   root.innerHTML=html;
   var kg=document.getElementById("kpi-grid"); if(kg) kg.innerHTML="";
   var hero=document.getElementById("dash-hero"); if(hero) hero.innerHTML="";
@@ -23187,8 +23199,23 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
 
 <script>
 (function(){
-  if(!window.db) return;
-  if(!db.tasks) db.tasks = [];
+  function ensureTasks(){
+    try{
+      if(typeof db==='undefined' || !db) return false;
+      if(!db.tasks) db.tasks = [];
+      if(!Array.isArray(db.tasks)) db.tasks = [];
+      return true;
+    }catch(e){ return false; }
+  }
+  if(!ensureTasks()){
+    // db may load later — still register API
+  }
+  try{ if(typeof db!=='undefined' && db && !db.tasks) db.tasks=[]; }catch(e){}
+
+  function esc(s){
+    return String(s==null?'':s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   function daysUntil(due){
     if(!due) return null;
@@ -23213,6 +23240,7 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
   window._tkFilter = window._tkFilter || 'pending';
 
   window.buildTasksDashboardHTML = function(){
+    if(typeof db==='undefined' || !db) return '';
     if(!db.tasks) db.tasks = [];
     var filter = window._tkFilter || 'pending';
     var list = db.tasks.slice();
@@ -23374,6 +23402,41 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
     if(typeof showOk==='function') showOk('Deleted');
     if(typeof renderDashboard==='function') renderDashboard();
   };
+
+  // global alias for older checks
+  if(typeof window.buildTasksDashboardHTML==='function'){
+    try{ buildTasksDashboardHTML = window.buildTasksDashboardHTML; }catch(e){}
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  if(typeof window.openTaskModal!=='function'){
+    window.openTaskModal=function(){
+      var m=document.getElementById('m-task');
+      if(m){ m.classList.add('open'); m.style.display='flex'; }
+      else alert('Task form loading... hard refresh (Ctrl+Shift+R) करा');
+    };
+  }
+  if(typeof window.buildTasksDashboardHTML!=='function'){
+    window.buildTasksDashboardHTML=function(){
+      try{
+        if(typeof db==='undefined'||!db) {
+          return '<div class="dv2-tasks"><div class="dv2-tasks-head"><h2>📋 आजचे काम · Drawing Delivery</h2>'+
+            '<button type="button" class="btn btn-gold btn-sm" onclick="openTaskModal()">+ Add Work</button></div>'+
+            '<div class="tk-empty">Data loading…</div></div>';
+        }
+        if(!db.tasks) db.tasks=[];
+        var n=(db.tasks||[]).filter(function(x){return x.status!=='done';}).length;
+        return '<div class="dv2-tasks"><div class="dv2-tasks-head"><h2>📋 आजचे काम · Drawing Delivery</h2>'+
+          '<button type="button" class="btn btn-gold btn-sm" onclick="if(window.openTaskModal)openTaskModal()">+ Add Work</button></div>'+
+          '<div class="tk-empty">'+(n?n+' pending work items':'No work items yet — ')+
+          '<b style="cursor:pointer;color:var(--grn)" onclick="openTaskModal()">+ Add Work</b></div></div>';
+      }catch(e){ return ''; }
+    };
+  }
 })();
 </script>
 
