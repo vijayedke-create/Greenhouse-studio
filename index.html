@@ -745,6 +745,121 @@ aside.collapsed .nav-icon svg{width:20px;height:20px}
 .nav-btn.active .nav-icon svg{stroke:var(--gold2,#d4b87a)}
 
 
+
+/* ═══════════════════════════════════════════
+   CONTACTS — premium studio theme
+═══════════════════════════════════════════ */
+#view-contacts.active{
+  background:
+    radial-gradient(ellipse 70% 50% at 90% 0%, rgba(184,151,90,.1), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 10% 30%, rgba(44,62,45,.08), transparent 45%),
+    linear-gradient(180deg, #f5f2eb 0%, #f7f5f0 100%) !important;
+  margin: -4px -8px 0; padding: 12px 8px 32px;
+}
+#view-contacts .sec-title{font-size:28px!important;letter-spacing:-.03em!important}
+#cf-tabs.tab-row,#view-contacts #cf-tabs{
+  background:rgba(255,252,247,.65)!important;backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.7);border-radius:999px!important;padding:4px!important;gap:2px!important;
+  box-shadow:0 2px 12px rgba(28,27,25,.04);
+}
+#cf-tabs .tab-btn,#view-contacts .tab-btn{
+  border-radius:999px!important;border:none!important;background:transparent!important;
+  padding:7px 14px!important;font-size:11px!important;font-weight:700!important;color:var(--mut)!important;box-shadow:none!important;
+}
+#cf-tabs .tab-btn.active,#view-contacts .tab-btn.active{background:var(--ink)!important;color:#f7f5f0!important}
+#view-contacts .cc-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))!important;gap:16px!important}
+#view-contacts .cc{
+  background:rgba(255,252,247,.82)!important;backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.75)!important;border-radius:18px!important;padding:18px!important;
+  box-shadow:0 4px 20px rgba(28,27,25,.04),inset 0 1px 0 rgba(255,255,255,.6)!important;
+  transition:transform .22s ease,box-shadow .22s ease!important;position:relative;overflow:hidden;
+}
+#view-contacts .cc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--grn),var(--gold));opacity:0;transition:opacity .2s}
+#view-contacts .cc:hover{transform:translateY(-4px)!important;box-shadow:0 14px 36px rgba(28,27,25,.08)!important}
+#view-contacts .cc:hover::before{opacity:1}
+#view-contacts .cc-av{width:48px!important;height:48px!important;border-radius:14px!important;font-size:16px!important;font-family:var(--font-display),serif!important}
+#view-contacts .cc-name{font-family:var(--font-display),serif!important;font-size:16px!important;font-weight:600!important;letter-spacing:-.02em!important}
+#view-contacts .cc-stats{margin-top:14px!important;padding-top:12px!important;display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:8px!important}
+#view-contacts .cc-stat{text-align:center}
+#view-contacts .cc-sv{font-family:var(--font-display),serif!important;font-size:15px!important;font-weight:600!important}
+#view-contacts .cc-detail-table,#view-contacts .tbl-wrap{
+  background:rgba(255,252,247,.85)!important;backdrop-filter:blur(12px);border-radius:16px!important;
+  border:1px solid rgba(255,255,255,.7)!important;overflow:hidden;box-shadow:0 4px 24px rgba(28,27,25,.04);
+}
+#view-contacts .badge{border-radius:999px!important;padding:3px 10px!important;font-size:9px!important;font-weight:700!important}
+
+/* ═══════════════════════════════════════════
+   PAYMENTS — premium studio theme
+═══════════════════════════════════════════ */
+#view-payments.active{
+  background:
+    radial-gradient(ellipse 65% 45% at 5% 10%, rgba(74,124,89,.1), transparent 50%),
+    radial-gradient(ellipse 55% 40% at 95% 20%, rgba(166,61,50,.06), transparent 45%),
+    radial-gradient(ellipse 50% 35% at 50% 90%, rgba(184,151,90,.08), transparent 40%),
+    linear-gradient(180deg, #f4f1ea 0%, #f7f5f0 100%) !important;
+  margin:-4px -8px 0;padding:12px 8px 32px;
+}
+#view-payments .sec-title{font-size:28px!important;letter-spacing:-.03em!important}
+#view-payments #pay-search,#view-payments #pay-sort{
+  background:rgba(255,252,247,.8)!important;backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.7)!important;border-radius:999px!important;
+  box-shadow:0 2px 10px rgba(28,27,25,.04);
+}
+#view-payments #pay-kpi .kpi-card{
+  background:rgba(255,252,247,.82)!important;backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.75)!important;border-radius:18px!important;padding:18px 16px!important;
+  box-shadow:0 4px 20px rgba(28,27,25,.04),inset 0 1px 0 rgba(255,255,255,.6)!important;
+  transition:transform .2s ease,box-shadow .2s ease!important;
+}
+#view-payments #pay-kpi .kpi-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(28,27,25,.07)!important}
+#view-payments #pay-kpi .kpi-lbl{font-size:10px!important;letter-spacing:.1em!important;text-transform:uppercase!important;font-weight:700!important}
+#view-payments #pay-kpi .kpi-val{font-family:var(--font-display),serif!important;font-size:26px!important;font-weight:600!important;letter-spacing:-.03em!important;margin-top:6px!important}
+#pay-filter-tabs{
+  background:rgba(255,252,247,.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.7);
+  border-radius:999px;padding:4px!important;gap:2px!important;display:inline-flex!important;flex-wrap:wrap;
+  box-shadow:0 2px 12px rgba(28,27,25,.04);margin-bottom:16px!important;
+}
+.pay-ftab{
+  border:none!important;background:transparent!important;border-radius:999px!important;
+  padding:8px 14px!important;font-size:11px!important;font-weight:700!important;color:var(--mut)!important;
+  cursor:pointer;font-family:var(--font-body),sans-serif!important;
+}
+.pay-ftab.active{background:var(--ink)!important;color:#f7f5f0!important}
+#pay-list > div{
+  background:rgba(255,252,247,.88)!important;backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.75)!important;border-radius:16px!important;
+  box-shadow:0 4px 20px rgba(28,27,25,.04)!important;margin-bottom:12px!important;overflow:hidden;
+  transition:transform .2s ease,box-shadow .2s ease!important;
+}
+#pay-list > div:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(28,27,25,.07)!important}
+#view-payments .btn-gold{border-radius:999px!important;padding:8px 16px!important}
+
+/* Architect photo on dashboard */
+.dv2-greet{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:16px!important;flex-wrap:wrap!important}
+.dv2-arch-photo-wrap{flex-shrink:0}
+.dv2-arch-photo{
+  width:72px;height:72px;border-radius:50%;object-fit:cover;
+  border:3px solid rgba(255,255,255,.9);
+  box-shadow:0 8px 28px rgba(28,27,25,.12),0 0 0 1px rgba(184,151,90,.25);
+}
+.dv2-arch-photo-placeholder{
+  width:72px;height:72px;border-radius:50%;border:2px dashed var(--bdr2);
+  background:rgba(255,252,247,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;gap:2px;font-family:var(--font-display),serif;font-size:18px;font-weight:600;color:var(--grn);
+}
+.dv2-arch-photo-placeholder small{font-family:var(--font-body),sans-serif;font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.dv2-arch-photo-placeholder:hover{border-color:var(--gold);background:var(--gold-bg)}
+.arch-photo-preview{
+  width:56px;height:56px;border-radius:50%;flex-shrink:0;background:var(--grn);color:var(--gold2);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-display),serif;font-weight:600;font-size:16px;
+  overflow:hidden;cursor:pointer;border:2px solid var(--bdr);
+}
+.permission-docs-group .perm-chevron{display:inline-block;margin-left:auto;font-size:14px;opacity:.7;min-width:14px;text-align:center;transition:transform .2s}
+.permission-docs-sub{overflow:hidden;max-height:280px;transition:max-height .28s ease,opacity .2s ease;opacity:1}
+.permission-docs-group.perm-collapsed .permission-docs-sub{
+  display:block!important;max-height:0!important;opacity:0;padding-top:0!important;padding-bottom:0!important;pointer-events:none;
+}
+
 /* ── Subtle glassmorphism (targeted only) ── */
 .gs-glass{
   background:rgba(255,252,247,.55) !important;
@@ -2405,7 +2520,7 @@ html{transition:background .3s,color .3s}
     <button class="nav-btn" data-view="completion" onclick="switchView('completion')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7V3z"/><path d="M15 3v4h4"/><path d="M9 14l2 2 5-5"/></svg></span>Completion Report</button>
     <button class="nav-btn" data-view="bankest" onclick="switchView('bankest')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M5 20V10l7-5 7 5v10"/><path d="M9 20v-5h6v5"/></svg></span>Bank Estimate</button>
     <div class="permission-docs-group" id="permission-docs-group">
-      <button class="nav-btn" data-view="nocletter" onclick="switchView('nocletter')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20V9h3v11M11 20V6h3v14M16 20V11h3v9"/><path d="M4 9h16"/></svg></span>Permission Docs <span class="perm-chevron">⌄</span></button>
+      <button type="button" class="nav-btn" id="perm-docs-toggle" data-view="nocletter" onclick="togglePermDocs(event)" title="Show / hide Permission Docs"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20V9h3v11M11 20V6h3v14M16 20V11h3v9"/><path d="M4 9h16"/></svg></span>Permission Docs <span class="perm-chevron" id="perm-chevron">›</span></button>
       <div class="permission-docs-sub">
         <button class="nav-btn perm-sub-btn" data-view="nocletter" onclick="switchView('nocletter')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>ना हरकत प्रमाणपत्र (NOC)</button>
         <button class="nav-btn perm-sub-btn" data-view="clientself" onclick="switchView('clientself')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>Client Self Declaration</button>
@@ -2750,6 +2865,23 @@ html{transition:background .3s,color .3s}
               📁 Change Logo
               <input type="file" accept="image/png,image/jpeg" style="display:none" onchange="updateLogo(this)">
             </label>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding:12px;background:var(--surf2);border-radius:10px;border:1px solid var(--bdr)">
+          <div id="arch-photo-preview" class="arch-photo-preview" onclick="document.getElementById('arch-photo-input').click()" title="Click to change">
+            <img id="arch-photo-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
+            <span id="arch-photo-fallback">VE</span>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:3px">Architect Photo</div>
+            <div style="font-size:11px;color:var(--mut);margin-bottom:6px">Dashboard greeting वर दिसेल</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--grn);color:#fff;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">
+                📷 Add / Change Photo
+                <input type="file" id="arch-photo-input" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="updateArchPhoto(this)">
+              </label>
+              <button type="button" class="btn btn-s btn-sm" onclick="removeArchPhoto()">Remove</button>
+            </div>
           </div>
         </div>
         <p>This information appears on all receipts and PDFs.</p>
@@ -3854,6 +3986,44 @@ function updateLogo(input){
   };
   reader.readAsDataURL(file);
 }
+
+function updateArchPhoto(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  if(file.size > 800000){ if(typeof showErr==='function') showErr('Photo 800KB पेक्षा कमी ठेवा'); else alert('Photo max 800KB'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    officeInfo.archPhoto = e.target.result;
+    if(typeof saveAll==='function') saveAll();
+    refreshArchPhotoUI();
+    if(typeof renderDashboard==='function') try{ renderDashboard(); }catch(err){}
+    if(typeof showOk==='function') showOk('Architect photo updated');
+  };
+  reader.readAsDataURL(file);
+}
+function removeArchPhoto(){
+  officeInfo.archPhoto = '';
+  if(typeof saveAll==='function') saveAll();
+  refreshArchPhotoUI();
+  if(typeof renderDashboard==='function') try{ renderDashboard(); }catch(err){}
+  if(typeof showOk==='function') showOk('Architect photo removed');
+}
+function refreshArchPhotoUI(){
+  const img = document.getElementById('arch-photo-img');
+  const fb = document.getElementById('arch-photo-fallback');
+  const photo = (officeInfo && officeInfo.archPhoto) || '';
+  const initials = ((officeInfo && officeInfo.arch) || 'VE').split(/\s+/).map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
+  if(fb) fb.textContent = initials || 'VE';
+  if(img){
+    if(photo){ img.src = photo; img.style.display = 'block'; if(fb) fb.style.display = 'none'; }
+    else { img.removeAttribute('src'); img.style.display = 'none'; if(fb) fb.style.display = 'flex'; }
+  }
+  const sideAv = document.querySelector('.user-av');
+  if(sideAv && photo){
+    sideAv.innerHTML = '<img src="'+photo+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  }
+}
+
 
 // ── Claude API Key Management ──
 function getApiKey(){
@@ -5035,8 +5205,19 @@ function renderDashboard(){
   }
 
   var html = "";
-  html += '<div class="dv2-greet"><div><h1>' + greet + ', ' + esc(archFirst) + ' <span style="font-size:22px">&#9728;</span></h1>';
-  html += '<p>Let\'s design better spaces, together.</p></div></div>';
+  var archPhoto = (officeInfo && officeInfo.archPhoto) || '';
+  var archInitials = String(archFirst||'VE').replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase() || 'VE';
+  html += '<div class="dv2-greet">';
+  html += '<div class="dv2-greet-text"><h1>' + greet + ', ' + esc(archFirst) + '</h1>';
+  html += '<p>Let\'s design better spaces, together.</p></div>';
+  html += '<div class="dv2-arch-photo-wrap" title="Change in Settings">';
+  if(archPhoto){
+    html += '<img class="dv2-arch-photo" src="'+String(archPhoto).replace(/"/g,'&quot;')+'" alt="'+esc(archFirst)+'">';
+  } else {
+    html += '<button type="button" class="dv2-arch-photo-placeholder" onclick="switchView(\'settings\')">';
+    html += '<span>'+archInitials+'</span><small>Add photo</small></button>';
+  }
+  html += '</div></div>';
 
   // Quick interactive chips
   html += '<div class="dv2-chips">';
@@ -5460,23 +5641,29 @@ function renderContacts(filter){
     const bal=projs.reduce((a,p)=>a+pbal(p.id),0);
     const initials=c.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
     const div=document.createElement('div');div.className='cc';
+    const balPct = total>0 ? Math.min(100, Math.round((total-bal)/total*100)) : 100;
     div.innerHTML=`
       <div class="cc-top">
         <div class="cc-av ${avCls(c.cat)}">${initials}</div>
-        <div style="display:flex;gap:5px;align-items:center">
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
           <span class="badge ${bdgCls(c.cat)}">${c.cat}</span>
+          ${c.pin?`<span class="badge" style="background:var(--grn);color:var(--gold2)">PIN</span>`:''}
           <button class="btn btn-s btn-sm" style="font-size:11px" onclick="event.stopPropagation();editContact('${c.id}')">✏️</button>
           <button class="btn btn-s btn-sm" onclick="event.stopPropagation();delContact('${c.id}',event)">🗑</button>
         </div>
       </div>
       <div class="cc-name">${c.name}</div>
-      <div class="cc-meta">${c.address||''}${c.phone?' · 📞 '+c.phone:''}</div>
-      ${c.wa?`<div style="margin-top:5px"><button class="btn-wa" style="font-size:10px;padding:4px 10px" onclick="event.stopPropagation();waLink('${c.wa}',event)">📲 WhatsApp</button></div>`:''}
+      <div class="cc-meta">${c.address||'No address'}${c.phone||c.wa?' · '+(c.wa||c.phone):''}</div>
+      ${c.wa?`<div style="margin-top:8px"><button class="btn-wa" style="font-size:10px;padding:5px 12px;border-radius:999px" onclick="event.stopPropagation();waLink('${c.wa}',event)">WhatsApp</button></div>`:''}
       <div class="cc-stats">
         <div class="cc-stat"><div class="cc-sv">${projs.length}</div><div class="cc-sl">Projects</div></div>
-        <div class="cc-stat"><div class="cc-sv" style="font-size:11px">${fmt(total)}</div><div class="cc-sl">Total</div></div>
-        <div class="cc-stat"><div class="cc-sv" style="font-size:11px;color:${bal>0?'var(--red)':'var(--rgreen)'}">${bal>0?fmt(bal):'✓'}</div><div class="cc-sl">Balance</div></div>
-      </div>`;
+        <div class="cc-stat"><div class="cc-sv" style="font-size:13px">${fmt(total)}</div><div class="cc-sl">Contract</div></div>
+        <div class="cc-stat"><div class="cc-sv" style="font-size:13px;color:${bal>0?'var(--red)':'var(--rgreen)'}">${bal>0?fmt(bal):'Paid'}</div><div class="cc-sl">Balance</div></div>
+      </div>
+      <div style="margin-top:12px;height:5px;border-radius:99px;background:var(--surf2);border:1px solid var(--bdr);overflow:hidden">
+        <div style="height:100%;width:${balPct}%;border-radius:99px;background:linear-gradient(90deg,var(--grn),var(--gold))"></div>
+      </div>
+      <div style="font-size:10px;color:var(--mut);margin-top:5px;font-weight:600">${balPct}% collected</div>`;
     div.addEventListener('click',()=>openCD(c.id));
     g.appendChild(div);
   });
@@ -22605,5 +22792,53 @@ window.switchView=function(v){
   </div>
 </div>
 
+
+<script>
+(function(){
+  window.PERM_DOC_VIEWS = ['nocletter','clientself','areawarranty','tpabhipray'];
+  window.togglePermDocs = function(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    var g = document.getElementById('permission-docs-group');
+    if(!g) return;
+    var collapsed = g.classList.toggle('perm-collapsed');
+    var ch = document.getElementById('perm-chevron');
+    if(ch) ch.textContent = collapsed ? '›' : '⌄';
+    try{ localStorage.setItem('gs_perm_docs_collapsed', collapsed ? '1' : '0'); }catch(err){}
+  };
+  window.setPermDocsOpen = function(open){
+    var g = document.getElementById('permission-docs-group');
+    if(!g) return;
+    g.classList.toggle('perm-collapsed', !open);
+    var ch = document.getElementById('perm-chevron');
+    if(ch) ch.textContent = open ? '⌄' : '›';
+  };
+  function bootPerm(){
+    var g = document.getElementById('permission-docs-group');
+    if(!g) return;
+    var saved = null;
+    try{ saved = localStorage.getItem('gs_perm_docs_collapsed'); }catch(e){}
+    var collapse = saved === null ? true : saved === '1';
+    g.classList.toggle('perm-collapsed', collapse);
+    var ch = document.getElementById('perm-chevron');
+    if(ch) ch.textContent = collapse ? '›' : '⌄';
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootPerm);
+  else bootPerm();
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){ if(typeof refreshArchPhotoUI==='function') refreshArchPhotoUI(); }, 300);
+  });
+  // Expand perm docs when opening those views
+  var _sv = window.switchView;
+  if(typeof _sv === 'function' && !window._permDocsSwitchPatched){
+    window._permDocsSwitchPatched = true;
+    window.switchView = function(v){
+      if(window.PERM_DOC_VIEWS && window.PERM_DOC_VIEWS.indexOf(v) > -1 && typeof setPermDocsOpen === 'function'){
+        setPermDocsOpen(true);
+      }
+      return _sv.apply(this, arguments);
+    };
+  }
+})();
+</script>
 </body>
 </html>
