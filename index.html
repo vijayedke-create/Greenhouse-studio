@@ -2525,6 +2525,7 @@ html{transition:background .3s,color .3s}
         <button class="nav-btn perm-sub-btn" data-view="nocletter" onclick="switchView('nocletter')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>ना हरकत प्रमाणपत्र (NOC)</button>
         <button class="nav-btn perm-sub-btn" data-view="clientself" onclick="switchView('clientself')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>Client Self Declaration</button>
         <button class="nav-btn perm-sub-btn" data-view="areawarranty" onclick="switchView('areawarranty')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>क्षेत्रफळाबाबत हमीपत्र</button>
+        <button class="nav-btn perm-sub-btn" data-view="archproj" onclick="switchView('archproj')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>Architectural Projection हमीपत्र</button>
         <button class="nav-btn perm-sub-btn" data-view="tpabhipray" onclick="switchView('tpabhipray')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>TP अभिप्राय पत्र</button>
         <button class="nav-btn perm-sub-btn" data-view="permcase" onclick="switchView('permcase')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v4H8z"/><path d="M6 7h12v14H6z"/><path d="M9 12h6M9 16h4"/></svg></span>Permission Case File</button>
       </div>
@@ -3071,6 +3072,7 @@ html{transition:background .3s,color .3s}
     <div id="view-nocletter" class="view-section"><div id="noc-body"></div></div>
     <div id="view-clientself" class="view-section"><div id="clientself-body"></div></div>
     <div id="view-areawarranty" class="view-section"><div id="areawarranty-body"></div></div>
+    <div id="view-archproj" class="view-section"><div id="archproj-body"></div></div>
     <div id="view-tpabhipray" class="view-section"><div id="tpabhipray-body"></div></div>
     <div id="view-permcase" class="view-section"><div id="permcase-body"></div></div>
     <div id="view-interiorest" class="view-section">
@@ -4850,6 +4852,7 @@ function renderView(v){
     nocletter:function(){if(window.renderNocView)renderNocView();},
     clientself:function(){if(window.renderClientSelfView)renderClientSelfView();},
     areawarranty:function(){if(window.renderAreaWarrantyView)renderAreaWarrantyView();},
+    archproj:function(){if(window.renderArchProjView)renderArchProjView();},
     tpabhipray:function(){if(window.renderTPAbhiprayView)renderTPAbhiprayView();},
     permcase:function(){
       try{
@@ -4891,7 +4894,7 @@ function switchView(v){
     var m=b.getAttribute('data-mob');
     b.classList.toggle('active', m===v || (m==='dashboard'&&v==='dashboard'));
   });
-  var permissionViews=['nocletter','clientself','areawarranty','tpabhipray','permcase'];
+  var permissionViews=['nocletter','clientself','areawarranty','archproj','tpabhipray','permcase'];
   if(permissionViews.indexOf(v)!==-1){
     var pnb=document.querySelector('.permission-docs-group > .nav-btn[data-view="nocletter"]');
     if(pnb) pnb.classList.add('active');
@@ -22795,7 +22798,7 @@ window.switchView=function(v){
 
 <script>
 (function(){
-  window.PERM_DOC_VIEWS = ['nocletter','clientself','areawarranty','tpabhipray'];
+  window.PERM_DOC_VIEWS = ['nocletter','clientself','areawarranty','archproj','tpabhipray'];
   window.togglePermDocs = function(e){
     if(e){ e.preventDefault(); e.stopPropagation(); }
     var g = document.getElementById('permission-docs-group');
@@ -22840,5 +22843,120 @@ window.switchView=function(v){
   }
 })();
 </script>
+
+<script>
+(function(){
+let apDrawn=false;
+const pq=id=>document.getElementById('ap-'+id);
+const pv=id=>{const e=pq(id);return e?e.value:''};
+const pe=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const apToday=()=>new Date().toISOString().slice(0,10);
+const apDmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
+
+function apRender(){
+  if(!apDrawn)return;
+  const applicant=pe(pv('applicant')||'____________________________');
+  const addr=pe(pv('addr')||'____________________________');
+  const contact=pe(pv('contact')||'________________');
+  const city=pe(pv('city')||'सोलापूर');
+  const peth=pe(pv('peth')||'____________');
+  const nagar=pe(pv('nagar')||'____________');
+  const road=pe(pv('road')||'____________');
+  const oldsn=pe(pv('oldsn')||'________');
+  const newsn=pe(pv('newsn')||'________');
+  const tp=pe(pv('tp')||'________');
+  const finalplot=pe(pv('finalplot')||'________');
+  const subplot=pe(pv('subplot')||'________');
+  const action=pe(pv('action')||'बांधकाम परवानगी / एकत्रीकरण / विभागणी');
+  const date=apDmy(pv('date'));
+
+  const el=pq('pv');
+  if(!el)return;
+  el.innerHTML='<div class="cmp-sheet aw"><div class="in aw-frame">'+
+    '<div class="aw-title">// हमीपत्र //</div>'+
+    '<div class="aw-to">मा. आयुक्त,<br>सोलापूर महानगरपालिका, सोलापूर.</div>'+
+    '<div class="aw-subject">विषय:- शहर सोलापूर येथील '+peth+' पेठ/नगर '+nagar+(road?' '+road+' रोड,':'')+' जुना स. नं. '+oldsn+' नवा स. नं. क्र. '+newsn+' टी.पी. क्र. '+tp+' अंतिम भूखंड क्र. '+finalplot+' उप भूखंड क्र. '+subplot+' या जागेतील '+action+' बाबत.</div>'+
+    '<div class="aw-meta"><b>अर्जदार:-</b> '+applicant+'</div>'+
+    '<div class="aw-meta"><b>रा. संपूर्ण पत्ता:-</b> '+addr+'</div>'+
+    '<div class="aw-meta"><b>संपर्क क्र.:-</b> '+contact+'</div>'+
+    '<div style="margin-top:18px">महोदय,</div>'+
+    '<p class="aw-sal">मी, '+applicant+', विषयांकित नमूद जागेतील बांधकाम परवानगी मिळणेकरीता म.न.पा. कडे प्रस्ताव सादर केला आहे. सदर जागेत <b>Architectural projection</b> दर्शविलेले असून ती बंदिस्त (Enclose) करणार नाही याची हमी या हमीपत्राद्वारे देत आहे.</p>'+
+    '<p class="aw-sal">तसेच चुकीची / खोटे अथवा दिशाभूल करणारी माहिती देणेकरीता भारतीय दंड संहिता १८६० मधील कलम १९९/२०० प्रमाणे होणाऱ्या कार्यवाहीस मी पात्र असेन तसेच यामुळे मला देणेत आलेली बांधकाम परवानगी UDCPR मधील तरतूद क्र. २.१५ अन्वये रद्द करणेचे अधिकार महानगरपालिकेस राहतील याची मला कल्पना आहे.</p>'+
+    '<p class="aw-sal">वरील प्रमाणे हमीपत्र मी विषयांकित जागेतील बांधकाम परवानगी मिळणेकरीता सादर केलेल्या प्रस्तावाकरिता लिहून देत आहे.</p>'+
+    '<div class="aw-sign"><div class="aw-signbox">'+
+      '<div style="margin-bottom:8px">आपला,</div>'+
+      '<div class="aw-signline"><b>अर्जदार</b> ______________________________</div>'+
+      '<div style="margin-top:8px">'+applicant+'</div>'+
+      '<div class="aw-date"><b>दिनांक:</b> '+date+'</div>'+
+      '<div><b>ठिकाण:</b> '+city+'</div>'+
+    '</div></div>'+
+  '</div></div>';
+}
+
+window.renderArchProjView=function(){
+  const box=document.getElementById('archproj-body');
+  if(!box)return;
+  if(apDrawn){apRender();return;}
+  box.innerHTML=
+    '<div class="sec-head"><div class="sec-title">🏗 Architectural Projection हमीपत्र</div>'+
+    '<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="apNew()">New</button>'+
+    '<button class="btn btn-gold" onclick="apPrint()">🖨 Print / PDF</button></div></div>'+
+    '<div class="g2" style="align-items:start;gap:16px">'+
+    '<div>'+
+      '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">अर्जदार</div></div><div class="card-body">'+
+        '<div class="fg"><label>अर्जदार (श्री/श्रीमती/सौ.)</label><input class="fi" id="ap-applicant" oninput="apRender()" placeholder="पूर्ण नाव"></div>'+
+        '<div class="fg"><label>संपूर्ण पत्ता</label><textarea class="fi" id="ap-addr" rows="2" oninput="apRender()" placeholder="पत्ता"></textarea></div>'+
+        '<div class="form-row c2"><div class="fg"><label>संपर्क क्र.</label><input class="fi" id="ap-contact" oninput="apRender()"></div>'+
+        '<div class="fg"><label>दिनांक</label><input class="fi" type="date" id="ap-date" oninput="apRender()"></div></div>'+
+        '<div class="fg"><label>ठिकाण</label><input class="fi" id="ap-city" value="सोलापूर" oninput="apRender()"></div>'+
+      '</div></div>'+
+      '<div class="card"><div class="card-head"><div class="card-title">जागेचा तपशील</div></div><div class="card-body">'+
+        '<div class="form-row c2"><div class="fg"><label>पेठ</label><input class="fi" id="ap-peth" oninput="apRender()"></div>'+
+        '<div class="fg"><label>नगर</label><input class="fi" id="ap-nagar" oninput="apRender()"></div></div>'+
+        '<div class="fg"><label>रोड</label><input class="fi" id="ap-road" oninput="apRender()"></div>'+
+        '<div class="form-row c2"><div class="fg"><label>जुना स. नं.</label><input class="fi" id="ap-oldsn" oninput="apRender()"></div>'+
+        '<div class="fg"><label>नवा स. नं. क्र.</label><input class="fi" id="ap-newsn" oninput="apRender()"></div></div>'+
+        '<div class="form-row c2"><div class="fg"><label>टी.पी. क्र.</label><input class="fi" id="ap-tp" oninput="apRender()"></div>'+
+        '<div class="fg"><label>अंतिम भूखंड क्र.</label><input class="fi" id="ap-finalplot" oninput="apRender()"></div></div>'+
+        '<div class="form-row c2"><div class="fg"><label>उप भूखंड क्र.</label><input class="fi" id="ap-subplot" oninput="apRender()"></div>'+
+        '<div class="fg"><label>विषय / बाबत</label><input class="fi" id="ap-action" value="बांधकाम परवानगी / एकत्रीकरण / विभागणी" oninput="apRender()"></div></div>'+
+      '</div></div>'+
+    '</div>'+
+    '<div><div style="margin-bottom:8px;font-size:11px;color:var(--mut);font-weight:600">Preview — A4</div>'+
+    '<div id="ap-pv" style="transform:scale(0.72);transform-origin:top left;width:210mm"></div></div>'+
+    '</div>';
+  apDrawn=true;
+  apNew();
+};
+
+window.apNew=function(){
+  const d=pq('date');if(d)d.value=apToday();
+  ['applicant','addr','contact','peth','nagar','road','oldsn','newsn','tp','finalplot','subplot'].forEach(function(id){const e=pq(id);if(e)e.value='';});
+  const city=pq('city');if(city)city.value='सोलापूर';
+  const action=pq('action');if(action)action.value='बांधकाम परवानगी / एकत्रीकरण / विभागणी';
+  apRender();
+};
+
+window.apPrint=function(){
+  const body=pq('pv')?pq('pv').innerHTML:'';
+  const w=window.open('','_blank');
+  if(!w)return alert('Pop-up blocked — allow pop-ups to print.');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Architectural Projection हमीपत्र</title>'+
+  '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">'+
+  '<style>html,body{margin:0;padding:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '.cmp-sheet.aw{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0 auto!important;padding:18mm 18mm!important;box-sizing:border-box!important;box-shadow:none!important;transform:none!important;overflow:hidden!important;background:#fff!important;color:#111;font-size:14pt;line-height:1.65}'+
+  '.cmp-sheet.aw .aw-title{text-align:center;font-weight:700;font-size:16pt;text-decoration:underline;margin:0 0 20px}'+
+  '.cmp-sheet.aw .aw-subject{margin:14px 0;line-height:1.7}'+
+  '.cmp-sheet.aw .aw-sal{text-align:justify;margin:12px 0;line-height:1.7}'+
+  '.cmp-sheet.aw .aw-sign{margin-top:28px;text-align:right}'+
+  '@page{size:A4 portrait;margin:0!important}</style></head><body>'+body+'</body></html>');
+  w.document.close();
+  setTimeout(function(){w.focus();w.print();},700);
+};
+
+if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Projection हमीपत्र';
+})();
+</script>
+
 </body>
 </html>
