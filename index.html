@@ -745,44 +745,6 @@ aside.collapsed .nav-icon svg{width:20px;height:20px}
 .nav-btn.active .nav-icon svg{stroke:var(--gold2,#d4b87a)}
 
 
-
-/* Architect photo on dashboard */
-.dv2-greet{
-  display:flex !important;
-  justify-content:space-between !important;
-  align-items:center !important;
-  gap:16px !important;
-  flex-wrap:wrap !important;
-}
-.dv2-arch-photo-wrap{flex-shrink:0}
-.dv2-arch-photo{
-  width:72px;height:72px;border-radius:50%;
-  object-fit:cover;
-  border:3px solid rgba(255,255,255,.9);
-  box-shadow:0 8px 28px rgba(28,27,25,.12), 0 0 0 1px rgba(184,151,90,.25);
-}
-.dv2-arch-photo-placeholder{
-  width:72px;height:72px;border-radius:50%;
-  border:2px dashed var(--bdr2);
-  background:rgba(255,252,247,.7);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;gap:2px;
-  font-family:var(--font-display),serif;font-size:18px;font-weight:600;color:var(--grn);
-}
-.dv2-arch-photo-placeholder small{
-  font-family:var(--font-body),sans-serif;font-size:8px;font-weight:700;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--mut);
-}
-.dv2-arch-photo-placeholder:hover{border-color:var(--gold);background:var(--gold-bg)}
-.arch-photo-preview{
-  width:56px;height:56px;border-radius:50%;flex-shrink:0;
-  background:var(--grn);color:var(--gold2);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display),serif;font-weight:600;font-size:16px;
-  overflow:hidden;cursor:pointer;border:2px solid var(--bdr);
-}
-.arch-photo-preview #arch-photo-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
-
 /* ── Subtle glassmorphism (targeted only) ── */
 .gs-glass{
   background:rgba(255,252,247,.55) !important;
@@ -2790,23 +2752,6 @@ html{transition:background .3s,color .3s}
             </label>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding:12px;background:var(--surf2);border-radius:10px;border:1px solid var(--bdr)">
-          <div id="arch-photo-preview" class="arch-photo-preview" onclick="document.getElementById('arch-photo-input').click()" title="Click to change">
-            <img id="arch-photo-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
-            <span id="arch-photo-fallback">VE</span>
-          </div>
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:3px">Architect Photo</div>
-            <div style="font-size:11px;color:var(--mut);margin-bottom:6px">Dashboard greeting वर दिसेल</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--grn);color:#fff;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">
-                📷 Add / Change Photo
-                <input type="file" id="arch-photo-input" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="updateArchPhoto(this)">
-              </label>
-              <button type="button" class="btn btn-s btn-sm" onclick="removeArchPhoto()">Remove</button>
-            </div>
-          </div>
-        </div>
         <p>This information appears on all receipts and PDFs.</p>
         <div class="form-row c2">
           <div class="fg"><label>Office / Studio Name</label><input class="fi" id="s-office-name" placeholder="Greenhouse Studio"></div>
@@ -3909,56 +3854,6 @@ function updateLogo(input){
   };
   reader.readAsDataURL(file);
 }
-
-function updateArchPhoto(input){
-  const file = input.files && input.files[0];
-  if(!file) return;
-  if(file.size > 800000){ if(typeof showErr==='function') showErr('Photo 800KB पेक्षा कमी ठेवा'); else alert('Photo max 800KB'); return; }
-  const reader = new FileReader();
-  reader.onload = function(e){
-    officeInfo.archPhoto = e.target.result;
-    if(typeof saveAll==='function') saveAll();
-    refreshArchPhotoUI();
-    if(typeof renderDashboard==='function') try{ renderDashboard(); }catch(err){}
-    if(typeof showOk==='function') showOk('Architect photo updated');
-  };
-  reader.readAsDataURL(file);
-}
-function removeArchPhoto(){
-  officeInfo.archPhoto = '';
-  if(typeof saveAll==='function') saveAll();
-  refreshArchPhotoUI();
-  if(typeof renderDashboard==='function') try{ renderDashboard(); }catch(err){}
-  if(typeof showOk==='function') showOk('Architect photo removed');
-}
-function refreshArchPhotoUI(){
-  const img = document.getElementById('arch-photo-img');
-  const fb = document.getElementById('arch-photo-fallback');
-  const photo = (officeInfo && officeInfo.archPhoto) || '';
-  const initials = ((officeInfo && officeInfo.arch) || 'VE').split(/\s+/).map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
-  if(fb) fb.textContent = initials || 'VE';
-  if(img){
-    if(photo){
-      img.src = photo;
-      img.style.display = 'block';
-      if(fb) fb.style.display = 'none';
-    } else {
-      img.removeAttribute('src');
-      img.style.display = 'none';
-      if(fb) fb.style.display = 'flex';
-    }
-  }
-  // Sidebar user avatar if present
-  const sideAv = document.querySelector('.user-av');
-  if(sideAv){
-    if(photo){
-      sideAv.innerHTML = '<img src="'+photo+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-    } else if(!sideAv.querySelector('img')){
-      /* keep text initials */
-    }
-  }
-}
-
 
 // ── Claude API Key Management ──
 function getApiKey(){
@@ -5140,19 +5035,8 @@ function renderDashboard(){
   }
 
   var html = "";
-  var archPhoto = (officeInfo && officeInfo.archPhoto) || '';
-  var archInitials = esc(archFirst).slice(0,2).toUpperCase() || 'VE';
-  html += '<div class="dv2-greet">';
-  html += '<div class="dv2-greet-text"><h1>' + greet + ', ' + esc(archFirst) + '</h1>';
-  html += '<p>Let\'s design better spaces, together.</p></div>';
-  html += '<div class="dv2-arch-photo-wrap" title="Change in Settings">';
-  if(archPhoto){
-    html += '<img class="dv2-arch-photo" src="'+String(archPhoto).replace(/"/g,'&quot;')+'" alt="'+esc(archFirst)+'">';
-  } else {
-    html += '<button type="button" class="dv2-arch-photo-placeholder" onclick="switchView(\'settings\')">';
-    html += '<span>'+archInitials+'</span><small>Add photo</small></button>';
-  }
-  html += '</div></div>';
+  html += '<div class="dv2-greet"><div><h1>' + greet + ', ' + esc(archFirst) + ' <span style="font-size:22px">&#9728;</span></h1>';
+  html += '<p>Let\'s design better spaces, together.</p></div></div>';
 
   // Quick interactive chips
   html += '<div class="dv2-chips">';
@@ -6380,45 +6264,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:#1a1a18;background:#fff;-w
 </div>
 
 <script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500));<\/script>
-
-
-<!-- Mobile bottom navigation -->
-<nav id="mob-bottom-nav" class="mob-bottom-nav" aria-label="Mobile navigation">
-  <button type="button" class="mob-nav-item active" data-mob="dashboard" onclick="mobNav('dashboard')">
-    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="0.5"/><rect x="13" y="3" width="8" height="5" rx="0.5"/><rect x="13" y="10" width="8" height="11" rx="0.5"/><rect x="3" y="13" width="8" height="8" rx="0.5"/></svg></span>
-    <span class="mob-nav-lbl">Home</span>
-  </button>
-  <button type="button" class="mob-nav-item" data-mob="projects" onclick="mobNav('projects')">
-    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
-    <span class="mob-nav-lbl">Projects</span>
-  </button>
-  <button type="button" class="mob-nav-item mob-nav-fab" onclick="mobQuickAdd()" title="Add">
-    <span class="mob-nav-fab-btn">+</span>
-  </button>
-  <button type="button" class="mob-nav-item" data-mob="payments" onclick="mobNav('payments')">
-    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M8 21h8"/><path d="M5 9h14"/><path d="M7 9l-2 6h4L7 9zM17 9l-2 6h4l-2-6z"/></svg></span>
-    <span class="mob-nav-lbl">Pay</span>
-  </button>
-  <button type="button" class="mob-nav-item" data-mob="menu" onclick="mobNav('menu')">
-    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
-    <span class="mob-nav-lbl">Menu</span>
-  </button>
-</nav>
-<div id="mob-quick-sheet" class="mob-quick-sheet" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="mob-quick-sheet-inner gs-glass-strong">
-    <div class="mob-quick-title">Quick add</div>
-    <button type="button" onclick="mobQuickAction('contact')">+ Contact</button>
-    <button type="button" onclick="mobQuickAction('project')">+ Project</button>
-    <button type="button" onclick="mobQuickAction('payment')">+ Payment</button>
-    <button type="button" class="mob-quick-cancel" onclick="document.getElementById('mob-quick-sheet').classList.remove('open')">Cancel</button>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  setTimeout(function(){ if(typeof refreshArchPhotoUI==='function') refreshArchPhotoUI(); }, 200);
-});
-</script>
 </body></html>`;
 
   const w = window.open('','_blank');
@@ -22726,6 +22571,39 @@ window.switchView=function(v){
 
 })();
 </script>
+
+
+<!-- Mobile bottom navigation -->
+<nav id="mob-bottom-nav" class="mob-bottom-nav" aria-label="Mobile navigation">
+  <button type="button" class="mob-nav-item active" data-mob="dashboard" onclick="mobNav('dashboard')">
+    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="0.5"/><rect x="13" y="3" width="8" height="5" rx="0.5"/><rect x="13" y="10" width="8" height="11" rx="0.5"/><rect x="3" y="13" width="8" height="8" rx="0.5"/></svg></span>
+    <span class="mob-nav-lbl">Home</span>
+  </button>
+  <button type="button" class="mob-nav-item" data-mob="projects" onclick="mobNav('projects')">
+    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
+    <span class="mob-nav-lbl">Projects</span>
+  </button>
+  <button type="button" class="mob-nav-item mob-nav-fab" onclick="mobQuickAdd()" title="Add">
+    <span class="mob-nav-fab-btn">+</span>
+  </button>
+  <button type="button" class="mob-nav-item" data-mob="payments" onclick="mobNav('payments')">
+    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M8 21h8"/><path d="M5 9h14"/><path d="M7 9l-2 6h4L7 9zM17 9l-2 6h4l-2-6z"/></svg></span>
+    <span class="mob-nav-lbl">Pay</span>
+  </button>
+  <button type="button" class="mob-nav-item" data-mob="menu" onclick="mobNav('menu')">
+    <span class="mob-nav-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
+    <span class="mob-nav-lbl">Menu</span>
+  </button>
+</nav>
+<div id="mob-quick-sheet" class="mob-quick-sheet" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="mob-quick-sheet-inner gs-glass-strong">
+    <div class="mob-quick-title">Quick add</div>
+    <button type="button" onclick="mobQuickAction('contact')">+ Contact</button>
+    <button type="button" onclick="mobQuickAction('project')">+ Project</button>
+    <button type="button" onclick="mobQuickAction('payment')">+ Payment</button>
+    <button type="button" class="mob-quick-cancel" onclick="document.getElementById('mob-quick-sheet').classList.remove('open')">Cancel</button>
+  </div>
+</div>
 
 </body>
 </html>
