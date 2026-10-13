@@ -536,7 +536,36 @@ aside.collapsed .sb-collapse-btn .sb-collapse-icon{
 .dv2-kpi-bar{height:4px;border-radius:4px;background:var(--surf2);margin-top:10px;overflow:hidden}
 .dv2-kpi-bar>i{display:block;height:100%;border-radius:4px}
 .dv2-row{display:grid;gap:14px;margin-bottom:14px}
-.dv2-row-main{grid-template-columns:1.35fr 1.15fr .9fr}
+.dv2-row-feat-tasks{
+  display:grid !important;
+  grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) !important;
+  gap:16px !important;
+  margin-bottom:16px;
+  align-items:stretch;
+}
+.dv2-row-feat-tasks > .dv2-feat{
+  min-height:300px !important;
+  max-height:none;
+  height:auto;
+}
+.dv2-row-feat-tasks > .dv2-tasks{
+  min-height:300px;
+  margin:0 !important;
+  height:100%;
+  max-height:420px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.dv2-row-feat-tasks .tk-list{
+  overflow-y:auto;
+  flex:1;
+  max-height:none;
+}
+@media(max-width:900px){
+  .dv2-row-feat-tasks{grid-template-columns:1fr !important}
+}
+.dv2-row-main{grid-template-columns:1.25fr 1fr}
 .dv2-row-mid{grid-template-columns:1fr 1.25fr .85fr}
 .dv2-row-bot{grid-template-columns:1.2fr 1.1fr 1fr}
 @media(max-width:1100px){
@@ -548,7 +577,7 @@ aside.collapsed .sb-collapse-btn .sb-collapse-icon{
 .dv2-link{font-size:12px;font-weight:600;color:var(--grn3);background:none;border:none;cursor:pointer;font-family:inherit;white-space:nowrap}
 .dv2-link:hover{color:var(--grn)}
 /* Featured project */
-.dv2-feat{position:relative;border-radius:16px;overflow:hidden;min-height:360px;background:linear-gradient(145deg,#0f1a14,#1a2e22);color:#fff;box-shadow:0 12px 40px rgba(15,26,20,.18)}
+.dv2-feat{position:relative;border-radius:16px;overflow:hidden;min-height:280px;background:linear-gradient(145deg,#0f1a14,#1a2e22);color:#fff;box-shadow:0 12px 40px rgba(15,26,20,.18)}
 .dv2-feat-bg{position:absolute;inset:0;background-size:cover;background-position:center top;background-repeat:no-repeat;opacity:1;filter:saturate(1.05) contrast(1.02)}
 .dv2-feat-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,14,11,.88) 0%,rgba(8,14,11,.45) 38%,rgba(8,14,11,.12) 62%,rgba(8,14,11,.05) 100%);pointer-events:none}
 .dv2-feat-body{position:relative;z-index:1;padding:20px;height:100%;min-height:360px;display:flex;flex-direction:column;justify-content:flex-end}
@@ -749,56 +778,85 @@ aside.collapsed .nav-icon svg{width:20px;height:20px}
 
 /* Daily work / drawing delivery tasks */
 .dv2-tasks{
-  margin:16px 0 18px;
-  border-color:rgba(184,151,90,.35);
-  background:rgba(255,252,247,.88);
+  background:linear-gradient(165deg,rgba(255,252,247,.97),rgba(247,245,240,.92));
   backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.75);
+  border:1px solid rgba(184,151,90,.3);
   border-radius:18px;
-  padding:16px 18px 14px;
-  box-shadow:0 4px 20px rgba(28,27,25,.04);
+  padding:14px 16px 12px;
+  box-shadow:0 8px 28px rgba(28,27,25,.06);
+  position:relative;
 }
 .dv2-tasks-head{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;
 }
 .dv2-tasks-head h2{
-  font-family:var(--font-display),serif;font-size:18px;font-weight:600;margin:0;letter-spacing:-.02em;color:var(--ink);
+  font-family:var(--font-display),serif;font-size:16px;font-weight:700;margin:0;letter-spacing:-.02em;color:var(--ink);
+  display:flex;align-items:center;gap:8px;
 }
-.dv2-tasks-filters{display:flex;gap:6px;flex-wrap:wrap}
+.dv2-tasks-head h2 .tk-ico{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,var(--grn),#3d5c40);
+  color:#e8d5a3;display:inline-flex;align-items:center;justify-content:center;font-size:14px;
+  box-shadow:0 3px 10px rgba(44,62,45,.2);
+}
+.dv2-tasks-filters{display:flex;gap:4px;flex-wrap:wrap}
 .tk-filter{
-  border:none;background:transparent;border-radius:999px;padding:6px 12px;font-size:11px;font-weight:700;
+  border:none;background:transparent;border-radius:999px;padding:4px 9px;font-size:10px;font-weight:700;
   color:var(--mut);cursor:pointer;font-family:inherit;
 }
 .tk-filter.active{background:var(--ink);color:#f7f5f0}
 .tk-list{display:flex;flex-direction:column;gap:8px}
 .tk-item{
-  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
-  padding:12px 14px;border-radius:14px;border:1px solid var(--bdr);
-  background:var(--surf);transition:transform .15s,box-shadow .15s;
+  display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;
+  padding:12px 12px;border-radius:12px;border:1px solid rgba(28,27,25,.06);
+  background:#fff;box-shadow:0 2px 8px rgba(28,27,25,.04);
+  transition:transform .15s,box-shadow .15s;position:relative;
 }
-.tk-item:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(28,27,25,.06)}
-.tk-item.done{opacity:.55}
+.tk-item::before{
+  content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;
+  background:var(--grn);opacity:.4;
+}
+.tk-item.urgent-item::before{background:var(--red);opacity:.75}
+.tk-item.high-item::before{background:#c9a84c;opacity:.85}
+.tk-item:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(28,27,25,.08)}
+.tk-item.done{opacity:.5}
 .tk-item.done .tk-title{text-decoration:line-through}
 .tk-check{
   width:22px;height:22px;border-radius:50%;border:2px solid var(--bdr2);
-  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;margin-top:3px;
 }
 .tk-item.done .tk-check{background:var(--rgreen);border-color:var(--rgreen);color:#fff;font-size:11px}
-.tk-title{font-size:13px;font-weight:700;color:var(--ink)}
-.tk-meta{font-size:11px;color:var(--mut);margin-top:3px;display:flex;flex-wrap:wrap;gap:8px}
-.tk-badge{
-  font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-  padding:3px 8px;border-radius:999px;
+.tk-client{
+  font-family:var(--font-display),serif;
+  font-size:15px;font-weight:700;letter-spacing:-.02em;
+  color:var(--grn);line-height:1.25;margin:0 0 3px;
+  display:flex;align-items:center;gap:6px;
 }
+.tk-client .tk-client-ico{
+  width:20px;height:20px;border-radius:50%;background:rgba(44,62,45,.1);
+  display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;
+}
+.tk-title{
+  font-family:var(--font-display),serif;
+  font-size:14px;font-weight:700;letter-spacing:-.015em;
+  color:var(--ink);line-height:1.3;margin:0;
+  display:flex;align-items:flex-start;gap:5px;
+}
+.tk-title .tk-dwg-ico{font-size:13px;opacity:.85;flex-shrink:0}
+.tk-meta{font-size:10px;color:var(--mut);margin-top:5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tk-badge{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px}
 .tk-badge.urgent{background:rgba(166,61,50,.12);color:var(--red)}
 .tk-badge.high{background:rgba(184,151,90,.18);color:#8a6a28}
 .tk-badge.normal{background:rgba(44,62,45,.1);color:var(--grn)}
 .tk-badge.low{background:var(--surf2);color:var(--mut)}
-.tk-due{font-family:var(--font-display),serif;font-size:12px;font-weight:600;white-space:nowrap}
-.tk-due.overdue{color:var(--red)}
-.tk-due.soon{color:#8a6a28}
+.tk-due{font-family:var(--font-display),serif;font-size:12px;font-weight:700;white-space:nowrap;padding:3px 9px;border-radius:999px;background:var(--surf2)}
+.tk-due.overdue{color:#fff;background:var(--red)}
+.tk-due.soon{color:#5c4810;background:rgba(184,151,90,.22)}
 .tk-actions{display:flex;gap:4px}
-.tk-empty{text-align:center;padding:20px;color:var(--mut);font-size:13px}
+.tk-empty{text-align:center;padding:24px 12px;color:var(--mut);font-size:13px;border:1.5px dashed var(--bdr2);border-radius:12px}
+.tk-empty-ico{font-size:26px;margin-bottom:6px;opacity:.7}
+#m-task .modal-box{max-width:520px}
+
 #m-task .modal-box{max-width:520px}
 
 /* ═══════════════════════════════════════════
@@ -5304,19 +5362,8 @@ function renderDashboard(){
   html += '<div class="dv2-kpi dv2-card-3d" onclick="switchView(\'contacts\')" title="Clients"><div class="dv2-kpi-top"><div class="dv2-kpi-ico" style="background:#eef0fe">&#128101;</div><div><div class="dv2-kpi-val">' + contacts.length + '</div><div class="dv2-kpi-lbl">Clients</div></div></div><div class="dv2-kpi-sub">' + (overduePay ? ('! ' + overduePay + ' overdue') : 'All clear') + '</div><div class="dv2-kpi-bar"><i style="width:'+(contacts.length?Math.min(100,Math.round((contacts.length-overduePay)/Math.max(contacts.length,1)*100)):0)+'%;background:#5a7a9a"></i></div>' + spark('#5a7a9a',5) + '</div>';
   html += '</div>';
 
-  // Daily work tasks — prominent position after KPIs
-  try {
-    if (typeof window.buildTasksDashboardHTML === 'function') {
-      html += window.buildTasksDashboardHTML() || '';
-    } else {
-      html += '<div class="dv2-tasks"><div class="dv2-tasks-head"><h2>📋 आजचे काम · Drawing Delivery</h2>'+
-        '<button type="button" class="btn btn-gold btn-sm" onclick="openTaskModal()">+ Add Work</button></div>'+
-        '<div class="tk-empty">Loading tasks… refresh if this stays</div></div>';
-    }
-  } catch (e) { console.warn('tasks render', e); }
-
-  // MAIN ROW: Featured | Pipeline+Actions | Calendar+Upcoming
-  html+='<div class="dv2-row dv2-row-main">';
+  // Featured + Daily Work side by side
+  html+='<div class="dv2-row dv2-row-feat-tasks">';
 
   // Featured — taller, clearer image, progress ring
   html+='<div class="dv2-feat" '+(featured?'onclick="if(typeof openPD===\'function\')openPD(\''+featured.id+'\')" style="cursor:pointer"':'')+">";
@@ -5343,6 +5390,22 @@ function renderDashboard(){
     html+="<h2>No projects yet</h2><div class=\"dv2-feat-meta\">Add a project to feature it here</div>";
   }
   html+="</div></div>";
+
+  // Tasks column (side by side with Featured)
+  try {
+    if (typeof window.buildTasksDashboardHTML === 'function') {
+      html += window.buildTasksDashboardHTML() || '';
+    } else {
+      html += '<div class="dv2-tasks"><div class="dv2-tasks-head"><h2><span class="tk-ico">📋</span> आजचे काम · Drawing Delivery</h2>'+
+        '<button type="button" class="btn btn-gold btn-sm" onclick="openTaskModal()">+ Add Work</button></div>'+
+        '<div class="tk-empty"><div class="tk-empty-ico">📐</div>Loading…</div></div>';
+    }
+  } catch (e) { console.warn('tasks render', e); }
+
+  html+='</div>'; // end dv2-row-feat-tasks
+
+  // Next row: Pipeline + Calendar
+  html+='<div class="dv2-row dv2-row-main">';
 
   // Middle column: Pipeline + Today's Action
   html+='<div style="display:flex;flex-direction:column;gap:14px">';
@@ -23184,10 +23247,10 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
     </div>
     <div class="modal-body">
       <input type="hidden" id="tk-id">
-      <div class="fg"><label>काम / Drawing *</label><input class="fi" id="tk-title" placeholder="उदा. Working Drawing Sheet 3, 3D View, Sanction Plan..."></div>
+      <div class="fg"><label style="font-size:13px;font-weight:800;color:var(--ink);letter-spacing:.02em">📐 काम / Drawing *</label><input class="fi" id="tk-title" style="font-size:15px;font-weight:600" placeholder="उदा. Working Drawing Sheet 3, 3D View, Sanction Plan..."></div>
       <div class="form-row c2">
-        <div class="fg"><label>Client</label>
-          <select class="fi fi-sel" id="tk-client"><option value="">— Select —</option></select>
+        <div class="fg"><label style="font-size:13px;font-weight:800;color:var(--grn);letter-spacing:.02em">👤 Client *</label>
+          <select class="fi fi-sel" id="tk-client" style="font-size:15px;font-weight:600"><option value="">— Select —</option></select>
         </div>
         <div class="fg"><label>Project</label>
           <select class="fi fi-sel" id="tk-project"><option value="">— Select —</option></select>
@@ -23298,7 +23361,7 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
 
     var html = '<div class="dv2-tasks" id="dv2-tasks">';
     html += '<div class="dv2-tasks-head">';
-    html += '<h2>📋 आजचे काम · Drawing Delivery</h2>';
+    html += '<h2><span class="tk-ico">📋</span> आजचे काम · Drawing Delivery</h2>';
     html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
     html += '<div class="dv2-tasks-filters">';
     [['pending','Pending'],['today','Today'],['urgent','Urgent'],['done','Done'],['all','All']].forEach(function(f){
@@ -23309,7 +23372,7 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
     html += '</div></div>';
 
     if(!list.length){
-      html += '<div class="tk-empty">No items — <b onclick="openTaskModal()" style="cursor:pointer;color:var(--grn)">+ Add</b> daily drawing / client delivery work</div>';
+      html += '<div class="tk-empty"><div class="tk-empty-ico">📐</div>No work items yet<br><b onclick="openTaskModal()" style="cursor:pointer;color:var(--grn)">+ Add Drawing / Work</b></div>';
     } else {
       html += '<div class="tk-list">';
       list.forEach(function(tk){
@@ -23323,24 +23386,30 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
         else { dueTxt = d+' days'; }
         var cn = clientName(tk.clientId);
         var pn = projectName(tk.projectId);
-        html += '<div class="tk-item'+(tk.status==='done'?' done':'')+'" data-id="'+tk.id+'">';
+        var urg = tk.urgency||'normal';
+        var itemCls = 'tk-item'+(tk.status==='done'?' done':'')+(urg==='urgent'?' urgent-item':urg==='high'?' high-item':'');
+        html += '<div class="'+itemCls+'" data-id="'+tk.id+'">';
         html += '<div class="tk-check" onclick="toggleTaskDone(\''+tk.id+'\')" title="Mark done">'+(tk.status==='done'?'✓':'')+'</div>';
-        html += '<div>';
-        html += '<div class="tk-title">'+esc(tk.title||'')+'</div>';
+        html += '<div style="min-width:0">';
+        if(cn){
+          html += '<div class="tk-client"><span class="tk-client-ico">👤</span>'+esc(cn)+'</div>';
+        } else {
+          html += '<div class="tk-client" style="opacity:.45"><span class="tk-client-ico">👤</span>No client</div>';
+        }
+        html += '<div class="tk-title"><span class="tk-dwg-ico">📐</span><span>'+esc(tk.title||'Untitled work')+'</span></div>';
         html += '<div class="tk-meta">';
-        html += '<span class="tk-badge '+(tk.urgency||'normal')+'">'+urgencyLabel(tk.urgency)+'</span>';
-        if(tk.dtype) html += '<span>'+esc(tk.dtype)+'</span>';
-        if(cn) html += '<span>· '+esc(cn)+'</span>';
-        if(pn) html += '<span>· '+esc(pn)+'</span>';
+        html += '<span class="tk-badge '+urg+'">'+urgencyLabel(urg)+'</span>';
+        if(tk.dtype) html += '<span>📄 '+esc(tk.dtype)+'</span>';
+        if(pn) html += '<span>🏗 '+esc(pn)+'</span>';
         html += '</div></div>';
         html += '<div style="text-align:right">';
         html += '<div class="tk-due '+dueCls+'">'+dueTxt+'</div>';
-        html += '<div class="tk-actions" style="margin-top:6px;justify-content:flex-end">';
+        html += '<div class="tk-actions" style="margin-top:8px;justify-content:flex-end">';
         html += '<button type="button" class="btn btn-s btn-sm" onclick="openTaskModal(\''+tk.id+'\')">Edit</button>';
         html += '<button type="button" class="btn btn-s btn-sm" onclick="deleteTask(\''+tk.id+'\')">🗑</button>';
         html += '</div></div></div>';
       });
-      html += '</div>';
+html += '</div>';
     }
     html += '</div>';
     return html;
