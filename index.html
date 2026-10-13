@@ -20900,7 +20900,9 @@ const EST_LIB=[
  ['Terrace waterproofing (brick bat)','Sq.mt',1080,'Providing cement based water proofing treatment to terraces (Indian water proofing or alike) with brick bats laid in required slope to drain the water for any span after cleaning the base surface. Applying a coat of cement slurry admixed with approved water proofing compound and laying the brick bats on bottom layer in C.M.1:5 admixed with approved water proofing compound filling up to half depth of brick bats, curing this layer for 3 days, applying cement slurry over this layer joints of brick bats with C.M 1:3 admixed with approved water proofing compound and finally top finishing with average 20 mm thick layers of same mortar added with jute fiber at 1 Kilogram per bag including finishing the surface smooth with cement slurry admixed with approved water proofing compound. Marking finished surface with false squares of 300 mm x 300 mm. making the junctions at the parapet rounded and tapered top for required height. with drip mould at the junction of plaster and parapet and curing and covering 10 years Guarantee against leakproofness on Court fee stamp paper of Rs. 500/- including ponding test etc. complete.'],
  ['Outdoor rock finish vitrified tiles 20 mm','Sq.mt',2850,'Supply & Fixing of Rock / Stone Finished out door vitrified flooring Tiles 20 mm thick and required width wide in plain pattern including Cement float, filling joints, with neat cement slurry, Natural sand, curing and cleaning complete. with prior approval of concerned Superitending Engineer.'],
  ['Underground water tank (6\' x 4\' x 4\')','L-S',20000,'Providing and Fixing Underground Water Tank ( Size - 6\' x 4\' x 4\' )'],
- ['TMT Fe-500 reinforcement','M.T',53000,'Providing and fixing in position TMT - FE -500 bar reinforcement of various diameters for R.C.C. pile caps, footings, foundations, slabs, beams columns, canopies, staircase, newels, chajjas, lintels pardis, copings, fins, arches etc. as per detailed designs, drawings and schedules. including cutting, bending, hooking the bars, binding with wires or tack welding and supporting as required complete. Bd.F.17, Page Number 306']
+ ['TMT Fe-500 reinforcement','M.T',53000,'Providing and fixing in position TMT - FE -500 bar reinforcement of various diameters for R.C.C. pile caps, footings, foundations, slabs, beams columns, canopies, staircase, newels, chajjas, lintels pardis, copings, fins, arches etc. as per detailed designs, drawings and schedules. including cutting, bending, hooking the bars, binding with wires or tack welding and supporting as required complete. Bd.F.17, Page Number 306'],
+ ['Electrical works (optional)','L-S',0,'Providing and fixing complete electrical installation for the floor including concealed / surface conduit, copper wiring, switches, sockets, MCB DB, earthing and light points as per requirement. (Optional — enter lump-sum amount manually; no quantity calculation.)'],
+ ['Plumbing & sanitary works (optional)','L-S',0,'Providing and fixing complete plumbing and sanitary installation for the floor including water supply lines, drainage, traps, WC, wash basin, taps and fittings as per requirement. (Optional — enter lump-sum amount manually; no quantity calculation.)']
 ];
 
 /* ── ready-made section templates (item order as used in the studio's abstracts) ── */
@@ -20918,10 +20920,10 @@ const EST_FOUNDATION={
     pick:[0,1,3,5]
   }
 };
-const EST_SUPER=[6,7,8,9,10,11,12,13,14,24,15,16,17,18,19,20,21,22,23,25,29];
+const EST_SUPER=[6,7,8,9,10,11,12,13,14,24,15,16,17,18,19,20,21,22,23,25,29,30,31];
 const EST_TPL={
  ground:{name:'Ground Floor',bldg:true,pick:null},
- first:{name:'First Floor',bldg:true,pick:[6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,21,25,26,29]},
+ first:{name:'First Floor',bldg:true,pick:[6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,21,25,26,29,30,31]},
  compound:{name:'Compound Wall & Site Development',bldg:false,pick:[0,1,2,4,5,6,10,11,12,18,20,27,28,29]},
  blank:{name:'New Section',bldg:true,pick:[]}
 };
@@ -20960,7 +20962,17 @@ function eWords(num){
 
 /* ── totals ── */
 function estSecTotal(s){return (s.items||[]).reduce((a,i)=>a+estAmt(i),0);}
-function estAmt(i){const q=parseFloat(i.q),r=parseFloat(i.r);return (isNaN(q)||isNaN(r))?0:q*r;}
+function estAmt(i){
+  const u=String((i&&i.u)||'').toLowerCase();
+  const q=parseFloat(i.q), r=parseFloat(i.r);
+  // L-S / optional: enter amount in Rate field (qty optional, defaults to 1)
+  if(/l-?s|lump/.test(u)){
+    if(isNaN(r)) return 0;
+    if(isNaN(q) || !i.q || i.q==='') return r;
+    return q*r;
+  }
+  return (isNaN(q)||isNaN(r))?0:q*r;
+}
 function estTotals(){
   const bld=estSec.filter(s=>s.bldg),oth=estSec.filter(s=>!s.bldg);
   const bldSum=bld.reduce((a,s)=>a+estSecTotal(s),0);
@@ -21132,8 +21144,10 @@ window.estFromProject=function(pid){
 /* ══════════════════ sections ══════════════════ */
 function estLibRow(i){
   const L=EST_LIB[i];
-  const row={d:L[3],u:L[1],q:'',r:L[2],cat:''};
-  row.cat=estItemCat({d:L[0]+' '+L[3]});
+  const isLS=/l-?s|lump/i.test(String(L[1]||''));
+  const row={d:L[3],u:L[1],q:isLS?'1':'',r:(isLS && !L[2])?'':L[2],cat:''};
+  row.cat=estItemCat({d:L[0]+' '+L[3],u:L[1]});
+  if(isLS) row.manual=true;
   return row;
 }
 function estFoundPick(){
@@ -21284,6 +21298,23 @@ window.estMoveItem=function(si,i,dir){
 window.estDelSec=function(i){if(!confirm('Remove this section?'))return;estSec.splice(i,1);estDrawSecs();estRender();};
 window.estSecUpd=function(i,k,v){estSec[i][k]=(k==='bldg')?!!v:v;estDrawSecs();estRender();};
 window.estAddItem=function(si){estSec[si].items.push({d:'',u:'Cu.mt',q:'',r:''});estDrawSecs();estRender();};
+window.estAddOptionalLS=function(si,kind){
+  if(!estSec[si]) return;
+  const isEl=kind==='electrical';
+  const row={
+    d: isEl
+      ? 'Providing and fixing complete electrical installation for this floor including conduit, copper wiring, switches, sockets, MCB DB, earthing and light points as required. (Optional — enter amount only.)'
+      : 'Providing and fixing complete plumbing and sanitary installation for this floor including water supply, drainage, traps, WC, basin, taps and fittings as required. (Optional — enter amount only.)',
+    u:'L-S',
+    q:'1',
+    r:'',
+    cat: isEl ? 'ELECTRICAL (OPTIONAL)' : 'PLUMBING (OPTIONAL)',
+    manual:true
+  };
+  estSec[si].items.push(row);
+  estDrawSecs();estRender();
+  if(typeof estToast==='function') estToast((isEl?'Electrical':'Plumbing')+' L-S item added — enter amount in Rate field');
+};
 window.estDelItem=function(si,i){estSec[si].items.splice(i,1);estDrawSecs();estRender();};
 window.estItemUpd=function(si,i,k,v){
   estSec[si].items[i][k]=v;
@@ -21305,6 +21336,8 @@ window.estPickLib=function(si,i,v){
 function estItemCat(it){
   if(it && it.cat) return String(it.cat).toUpperCase();
   const t = String((it && (it.d || it.name)) || '').toLowerCase();
+  if(/electr|wiring|mcb|switch|light\s*point/.test(t)) return 'ELECTRICAL (OPTIONAL)';
+  if(/plumb|sanitar|drainage|water\s*supply|wc\b|wash\s*basin/.test(t)) return 'PLUMBING (OPTIONAL)';
   if(/site\s*clean|debris|clearing/.test(t)) return 'SITE CLEANING';
   if(/line\s*out|setting\s*out|layout\s*mark/.test(t)) return 'LINE OUT';
   if(/excav|murum|earth\s*work|soil/.test(t)) return 'EXCAVATION';
@@ -21533,8 +21566,8 @@ function estDrawSecs(){
           <div class="meta">
             <button type="button" class="btn btn-s btn-sm" style="grid-column:1/-1;justify-self:start" onclick="estOpenLib(${si},${i})">📚 SSR Library…</button>
             <select class="u" title="Unit" onchange="estItemUpd(${si},${i},'u',this.value)">${EST_UNITS.map(u=>'<option'+(u===it.u?' selected':'')+'>'+u+'</option>').join('')}</select>
-            <input class="q" value="${ece(it.q)}" placeholder="qty" title="Quantity" oninput="estItemUpd(${si},${i},'q',this.value)">
-            <input class="r" value="${ece(it.r)}" placeholder="rate" title="Rate" oninput="estItemUpd(${si},${i},'r',this.value)">
+            <input class="q" value="${ece(it.q)}" placeholder="${/l-?s|lump/i.test(String(it.u||''))?'1': 'qty'}" title="${/l-?s|lump/i.test(String(it.u||''))?'Qty (optional for L-S)':'Quantity'}" oninput="estItemUpd(${si},${i},'q',this.value)" ${/l-?s|lump/i.test(String(it.u||''))?'style="opacity:.7"':''}>
+            <input class="r" value="${ece(it.r)}" placeholder="${/l-?s|lump/i.test(String(it.u||''))?'Amount ₹':'rate'}" title="${/l-?s|lump/i.test(String(it.u||''))?'Manual lump-sum amount':'Rate'}" oninput="estItemUpd(${si},${i},'r',this.value)">
             <div class="tail"><span class="amt" id="est-amt-${si}-${i}">${e2(estAmt(it))}</span>
               <button class="xb" title="Remove item" onclick="estDelItem(${si},${i})">×</button></div>
           </div>
@@ -21542,8 +21575,11 @@ function estDrawSecs(){
         </div>
       </div>`;
     }).join('')}
-    <div class="secfoot"><button class="btn btn-sm" onclick="estAddItem(${si})">+ Item</button>
-      <span>Section total <span id="est-st-${si}">₹ ${e2(estSecTotal(s))}</span></span></div>`).join('');
+    <div class="secfoot" style="flex-wrap:wrap;gap:6px">
+      <button class="btn btn-sm" onclick="estAddItem(${si})">+ Item</button>
+      <button class="btn btn-sm" onclick="estAddOptionalLS(${si},'electrical')" title="Lump-sum, no qty calc">⚡ Electrical (LS)</button>
+      <button class="btn btn-sm" onclick="estAddOptionalLS(${si},'plumbing')" title="Lump-sum, no qty calc">🔧 Plumbing (LS)</button>
+      <span style="margin-left:auto">Section total <span id="est-st-${si}">₹ ${e2(estSecTotal(s))}</span></span></div>`).join('');
 }
 
 /* ── percentage additions ── */
