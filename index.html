@@ -3663,7 +3663,21 @@ html{transition:background .3s,color .3s}
             </div>
             <input type="hidden" id="p-upi-app" value="GPay">
           </div>
-          <div class="fg"><label>Services <span class="ml">सेवा</span></label><div class="svc-grid" id="svc-grid" style="margin-top:8px"></div></div>
+          <div class="fg"><label>Drawings / Services <span class="ml">रेखाचित्रे / सेवा</span></label>
+            <div style="font-size:11px;color:var(--mut);margin:4px 0 6px;line-height:1.5">
+              <b style="color:var(--grn)">✓ ON (green)</b> = <b>Included</b> on receipt ·
+              <b>OFF</b> = <b>Excluded</b> on receipt
+            </div>
+            <div class="svc-grid" id="svc-grid" style="margin-top:8px"></div>
+            <div style="margin-top:12px;padding:12px;background:var(--surf2);border:1px solid var(--bdr);border-radius:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--ink);margin-bottom:8px">➕ Other drawings <span style="font-weight:400;color:var(--mut)">(manual add)</span></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <input class="fi" id="other-dwg-input" placeholder="e.g. Terrace Plan, Compound Wall..." style="flex:1;min-width:160px">
+                <button type="button" class="btn btn-sm btn-gold" onclick="addOtherDrawing()">+ Add</button>
+              </div>
+              <div id="other-dwg-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+            </div>
+          </div>
         </div>
         <div id="int-sub-panel" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;padding:12px;background:rgba(44,95,138,.04);border:1px solid rgba(44,95,138,.2);border-radius:10px">
           <div style="width:100%;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:6px">🏠 Interior Design — Areas</div>
@@ -4685,23 +4699,88 @@ function generateAndDownloadPDF(pid){
     if(p.deadline) doc.text('Deadline     : '+p.deadline,pageW/2+5,y+20);
     y+=36;
 
-    // ── SERVICES TABLE ─────────────────────────────
+    // ── SERVICES / DRAWINGS INCLUDE & EXCLUDE ─────
+    const includedList=(p.services&&p.services.length)?p.services.slice():[];
+    const excludedList=(p.excludedServices&&p.excludedServices.length)?p.excludedServices.slice():[];
+    const otherList=(p.otherDrawings&&p.otherDrawings.length)?p.otherDrawings.slice():[];
+    // Fallback: if no excluded saved, treat non-selected SERVICES as excluded (optional display)
+    if(!excludedList.length && typeof SERVICES!=='undefined'){
+      /* keep empty — only show what user explicitly left off when saved */
+    }
+
     doc.setFont('helvetica','bold');
     doc.setFontSize(9.5);
     doc.setTextColor(26,58,42);
-    doc.text('SERVICES INCLUDED IN THIS PROJECT',14,y);
+    doc.text('DRAWINGS / SERVICES — INCLUDED',14,y);
     y+=3;
+    const incBody=includedList.length
+      ? includedList.map((s,i)=>[String(i+1),s,'✓ Included'])
+      : [['—','No drawings marked included','—']];
     doc.autoTable({
       startY:y,
-      head:[['#','Service Name','Status']],
-      body:p.services.map((s,i)=>[String(i+1),s,'✓ Included']),
+      head:[['#','Drawing / Service Name','Status']],
+      body:incBody,
       headStyles:{fillColor:[26,58,42],textColor:[201,168,76],fontStyle:'bold',fontSize:8.5,cellPadding:3},
       bodyStyles:{fontSize:8.5,cellPadding:3},
       alternateRowStyles:{fillColor:[250,248,243]},
       columnStyles:{0:{cellWidth:12,halign:'center'},2:{cellWidth:28,halign:'center',textColor:[39,120,60],fontStyle:'bold'}},
       styles:{lineColor:[220,215,205],lineWidth:0.3},
     });
-    y=doc.lastAutoTable.finalY+8;
+    y=doc.lastAutoTable.finalY+6;
+
+    if(excludedList.length){
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(26,58,42);
+      doc.text('DRAWINGS / SERVICES — EXCLUDED',14,y);
+      y+=3;
+      doc.autoTable({
+        startY:y,
+        head:[['#','Drawing / Service Name','Status']],
+        body:excludedList.map((s,i)=>[String(i+1),s,'✗ Excluded']),
+        headStyles:{fillColor:[90,70,60],textColor:[255,230,200],fontStyle:'bold',fontSize:8.5,cellPadding:3},
+        bodyStyles:{fontSize:8.5,cellPadding:3,textColor:[90,70,70]},
+        alternateRowStyles:{fillColor:[252,248,245]},
+        columnStyles:{0:{cellWidth:12,halign:'center'},2:{cellWidth:28,halign:'center',textColor:[160,60,50],fontStyle:'bold'}},
+        styles:{lineColor:[220,215,205],lineWidth:0.3},
+      });
+      y=doc.lastAutoTable.finalY+6;
+    }
+
+    if(otherList.length){
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(26,58,42);
+      doc.text('OTHER DRAWINGS (MANUAL)',14,y);
+      y+=3;
+      doc.autoTable({
+        startY:y,
+        head:[['#','Drawing Name','Status']],
+        body:otherList.map((d,i)=>[String(i+1), d.name||d, (d.included!==false)?'✓ Included':'✗ Excluded']),
+        headStyles:{fillColor:[45,70,90],textColor:[200,220,240],fontStyle:'bold',fontSize:8.5,cellPadding:3},
+        bodyStyles:{fontSize:8.5,cellPadding:3},
+        alternateRowStyles:{fillColor:[248,250,252]},
+        columnStyles:{0:{cellWidth:12,halign:'center'},2:{cellWidth:28,halign:'center',fontStyle:'bold'}},
+        styles:{lineColor:[220,215,205],lineWidth:0.3},
+      });
+      y=doc.lastAutoTable.finalY+6;
+    }
+
+    // Notes
+    if(p.notes && String(p.notes).trim()){
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(26,58,42);
+      doc.text('NOTES',14,y);
+      y+=5;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(60,60,60);
+      const noteLines=doc.splitTextToSize(String(p.notes).trim(), 180);
+      doc.text(noteLines, 14, y);
+      y+= noteLines.length*4.2 + 6;
+    }
+
 
     // ── DRAWINGS STATUS TABLE ──────────────────────
     // Collect all released drawings from payments
@@ -7411,6 +7490,8 @@ function populateProjModal(){
   });
   // Build service chips
   buildServiceGrid();
+  window._otherDrawings=[];
+  if(typeof renderOtherDrawings==='function') renderOtherDrawings();
   // Reset form fields
   ['p-name','p-address','p-total','p-advance','p-notes','p-deadline'].forEach(function(id){
     const el=document.getElementById(id);if(el)el.value='';
@@ -7888,6 +7969,50 @@ function saveProject(){
   if(advance>0)setTimeout(()=>sendWA(pid,null),1000);
 }
 
+window._otherDrawings=window._otherDrawings||[];
+window.addOtherDrawing=function(){
+  var inp=document.getElementById('other-dwg-input');
+  if(!inp) return;
+  var name=(inp.value||'').trim();
+  if(!name){ alert('Drawing name लिहा'); return; }
+  if(!window._otherDrawings) window._otherDrawings=[];
+  if(window._otherDrawings.some(function(d){return d.name===name;})){ alert('Already added'); return; }
+  window._otherDrawings.push({name:name, included:true});
+  inp.value='';
+  renderOtherDrawings();
+};
+window.removeOtherDrawing=function(i){
+  if(!window._otherDrawings) return;
+  window._otherDrawings.splice(i,1);
+  renderOtherDrawings();
+};
+window.toggleOtherDrawing=function(i){
+  if(!window._otherDrawings||!window._otherDrawings[i]) return;
+  window._otherDrawings[i].included=!window._otherDrawings[i].included;
+  renderOtherDrawings();
+};
+window.renderOtherDrawings=function(){
+  var el=document.getElementById('other-dwg-list');
+  if(!el) return;
+  var list=window._otherDrawings||[];
+  if(!list.length){ el.innerHTML='<span style="font-size:11px;color:var(--mut)">No other drawings added</span>'; return; }
+  el.innerHTML=list.map(function(d,i){
+    return '<span class="svc-tog'+(d.included?' on':'')+'" style="cursor:pointer" title="Click = Include / Exclude" onclick="toggleOtherDrawing('+i+')">'+
+      (d.included?'✓ ':'○ ')+String(d.name).replace(/</g,'&lt;')+
+      ' <b onclick="event.stopPropagation();removeOtherDrawing('+i+')" style="margin-left:4px;opacity:.6">×</b></span>';
+  }).join('');
+};
+window.getExcludedServices=function(){
+  var ex=[];
+  document.querySelectorAll('#svc-grid .svc-tog:not(.on)').forEach(function(sp){
+    var s=sp.dataset.svc||sp.textContent.trim();
+    if(s && s!=='Other') ex.push(s);
+  });
+  return ex;
+};
+window.getOtherDrawings=function(){
+  return (window._otherDrawings||[]).slice();
+};
 function getSelectedServices(){
   var svcs=[];
   document.querySelectorAll('#svc-grid .svc-tog.on').forEach(function(sp){
