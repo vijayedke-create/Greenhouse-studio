@@ -2490,6 +2490,11 @@ html{transition:background .3s,color .3s}
   .kpi-val{font-size:19px}
   .pc-premium .pc-name{font-size:16px}
 }
+
+#pnl-kpi{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){#pnl-kpi{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){#pnl-kpi{grid-template-columns:1fr}}
+
 </style>
 
 <style id="tp-abhipray-css">
@@ -2824,6 +2829,23 @@ html{transition:background .3s,color .3s}
           <button class="tab-btn active" data-rm="client" onclick="switchRptMode('client')">By Client</button>
           <button class="tab-btn" data-rm="project" onclick="switchRptMode('project')">By Project</button>
         </div>
+      </div>
+
+      <!-- Monthly P&L -->
+      <div class="card" id="pnl-card" style="margin-bottom:18px;padding:18px 20px;border:1px solid rgba(184,151,90,.25);background:linear-gradient(165deg,rgba(255,252,247,.98),rgba(247,245,240,.95));border-radius:16px">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px">
+          <div>
+            <div style="font-family:var(--font-display),serif;font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.02em">📊 Monthly P&amp;L Report</div>
+            <div style="font-size:12px;color:var(--mut);margin-top:4px">Revenue − Expenses · Pending fees · PDF download</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <select class="fi fi-sel" id="pnl-month" style="width:130px;font-size:12px" onchange="renderPnLPreview()"></select>
+            <select class="fi fi-sel" id="pnl-year" style="width:100px;font-size:12px" onchange="renderPnLPreview()"></select>
+            <button type="button" class="btn btn-gold" onclick="generateMonthlyPnLPDF()">📄 Download PDF</button>
+          </div>
+        </div>
+        <div id="pnl-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px"></div>
+        <div id="pnl-detail" style="margin-top:14px;font-size:12px;color:var(--mut)"></div>
       </div>
 
       <!-- CLIENT MODE -->
@@ -23667,6 +23689,309 @@ html += '</div>';
       }catch(e){ return ''; }
     };
   }
+})();
+</script>
+
+
+<script>
+(function(){
+  function pnlMonths(){
+    return ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  }
+  function pnlFmt(n){
+    if(typeof fmt==='function') return fmt(n);
+    return '₹ '+Math.round(n||0).toLocaleString('en-IN');
+  }
+  function pnlEnsureSelects(){
+    var mEl=document.getElementById('pnl-month');
+    var yEl=document.getElementById('pnl-year');
+    if(!mEl||!yEl) return;
+    if(!mEl.options.length){
+      pnlMonths().forEach(function(name,i){
+        var o=document.createElement('option');
+        o.value=String(i);
+        o.textContent=name;
+        mEl.appendChild(o);
+      });
+    }
+    if(!yEl.options.length){
+      var cy=new Date().getFullYear();
+      for(var y=cy;y>=cy-5;y--){
+        var o=document.createElement('option');
+        o.value=String(y);
+        o.textContent=String(y);
+        yEl.appendChild(o);
+      }
+    }
+    if(!mEl.dataset.ready){
+      mEl.value=String(new Date().getMonth());
+      yEl.value=String(new Date().getFullYear());
+      mEl.dataset.ready='1';
+    }
+  }
+  function pnlInMonth(dateStr, year, month){
+    if(!dateStr) return false;
+    var d=new Date(dateStr);
+    if(isNaN(d.getTime())){
+      var p=String(dateStr).split(/[-\/]/);
+      if(p.length===3){
+        if(p[0].length===4) d=new Date(+p[0], +p[1]-1, +p[2]);
+        else d=new Date(+p[2], +p[1]-1, +p[0]);
+      }
+    }
+    if(isNaN(d.getTime())) return false;
+    return d.getFullYear()===year && d.getMonth()===month;
+  }
+  function computeMonthlyPnL(year, month){
+    var pays=(typeof db!=='undefined' && db.payments)||[];
+    var exps=(typeof db!=='undefined' && db.expenses)||[];
+    var projs=(typeof db!=='undefined' && db.projects)||[];
+    var revenue=0, revRows=[];
+    pays.forEach(function(p){
+      if(pnlInMonth(p.date, year, month)){
+        revenue += (+p.amount)||0;
+        var proj = (typeof gp==='function')?gp(p.projectId):null;
+        revRows.push({
+          date:p.date||'',
+          name: proj?(proj.name||'Project'): (p.stage||'Payment'),
+          stage:p.stage||'',
+          mode:p.mode||p.paymode||'',
+          amount:(+p.amount)||0
+        });
+      }
+    });
+    var expenses=0, expRows=[];
+    exps.forEach(function(e){
+      if(pnlInMonth(e.date, year, month)){
+        expenses += (+e.amount)||0;
+        expRows.push({
+          date:e.date||'',
+          cat:e.cat||'Expense',
+          desc:e.desc||e.description||'',
+          amount:(+e.amount)||0
+        });
+      }
+    });
+    var pending=0, pendingRows=[];
+    projs.forEach(function(p){
+      var bal = (typeof pbal==='function') ? pbal(p.id) : Math.max(0, (+p.total||0) - (pays.filter(function(x){return x.projectId===p.id;}).reduce(function(a,x){return a+(+x.amount||0);},0)));
+      if(bal>0){
+        pending += bal;
+        pendingRows.push({name:p.name||'Project', total:+p.total||0, bal:bal});
+      }
+    });
+    var net = revenue - expenses;
+    return {
+      year:year, month:month,
+      monthName: pnlMonths()[month]||'',
+      revenue:revenue, expenses:expenses, pending:pending, net:net,
+      revRows:revRows, expRows:expRows, pendingRows:pendingRows
+    };
+  }
+  window.computeMonthlyPnL = computeMonthlyPnL;
+
+  window.renderPnLPreview = function(){
+    pnlEnsureSelects();
+    var mEl=document.getElementById('pnl-month');
+    var yEl=document.getElementById('pnl-year');
+    if(!mEl||!yEl) return;
+    var month=parseInt(mEl.value,10);
+    var year=parseInt(yEl.value,10);
+    var d=computeMonthlyPnL(year, month);
+    var kpi=document.getElementById('pnl-kpi');
+    if(kpi){
+      kpi.innerHTML=
+        '<div style="padding:14px;border-radius:12px;background:rgba(39,120,60,.08);border:1px solid rgba(39,120,60,.15)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Revenue</div><div style="font-family:var(--font-display),serif;font-size:22px;font-weight:700;color:var(--rgreen,#27783c);margin-top:4px">'+pnlFmt(d.revenue)+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">'+d.revRows.length+' payments</div></div>'+
+        '<div style="padding:14px;border-radius:12px;background:rgba(166,61,50,.06);border:1px solid rgba(166,61,50,.12)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Expenses</div><div style="font-family:var(--font-display),serif;font-size:22px;font-weight:700;color:var(--red,#a63d32);margin-top:4px">'+pnlFmt(d.expenses)+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">'+d.expRows.length+' entries</div></div>'+
+        '<div style="padding:14px;border-radius:12px;background:rgba(184,151,90,.1);border:1px solid rgba(184,151,90,.2)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Net Profit</div><div style="font-family:var(--font-display),serif;font-size:22px;font-weight:700;color:'+(d.net>=0?'var(--grn)':'var(--red)')+';margin-top:4px">'+pnlFmt(d.net)+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Revenue − Expenses</div></div>'+
+        '<div style="padding:14px;border-radius:12px;background:var(--surf2);border:1px solid var(--bdr)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Pending Fees</div><div style="font-family:var(--font-display),serif;font-size:22px;font-weight:700;color:var(--ink);margin-top:4px">'+pnlFmt(d.pending)+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">'+d.pendingRows.length+' projects</div></div>';
+    }
+    var det=document.getElementById('pnl-detail');
+    if(det){
+      det.innerHTML='Period: <b style="color:var(--ink)">'+d.monthName+' '+d.year+'</b> · Office performance snapshot. Download PDF for full breakdown.';
+    }
+  };
+
+  window.generateMonthlyPnLPDF = function(){
+    try{
+      if(!window.jspdf || !window.jspdf.jsPDF){
+        alert('jsPDF library not loaded. Hard refresh करा.');
+        return;
+      }
+      pnlEnsureSelects();
+      var month=parseInt(document.getElementById('pnl-month').value,10);
+      var year=parseInt(document.getElementById('pnl-year').value,10);
+      var d=computeMonthlyPnL(year, month);
+      var office=(typeof officeInfo!=='undefined'&&officeInfo)?officeInfo:{};
+      var jsPDF=window.jspdf.jsPDF;
+      var doc=new jsPDF('p','mm','a4');
+      var pageW=210, pageH=297, y=14;
+      var fmt2=function(n){ return 'Rs. '+Math.round(n||0).toLocaleString('en-IN'); };
+
+      doc.setFillColor(26,58,42);
+      doc.rect(0,0,pageW,28,'F');
+      doc.setFillColor(201,168,76);
+      doc.rect(0,28,pageW,2,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(14);
+      doc.text(office.name||'Greenhouse Studio', 14, 12);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(201,168,76);
+      doc.text((office.addr||'')+'  |  '+(office.phone||'')+'  |  '+(office.email||''), 14, 20);
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(9);
+      doc.text('Date: '+new Date().toLocaleDateString('en-IN'), pageW-14, 12, {align:'right'});
+      doc.text('Monthly P&L Report', pageW-14, 20, {align:'right'});
+
+      y=40;
+      doc.setTextColor(26,58,42);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(16);
+      doc.text('Profit & Loss Statement', 14, y);
+      y+=7;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(11);
+      doc.setTextColor(80,80,80);
+      doc.text('Period: '+d.monthName+' '+d.year, 14, y);
+      y+=10;
+
+      var boxW=44, boxH=22, gap=4, x0=14;
+      var boxes=[
+        {label:'REVENUE', val:fmt2(d.revenue), bg:[232,245,236], tc:[39,120,60]},
+        {label:'EXPENSES', val:fmt2(d.expenses), bg:[252,235,232], tc:[160,60,50]},
+        {label:'NET PROFIT', val:fmt2(d.net), bg: d.net>=0?[232,245,236]:[252,235,232], tc:d.net>=0?[26,58,42]:[160,60,50]},
+        {label:'PENDING FEES', val:fmt2(d.pending), bg:[250,245,235], tc:[120,90,40]}
+      ];
+      boxes.forEach(function(b,i){
+        var x=x0+i*(boxW+gap);
+        doc.setFillColor(b.bg[0],b.bg[1],b.bg[2]);
+        doc.roundedRect(x, y, boxW, boxH, 2, 2, 'F');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7);
+        doc.setTextColor(100,100,100);
+        doc.text(b.label, x+3, y+7);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(9);
+        doc.setTextColor(b.tc[0],b.tc[1],b.tc[2]);
+        doc.text(b.val, x+3, y+16);
+      });
+      y+=boxH+10;
+
+      doc.setFont('helvetica','italic');
+      doc.setFontSize(8);
+      doc.setTextColor(100,100,100);
+      doc.text('Net Profit = Revenue - Expenses  |  Pending = Outstanding project balances (current)', 14, y);
+      y+=8;
+
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(26,58,42);
+      doc.text('REVENUE (Payments received)', 14, y);
+      y+=3;
+      var revBody = d.revRows.length
+        ? d.revRows.map(function(r,i){ return [String(i+1), r.date, r.name, r.stage, r.mode, fmt2(r.amount)]; })
+        : [['—','—','No payments this month','—','—','—']];
+      doc.autoTable({
+        startY:y,
+        head:[['#','Date','Project / Item','Stage','Mode','Amount']],
+        body:revBody,
+        headStyles:{fillColor:[26,58,42], textColor:[201,168,76], fontStyle:'bold', fontSize:8, cellPadding:2.5},
+        bodyStyles:{fontSize:8, cellPadding:2.5},
+        alternateRowStyles:{fillColor:[250,248,243]},
+        columnStyles:{0:{cellWidth:10,halign:'center'},5:{halign:'right',fontStyle:'bold'}},
+        styles:{lineColor:[220,215,205], lineWidth:0.3},
+        margin:{left:14,right:14}
+      });
+      y=doc.lastAutoTable.finalY+6;
+
+      if(y>250){ doc.addPage(); y=16; }
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(26,58,42);
+      doc.text('EXPENSES', 14, y);
+      y+=3;
+      var expBody = d.expRows.length
+        ? d.expRows.map(function(r,i){ return [String(i+1), r.date, r.cat, r.desc, fmt2(r.amount)]; })
+        : [['—','—','No expenses this month','—','—']];
+      doc.autoTable({
+        startY:y,
+        head:[['#','Date','Category','Description','Amount']],
+        body:expBody,
+        headStyles:{fillColor:[90,50,45], textColor:[255,230,220], fontStyle:'bold', fontSize:8, cellPadding:2.5},
+        bodyStyles:{fontSize:8, cellPadding:2.5},
+        alternateRowStyles:{fillColor:[252,248,246]},
+        columnStyles:{0:{cellWidth:10,halign:'center'},4:{halign:'right',fontStyle:'bold'}},
+        styles:{lineColor:[220,215,205], lineWidth:0.3},
+        margin:{left:14,right:14}
+      });
+      y=doc.lastAutoTable.finalY+6;
+
+      if(y>240){ doc.addPage(); y=16; }
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(26,58,42);
+      doc.text('PENDING FEES (Outstanding)', 14, y);
+      y+=3;
+      var penBody = d.pendingRows.length
+        ? d.pendingRows.map(function(r,i){ return [String(i+1), r.name, fmt2(r.total), fmt2(r.bal)]; })
+        : [['—','No pending balances','—','—']];
+      doc.autoTable({
+        startY:y,
+        head:[['#','Project','Contract','Balance Due']],
+        body:penBody,
+        headStyles:{fillColor:[80,70,50], textColor:[240,220,180], fontStyle:'bold', fontSize:8, cellPadding:2.5},
+        bodyStyles:{fontSize:8, cellPadding:2.5},
+        alternateRowStyles:{fillColor:[250,248,240]},
+        columnStyles:{0:{cellWidth:10,halign:'center'},2:{halign:'right'},3:{halign:'right',fontStyle:'bold',textColor:[160,60,50]}},
+        styles:{lineColor:[220,215,205], lineWidth:0.3},
+        margin:{left:14,right:14}
+      });
+      y=doc.lastAutoTable.finalY+10;
+
+      if(y>260){ doc.addPage(); y=16; }
+      doc.setFillColor(26,58,42);
+      doc.roundedRect(14, y, pageW-28, 28, 3, 3, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.text('Total Revenue:  '+fmt2(d.revenue), 20, y+10);
+      doc.text('Total Expenses: '+fmt2(d.expenses), 20, y+18);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(11);
+      doc.setTextColor(201,168,76);
+      doc.text('Net Profit: '+fmt2(d.net), pageW-20, y+14, {align:'right'});
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(200,200,200);
+      doc.text('Pending (not in net): '+fmt2(d.pending), pageW-20, y+22, {align:'right'});
+
+      doc.setFontSize(7);
+      doc.setTextColor(150,150,150);
+      doc.text('Generated by '+(office.name||'Greenhouse Studio')+' · Confidential', 14, pageH-8);
+      doc.text('Page 1', pageW-14, pageH-8, {align:'right'});
+
+      doc.save('PnL_'+(d.monthName||'')+'_'+d.year+'.pdf');
+      if(typeof showOk==='function') showOk('P&L PDF downloaded');
+    }catch(err){
+      alert('P&L PDF error: '+(err&&err.message?err.message:err));
+      console.error(err);
+    }
+  };
+
+  var _sv=window.switchView;
+  if(typeof _sv==='function' && !window._pnlSwitchPatched){
+    window._pnlSwitchPatched=true;
+    window.switchView=function(v){
+      var r=_sv.apply(this, arguments);
+      if(v==='reports') setTimeout(function(){ if(typeof renderPnLPreview==='function') renderPnLPreview(); }, 50);
+      return r;
+    };
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){ if(typeof renderPnLPreview==='function') renderPnLPreview(); }, 400);
+  });
 })();
 </script>
 
