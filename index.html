@@ -2834,13 +2834,10 @@ body{
   -moz-osx-font-smoothing:grayscale;
 }
 
-/* Soft glass surfaces */
-.card,
-.dv2-card,
-.dv2-tasks,
+/* Soft glass surfaces — exclude Dashboard (#dash-v2) */
+.card:not(#view-dashboard .card),
 .setting-section,
 .lead-card,
-.tk-item,
 .pend-wa-card,
 #pnl-card{
   background:var(--glass, rgba(255,252,247,.78)) !important;
@@ -2853,26 +2850,21 @@ body{
               border-color .28s ease,
               background .28s ease !important;
 }
-.card:hover,
-.dv2-card:hover,
-.lead-card:hover,
-.tk-item:hover{
+.card:not(#view-dashboard .card):hover,
+.lead-card:hover{
   transform:translateY(-2px) !important;
   box-shadow:var(--sh-hover,var(--sh2)) !important;
   border-color:rgba(184,151,90,.28) !important;
   background:rgba(255,252,247,.92) !important;
 }
 
-/* KPI / metric tiles */
-.kpi-card,
-.dv2-kpi,
+/* KPI outside dashboard only */
 .lead-kpi .lk,
 .pnl-tile{
   transition:transform .28s cubic-bezier(.22,1,.36,1),
               box-shadow .28s ease,
               border-color .28s ease !important;
 }
-.kpi-card:hover,
 .lead-kpi .lk:hover,
 .pnl-tile:hover{
   transform:translateY(-2px);
@@ -2902,19 +2894,6 @@ body{
   filter:brightness(1.04);
 }
 
-/* Sidebar nav — soft active/hover */
-.nav-btn{
-  transition:background .22s ease, color .22s ease, transform .2s ease, box-shadow .22s ease !important;
-  border-radius:8px !important;
-}
-.nav-btn:hover{
-  background:rgba(255,255,255,.08) !important;
-  transform:translateX(2px);
-}
-.nav-btn.active{
-  background:rgba(255,255,255,.12) !important;
-  box-shadow:inset 2px 0 0 var(--gold), 0 4px 16px rgba(0,0,0,.12) !important;
-}
 
 /* Project / contact style cards if present */
 .proj-card,
@@ -2944,9 +2923,15 @@ body{
   to{opacity:1;transform:none}
 }
 .modal-overlay{
+  display:none;
+  position:fixed;inset:0;z-index:10000;
+  align-items:center;justify-content:center;
   backdrop-filter:blur(6px);
   -webkit-backdrop-filter:blur(6px);
   background:rgba(12,16,14,.42) !important;
+}
+.modal-overlay.open{
+  display:flex !important;
   animation:gsFade .25s ease;
 }
 @keyframes gsFade{from{opacity:0}to{opacity:1}}
@@ -2970,15 +2955,6 @@ header, .topbar, #topbar{
   box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 4px 20px rgba(28,27,25,.04) !important;
 }
 
-/* Featured / image cards */
-.dv2-feat{
-  box-shadow:0 12px 40px rgba(15,26,20,.2), 0 0 0 1px rgba(255,255,255,.06) inset !important;
-  transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease !important;
-}
-.dv2-feat:hover{
-  transform:translateY(-2px);
-  box-shadow:0 18px 48px rgba(15,26,20,.28), 0 0 0 1px rgba(255,255,255,.08) inset !important;
-}
 
 /* Progress bars soft */
 .pres-prog-fill,
@@ -3127,6 +3103,29 @@ header,.topbar{position:relative;z-index:15}
 .ce-tier-rate{font-size:11px;color:rgba(232,213,163,.65)}
 .ce-tier-amt{font-family:var(--font-display),Georgia,serif;font-size:18px;font-weight:600;color:#e8d5a3}
 .ce-note{margin-top:14px;font-size:10px;line-height:1.5;color:rgba(247,245,240,.4)}
+
+
+/* Dashboard — keep original Architecture Management look (no polish overrides) */
+#view-dashboard,
+#view-dashboard *{
+  /* allow dashboard's own CSS; block polish transform on root cards */
+}
+#view-dashboard .card,
+#view-dashboard .dv2-card,
+#view-dashboard .dv2-tasks,
+#view-dashboard .dv2-kpi,
+#view-dashboard .kpi-card,
+#dash-v2 .card,
+#dash-v2 [class*="dv2-"]{
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  transform:none !important;
+}
+#view-dashboard .card:hover,
+#dash-v2 .dv2-card:hover,
+#dash-v2 .dv2-feat:hover{
+  transform:none !important;
+}
 
 </style>
 
@@ -4715,7 +4714,7 @@ header,.topbar{position:relative;z-index:15}
       <div style="display:flex;gap:8px">
         <button onclick="closeModal('m-proj')" style="padding:10px 16px;background:var(--surf2);color:var(--mut);border:1px solid var(--bdr);border-radius:10px;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Cancel</button>
         <button id="proj-next-btn" onclick="nextProjStep()" style="padding:10px 24px;background:var(--grn);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">पुढे →</button>
-        <button id="proj-save-btn" onclick="saveProject()" style="display:none;padding:10px 24px;background:var(--gold);color:var(--grn);border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">💾 Save Project</button>
+        <button id="proj-save-btn" onclick="saveProject()" style="display:inline-block;padding:10px 24px;background:var(--gold);color:var(--grn);border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">💾 Save Project</button>
       </div>
     </div>
   </div>
@@ -5207,15 +5206,25 @@ function setSyncStatus(color,text){
 
 // ── SAVE ──────────────────────────────────────────
 async function syncData(){
-  saveLocal();
+  try{ saveLocal(); }catch(e){ console.error(e); }
   if(fbDbUrl){
-    await syncFirebase();
+    try{ await syncFirebase(); }catch(e){ console.error('syncFirebase', e); }
   } else {
-    setSyncStatus('yellow','Saved locally — Firebase not connected');
+    try{ setSyncStatus('yellow','Saved locally — Firebase not connected'); }catch(e){}
   }
 }
-// Alias used throughout app
-const saveAll=syncData;
+// Alias — always persist locally even if called without await
+function saveAll(){
+  try{ saveLocal(); }catch(e){ console.error('saveAll/saveLocal', e); }
+  if(fbDbUrl){
+    try{
+      var p = syncFirebase();
+      if(p && typeof p.then==='function') p.catch(function(e){ console.error(e); });
+    }catch(e){ console.error(e); }
+  } else {
+    try{ setSyncStatus('yellow','Saved locally — Firebase not connected'); }catch(e){}
+  }
+}
 
 // ── LOAD ──────────────────────────────────────────
 async function loadRemoteData(){
@@ -8289,44 +8298,53 @@ function editContact(cid){
 }
 
 function saveContact(){
-  const name=document.getElementById('c-name').value.trim();
-  const wa=document.getElementById('c-wa').value.trim();
-  const cat=document.getElementById('c-cat').value;
-  const other=document.getElementById('c-other').value.trim();
-  if(!name||!wa||!cat){alert('Name, WhatsApp number आणि Category आवश्यक आहे');return;}
-  const srcEl=document.getElementById('c-source');
-  const pinEl=document.getElementById('c-pin');
-  const pin=(pinEl?pinEl.value.trim():'').replace(/[^0-9]/g,'');
-  const finalCat=cat==='Other'?(other||'Other'):cat;
+  try{
+    if(typeof ensureDbExtensions==='function') ensureDbExtensions();
+    if(!db.contacts) db.contacts=[];
+    if(!db.activities) db.activities=[];
+    function val(id){ var e=document.getElementById(id); return e ? String(e.value||'').trim() : ''; }
+    const name=val('c-name');
+    const wa=val('c-wa');
+    const cat=val('c-cat');
+    const other=val('c-other');
+    if(!name||!wa||!cat){alert('Name, WhatsApp number आणि Category आवश्यक आहे');return;}
+    const pin=val('c-pin').replace(/[^0-9]/g,'');
+    const finalCat=cat==='Other'?(other||'Other'):cat;
+    const phone=val('c-phone');
+    const address=val('c-address');
+    const source=val('c-source');
 
-  if(_editContactId){
-    // ── EDIT MODE ──
-    const c=gc(_editContactId);
-    if(!c){showErr('Contact not found');return;}
-    c.name=name;c.wa=wa;c.cat=finalCat;
-    c.phone=document.getElementById('c-phone').value.trim();
-    c.address=document.getElementById('c-address').value.trim();
-    c.source=srcEl?srcEl.value:'';
-    c.pin=pin?String(pin):c.pin||null;
-    db.activities.unshift({text:'Contact Updated — '+name,sub:'Category: '+finalCat,time:'Just now',color:'#1a3a2a'});
-    saveAll();closeModal('m-contact');renderContacts();renderDashboard();
-    showOk('✅ Contact updated!');
-    _editContactId=null;
-  } else {
-    // ── ADD MODE ──
-    // Check duplicate PIN
-    if(pin){
-      const dup=db.contacts.find(x=>x.pin===pin);
-      if(dup){showErr('हा PIN already '+dup.name+' ला दिला आहे. Different PIN वापरा.');return;}
+    if(_editContactId){
+      const c=typeof gc==='function'?gc(_editContactId):db.contacts.find(function(x){return x.id===_editContactId;});
+      if(!c){alert('Contact not found');return;}
+      c.name=name;c.wa=wa;c.cat=finalCat;c.phone=phone;c.address=address;c.source=source;
+      c.pin=pin?String(pin):(c.pin||null);
+      db.activities.unshift({text:'Contact Updated — '+name,sub:'Category: '+finalCat,time:'Just now',color:'#1a3a2a'});
+      _editContactId=null;
+      try{ saveAll(); }catch(e){ saveLocal(); }
+      closeModal('m-contact');
+      if(typeof renderContacts==='function') renderContacts();
+      if(typeof renderDashboard==='function') renderDashboard();
+      if(typeof showOk==='function') showOk('✅ Contact updated!');
+      else alert('Contact updated');
+    } else {
+      if(pin){
+        const dup=db.contacts.find(function(x){return x.pin===pin;});
+        if(dup){alert('हा PIN already '+dup.name+' ला दिला आहे. Different PIN वापरा.');return;}
+      }
+      db.contacts.push({id:uid('CON'),name:name,cat:finalCat,wa:wa,phone:phone,address:address,source:source,pin:pin||null});
+      db.activities.unshift({text:'New Contact — '+name,sub:'Category: '+finalCat+(pin?' · PIN set':''),time:'Just now',color:'#1a3a2a'});
+      try{ saveAll(); }catch(e){ saveLocal(); }
+      closeModal('m-contact');
+      if(typeof renderContacts==='function') renderContacts();
+      if(typeof renderDashboard==='function') renderDashboard();
+      var nc=document.getElementById('nb-c'); if(nc) nc.textContent=db.contacts.length;
+      if(typeof showOk==='function') showOk(pin?('✅ Contact saved! PIN: '+pin):'✅ Contact added!');
+      else alert('Contact added');
     }
-    db.contacts.push({id:uid('CON'),name,cat:finalCat,wa,
-      phone:document.getElementById('c-phone').value.trim(),
-      address:document.getElementById('c-address').value.trim(),
-      source:srcEl?srcEl.value:'',pin:pin||null});
-    db.activities.unshift({text:'New Contact — '+name,sub:'Category: '+finalCat+(pin?' · PIN set':''),time:'Just now',color:'#1a3a2a'});
-    saveAll();closeModal('m-contact');renderContacts();renderDashboard();
-    if(pin) showOk('✅ Contact saved! PIN: '+pin+' — Client ला WhatsApp वर पाठवा');
-    else showOk('✅ Contact added!');
+  }catch(err){
+    console.error('saveContact', err);
+    alert('Contact save error: '+(err.message||err));
   }
 }
 function populateProjModal(){
@@ -8751,10 +8769,15 @@ function openEditProject(pid){
 }
 
 function saveProject(){
-  const name=document.getElementById('p-name').value.trim();
-  const cid=document.getElementById('p-client').value;
-  const total=parseInt(document.getElementById('p-total').value)||0;
-  const advance=parseInt(document.getElementById('p-advance').value)||0;
+  try{
+  if(typeof ensureDbExtensions==='function') ensureDbExtensions();
+  if(!db.projects) db.projects=[];
+  if(!db.payments) db.payments=[];
+  if(!db.activities) db.activities=[];
+  const name=String((document.getElementById('p-name')&&document.getElementById('p-name').value)||'').trim();
+  const cid=String((document.getElementById('p-client')&&document.getElementById('p-client').value)||'').trim();
+  const total=parseInt((document.getElementById('p-total')&&document.getElementById('p-total').value)||0,10)||0;
+  const advance=parseInt((document.getElementById('p-advance')&&document.getElementById('p-advance').value)||0,10)||0;
   // Only name and client are mandatory
   if(!name){alert('Please enter Project Name');return;}
   if(!cid){alert('Please select a Client');return;}
@@ -8818,7 +8841,13 @@ function saveProject(){
   closeModal('m-proj');
   renderProjects();
   renderDashboard();
-  if(advance>0)setTimeout(()=>sendWA(pid,null),1000);
+  var np=document.getElementById('nb-p'); if(np) np.textContent=(db.projects||[]).length;
+  if(typeof showOk==='function') showOk('✅ Project added!');
+  if(advance>0) setTimeout(function(){ try{ sendWA(pid,null); }catch(e){} },1000);
+  }catch(err){
+    console.error('saveProject', err);
+    alert('Project save error: '+(err.message||err));
+  }
 }
 
 window._otherDrawings=window._otherDrawings||[];
@@ -8907,47 +8936,60 @@ function populatePayModal(){
   DRAWINGS.forEach(d=>{const sp=document.createElement('span');sp.className='svc-tog';sp.textContent=d;sp.onclick=()=>sp.classList.toggle('on');g.appendChild(sp);});
 }
 function savePayment(){
-  const pid=document.getElementById('pay-proj').value;
-  const amt=parseInt(document.getElementById('pay-amt').value)||0;
-  const date=document.getElementById('pay-date').value;
-  const modeBase=document.getElementById('pay-mode').value;
-  const upiApp=document.getElementById('pay-upi-app')?document.getElementById('pay-upi-app').value:'';
-  const mode=modeBase==='UPI'&&upiApp?'UPI/'+upiApp:modeBase;
-  const stage=document.getElementById('pay-stage').value;
-  const notes=document.getElementById('pay-notes').value.trim();
-  if(!pid||!amt||!date){alert('Please fill Project, Amount & Date');return;}
-  const drws=[...document.querySelectorAll('#pay-drw-grid .svc-tog.on')].map(s=>s.textContent);
+  try{
+    if(typeof ensureDbExtensions==='function') ensureDbExtensions();
+    if(!db.payments) db.payments=[];
+    if(!db.activities) db.activities=[];
+    function payVal(id){ var e=document.getElementById(id); return e ? String(e.value||'').trim() : ''; }
+    const pid=payVal('pay-proj');
+    const amt=parseInt(payVal('pay-amt'),10)||0;
+    const date=payVal('pay-date');
+    const modeBase=payVal('pay-mode');
+    const upiApp=payVal('pay-upi-app');
+    const mode=modeBase==='UPI'&&upiApp?'UPI/'+upiApp:modeBase;
+    const stage=payVal('pay-stage');
+    const notes=payVal('pay-notes');
+    if(!pid||!amt||!date){alert('Please fill Project, Amount & Date');return;}
+    var drwNodes=document.querySelectorAll('#pay-drw-grid .svc-tog.on');
+    const drws=drwNodes&&drwNodes.length?[].map.call(drwNodes,function(s){return s.textContent;}):[];
 
-  if(_editPayId){
-    // ── EDIT MODE ──
-    const pay = (db.payments||[]).find(p=>p.id===_editPayId);
-    if(pay){
-      pay.amount = amt;
-      pay.date = date;
-      pay.mode = mode;
-      pay.stage = stage;
-      pay.notes = notes;
-      pay.drawings = drws;
+    if(_editPayId){
+      const pay = (db.payments||[]).find(function(p){return p.id===_editPayId;});
+      if(pay){
+        pay.amount = amt; pay.date = date; pay.mode = mode;
+        pay.stage = stage; pay.notes = notes; pay.drawings = drws;
+      }
+      _editPayId = null;
+      const titleEl = document.getElementById('m-pay-title');
+      if(titleEl) titleEl.textContent = 'Record Payment';
+      const saveBtn = document.getElementById('pay-save-btn');
+      if(saveBtn){ saveBtn.textContent = 'Save Payment'; saveBtn.style.background='var(--rgreen)'; saveBtn.style.color='#fff'; }
+      const selEl = document.getElementById('pay-proj');
+      if(selEl) selEl.disabled = false;
+      try{ saveAll(); }catch(e){ saveLocal(); }
+      closeModal('m-pay');
+      if(typeof renderPayments==='function') renderPayments();
+      if(typeof renderDashboard==='function') renderDashboard();
+      if(typeof showOk==='function') showOk('✅ Payment updated!');
+      return;
     }
-    _editPayId = null;
-    // Reset modal
-    const titleEl = document.getElementById('m-pay-title');
-    if(titleEl) titleEl.textContent = 'Record Payment';
-    const saveBtn = document.getElementById('pay-save-btn');
-    if(saveBtn){ saveBtn.textContent = 'Save Payment'; saveBtn.style.background='var(--rgreen)'; saveBtn.style.color='#fff'; }
-    const selEl = document.getElementById('pay-proj');
-    if(selEl) selEl.disabled = false;
-    saveAll(); closeModal('m-pay'); renderPayments(); renderDashboard();
-    showOk('✅ Payment updated!');
-    return;
-  }
 
-  // ── NEW MODE ──
-  const payId=uid('TX');
-  db.payments.push({id:payId,projectId:pid,amount:amt,date,mode,stage,drawings:drws,notes});
-  const p=gp(pid);db.activities.unshift({text:fmt(amt)+' Payment — '+p.name,sub:stage+' · '+mode,time:'Just now',color:'#27ae60'});
-  saveAll();closeModal('m-pay');renderPayments();renderDashboard();
-  setTimeout(()=>sendWA(pid,payId),800);
+    const payId=uid('TX');
+    db.payments.push({id:payId,projectId:pid,amount:amt,date:date,mode:mode,stage:stage,drawings:drws,notes:notes});
+    const p=typeof gp==='function'?gp(pid):null;
+    var pname=p&&p.name?p.name:'Project';
+    var amtLabel=typeof fmt==='function'?fmt(amt):('₹'+amt);
+    db.activities.unshift({text:amtLabel+' Payment — '+pname,sub:stage+' · '+mode,time:'Just now',color:'#27ae60'});
+    try{ saveAll(); }catch(e){ saveLocal(); }
+    closeModal('m-pay');
+    if(typeof renderPayments==='function') renderPayments();
+    if(typeof renderDashboard==='function') renderDashboard();
+    if(typeof showOk==='function') showOk('✅ Payment saved!');
+    setTimeout(function(){ try{ if(typeof sendWA==='function') sendWA(pid,payId); }catch(e){} },800);
+  }catch(err){
+    console.error('savePayment', err);
+    alert('Payment save error: '+(err.message||err));
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -9343,9 +9385,16 @@ function icDelete(id){
 
 
 function ensureDbExtensions(){
+  if(!db) return;
+  if(!db.contacts) db.contacts=[];
+  if(!db.projects) db.projects=[];
+  if(!db.payments) db.payments=[];
+  if(!db.activities) db.activities=[];
   if(!db.expenses) db.expenses=[];
   if(!db.estimates) db.estimates=[];
   if(!db.siteVisits) db.siteVisits=[];
+  if(!db.tasks) db.tasks=[];
+  if(!db.leads) db.leads=[];
   if(!db.commissions) db.commissions=[];
   if(!db.suppliers) db.suppliers=[];
   if(!db.matCatalog) db.matCatalog=[];
@@ -18548,7 +18597,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
     setInterval(pollRemote,6000);
   },500);
 });
-<\/script>
+</script>
 
 <!-- FAB Quick Add -->
 <div class="fab-menu" id="fab-menu" style="display:none">
@@ -21230,7 +21279,7 @@ Portal मध्ये पाहता येईल:
   const waUrl = 'https://wa.me/' + formatWA(c.wa || c.phone || '') + '?text=' + encodeURIComponent(msg);
   window.open(waUrl, '_blank');
 }
-<\/script>
+</script>
 
 <!-- Global Toasts -->
 <div id="gs-toast-ok" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a4a2a;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:9998;align-items:center;gap:8px;max-width:90vw;border:1px solid #2d6a3d"></div>
@@ -24892,7 +24941,7 @@ html += '</div>';
   </div>
 </div>
 
-<div class="modal-overlay" id="m-lead">
+<div class="modal-bg" id="m-lead">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-head">
       <div class="modal-title" id="m-lead-title">+ New Lead</div>
