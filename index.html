@@ -31,11 +31,14 @@
   --gold2:#d4b87a;
   --gold-bg:rgba(184,151,90,.12);
   --red:#a63d32;--rgreen:#4a7c59;--blue:#3d5a6c;--orange:#a67c52;
-  --sh:0 1px 2px rgba(28,27,25,.04),0 4px 16px rgba(28,27,25,.05);
-  --sh2:0 8px 28px rgba(28,27,25,.08);
-  --rad:6px;
-  --rad-lg:10px;
-  --transition:all .2s ease;
+  --sh:0 1px 2px rgba(28,27,25,.03),0 4px 14px rgba(28,27,25,.045),0 12px 32px rgba(28,27,25,.03);
+  --sh2:0 4px 12px rgba(28,27,25,.05),0 16px 40px rgba(28,27,25,.07);
+  --sh-hover:0 8px 20px rgba(28,27,25,.07),0 20px 48px rgba(28,27,25,.08);
+  --glass:rgba(255,252,247,.72);
+  --glass-bdr:rgba(255,255,255,.55);
+  --rad:8px;
+  --rad-lg:12px;
+  --transition:all .28s cubic-bezier(.22,1,.36,1);
   --font-display:'Playfair Display',Georgia,serif;
   --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
   --font-mono:'JetBrains Mono',ui-monospace,monospace;
@@ -2491,9 +2494,639 @@ html{transition:background .3s,color .3s}
   .pc-premium .pc-name{font-size:16px}
 }
 
-#pnl-kpi{grid-template-columns:repeat(4,1fr)}
-@media(max-width:900px){#pnl-kpi{grid-template-columns:1fr 1fr}}
-@media(max-width:520px){#pnl-kpi{grid-template-columns:1fr}}
+
+/* ── Monthly P&L card — architecture studio ── */
+#pnl-card{
+  margin-bottom:20px;
+  padding:0;
+  overflow:hidden;
+  border:1px solid rgba(28,27,25,.08);
+  border-radius:18px;
+  background:#fffcf7;
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 8px 28px rgba(28,27,25,.05);
+  position:relative;
+}
+#pnl-card::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--gold,#c9a84c),var(--grn,#2c3e2d));
+  border-radius:18px 0 0 18px;
+}
+.pnl-head{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:14px;padding:18px 20px 16px 22px;
+  border-bottom:1px solid rgba(28,27,25,.06);
+  background:linear-gradient(180deg,rgba(255,255,255,.6),transparent);
+}
+.pnl-head-left{display:flex;align-items:center;gap:14px;min-width:0}
+.pnl-icon{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#1a2e22,#2c3e2d);
+  color:var(--gold2,#e8d5a3);
+  box-shadow:0 4px 14px rgba(26,46,34,.22);
+}
+.pnl-title{
+  font-family:var(--font-display),Georgia,serif;
+  font-size:20px;font-weight:600;letter-spacing:-.03em;
+  color:var(--ink,#1c1b19);line-height:1.2;
+}
+.pnl-sub{font-size:12px;color:var(--mut,#7a7670);margin-top:3px;letter-spacing:.01em}
+.pnl-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pnl-sel{
+  width:auto;min-width:110px;font-size:12.5px;font-weight:600;
+  padding:8px 12px;border-radius:10px;
+  background:#fff;border:1px solid rgba(28,27,25,.1);
+  color:var(--ink);
+}
+.pnl-sel:focus{outline:none;border-color:rgba(184,151,90,.5);box-shadow:0 0 0 3px rgba(184,151,90,.12)}
+.pnl-dl{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 16px;font-size:12.5px;font-weight:700;
+  border-radius:10px;letter-spacing:.02em;
+}
+.pnl-kpi{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;padding:0;
+}
+.pnl-tile{
+  position:relative;padding:18px 18px 16px;
+  background:#fff;border-right:1px solid rgba(28,27,25,.05);
+  transition:background .15s;
+  min-height:110px;
+}
+.pnl-tile:last-child{border-right:none}
+.pnl-tile:hover{background:#fffcf7}
+.pnl-tile-label{
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mut,#7a7670);display:flex;align-items:center;gap:6px;
+}
+.pnl-tile-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+}
+.pnl-tile-val{
+  font-family:var(--font-display),Georgia,serif;
+  font-size:24px;font-weight:600;letter-spacing:-.03em;
+  margin-top:10px;line-height:1.15;color:var(--ink);
+}
+.pnl-tile-meta{font-size:11px;color:var(--mut);margin-top:6px;font-weight:500}
+.pnl-tile.rev .pnl-tile-dot{background:#2f7a45}
+.pnl-tile.rev .pnl-tile-val{color:#1e5c32}
+.pnl-tile.exp .pnl-tile-dot{background:#a63d32}
+.pnl-tile.exp .pnl-tile-val{color:#8f342a}
+.pnl-tile.net .pnl-tile-dot{background:var(--gold,#c9a84c)}
+.pnl-tile.net.up .pnl-tile-val{color:#1e5c32}
+.pnl-tile.net.down .pnl-tile-val{color:#8f342a}
+.pnl-tile.pen .pnl-tile-dot{background:#6b6560}
+.pnl-tile.pen .pnl-tile-val{color:#3a3835}
+.pnl-detail{
+  padding:12px 20px 14px 22px;
+  font-size:12px;color:var(--mut);
+  border-top:1px solid rgba(28,27,25,.05);
+  background:rgba(247,245,240,.5);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.pnl-detail b{color:var(--ink);font-weight:700}
+.pnl-detail-tag{
+  font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:4px 10px;border-radius:999px;
+  background:rgba(44,62,45,.08);color:var(--grn,#2c3e2d);
+}
+@media(max-width:900px){
+  .pnl-kpi{grid-template-columns:1fr 1fr}
+  .pnl-tile:nth-child(2){border-right:none}
+  .pnl-tile:nth-child(1),
+  .pnl-tile:nth-child(2){border-bottom:1px solid rgba(28,27,25,.05)}
+}
+@media(max-width:520px){
+  .pnl-kpi{grid-template-columns:1fr}
+  .pnl-tile{border-right:none!important;border-bottom:1px solid rgba(28,27,25,.05)}
+  .pnl-tile:last-child{border-bottom:none}
+  .pnl-title{font-size:17px}
+  .pnl-tile-val{font-size:22px}
+}
+
+
+.tk-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;justify-content:flex-end}
+.tk-search-wrap{
+  position:relative;display:flex;align-items:center;flex:1;min-width:140px;max-width:220px;
+}
+.tk-search-ico{
+  position:absolute;left:10px;font-size:12px;opacity:.55;pointer-events:none;line-height:1;
+}
+.tk-search{
+  width:100%;box-sizing:border-box;
+  padding:7px 28px 7px 28px;font-size:12px;font-weight:500;font-family:inherit;
+  border:1px solid rgba(28,27,25,.12);border-radius:10px;
+  background:#fff;color:var(--ink);outline:none;
+  transition:border-color .15s, box-shadow .15s;
+}
+.tk-search:focus{
+  border-color:rgba(184,151,90,.55);
+  box-shadow:0 0 0 3px rgba(184,151,90,.14);
+}
+.tk-search::placeholder{color:var(--mut);font-weight:400}
+.tk-search-clear{
+  position:absolute;right:6px;width:20px;height:20px;border:0;border-radius:50%;
+  background:rgba(28,27,25,.08);color:var(--ink);cursor:pointer;font-size:13px;line-height:1;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.tk-search-clear:hover{background:rgba(28,27,25,.15)}
+@media(max-width:520px){
+  .tk-search-wrap{max-width:none;width:100%;flex:1 1 100%}
+  .tk-toolbar{justify-content:stretch}
+}
+
+
+/* Leads */
+.lead-kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.lead-kpi .lk{padding:14px 12px;border-radius:14px;background:#fff;border:1px solid rgba(28,27,25,.07);box-shadow:0 2px 10px rgba(28,27,25,.03)}
+.lead-kpi .lk b{display:block;font-family:var(--font-display),serif;font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.lead-kpi .lk span{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.lead-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.lead-list{display:flex;flex-direction:column;gap:10px}
+.lead-card{
+  display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;
+  padding:16px 18px;border-radius:14px;background:#fff;
+  border:1px solid rgba(28,27,25,.07);box-shadow:0 2px 12px rgba(28,27,25,.04);
+  transition:transform .15s,box-shadow .15s;
+}
+.lead-card:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(28,27,25,.07)}
+.lead-name{font-family:var(--font-display),serif;font-size:16px;font-weight:700;color:var(--ink);margin:0 0 4px}
+.lead-meta{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lead-st{
+  font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 9px;border-radius:999px;
+}
+.lead-st.new{background:rgba(44,62,45,.1);color:var(--grn)}
+.lead-st.contacted{background:rgba(44,95,138,.12);color:#2c5f8a}
+.lead-st.visit{background:rgba(184,151,90,.18);color:#8a6a28}
+.lead-st.proposal{background:rgba(120,80,160,.12);color:#6b3d9a}
+.lead-st.won{background:rgba(39,120,60,.15);color:#1e5c32}
+.lead-st.lost{background:rgba(166,61,50,.1);color:var(--red)}
+.lead-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.lead-notes{font-size:12px;color:var(--ink);margin-top:8px;opacity:.85;line-height:1.45}
+.lead-empty{text-align:center;padding:36px;color:var(--mut);border:1.5px dashed var(--bdr2);border-radius:14px}
+@media(max-width:700px){.lead-kpi{grid-template-columns:1fr 1fr}.lead-card{grid-template-columns:1fr}}
+
+/* Pending WA reminders panel */
+.pend-wa-card{
+  margin-bottom:18px;padding:18px 20px;border-radius:16px;
+  background:#fff;border:1px solid rgba(28,27,25,.08);
+  box-shadow:0 4px 16px rgba(28,27,25,.04);
+}
+.pend-wa-card h3{font-family:var(--font-display),serif;font-size:17px;margin:0 0 4px;font-weight:600}
+.pend-wa-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:12px 0;border-bottom:1px solid rgba(28,27,25,.05);
+}
+.pend-wa-row:last-child{border-bottom:none}
+.pend-wa-name{font-weight:700;font-size:14px;color:var(--ink)}
+.pend-wa-amt{font-family:var(--font-display),serif;font-weight:700;color:#8f342a}
+
+
+/* ══ Public Client Presentation ══ */
+#present-root{
+  display:none;position:fixed;inset:0;z-index:99990;
+  background:#0c100e;color:#f7f5f0;
+  font-family:var(--font-display),Georgia,serif;
+  overflow:hidden;
+}
+#present-root.on{display:flex;flex-direction:column}
+.pres-bar{
+  position:absolute;top:0;left:0;right:0;z-index:5;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;pointer-events:none;
+}
+.pres-bar *{pointer-events:auto}
+.pres-brand{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(232,213,163,.9)}
+.pres-bar-actions{display:flex;gap:8px;align-items:center}
+.pres-btn{
+  border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);
+  backdrop-filter:blur(10px);color:#fff;font-size:11px;font-weight:700;
+  padding:7px 12px;border-radius:999px;cursor:pointer;font-family:inherit;
+}
+.pres-btn:hover{background:rgba(255,255,255,.12)}
+.pres-btn.gold{border-color:rgba(201,168,76,.5);color:#e8d5a3}
+.pres-stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+.pres-slide{
+  position:absolute;inset:0;opacity:0;pointer-events:none;
+  transition:opacity .55s ease;display:flex;flex-direction:column;
+}
+.pres-slide.active{opacity:1;pointer-events:auto}
+.pres-intro{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:40px 24px;
+  background:radial-gradient(ellipse at 50% 30%,rgba(44,62,45,.45),transparent 55%),
+             linear-gradient(165deg,#0c100e 0%,#152018 50%,#0c100e 100%);
+}
+.pres-intro-mark{
+  width:56px;height:56px;border-radius:14px;margin-bottom:22px;
+  background:linear-gradient(145deg,#1a2e22,#2c3e2d);color:#e8d5a3;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:0 12px 40px rgba(0,0,0,.35);
+}
+.pres-intro h1{
+  font-size:clamp(28px,5vw,48px);font-weight:600;letter-spacing:-.03em;margin:0 0 10px;
+}
+.pres-intro .tag{
+  font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:rgba(201,168,76,.85);font-weight:600;
+}
+.pres-intro .sub{margin-top:18px;font-size:15px;color:rgba(247,245,240,.55);max-width:420px;line-height:1.6;font-family:system-ui,sans-serif}
+.pres-proj{flex:1;display:grid;grid-template-columns:1.35fr 1fr;min-height:0}
+@media(max-width:900px){.pres-proj{grid-template-columns:1fr}}
+.pres-img{
+  position:relative;background:#111;overflow:hidden;
+  min-height:280px;
+}
+.pres-img img,.pres-img .ph{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+}
+.pres-img .ph{
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#1a2420,#0e1411);
+  color:rgba(201,168,76,.35);font-size:48px;
+}
+.pres-img-shade{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 55%,rgba(12,16,14,.75));
+  pointer-events:none;
+}
+@media(max-width:900px){
+  .pres-img-shade{background:linear-gradient(to top,rgba(12,16,14,.9),transparent 50%)}
+}
+.pres-info{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(24px,5vw,56px);background:#0c100e;
+}
+.pres-info .eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(201,168,76,.9);margin-bottom:12px;font-family:system-ui,sans-serif;
+}
+.pres-info h2{
+  font-size:clamp(26px,4vw,40px);font-weight:600;letter-spacing:-.03em;margin:0 0 10px;line-height:1.15;
+}
+.pres-info .meta{
+  font-size:14px;color:rgba(247,245,240,.55);font-family:system-ui,sans-serif;margin-bottom:22px;
+}
+.pres-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.pres-chip{
+  font-size:11px;font-weight:600;letter-spacing:.04em;
+  padding:6px 12px;border-radius:999px;font-family:system-ui,sans-serif;
+  border:1px solid rgba(255,255,255,.12);color:rgba(247,245,240,.75);
+}
+.pres-prog-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(247,245,240,.4);font-family:system-ui,sans-serif;margin-bottom:8px}
+.pres-prog-track{height:4px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;max-width:280px}
+.pres-prog-fill{height:100%;background:linear-gradient(90deg,#c9a84c,#e8d5a3);border-radius:4px;transition:width .6s ease}
+.pres-prog-pct{font-size:13px;color:#e8d5a3;margin-top:8px;font-family:system-ui,sans-serif;font-weight:600}
+.pres-nav{
+  position:absolute;bottom:0;left:0;right:0;z-index:5;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  padding:18px 24px 22px;
+  background:linear-gradient(to top,rgba(0,0,0,.55),transparent);
+}
+.pres-nav button{
+  width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
+  background:rgba(0,0,0,.4);color:#fff;font-size:18px;cursor:pointer;
+  backdrop-filter:blur(8px);
+}
+.pres-nav button:hover{background:rgba(255,255,255,.12)}
+.pres-dots{display:flex;gap:6px;align-items:center}
+.pres-dot{
+  width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);border:none;padding:0;cursor:pointer;
+}
+.pres-dot.on{background:#e8d5a3;width:18px;border-radius:4px}
+.pres-count{font-size:12px;color:rgba(247,245,240,.45);font-family:system-ui,sans-serif;min-width:52px;text-align:center}
+.pres-grid-wrap{
+  flex:1;overflow:auto;padding:72px 28px 40px;
+  background:linear-gradient(165deg,#0c100e,#152018);
+}
+.pres-grid-title{text-align:center;margin-bottom:28px}
+.pres-grid-title h2{font-size:28px;font-weight:600;margin:0 0 6px;letter-spacing:-.02em}
+.pres-grid-title p{margin:0;font-size:13px;color:rgba(247,245,240,.45);font-family:system-ui,sans-serif}
+.pres-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:16px;max-width:1100px;margin:0 auto;
+}
+.pres-gcard{
+  border-radius:14px;overflow:hidden;cursor:pointer;position:relative;
+  aspect-ratio:4/3;background:#1a2420;border:1px solid rgba(255,255,255,.06);
+  transition:transform .2s,box-shadow .2s;
+}
+.pres-gcard:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.pres-gcard img,.pres-gcard .ph{width:100%;height:100%;object-fit:cover;display:block}
+.pres-gcard .ph{display:flex;align-items:center;justify-content:center;color:rgba(201,168,76,.3);font-size:32px;height:100%}
+.pres-gcard-cap{
+  position:absolute;left:0;right:0;bottom:0;padding:14px 14px 12px;
+  background:linear-gradient(to top,rgba(0,0,0,.85),transparent);
+  font-size:14px;font-weight:600;
+}
+.pres-gcard-cap small{display:block;font-size:11px;font-weight:500;color:rgba(247,245,240,.5);margin-top:2px;font-family:system-ui,sans-serif}
+
+
+
+/* ═══════════════════════════════════════════
+   Visual Polish — soft glass, shadows, hover
+   ═══════════════════════════════════════════ */
+html{scroll-behavior:smooth}
+body{
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Soft glass surfaces */
+.card,
+.dv2-card,
+.dv2-tasks,
+.setting-section,
+.lead-card,
+.tk-item,
+.pend-wa-card,
+#pnl-card{
+  background:var(--glass, rgba(255,252,247,.78)) !important;
+  backdrop-filter:blur(14px) saturate(1.15);
+  -webkit-backdrop-filter:blur(14px) saturate(1.15);
+  border:1px solid var(--glass-bdr,rgba(255,255,255,.5)) !important;
+  box-shadow:var(--sh) !important;
+  transition:transform .28s cubic-bezier(.22,1,.36,1),
+              box-shadow .28s cubic-bezier(.22,1,.36,1),
+              border-color .28s ease,
+              background .28s ease !important;
+}
+.card:hover,
+.dv2-card:hover,
+.lead-card:hover,
+.tk-item:hover{
+  transform:translateY(-2px) !important;
+  box-shadow:var(--sh-hover,var(--sh2)) !important;
+  border-color:rgba(184,151,90,.28) !important;
+  background:rgba(255,252,247,.92) !important;
+}
+
+/* KPI / metric tiles */
+.kpi-card,
+.dv2-kpi,
+.lead-kpi .lk,
+.pnl-tile{
+  transition:transform .28s cubic-bezier(.22,1,.36,1),
+              box-shadow .28s ease,
+              border-color .28s ease !important;
+}
+.kpi-card:hover,
+.lead-kpi .lk:hover,
+.pnl-tile:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 28px rgba(28,27,25,.08);
+}
+
+/* Buttons — soft press + glow */
+.btn{
+  transition:transform .2s cubic-bezier(.22,1,.36,1),
+              box-shadow .25s ease,
+              background .2s ease,
+              filter .2s ease !important;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn-p{
+  box-shadow:0 2px 10px rgba(44,62,45,.2),0 6px 18px rgba(44,62,45,.1) !important;
+}
+.btn-p:hover{
+  box-shadow:0 4px 14px rgba(44,62,45,.28),0 10px 28px rgba(44,62,45,.14) !important;
+}
+.btn-gold{
+  box-shadow:0 2px 10px rgba(184,151,90,.25),0 6px 18px rgba(184,151,90,.12) !important;
+}
+.btn-gold:hover{
+  box-shadow:0 4px 16px rgba(184,151,90,.35),0 12px 28px rgba(184,151,90,.15) !important;
+  filter:brightness(1.04);
+}
+
+/* Sidebar nav — soft active/hover */
+.nav-btn{
+  transition:background .22s ease, color .22s ease, transform .2s ease, box-shadow .22s ease !important;
+  border-radius:8px !important;
+}
+.nav-btn:hover{
+  background:rgba(255,255,255,.08) !important;
+  transform:translateX(2px);
+}
+.nav-btn.active{
+  background:rgba(255,255,255,.12) !important;
+  box-shadow:inset 2px 0 0 var(--gold), 0 4px 16px rgba(0,0,0,.12) !important;
+}
+
+/* Project / contact style cards if present */
+.proj-card,
+.contact-card,
+.cc-card{
+  transition:transform .28s cubic-bezier(.22,1,.36,1), box-shadow .28s ease, border-color .28s ease !important;
+}
+.proj-card:hover,
+.contact-card:hover,
+.cc-card:hover{
+  transform:translateY(-3px) !important;
+  box-shadow:var(--sh-hover) !important;
+}
+
+/* Modal glass */
+.modal-box,
+.modal-overlay .modal-box{
+  background:rgba(255,252,247,.94) !important;
+  backdrop-filter:blur(20px) saturate(1.2);
+  -webkit-backdrop-filter:blur(20px) saturate(1.2);
+  box-shadow:0 24px 64px rgba(28,27,25,.18), 0 0 0 1px rgba(255,255,255,.4) inset !important;
+  border:1px solid rgba(255,255,255,.45) !important;
+  animation:gsModalIn .32s cubic-bezier(.22,1,.36,1);
+}
+@keyframes gsModalIn{
+  from{opacity:0;transform:translateY(10px) scale(.98)}
+  to{opacity:1;transform:none}
+}
+.modal-overlay{
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  background:rgba(12,16,14,.42) !important;
+  animation:gsFade .25s ease;
+}
+@keyframes gsFade{from{opacity:0}to{opacity:1}}
+
+/* Inputs focus soft ring */
+.fi:focus,
+input.fi:focus,
+select.fi:focus,
+textarea.fi:focus{
+  outline:none !important;
+  border-color:rgba(184,151,90,.55) !important;
+  box-shadow:0 0 0 3px rgba(184,151,90,.14), 0 2px 8px rgba(28,27,25,.04) !important;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+
+/* Header soft glass */
+header, .topbar, #topbar{
+  background:rgba(255,252,247,.82) !important;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 4px 20px rgba(28,27,25,.04) !important;
+}
+
+/* Featured / image cards */
+.dv2-feat{
+  box-shadow:0 12px 40px rgba(15,26,20,.2), 0 0 0 1px rgba(255,255,255,.06) inset !important;
+  transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease !important;
+}
+.dv2-feat:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 48px rgba(15,26,20,.28), 0 0 0 1px rgba(255,255,255,.08) inset !important;
+}
+
+/* Progress bars soft */
+.pres-prog-fill,
+.progress-fill,
+[class*="progress"] > div{
+  transition:width .6s cubic-bezier(.22,1,.36,1) !important;
+}
+
+/* Page enter (if class used) */
+.gs-enter{animation:gsFadeUp .4s cubic-bezier(.22,1,.36,1)}
+@keyframes gsFadeUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+
+/* Scrollbar subtle */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{
+  background:rgba(28,27,25,.12);
+  border-radius:8px;
+  border:2px solid transparent;
+  background-clip:padding-box;
+}
+::-webkit-scrollbar-thumb:hover{background:rgba(28,27,25,.2);background-clip:padding-box}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    transition-duration:.01ms !important;
+  }
+}
+
+
+/* ── Subtle ambient background animations ── */
+#gs-ambient{
+  position:fixed;inset:0;z-index:0;
+  pointer-events:none;overflow:hidden;
+  background:var(--bg,#f7f5f0);
+}
+#gs-ambient .gs-orb{
+  position:absolute;border-radius:50%;
+  filter:blur(72px);opacity:.45;
+  will-change:transform;
+  mix-blend-mode:multiply;
+}
+#gs-ambient .gs-orb-1{
+  width:48vw;height:48vw;max-width:520px;max-height:520px;
+  left:-8%;top:-12%;
+  background:radial-gradient(circle,rgba(184,151,90,.28) 0%,rgba(184,151,90,0) 70%);
+  animation:gsOrbA 28s ease-in-out infinite alternate;
+}
+#gs-ambient .gs-orb-2{
+  width:42vw;height:42vw;max-width:460px;max-height:460px;
+  right:-10%;top:18%;
+  background:radial-gradient(circle,rgba(44,62,45,.16) 0%,rgba(44,62,45,0) 70%);
+  animation:gsOrbB 34s ease-in-out infinite alternate;
+}
+#gs-ambient .gs-orb-3{
+  width:36vw;height:36vw;max-width:400px;max-height:400px;
+  left:28%;bottom:-14%;
+  background:radial-gradient(circle,rgba(212,184,122,.2) 0%,rgba(212,184,122,0) 70%);
+  animation:gsOrbC 32s ease-in-out infinite alternate;
+}
+#gs-ambient .gs-grid{
+  position:absolute;inset:0;
+  opacity:.035;
+  background-image:
+    linear-gradient(rgba(28,27,25,.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(28,27,25,.5) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse at 50% 40%, #000 20%, transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 40%, #000 20%, transparent 75%);
+  animation:gsGridDrift 60s linear infinite;
+}
+@keyframes gsOrbA{
+  0%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(6%,4%) scale(1.06)}
+  100%{transform:translate(2%,8%) scale(.96)}
+}
+@keyframes gsOrbB{
+  0%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(-5%,6%) scale(1.08)}
+  100%{transform:translate(-8%,-2%) scale(1)}
+}
+@keyframes gsOrbC{
+  0%{transform:translate(0,0) scale(1.02)}
+  50%{transform:translate(5%,-5%) scale(1)}
+  100%{transform:translate(-3%,-3%) scale(1.05)}
+}
+@keyframes gsGridDrift{
+  0%{transform:translate(0,0)}
+  100%{transform:translate(48px,48px)}
+}
+/* Keep app content above ambient */
+#app-shell{
+  position:relative;z-index:1;
+}
+aside#sidebar{z-index:20}
+header,.topbar{position:relative;z-index:15}
+@media (prefers-reduced-motion:reduce){
+  #gs-ambient .gs-orb,
+  #gs-ambient .gs-grid{animation:none !important}
+}
+
+
+/* Cost Estimator */
+.ce-card{margin-bottom:18px;padding:0;overflow:hidden;border:1px solid rgba(184,151,90,.22)!important}
+.ce-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:18px 20px;border-bottom:1px solid rgba(28,27,25,.06);
+  background:linear-gradient(135deg,rgba(44,62,45,.06),rgba(184,151,90,.08));
+}
+.ce-title{font-family:var(--font-display),Georgia,serif;font-size:18px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+.ce-sub{font-size:12px;color:var(--mut);margin-top:4px}
+.ce-badge{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:5px 10px;border-radius:999px;background:rgba(44,62,45,.1);color:var(--grn);
+}
+.ce-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:280px}
+@media(max-width:800px){.ce-grid{grid-template-columns:1fr}}
+.ce-inputs{padding:18px 20px;border-right:1px solid rgba(28,27,25,.06)}
+@media(max-width:800px){.ce-inputs{border-right:none;border-bottom:1px solid rgba(28,27,25,.06)}}
+.ce-rates{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.ce-rate-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 10px;border-radius:10px;background:rgba(247,245,240,.8);border:1px solid rgba(28,27,25,.06);
+  font-size:12px;font-weight:600;color:var(--ink2);
+}
+.ce-rate-in{display:flex;align-items:center;gap:4px;font-weight:500;color:var(--mut)}
+.ce-rate-in input{width:88px;padding:6px 8px;font-size:12px;font-weight:700;color:var(--ink)}
+.ce-results{
+  padding:18px 20px;background:linear-gradient(165deg,#1a2e22,#2c3e2d);
+  color:#f7f5f0;display:flex;flex-direction:column;justify-content:center;
+}
+.ce-result-empty{text-align:center;opacity:.55;font-size:13px}
+.ce-eff{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(232,213,163,.75);margin-bottom:6px}
+.ce-eff-val{font-family:var(--font-display),Georgia,serif;font-size:22px;font-weight:600;margin-bottom:16px}
+.ce-tier{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08);
+}
+.ce-tier:last-child{border-bottom:none}
+.ce-tier-name{font-size:12px;font-weight:600;color:rgba(247,245,240,.7)}
+.ce-tier-rate{font-size:11px;color:rgba(232,213,163,.65)}
+.ce-tier-amt{font-family:var(--font-display),Georgia,serif;font-size:18px;font-weight:600;color:#e8d5a3}
+.ce-note{margin-top:14px;font-size:10px;line-height:1.5;color:rgba(247,245,240,.4)}
 
 </style>
 
@@ -2590,6 +3223,14 @@ html{transition:background .3s,color .3s}
 </head>
 <body>
 
+<div id="gs-ambient" aria-hidden="true">
+  <div class="gs-orb gs-orb-1"></div>
+  <div class="gs-orb gs-orb-2"></div>
+  <div class="gs-orb gs-orb-3"></div>
+  <div class="gs-grid"></div>
+</div>
+
+
 <div id="app-shell" style="display:flex;width:100%;height:100%;overflow:hidden">
 <div id="mob-bg" class="mob-bg" onclick="closeSidebar()"></div>
 
@@ -2613,7 +3254,7 @@ html{transition:background .3s,color .3s}
   </div>
   <nav>
     <div class="nav-sec">Main</div>
-    <button class="nav-btn active" data-view="dashboard"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="0.5"/><rect x="13" y="3" width="8" height="5" rx="0.5"/><rect x="13" y="10" width="8" height="11" rx="0.5"/><rect x="3" y="13" width="8" height="8" rx="0.5"/></svg></span>Dashboard</button>
+    <button class="nav-btn active" data-view="dashboard" onclick="switchView('dashboard')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="0.5"/><rect x="13" y="3" width="8" height="5" rx="0.5"/><rect x="13" y="10" width="8" height="11" rx="0.5"/><rect x="3" y="13" width="8" height="8" rx="0.5"/></svg></span>Dashboard</button>
     <button class="nav-btn" data-view="contacts" onclick="switchView('contacts')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"/></svg></span>Contacts<span class="nav-badge" id="nb-c">0</span></button>
     <button class="nav-btn" data-view="projects" onclick="switchView('projects')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M9 11h.01M15 11h.01"/></svg></span>Projects<span class="nav-badge" id="nb-p">0</span></button>
     <div class="nav-sec">Finance</div>
@@ -2622,6 +3263,8 @@ html{transition:background .3s,color .3s}
     <div class="nav-sec">Tools</div>
     <button class="nav-btn" data-view="estimates" onclick="switchView('estimates')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L20 4"/><path d="M14 4l6 6"/><path d="M8 10l2 2M11 7l2 2M5 13l2 2"/></svg></span>Estimates</button>
     <button class="nav-btn" data-view="expenses" onclick="switchView('expenses')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16"/><path d="M6 18V10l3-2 3 2v8"/><path d="M12 18V8l3-2 3 2v10"/></svg></span>Expenses</button>
+    <button class="nav-btn" data-view="leads" onclick="switchView('leads')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Leads</button>
+    <button class="nav-btn" type="button" onclick="openPresentation()"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 22h8M12 18v4"/></svg></span>Presentation</button>
     <button class="nav-btn" data-view="analytics" onclick="switchView('analytics')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/><path d="M12 12l4-5M12 12l-2 3"/></svg></span>Analytics</button>
     <button class="nav-btn" data-view="tools" onclick="switchView('tools')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><path d="M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg></span>Tools</button>
     <div class="nav-sec">Manage</div>
@@ -2832,20 +3475,39 @@ html{transition:background .3s,color .3s}
       </div>
 
       <!-- Monthly P&L -->
-      <div class="card" id="pnl-card" style="margin-bottom:18px;padding:18px 20px;border:1px solid rgba(184,151,90,.25);background:linear-gradient(165deg,rgba(255,252,247,.98),rgba(247,245,240,.95));border-radius:16px">
-        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px">
-          <div>
-            <div style="font-family:var(--font-display),serif;font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.02em">📊 Monthly P&amp;L Report</div>
-            <div style="font-size:12px;color:var(--mut);margin-top:4px">Revenue − Expenses · Pending fees · PDF download</div>
+      <div class="card" id="pnl-card">
+        <div class="pnl-head">
+          <div class="pnl-head-left">
+            <div class="pnl-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19V5M4 19h16M8 16V9M12 16V7M16 16v-5"/></svg>
+            </div>
+            <div>
+              <div class="pnl-title">Monthly P&amp;L</div>
+              <div class="pnl-sub">Revenue − Expenses · Pending · PDF</div>
+            </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <select class="fi fi-sel" id="pnl-month" style="width:130px;font-size:12px" onchange="renderPnLPreview()"></select>
-            <select class="fi fi-sel" id="pnl-year" style="width:100px;font-size:12px" onchange="renderPnLPreview()"></select>
-            <button type="button" class="btn btn-gold" onclick="generateMonthlyPnLPDF()">📄 Download PDF</button>
+          <div class="pnl-controls">
+            <select class="fi fi-sel pnl-sel" id="pnl-month" onchange="renderPnLPreview()"></select>
+            <select class="fi fi-sel pnl-sel" id="pnl-year" onchange="renderPnLPreview()"></select>
+            <button type="button" class="btn btn-gold pnl-dl" onclick="generateMonthlyPnLPDF()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M5 21h14"/></svg>
+              PDF
+            </button>
           </div>
         </div>
-        <div id="pnl-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px"></div>
-        <div id="pnl-detail" style="margin-top:14px;font-size:12px;color:var(--mut)"></div>
+        <div id="pnl-kpi" class="pnl-kpi"></div>
+        <div id="pnl-detail" class="pnl-detail"></div>
+      </div>
+
+      <div class="pend-wa-card" id="pend-wa-panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <div>
+            <h3>💬 Pending payment reminders</h3>
+            <div style="font-size:12px;color:var(--mut)">One-tap WhatsApp to clients with outstanding balance</div>
+          </div>
+          <button type="button" class="btn btn-s btn-sm" onclick="renderPendingWA()">Refresh</button>
+        </div>
+        <div id="pend-wa-list"><div style="color:var(--mut);font-size:13px">Loading…</div></div>
       </div>
 
       <!-- CLIENT MODE -->
@@ -2958,6 +3620,25 @@ html{transition:background .3s,color .3s}
         <div id="sync-info-box" style="margin-top:12px;font-size:12px;color:var(--mut)"></div>
       </div>
 
+
+      <div class="setting-section">
+        <h3>🖥 Public Client Presentation</h3>
+        <p style="font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.6">
+          TV / tablet वर client meeting साठी fullscreen portfolio. Sidebar दिसत नाही.
+          Link: <b style="color:var(--grn)">your-site.netlify.app/#present</b>
+        </p>
+        <button type="button" class="btn btn-gold" onclick="openPresentation()">▶ Start Presentation</button>
+      </div>
+
+      <div class="setting-section">
+        <h3>📘 Studio Brochure / Portfolio PDF</h3>
+        <p style="font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.6">
+          Client / builder ला देण्यासाठी professional services brochure —
+          2D–3D design, structural, permission docs, interiors व इतर सेवा.
+        </p>
+        <button type="button" class="btn btn-gold" onclick="downloadStudioBrochure()">⬇ Download Brochure PDF</button>
+      </div>
+
       <!-- Netlify Deploy Info -->
       <div class="setting-section" style="background:linear-gradient(135deg,#1a3a2a,#2d5a3d);color:white;border:none">
         <h3 style="color:#e8c96e">🚀 Netlify वर Deploy करा</h3>
@@ -2979,6 +3660,7 @@ html{transition:background .3s,color .3s}
         <p>Export all data as a JSON backup file. Import to restore or transfer data. Importing merges new records without deleting existing ones.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-p" onclick="exportData()">⬇ Export Backup (JSON)</button>
+          <button class="btn btn-s" onclick="exportPaymentsCSV()">⬇ Payments CSV</button>
           <button class="btn btn-s" onclick="document.getElementById('import-input').click()">⬆ Import JSON</button>
           <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(this)">
           <button class="btn btn-s" style="color:var(--red);border-color:var(--red)" onclick="clearAllData()">🗑 Clear All Data</button>
@@ -3071,6 +3753,26 @@ html{transition:background .3s,color .3s}
       </div>
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);max-width:500px;margin-bottom:18px" id="exp-kpi"></div>
       <div class="card"><div id="exp-list"></div></div>
+    </div>
+
+
+    <!-- ── LEADS & ENQUIRIES ── -->
+    <div id="view-leads" class="view-section">
+      <div class="sec-head">
+        <div class="sec-title">Leads &amp; Enquiries</div>
+        <button class="btn btn-gold" onclick="openLeadModal()">+ New Lead</button>
+      </div>
+      <div class="lead-kpi" id="lead-kpi"></div>
+      <div class="lead-filters" id="lead-filters">
+        <button type="button" class="tk-filter active" data-lf="all" onclick="setLeadFilter('all')">All</button>
+        <button type="button" class="tk-filter" data-lf="new" onclick="setLeadFilter('new')">New</button>
+        <button type="button" class="tk-filter" data-lf="contacted" onclick="setLeadFilter('contacted')">Contacted</button>
+        <button type="button" class="tk-filter" data-lf="visit" onclick="setLeadFilter('visit')">Site Visit</button>
+        <button type="button" class="tk-filter" data-lf="proposal" onclick="setLeadFilter('proposal')">Proposal</button>
+        <button type="button" class="tk-filter" data-lf="won" onclick="setLeadFilter('won')">Won</button>
+        <button type="button" class="tk-filter" data-lf="lost" onclick="setLeadFilter('lost')">Lost</button>
+      </div>
+      <div id="lead-list" class="lead-list"></div>
     </div>
 
     <!-- ── ANALYTICS ── -->
@@ -3220,6 +3922,71 @@ html{transition:background .3s,color .3s}
 
     <div id="view-tools" class="view-section">
       <div class="sec-head"><div class="sec-title">Architecture Tools</div></div>
+
+      <!-- ═══ COST / AREA CALCULATOR ═══ -->
+      <div class="card ce-card" id="cost-estimator-card">
+        <div class="ce-head">
+          <div>
+            <div class="ce-title">Interactive Cost Estimator</div>
+            <div class="ce-sub">Plot / built-up area → अंदाजे construction cost (₹ / sq.ft)</div>
+          </div>
+          <div class="ce-badge">Client tool</div>
+        </div>
+        <div class="ce-grid">
+          <div class="ce-inputs">
+            <div class="fg">
+              <label>Area type</label>
+              <select class="fi fi-sel" id="ce-area-type" onchange="ceRecalc()">
+                <option value="builtup">Built-up area (recommended)</option>
+                <option value="carpet">Carpet area</option>
+                <option value="plot">Plot area only</option>
+              </select>
+            </div>
+            <div class="form-row c2">
+              <div class="fg">
+                <label>Area (sq.ft) *</label>
+                <input class="fi" type="number" id="ce-area" min="0" step="1" placeholder="e.g. 1200" oninput="ceRecalc()">
+              </div>
+              <div class="fg">
+                <label>Floors (G+)</label>
+                <input class="fi" type="number" id="ce-floors" min="1" max="20" value="1" oninput="ceRecalc()">
+              </div>
+            </div>
+            <div class="fg" id="ce-plot-wrap" style="display:none">
+              <label>If plot area — assumed built-up %</label>
+              <input class="fi" type="number" id="ce-bu-pct" min="30" max="100" value="70" oninput="ceRecalc()">
+              <div style="font-size:11px;color:var(--mut);margin-top:4px">Plot वर ~70% built-up गृहीत (edit करू शकता)</div>
+            </div>
+            <div class="fg">
+              <label>Rate set</label>
+              <select class="fi fi-sel" id="ce-rate-set" onchange="ceApplyRates();ceRecalc()">
+                <option value="solapur2026">Solapur typical (2025–26)</option>
+                <option value="custom">Custom rates</option>
+              </select>
+            </div>
+            <div class="ce-rates">
+              <div class="ce-rate-row">
+                <span>Economy</span>
+                <div class="ce-rate-in">₹ <input class="fi" type="number" id="ce-r-eco" value="1600" oninput="ceRecalc()"> /sq.ft</div>
+              </div>
+              <div class="ce-rate-row">
+                <span>Standard</span>
+                <div class="ce-rate-in">₹ <input class="fi" type="number" id="ce-r-std" value="2100" oninput="ceRecalc()"> /sq.ft</div>
+              </div>
+              <div class="ce-rate-row">
+                <span>Premium</span>
+                <div class="ce-rate-in">₹ <input class="fi" type="number" id="ce-r-prm" value="2800" oninput="ceRecalc()"> /sq.ft</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:8px">
+              * अंदाजे civil cost (structure + basic finishing). Plot value, fees, interiors, GST वेगळे.
+            </div>
+          </div>
+          <div class="ce-results" id="ce-results">
+            <div class="ce-result-empty">Area enter करा — cost range दिसेल</div>
+          </div>
+        </div>
+      </div>
 
       <!-- ═══ AI FLOOR PLAN ASSISTANT ═══ -->
       <div class="card" style="margin-bottom:16px;border:1.5px solid var(--gold);overflow:hidden">
@@ -4064,7 +4831,8 @@ const DRAWINGS=[
 const VIEW_TITLES={
   dashboard:'Dashboard',contacts:'Contacts',projects:'Projects',
   payments:'Payment Records',reports:'Reports & PDF',settings:'Settings & Sync',
-  permcase:'Permission Case File'
+  permcase:'Permission Case File',leads:'Leads & Enquiries',
+  expenses:'Expense Tracker',analytics:'Analytics'
 };
 
 // ════════════════════════════════════════════════
@@ -5056,6 +5824,7 @@ function renderView(v){
     reports:function(){renderReports();renderRptContacts('All');},
     estimates:renderEstimates,
     expenses:renderExpenses,
+    leads:renderLeads,
     analytics:renderAnalytics,
     tools:renderToolsView,
     settings:renderSettings,
@@ -17713,7 +18482,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
     setInterval(pollRemote,6000);
   },500);
 });
-</script>
+<\/script>
 
 <!-- FAB Quick Add -->
 <div class="fab-menu" id="fab-menu" style="display:none">
@@ -20395,7 +21164,7 @@ Portal मध्ये पाहता येईल:
   const waUrl = 'https://wa.me/' + formatWA(c.wa || c.phone || '') + '?text=' + encodeURIComponent(msg);
   window.open(waUrl, '_blank');
 }
-</script>
+<\/script>
 
 <!-- Global Toasts -->
 <div id="gs-toast-ok" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a4a2a;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:9998;align-items:center;gap:8px;max-width:90vw;border:1px solid #2d6a3d"></div>
@@ -23180,10 +23949,24 @@ window.closeClientPortal=function(){
 /* ── switchView guard: block direct navigation into a disallowed view ── */
 var _origSwitchView=window.switchView;
 window.switchView=function(v){
-  if(window.ROLE_ACCESS&&window.ROLE_ACCESS[window.CURRENT_ROLE]&&window.ROLE_ACCESS[window.CURRENT_ROLE].indexOf(v)===-1){
-    v='dashboard';
-  }
-  return _origSwitchView(v);
+  try{
+    var role=window.CURRENT_ROLE||'admin';
+    var acc=window.ROLE_ACCESS&&window.ROLE_ACCESS[role];
+    // null/undefined = full access (admin); only restrict when list is an Array
+    if(Array.isArray(acc) && acc.indexOf(v)===-1){
+      v='dashboard';
+    }
+    if(typeof _origSwitchView==='function') return _origSwitchView(v);
+  }catch(err){ console.error('switchView role guard', err); }
+  // fallback if wrapper broken
+  try{
+    document.querySelectorAll('.view-section').forEach(function(e){e.classList.remove('active');e.style.display='none';});
+    var el=document.getElementById('view-'+v);
+    if(el){ el.classList.add('active'); el.style.display='block'; }
+    document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+    var nb=document.querySelector('.nav-btn[data-view="'+v+'"]');
+    if(nb) nb.classList.add('active');
+  }catch(e2){ console.error(e2); }
 };
 
 })();
@@ -23489,6 +24272,7 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
     if(typeof db==='undefined' || !db) return '';
     if(!db.tasks) db.tasks = [];
     var filter = window._tkFilter || 'pending';
+    var search = (window._tkSearch || '').trim().toLowerCase();
     var list = db.tasks.slice();
     // sort: pending first by due date, urgency
     var urgOrder = {urgent:0, high:1, normal:2, low:3};
@@ -23505,11 +24289,23 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
       var today = new Date().toISOString().slice(0,10);
       list = list.filter(function(x){ return x.status!=='done' && x.due === today; });
     }
+    if(search){
+      list = list.filter(function(x){
+        var cn = (typeof clientName==='function' ? clientName(x.clientId) : '') || '';
+        var pn = (typeof projectName==='function' ? projectName(x.projectId) : '') || '';
+        var hay = [x.title||'', x.dtype||'', x.notes||'', x.urgency||'', cn, pn, x.due||''].join(' ').toLowerCase();
+        return hay.indexOf(search) !== -1;
+      });
+    }
 
     var html = '<div class="dv2-tasks" id="dv2-tasks">';
     html += '<div class="dv2-tasks-head">';
     html += '<h2><span class="tk-ico">📋</span> आजचे काम · Drawing Delivery</h2>';
-    html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+    html += '<div class="tk-toolbar">';
+    html += '<div class="tk-search-wrap"><span class="tk-search-ico">🔍</span>';
+    html += '<input type="search" class="tk-search" id="tk-search" placeholder="Client, drawing, project…" value="'+String(window._tkSearch||'').replace(/"/g,'&quot;')+'" oninput="setTkSearch(this.value)" autocomplete="off">';
+    if(search) html += '<button type="button" class="tk-search-clear" onclick="setTkSearch(\'\')" title="Clear">×</button>';
+    html += '</div>';
     html += '<div class="dv2-tasks-filters">';
     [['pending','Pending'],['today','Today'],['urgent','Urgent'],['done','Done'],['all','All']].forEach(function(f){
       html += '<button type="button" class="tk-filter'+(filter===f[0]?' active':'')+'" onclick="setTkFilter(\''+f[0]+'\')">'+f[1]+'</button>';
@@ -23519,7 +24315,11 @@ if(typeof VIEW_TITLES==='object') VIEW_TITLES.archproj='🏗 Architectural Proje
     html += '</div></div>';
 
     if(!list.length){
-      html += '<div class="tk-empty"><div class="tk-empty-ico">📐</div>No work items yet<br><b onclick="openTaskModal()" style="cursor:pointer;color:var(--grn)">+ Add Drawing / Work</b></div>';
+      if(search){
+        html += '<div class="tk-empty"><div class="tk-empty-ico">🔍</div>No match for <b>"'+String(window._tkSearch||'').replace(/</g,'&lt;')+'"</b><br><span style="cursor:pointer;color:var(--grn);font-weight:700" onclick="setTkSearch(\'\')">Clear search</span></div>';
+      } else {
+        html += '<div class="tk-empty"><div class="tk-empty-ico">📐</div>No work items yet<br><b onclick="openTaskModal()" style="cursor:pointer;color:var(--grn)">+ Add Drawing / Work</b></div>';
+      }
     } else {
       html += '<div class="tk-list">';
       list.forEach(function(tk){
@@ -23565,6 +24365,15 @@ html += '</div>';
   window.setTkFilter = function(f){
     window._tkFilter = f;
     if(typeof renderDashboard==='function') renderDashboard();
+  };
+  window.setTkSearch = function(q){
+    window._tkSearch = q || '';
+    if(typeof renderDashboard==='function') renderDashboard();
+    // keep focus + cursor at end after re-render
+    setTimeout(function(){
+      var el=document.getElementById('tk-search');
+      if(el){ el.focus(); var n=el.value.length; try{ el.setSelectionRange(n,n); }catch(e){} }
+    }, 30);
   };
 
   window.openTaskModal = function(id){
@@ -23800,15 +24609,16 @@ html += '</div>';
     var d=computeMonthlyPnL(year, month);
     var kpi=document.getElementById('pnl-kpi');
     if(kpi){
+      var netCls = d.net>=0 ? 'up' : 'down';
       kpi.innerHTML=
-        '<div style="padding:14px;border-radius:12px;background:rgba(39,120,60,.08);border:1px solid rgba(39,120,60,.15)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Revenue</div><div style="font-family:var(--font-display),serif;font-size:22px;font-weight:700;color:var(--rgreen,#27783c);margin-top:4px">'+pnlFmt(d.revenue)+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">'+d.revRows.length+' payments</div></div>'+
-        '<div style="padding:14px;border-radius:12px;background:rgba(166,61,50,.06);border:1px solid rgba(166,61,50,.12)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Expenses</div><div style="font-family:var(--font-display),serif;font-size:22px;font-weight:700;color:var(--red,#a63d32);margin-top:4px">'+pnlFmt(d.expenses)+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">'+d.expRows.length+' entries</div></div>'+
-        '<div style="padding:14px;border-radius:12px;background:rgba(184,151,90,.1);border:1px solid rgba(184,151,90,.2)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Net Profit</div><div style="font-family:var(--font-display),serif;font-size:22px;font-weight:700;color:'+(d.net>=0?'var(--grn)':'var(--red)')+';margin-top:4px">'+pnlFmt(d.net)+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Revenue − Expenses</div></div>'+
-        '<div style="padding:14px;border-radius:12px;background:var(--surf2);border:1px solid var(--bdr)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Pending Fees</div><div style="font-family:var(--font-display),serif;font-size:22px;font-weight:700;color:var(--ink);margin-top:4px">'+pnlFmt(d.pending)+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">'+d.pendingRows.length+' projects</div></div>';
+        '<div class="pnl-tile rev"><div class="pnl-tile-label"><span class="pnl-tile-dot"></span>Revenue</div><div class="pnl-tile-val">'+pnlFmt(d.revenue)+'</div><div class="pnl-tile-meta">'+d.revRows.length+' payment'+(d.revRows.length===1?'':'s')+'</div></div>'+
+        '<div class="pnl-tile exp"><div class="pnl-tile-label"><span class="pnl-tile-dot"></span>Expenses</div><div class="pnl-tile-val">'+pnlFmt(d.expenses)+'</div><div class="pnl-tile-meta">'+d.expRows.length+' entr'+(d.expRows.length===1?'y':'ies')+'</div></div>'+
+        '<div class="pnl-tile net '+netCls+'"><div class="pnl-tile-label"><span class="pnl-tile-dot"></span>Net Profit</div><div class="pnl-tile-val">'+pnlFmt(d.net)+'</div><div class="pnl-tile-meta">Revenue − Expenses</div></div>'+
+        '<div class="pnl-tile pen"><div class="pnl-tile-label"><span class="pnl-tile-dot"></span>Pending Fees</div><div class="pnl-tile-val">'+pnlFmt(d.pending)+'</div><div class="pnl-tile-meta">'+d.pendingRows.length+' project'+(d.pendingRows.length===1?'':'s')+'</div></div>';
     }
     var det=document.getElementById('pnl-detail');
     if(det){
-      det.innerHTML='Period: <b style="color:var(--ink)">'+d.monthName+' '+d.year+'</b> · Office performance snapshot. Download PDF for full breakdown.';
+      det.innerHTML='<span>Period <b>'+d.monthName+' '+d.year+'</b> · Full breakdown in PDF</span><span class="pnl-detail-tag">Studio Report</span>';
     }
   };
 
@@ -23992,6 +24802,491 @@ html += '</div>';
   document.addEventListener('DOMContentLoaded', function(){
     setTimeout(function(){ if(typeof renderPnLPreview==='function') renderPnLPreview(); }, 400);
   });
+})();
+</script>
+
+
+<!-- Public Client Presentation -->
+<div id="present-root" aria-label="Client presentation">
+  <div class="pres-bar">
+    <div class="pres-brand" id="pres-brand">GREENHOUSE STUDIO</div>
+    <div class="pres-bar-actions">
+      <button type="button" class="pres-btn" onclick="presToggleAuto()" id="pres-auto-btn">Autoplay</button>
+      <button type="button" class="pres-btn" onclick="presShowGrid()">Portfolio</button>
+      <button type="button" class="pres-btn" onclick="downloadStudioBrochure()">Brochure PDF</button>
+      <button type="button" class="pres-btn gold" onclick="presExit()">Exit ✕</button>
+    </div>
+  </div>
+  <div class="pres-stage" id="pres-stage"></div>
+  <div class="pres-nav" id="pres-nav">
+    <button type="button" onclick="presPrev()" aria-label="Previous">‹</button>
+    <div class="pres-dots" id="pres-dots"></div>
+    <span class="pres-count" id="pres-count"></span>
+    <button type="button" onclick="presNext()" aria-label="Next">›</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="m-lead">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head">
+      <div class="modal-title" id="m-lead-title">+ New Lead</div>
+      <button class="modal-x" onclick="closeModal('m-lead')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="lead-id">
+      <div class="fg"><label>Name *</label><input class="fi" id="lead-name" placeholder="Client / Builder name"></div>
+      <div class="form-row c2">
+        <div class="fg"><label>Phone / WhatsApp</label><input class="fi" id="lead-phone" placeholder="98xxxxxxxx"></div>
+        <div class="fg"><label>Source</label>
+          <select class="fi fi-sel" id="lead-source">
+            <option>Walk-in</option><option>Phone call</option><option>WhatsApp</option>
+            <option>Referral</option><option>Site board</option><option>Instagram</option>
+            <option>Google</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>Project type</label>
+          <select class="fi fi-sel" id="lead-type">
+            <option>Residential</option><option>G+1 / G+2</option><option>Apartment</option>
+            <option>Commercial</option><option>Interior</option><option>Permission only</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg"><label>Status</label>
+          <select class="fi fi-sel" id="lead-status">
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="visit">Site Visit</option>
+            <option value="proposal">Proposal Sent</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>Follow-up date</label><input class="fi" type="date" id="lead-follow"></div>
+        <div class="fg"><label>Est. budget (₹)</label><input class="fi" type="number" id="lead-budget" placeholder="Optional"></div>
+      </div>
+      <div class="fg"><label>Location / Site</label><input class="fi" id="lead-loc" placeholder="Solapur / area"></div>
+      <div class="fg"><label>Notes</label><textarea class="fi fi-ta" id="lead-notes" rows="3" placeholder="Requirement, plot size…"></textarea></div>
+    </div>
+    <div class="modal-foot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--bdr)">
+      <button type="button" class="btn btn-s" onclick="closeModal('m-lead')">Cancel</button>
+      <button type="button" class="btn btn-gold" onclick="saveLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ── Leads ── */
+  window._leadFilter = window._leadFilter || 'all';
+  function ensureLeads(){ if(typeof db==='undefined'||!db) return []; if(!db.leads) db.leads=[]; return db.leads; }
+  function leadSave(){ try{ if(typeof saveAll==='function') saveAll(); else if(typeof saveLocal==='function') saveLocal(); }catch(e){} }
+  function leadEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function leadFmt(n){ if(typeof fmt==='function') return fmt(n); return '₹ '+Math.round(n||0).toLocaleString('en-IN'); }
+  var ST_LABEL={new:'New',contacted:'Contacted',visit:'Site Visit',proposal:'Proposal',won:'Won',lost:'Lost'};
+
+  window.setLeadFilter=function(f){
+    window._leadFilter=f;
+    document.querySelectorAll('#lead-filters .tk-filter').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-lf')===f); });
+    renderLeads();
+  };
+  window.renderLeads=function(){
+    var list=ensureLeads().slice();
+    var f=window._leadFilter||'all';
+    var kpi=document.getElementById('lead-kpi');
+    var counts={all:list.length,new:0,contacted:0,visit:0,proposal:0,won:0,lost:0};
+    list.forEach(function(L){ if(counts[L.status]!=null) counts[L.status]++; });
+    if(kpi){
+      kpi.innerHTML='<div class="lk"><b>'+counts.all+'</b><span>Total</span></div><div class="lk"><b>'+(counts.new+counts.contacted)+'</b><span>Active</span></div><div class="lk"><b>'+counts.visit+'</b><span>Visits</span></div><div class="lk"><b>'+counts.won+'</b><span>Won</span></div><div class="lk"><b>'+counts.lost+'</b><span>Lost</span></div>';
+    }
+    if(f!=='all') list=list.filter(function(L){ return L.status===f; });
+    var el=document.getElementById('lead-list');
+    if(!el) return;
+    if(!list.length){ el.innerHTML='<div class="lead-empty">No leads — <b style="cursor:pointer;color:var(--grn)" onclick="openLeadModal()">+ Add enquiry</b></div>'; return; }
+    el.innerHTML=list.map(function(L){
+      var st=L.status||'new';
+      var wa=String(L.phone||'').replace(/\D/g,''); if(wa.length===10) wa='91'+wa;
+      var msg=encodeURIComponent('Namaste '+(L.name||'')+', Greenhouse Studio here regarding your enquiry'+(L.type?(' for '+L.type):'')+'.');
+      return '<div class="lead-card"><div><div class="lead-name">'+leadEsc(L.name)+'</div><div class="lead-meta"><span class="lead-st '+st+'">'+(ST_LABEL[st]||st)+'</span>'+(L.type?'<span>'+leadEsc(L.type)+'</span>':'')+(L.source?'<span>· '+leadEsc(L.source)+'</span>':'')+(L.loc?'<span>· 📍 '+leadEsc(L.loc)+'</span>':'')+(L.follow?'<span>· Follow-up '+leadEsc(L.follow)+'</span>':'')+'</div>'+(L.notes?'<div class="lead-notes">'+leadEsc(L.notes)+'</div>':'')+'</div><div class="lead-actions">'+(wa?'<a class="btn btn-s btn-sm" target="_blank" href="https://wa.me/'+wa+'?text='+msg+'">WhatsApp</a>':'')+'<button type="button" class="btn btn-s btn-sm" onclick="openLeadModal(\''+L.id+'\')">Edit</button><button type="button" class="btn btn-s btn-sm" onclick="convertLeadToContact(\''+L.id+'\')">→ Contact</button><button type="button" class="btn btn-s btn-sm" style="color:var(--red)" onclick="deleteLead(\''+L.id+'\')">🗑</button></div></div>';
+    }).join('');
+  };
+  window.openLeadModal=function(id){
+    ensureLeads();
+    var set=function(i,v){ var e=document.getElementById(i); if(e) e.value=v||''; };
+    set('lead-id',''); set('lead-name',''); set('lead-phone',''); set('lead-source','Walk-in'); set('lead-type','Residential'); set('lead-status','new'); set('lead-follow',''); set('lead-budget',''); set('lead-loc',''); set('lead-notes','');
+    var title=document.getElementById('m-lead-title'); if(title) title.textContent='+ New Lead';
+    if(id){ var L=db.leads.find(function(x){return x.id===id;}); if(L){ set('lead-id',L.id); set('lead-name',L.name); set('lead-phone',L.phone); set('lead-source',L.source||'Walk-in'); set('lead-type',L.type||'Residential'); set('lead-status',L.status||'new'); set('lead-follow',L.follow||''); set('lead-budget',L.budget||''); set('lead-loc',L.loc||''); set('lead-notes',L.notes||''); if(title) title.textContent='Edit Lead'; } }
+    if(typeof openModal==='function') openModal('m-lead');
+  };
+  window.saveLead=function(){
+    ensureLeads();
+    var name=(document.getElementById('lead-name').value||'').trim(); if(!name){ alert('Name required'); return; }
+    var id=(document.getElementById('lead-id').value||'').trim();
+    var row={name:name,phone:(document.getElementById('lead-phone').value||'').trim(),source:document.getElementById('lead-source').value,type:document.getElementById('lead-type').value,status:document.getElementById('lead-status').value,follow:document.getElementById('lead-follow').value,budget:parseInt(document.getElementById('lead-budget').value,10)||0,loc:(document.getElementById('lead-loc').value||'').trim(),notes:(document.getElementById('lead-notes').value||'').trim()};
+    if(id){ var L=db.leads.find(function(x){return x.id===id;}); if(L) Object.assign(L,row); }
+    else { row.id=(typeof uid==='function'?uid('LD'):('LD-'+Date.now())); row.created=new Date().toISOString().slice(0,10); db.leads.unshift(row); }
+    leadSave(); if(typeof closeModal==='function') closeModal('m-lead'); renderLeads(); if(typeof showOk==='function') showOk('Lead saved');
+  };
+  window.deleteLead=function(id){ if(!confirm('Delete this lead?')) return; ensureLeads(); db.leads=db.leads.filter(function(x){return x.id!==id;}); leadSave(); renderLeads(); };
+  window.convertLeadToContact=function(id){
+    ensureLeads(); var L=db.leads.find(function(x){return x.id===id;}); if(!L) return;
+    if(!db.contacts) db.contacts=[];
+    db.contacts.push({id:(typeof uid==='function'?uid('CON'):('CON-'+Date.now())),name:L.name,cat:'Client',wa:L.phone||'',phone:L.phone||'',address:L.loc||'',notes:(L.notes||'')+(L.source?(' | Source: '+L.source):'')});
+    L.status='won'; leadSave(); renderLeads(); if(typeof showOk==='function') showOk('Contact created · Lead marked Won');
+  };
+
+  window.renderPendingWA=function(){
+    var el=document.getElementById('pend-wa-list'); if(!el||typeof db==='undefined') return;
+    var rows=[]; (db.projects||[]).forEach(function(p){ var bal=(typeof pbal==='function')?pbal(p.id):0; if(bal<=0) return; var c=(typeof gc==='function')?gc(p.clientId):null; rows.push({p:p,c:c,bal:bal}); });
+    rows.sort(function(a,b){ return b.bal-a.bal; });
+    if(!rows.length){ el.innerHTML='<div style="font-size:13px;color:var(--mut);padding:8px 0">No pending balances 🎉</div>'; return; }
+    el.innerHTML=rows.slice(0,20).map(function(r){
+      var phone=r.c?String(r.c.wa||r.c.phone||'').replace(/\D/g,''):''; if(phone.length===10) phone='91'+phone;
+      var msg='Namaste '+(r.c?r.c.name:'')+',\n\nGreenhouse Studio — project *'+(r.p.name||'')+'*\nOutstanding balance: *Rs. '+Math.round(r.bal).toLocaleString('en-IN')+'*\n\nPlease clear at your convenience. Thank you.';
+      var href=phone?('https://wa.me/'+phone+'?text='+encodeURIComponent(msg)):'';
+      return '<div class="pend-wa-row"><div><div class="pend-wa-name">'+leadEsc(r.p.name)+'</div><div style="font-size:12px;color:var(--mut)">'+(r.c?leadEsc(r.c.name):'No client')+'</div></div><div style="display:flex;align-items:center;gap:10px"><span class="pend-wa-amt">'+leadFmt(r.bal)+'</span>'+(href?'<a class="btn btn-gold btn-sm" target="_blank" href="'+href+'">WhatsApp</a>':'<button class="btn btn-s btn-sm" disabled>No WA</button>')+'</div></div>';
+    }).join('');
+  };
+  window.exportPaymentsCSV=function(){
+    if(typeof db==='undefined') return;
+    var pays=db.payments||[], lines=['Date,Project,Client,Stage,Mode,Amount,Notes'];
+    pays.forEach(function(p){ var proj=(typeof gp==='function')?gp(p.projectId):null; var c=proj&&typeof gc==='function'?gc(proj.clientId):null;
+      lines.push([p.date||'',proj?proj.name:'',c?c.name:'',p.stage||'',p.mode||'',p.amount||0,(p.notes||'').replace(/,/g,';')].map(function(x){return '"'+String(x).replace(/"/g,'""')+'"';}).join(',')); });
+    var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})); a.download='Payments_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  };
+
+  /* ── Presentation ── */
+  var presIdx=0, presSlides=[], presAuto=null, presMode='slides';
+  function presOfficeName(){ var o=(typeof officeInfo!=='undefined'&&officeInfo)?officeInfo:{}; return o.name||'Greenhouse Studio'; }
+  function presEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function presCover(p){ if(typeof coverOf==='function') return coverOf(p)||''; return (p&&(p.cover||p.image||p.photo))||''; }
+  function presPct(p){ if(!p) return 0; var stages=['Concept','Design','3D','Working Drawing','Approval','Site','Completed']; var i=stages.indexOf(p.stage||''); if(i<0) return 20; return Math.round(((i+1)/stages.length)*100); }
+  function presBuildSlides(){
+    var projects=(typeof db!=='undefined'&&db.projects)?db.projects.slice():[];
+    projects.sort(function(a,b){ return (presCover(b)?1:0)-(presCover(a)?1:0); });
+    var slides=[{type:'intro'}]; projects.forEach(function(p){ slides.push({type:'project',p:p}); }); if(projects.length) slides.push({type:'grid'}); return slides;
+  }
+  function presGridHTML(){
+    var projects=(typeof db!=='undefined'&&db.projects)?db.projects:[];
+    return '<div class="pres-grid-wrap"><div class="pres-grid-title"><h2>Portfolio</h2><p>Tap a project to present</p></div><div class="pres-grid">'+projects.map(function(p,i){ var cover=presCover(p); return '<div class="pres-gcard" onclick="presMode=\'slides\';presGo('+(i+1)+')">'+(cover?('<img src="'+String(cover).replace(/"/g,'&quot;')+'" alt="">'):'<div class="ph">⌂</div>')+'<div class="pres-gcard-cap">'+presEsc(p.name||'')+'<small>'+presEsc(p.address||p.city||'')+'</small></div></div>'; }).join('')+'</div></div>';
+  }
+  function presRender(){
+    var root=document.getElementById('present-root'), stage=document.getElementById('pres-stage'), dots=document.getElementById('pres-dots'), count=document.getElementById('pres-count'), brand=document.getElementById('pres-brand'), nav=document.getElementById('pres-nav');
+    if(!root||!stage) return;
+    if(brand) brand.textContent=(presOfficeName()||'').toUpperCase();
+    presSlides=presBuildSlides();
+    if(presIdx>=presSlides.length) presIdx=0; if(presIdx<0) presIdx=presSlides.length-1;
+    if(presMode==='grid'){ if(nav) nav.style.display='none'; stage.innerHTML=presGridHTML(); return; }
+    if(nav) nav.style.display='flex';
+    stage.innerHTML=presSlides.map(function(s,i){
+      var cls='pres-slide'+(i===presIdx?' active':'');
+      if(s.type==='intro') return '<div class="'+cls+'"><div class="pres-intro"><div class="pres-intro-mark">⌂</div><div class="tag">Architecture · Interiors</div><h1>'+presEsc(presOfficeName())+'</h1><div class="sub">Selected works &amp; ongoing projects — Solapur</div></div></div>';
+      if(s.type==='grid') return '<div class="'+cls+'">'+presGridHTML()+'</div>';
+      var p=s.p||{}, cover=presCover(p), c=(typeof gc==='function')?gc(p.clientId):null, loc=p.address||p.city||'Solapur', pct=presPct(p), type=(p.services&&p.services[0])||p.type||'Residential';
+      return '<div class="'+cls+'"><div class="pres-proj"><div class="pres-img">'+(cover?('<img src="'+String(cover).replace(/"/g,'&quot;')+'" alt="">'):'<div class="ph">⌂</div>')+'<div class="pres-img-shade"></div></div><div class="pres-info"><div class="eyebrow">Project '+i+' of '+(presSlides.length-2)+'</div><h2>'+presEsc(p.name||'Untitled')+'</h2><div class="meta">'+presEsc(loc)+(c?(' · '+presEsc(c.name)):'')+'</div><div class="pres-chips"><span class="pres-chip">'+presEsc(type)+'</span>'+(p.stage?('<span class="pres-chip">'+presEsc(p.stage)+'</span>'):'')+'</div><div class="pres-prog-label">Progress</div><div class="pres-prog-track"><div class="pres-prog-fill" style="width:'+pct+'%"></div></div><div class="pres-prog-pct">'+pct+'%</div></div></div></div>';
+    }).join('');
+    if(dots) dots.innerHTML=presSlides.map(function(_,i){ return '<button type="button" class="pres-dot'+(i===presIdx?' on':'')+'" onclick="presGo('+i+')"></button>'; }).join('');
+    if(count) count.textContent=(presIdx+1)+' / '+presSlides.length;
+  }
+  window.presGo=function(i){ presMode='slides'; presIdx=i; presRender(); };
+  window.presNext=function(){ if(!presSlides.length) presSlides=presBuildSlides(); presMode='slides'; presIdx=(presIdx+1)%presSlides.length; presRender(); };
+  window.presPrev=function(){ if(!presSlides.length) presSlides=presBuildSlides(); presMode='slides'; presIdx=(presIdx-1+presSlides.length)%presSlides.length; presRender(); };
+  window.presShowGrid=function(){ presMode='grid'; presRender(); };
+  window.presToggleAuto=function(){ var btn=document.getElementById('pres-auto-btn'); if(presAuto){ clearInterval(presAuto); presAuto=null; if(btn) btn.textContent='Autoplay'; } else { presMode='slides'; presAuto=setInterval(function(){ presNext(); },6000); if(btn) btn.textContent='Stop'; } };
+  window.presExit=function(){ if(presAuto){ clearInterval(presAuto); presAuto=null; } var root=document.getElementById('present-root'); if(root) root.classList.remove('on'); document.body.style.overflow=''; try{ if(location.hash==='#present'||location.hash==='#presentation') history.replaceState(null,'',location.pathname+location.search); }catch(e){} };
+  window.openPresentation=function(){ presIdx=0; presMode='slides'; var root=document.getElementById('present-root'); if(!root) return; root.classList.add('on'); document.body.style.overflow='hidden'; presRender(); try{ location.hash='present'; }catch(e){} };
+  document.addEventListener('keydown', function(e){ var root=document.getElementById('present-root'); if(!root||!root.classList.contains('on')) return; if(e.key==='Escape') presExit(); if(e.key==='ArrowRight'||e.key===' '){ e.preventDefault(); presNext(); } if(e.key==='ArrowLeft'){ e.preventDefault(); presPrev(); } if(e.key==='g'||e.key==='G') presShowGrid(); });
+  function presCheckHash(){ if(location.hash==='#present'||location.hash==='#presentation') setTimeout(function(){ openPresentation(); },300); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', presCheckHash); else presCheckHash();
+  window.addEventListener('hashchange', presCheckHash);
+
+  var _sv=window.switchView;
+  if(typeof _sv==='function' && !window._featSwitchPatched){
+    window._featSwitchPatched=true;
+    window.switchView=function(v){
+      var r=_sv.apply(this, arguments);
+      if(v==='leads') setTimeout(function(){ renderLeads(); },40);
+      if(v==='reports') setTimeout(function(){ if(typeof renderPendingWA==='function') renderPendingWA(); if(typeof renderPnLPreview==='function') renderPnLPreview(); },60);
+      return r;
+    };
+  }
+})();
+</script>
+
+
+
+
+
+<script>
+(function(){
+  window.downloadStudioBrochure = function(){
+    try{
+      if(!window.jspdf || !window.jspdf.jsPDF){
+        alert('jsPDF library not loaded. Hard refresh करा.');
+        return;
+      }
+      var o = (typeof officeInfo !== 'undefined' && officeInfo) ? officeInfo : {};
+      var name = o.name || 'Greenhouse Studio';
+      var arch = o.arch || 'Architect';
+      var addr = o.addr || o.address || 'Solapur';
+      var phone = o.phone || '';
+      var email = o.email || '';
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF('p', 'mm', 'a4');
+      var W = 210, H = 297;
+
+      function headerBar(){
+        doc.setFillColor(26, 58, 42);
+        doc.rect(0, 0, W, 42, 'F');
+        doc.setFillColor(201, 168, 76);
+        doc.rect(0, 42, W, 2.2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.text(name, 16, 18);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(201, 168, 76);
+        doc.text('ARCHITECTURE  ·  INTERIORS  ·  PERMISSIONS', 16, 26);
+        doc.setTextColor(220, 220, 220);
+        doc.setFontSize(8);
+        var contact = [addr, phone, email].filter(Boolean).join('  |  ');
+        if(contact) doc.text(contact, 16, 34);
+        doc.setTextColor(201, 168, 76);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('STUDIO BROCHURE', W - 16, 18, {align: 'right'});
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(200, 200, 200);
+        doc.text(arch, W - 16, 26, {align: 'right'});
+      }
+
+      function footer(page, total){
+        doc.setDrawColor(201, 168, 76);
+        doc.setLineWidth(0.3);
+        doc.line(16, H - 14, W - 16, H - 14);
+        doc.setFontSize(7);
+        doc.setTextColor(140, 140, 140);
+        doc.text(name + '  ·  Confidential client copy', 16, H - 8);
+        doc.text('Page ' + page + ' / ' + total, W - 16, H - 8, {align: 'right'});
+      }
+
+      function sectionTitle(y, title){
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(26, 58, 42);
+        doc.text(title, 16, y);
+        doc.setDrawColor(201, 168, 76);
+        doc.setLineWidth(0.6);
+        doc.line(16, y + 2, 16 + doc.getTextWidth(title) + 4, y + 2);
+        return y + 10;
+      }
+
+      function bodyText(y, text, maxW){
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(55, 55, 55);
+        var lines = doc.splitTextToSize(text, maxW || 178);
+        doc.text(lines, 16, y);
+        return y + lines.length * 4.6 + 4;
+      }
+
+      var services = [
+        {title: 'Architectural Design (2D)', desc: 'Floor plans, elevations, sections, working drawings and sanction drawings prepared as per site measurement and client brief. Clear, buildable drawings for contractors and authorities.'},
+        {title: '3D Elevation & Visualisation', desc: 'Realistic 3D exterior views so clients can visualise elevation, materials and massing before construction starts.'},
+        {title: 'Structural Design Coordination', desc: 'Coordination with structural engineers for RCC framing, foundations and load-bearing decisions aligned with architectural layout.'},
+        {title: 'Building Permission & Documentation', desc: 'Municipal submission sets, area statements, NOC support documents, client undertakings and permission paperwork for Solapur and nearby regions.'},
+        {title: 'Interior Layout Design', desc: 'Furniture layouts, kitchen and toilet planning, material suggestions and interior drawing packages for residential and small commercial spaces.'},
+        {title: 'Site Support & Working Drawings', desc: 'Site visits, revised working drawings, centre-line marking support and coordination during construction as agreed in the project fee.'},
+        {title: 'Estimates & Bank Loan Support', desc: 'Detailed construction estimates and bank-oriented estimate certificates based on standard rates, for loan processing and budgeting.'},
+        {title: 'Project Documentation', desc: 'Agreements, payment schedules, drawing issue records and progress documentation for transparent client-studio workflow.'}
+      ];
+
+      headerBar();
+      var y = 56;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(26, 58, 42);
+      doc.text('Design with clarity. Build with confidence.', 16, y);
+      y += 8;
+      y = bodyText(y, name + ' offers end-to-end architectural services — from concept and 2D/3D design to permission documentation, working drawings and site coordination. Every project is handled with practical detailing suited to local bye-laws, site conditions and the client budget.');
+      y += 2;
+
+      doc.setFillColor(247, 245, 240);
+      doc.roundedRect(16, y, 178, 28, 3, 3, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(26, 58, 42);
+      doc.text('Why clients choose us', 20, y + 9);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(70, 70, 70);
+      doc.text('Local Solapur expertise  ·  Clear drawings  ·  Sanction-ready sets  ·  Transparent fees  ·  On-time delivery focus', 20, y + 17);
+      y += 36;
+
+      y = sectionTitle(y, 'Our Services');
+      services.slice(0, 4).forEach(function(s, idx){
+        doc.setFillColor(26, 58, 42);
+        doc.circle(19, y - 1.2, 2.2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.text(String(idx + 1), 19, y, {align: 'center'});
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(26, 58, 42);
+        doc.text(s.title, 25, y);
+        y += 5;
+        y = bodyText(y, s.desc);
+        y += 2;
+      });
+      footer(1, 2);
+
+      doc.addPage();
+      headerBar();
+      y = 56;
+      y = sectionTitle(y, 'Our Services (continued)');
+      services.slice(4).forEach(function(s, idx){
+        doc.setFillColor(26, 58, 42);
+        doc.circle(19, y - 1.2, 2.2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.text(String(idx + 5), 19, y, {align: 'center'});
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(26, 58, 42);
+        doc.text(s.title, 25, y);
+        y += 5;
+        y = bodyText(y, s.desc);
+        y += 2;
+      });
+
+      y += 4;
+      y = sectionTitle(y, 'How we work');
+      [
+        '1. Brief & site discussion — requirements, plot, budget and timeline.',
+        '2. Concept / layout — options explained in simple terms.',
+        '3. Drawings & 3D — plans, elevations and visualisation as scoped.',
+        '4. Permissions — submission documents and authority coordination support.',
+        '5. Working drawings & site — construction support as per agreement.'
+      ].forEach(function(line){
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(50, 50, 50);
+        doc.text(line, 16, y);
+        y += 6;
+      });
+
+      y += 6;
+      doc.setFillColor(26, 58, 42);
+      doc.roundedRect(16, y, 178, 42, 3, 3, 'F');
+      doc.setTextColor(201, 168, 76);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('Start your project', 24, y + 12);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(255, 255, 255);
+      doc.text(name + (arch ? ('  ·  ' + arch) : ''), 24, y + 21);
+      var c2 = [addr, phone, email].filter(Boolean).join('   ·   ');
+      doc.setFontSize(8.5);
+      doc.setTextColor(220, 220, 220);
+      if(c2) doc.text(c2, 24, y + 29);
+      doc.setTextColor(201, 168, 76);
+      doc.setFontSize(8);
+      doc.text('Architecture  ·  Interiors  ·  Permissions  ·  Solapur', 24, y + 37);
+
+      footer(2, 2);
+      doc.save((name.replace(/\s+/g, '_') || 'Studio') + '_Brochure.pdf');
+      if(typeof showOk === 'function') showOk('Brochure PDF downloaded');
+    }catch(err){
+      alert('Brochure PDF error: ' + (err && err.message ? err.message : err));
+      console.error(err);
+    }
+  };
+})();
+</script>
+
+
+<script>
+(function(){
+  var CE_PRESETS = {
+    solapur2026: { eco: 1600, std: 2100, prm: 2800 }
+  };
+
+  function ceNum(id){
+    var el = document.getElementById(id);
+    if(!el) return 0;
+    var n = parseFloat(el.value);
+    return isNaN(n) ? 0 : n;
+  }
+  function ceFmt(n){
+    if(typeof fmt === 'function') return fmt(n);
+    return '₹ ' + Math.round(n || 0).toLocaleString('en-IN');
+  }
+  function ceEffArea(){
+    var area = ceNum('ce-area');
+    var floors = Math.max(1, ceNum('ce-floors') || 1);
+    var type = (document.getElementById('ce-area-type') || {}).value || 'builtup';
+    var wrap = document.getElementById('ce-plot-wrap');
+    if(wrap) wrap.style.display = type === 'plot' ? 'block' : 'none';
+    if(area <= 0) return 0;
+    if(type === 'plot'){
+      var pct = ceNum('ce-bu-pct') || 70;
+      return area * (pct / 100) * floors;
+    }
+    if(type === 'carpet'){
+      // carpet ≈ 75–80% of built-up → inverse ~1.25
+      return area * 1.25 * floors;
+    }
+    return area * floors;
+  }
+  window.ceApplyRates = function(){
+    var set = (document.getElementById('ce-rate-set') || {}).value || 'solapur2026';
+    if(set === 'custom') return;
+    var p = CE_PRESETS[set] || CE_PRESETS.solapur2026;
+    var map = { 'ce-r-eco': p.eco, 'ce-r-std': p.std, 'ce-r-prm': p.prm };
+    Object.keys(map).forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.value = map[id];
+    });
+  };
+  window.ceRecalc = function(){
+    var box = document.getElementById('ce-results');
+    if(!box) return;
+    var eff = ceEffArea();
+    if(eff <= 0){
+      box.innerHTML = '<div class="ce-result-empty">Area enter करा — cost range दिसेल</div>';
+      return;
+    }
+    var eco = ceNum('ce-r-eco'), std = ceNum('ce-r-std'), prm = ceNum('ce-r-prm');
+    var type = (document.getElementById('ce-area-type') || {}).value || 'builtup';
+    var floors = Math.max(1, ceNum('ce-floors') || 1);
+    var label = type === 'plot' ? 'Est. built-up used' : (type === 'carpet' ? 'Est. built-up (from carpet)' : 'Built-up × floors');
+    box.innerHTML =
+      '<div class="ce-eff">' + label + '</div>' +
+      '<div class="ce-eff-val">' + Math.round(eff).toLocaleString('en-IN') + ' sq.ft</div>' +
+      '<div class="ce-tier"><div><div class="ce-tier-name">Economy</div><div class="ce-tier-rate">₹ ' + eco.toLocaleString('en-IN') + ' /sq.ft</div></div><div class="ce-tier-amt">' + ceFmt(eff * eco) + '</div></div>' +
+      '<div class="ce-tier"><div><div class="ce-tier-name">Standard</div><div class="ce-tier-rate">₹ ' + std.toLocaleString('en-IN') + ' /sq.ft</div></div><div class="ce-tier-amt">' + ceFmt(eff * std) + '</div></div>' +
+      '<div class="ce-tier"><div><div class="ce-tier-name">Premium</div><div class="ce-tier-rate">₹ ' + prm.toLocaleString('en-IN') + ' /sq.ft</div></div><div class="ce-tier-amt">' + ceFmt(eff * prm) + '</div></div>' +
+      '<div class="ce-note">Indicative civil cost only · Floors: G+' + (floors - 1 > 0 ? (floors - 1) : '0') + ' (×' + floors + ') · Not a quotation</div>';
+  };
+
+  // Run when tools opens
+  var _sv = window.switchView;
+  if(typeof _sv === 'function' && !window._ceSwitchPatched){
+    window._ceSwitchPatched = true;
+    window.switchView = function(v){
+      var r = _sv.apply(this, arguments);
+      if(v === 'tools') setTimeout(function(){ ceApplyRates(); ceRecalc(); }, 50);
+      return r;
+    };
+  }
 })();
 </script>
 
