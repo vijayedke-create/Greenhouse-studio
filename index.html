@@ -5101,23 +5101,77 @@ let firebaseDb=null,firebaseRef=null,fbListener=null;
 // ════════════════════════════════════════════════
 // STORAGE
 // ════════════════════════════════════════════════
+function gsCountRecords(d){
+  if(!d || typeof d!=='object') return 0;
+  var n=0;
+  ['contacts','projects','payments','expenses','estimates','tasks','leads','siteVisits','activities'].forEach(function(k){
+    if(Array.isArray(d[k])) n += d[k].length;
+  });
+  return n;
+}
 function saveLocal(){
   try{
-    if(!db.tasks)db.tasks=[];
-    localStorage.setItem('gs_db',JSON.stringify(db));
-    localStorage.setItem('gs_office',JSON.stringify(officeInfo));
-    localStorage.setItem('gs_saved',new Date().toLocaleString());
-  }catch(e){}
+    if(!db) return;
+    if(!db.tasks) db.tasks=[];
+    if(!db.leads) db.leads=[];
+    var payload = JSON.stringify(db);
+    localStorage.setItem('gs_db', payload);
+    localStorage.setItem('gs_db_backup', payload);
+    localStorage.setItem('gs_office', JSON.stringify(officeInfo||{}));
+    localStorage.setItem('gs_saved', new Date().toLocaleString());
+    var el = document.getElementById('last-saved');
+    if(el) el.textContent = localStorage.getItem('gs_saved') || '—';
+    var dc = document.getElementById('data-count');
+    if(dc) dc.textContent = gsCountRecords(db);
+  }catch(e){
+    console.error('saveLocal', e);
+    try{
+      // quota fallback — try without large base64 if any
+      localStorage.setItem('gs_db', JSON.stringify(db));
+    }catch(e2){ console.error('saveLocal quota', e2); }
+  }
 }
 function loadLocal(){
   try{
-    const d=localStorage.getItem('gs_db');
-    if(d) db=JSON.parse(d);
-    if(!db.tasks) db.tasks=[];
-    if(!Array.isArray(db.tasks)) db.tasks=[];
-    const o=localStorage.getItem('gs_office');
-    if(o) officeInfo=JSON.parse(o);
-  }catch(e){}
+    var raw = localStorage.getItem('gs_db');
+    if(!raw) raw = localStorage.getItem('gs_db_backup');
+    // legacy keys
+    if(!raw) raw = localStorage.getItem('greenhouse_db') || localStorage.getItem('greenhouseStudio_db');
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === 'object'){
+        // If payload was export format {db, officeInfo}
+        if(parsed.db && typeof parsed.db === 'object'){
+          if(parsed.officeInfo) officeInfo = parsed.officeInfo;
+          parsed = parsed.db;
+        }
+        var incoming = gsCountRecords(parsed);
+        var current = gsCountRecords(db);
+        // Prefer loaded data if it has any records, or if current is only seed
+        if(incoming > 0 || current === 0){
+          db = parsed;
+        } else if(incoming === 0 && current > 0){
+          // keep current seed / in-memory rather than wipe with empty
+          console.warn('loadLocal: skipped empty storage overwrite');
+        } else {
+          db = parsed;
+        }
+      }
+    }
+    if(!db.tasks) db.tasks = [];
+    if(!Array.isArray(db.tasks)) db.tasks = [];
+    if(!db.leads) db.leads = [];
+    if(!db.contacts) db.contacts = [];
+    if(!db.projects) db.projects = [];
+    if(!db.payments) db.payments = [];
+    var o = localStorage.getItem('gs_office');
+    if(o){
+      try{ officeInfo = Object.assign(officeInfo||{}, JSON.parse(o)); }catch(e){}
+    }
+    console.log('loadLocal: contacts', (db.contacts||[]).length, 'projects', (db.projects||[]).length, 'payments', (db.payments||[]).length);
+  }catch(e){
+    console.error('loadLocal', e);
+  }
   if(typeof db!=='undefined' && !db.tasks) db.tasks=[];
 }
 
@@ -5218,6 +5272,13 @@ async function fbPoll(){
       if(!d.expenses) d.expenses=[];
       if(!d.estimates) d.estimates=[];
       if(!d.siteVisits) d.siteVisits=[];
+      var remoteN = (typeof gsCountRecords==='function') ? gsCountRecords(d) : ((d.contacts||[]).length+(d.projects||[]).length+(d.payments||[]).length);
+      var localN = (typeof gsCountRecords==='function') ? gsCountRecords(db) : ((db.contacts||[]).length+(db.projects||[]).length+(db.payments||[]).length);
+      // Never replace local data with empty remote
+      if(remoteN === 0 && localN > 0){
+        console.warn('fbPoll: skip empty remote overwrite');
+        return;
+      }
       var h=JSON.stringify(d);
       if(h!==fbLastHash){
         fbLastHash=h;
@@ -18458,8 +18519,13 @@ document.addEventListener('DOMContentLoaded',()=>{
 document.addEventListener('DOMContentLoaded',async ()=>{
   initTheme();
   initViewPrefs();
-  loadLocal();
-  ensureDbExtensions();
+  try{ loadLocal(); }catch(e){ console.error(e); }
+  try{ ensureDbExtensions(); }catch(e){ console.error(e); }
+  // Re-render after data load
+  try{
+    var nc=document.getElementById('nb-c');if(nc)nc.textContent=(db.contacts||[]).length;
+    var np=document.getElementById('nb-p');if(np)np.textContent=(db.projects||[]).length;
+  }catch(e){}
   // ── URL Hash → Client Portal Mode ──
   checkPortalMode();
   // Render only active view on load
