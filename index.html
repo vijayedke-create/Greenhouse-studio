@@ -3127,6 +3127,19 @@ header,.topbar{position:relative;z-index:15}
   transform:none !important;
 }
 
+
+/* Project cover photo */
+.p-cover-box{margin-top:6px}
+.p-cover-preview{
+  width:100%;height:140px;border-radius:12px;overflow:hidden;
+  border:1.5px dashed var(--bdr2);background:var(--surf2);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:8px;position:relative;
+}
+.p-cover-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.p-cover-ph{font-size:13px;color:var(--mut);font-weight:600}
+.p-cover-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
 </style>
 
 <style id="tp-abhipray-css">
@@ -4496,6 +4509,20 @@ header,.topbar{position:relative;z-index:15}
           <div><div style="font-size:10px;font-weight:700;color:var(--mut);margin-bottom:7px">Floor Plans Required</div><div id="apt-floors-checks" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
         </div>
         <div class="fg" style="margin-top:12px"><label>Notes <span class="ml">टिपा</span></label><textarea class="fi fi-ta" id="p-notes" placeholder="Additional info..."></textarea></div>
+        <div class="fg" style="margin-top:14px">
+          <label>Cover photo <span class="ml">कव्हर फोटो</span></label>
+          <div class="p-cover-box" id="p-cover-box">
+            <div class="p-cover-preview" id="p-cover-preview"><span class="p-cover-ph">⌂ Cover image</span></div>
+            <div class="p-cover-actions">
+              <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">📷 Choose photo
+                <input type="file" id="p-cover-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="projCoverOnFile(this)">
+              </label>
+              <button type="button" class="btn btn-s btn-sm" onclick="projCoverClear()" id="p-cover-clear" style="display:none;color:var(--red)">Remove</button>
+            </div>
+            <div style="font-size:11px;color:var(--mut);margin-top:6px">Featured project / cards वर दिसेल.</div>
+          </div>
+          <input type="hidden" id="p-cover-data" value="">
+        </div>
       </div>
 
       <!-- STEP 2: PROJECT BRIEF -->
@@ -8728,6 +8755,11 @@ function openEditProject(pid){
     set('p-total', p.total);
     set('p-deadline', p.deadline);
     set('p-notes', p.notes);
+    if(typeof projCoverSetPreview==='function'){
+      projCoverSetPreview(p.cover||p.image||p.photo||'');
+    } else {
+      var hid=document.getElementById('p-cover-data'); if(hid) hid.value=p.cover||'';
+    }
 
     // Payment mode
     const pmEl = document.getElementById('p-paymode');
@@ -8799,6 +8831,7 @@ function saveProject(){
     p.paymode = pmode;
     p.deadline = document.getElementById('p-deadline').value;
     p.notes = document.getElementById('p-notes').value.trim();
+    p.cover = (typeof projCoverGet==='function'?projCoverGet():(document.getElementById('p-cover-data')||{}).value)||'';
     p.aptFloors = document.getElementById('apt-floors')?document.getElementById('apt-floors').value:'';
     p.aptParking = document.getElementById('apt-parking')&&document.getElementById('apt-parking').checked;
     db.activities.unshift({text:'Project Updated — '+name,sub:'Edited',time:'Just now',color:'#2c5f8a'});
@@ -8825,6 +8858,7 @@ function saveProject(){
     services:svcs,total,paymode:pmode,
     deadline:document.getElementById('p-deadline').value,
     notes:document.getElementById('p-notes').value.trim(),
+    cover:(typeof projCoverGet==='function'?projCoverGet():(document.getElementById('p-cover-data')||{}).value)||'',
     stage:'Concept',files:[],
     aptFloors:document.getElementById('apt-floors')?document.getElementById('apt-floors').value:'',
     aptParking:document.getElementById('apt-parking')&&document.getElementById('apt-parking').checked
@@ -25399,6 +25433,74 @@ html += '</div>';
     window.switchView = function(v){
       var r = _sv.apply(this, arguments);
       if(v === 'tools') setTimeout(function(){ ceApplyRates(); ceRecalc(); }, 50);
+      return r;
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  window.projCoverSetPreview = function(dataUrl){
+    var prev = document.getElementById('p-cover-preview');
+    var hid = document.getElementById('p-cover-data');
+    var clr = document.getElementById('p-cover-clear');
+    if(hid) hid.value = dataUrl || '';
+    if(!prev) return;
+    if(dataUrl){
+      prev.innerHTML = '<img src="'+String(dataUrl).replace(/"/g,'&quot;')+'" alt="Cover">';
+      if(clr) clr.style.display = 'inline-flex';
+    } else {
+      prev.innerHTML = '<span class="p-cover-ph">⌂ Cover image</span>';
+      if(clr) clr.style.display = 'none';
+    }
+  };
+  window.projCoverClear = function(){
+    var f = document.getElementById('p-cover-file');
+    if(f) f.value = '';
+    projCoverSetPreview('');
+  };
+  window.projCoverOnFile = function(input){
+    var file = input && input.files && input.files[0];
+    if(!file) return;
+    if(!/^image\//i.test(file.type)){ alert('Please select an image file'); return; }
+    if(file.size > 2.5 * 1024 * 1024){ alert('Image too large (max ~2.5 MB).'); return; }
+    var reader = new FileReader();
+    reader.onload = function(){
+      var dataUrl = reader.result;
+      try{
+        var img = new Image();
+        img.onload = function(){
+          var maxW = 1200, maxH = 800;
+          var w = img.width, h = img.height;
+          var scale = Math.min(1, maxW / w, maxH / h);
+          if(scale < 1){
+            var c = document.createElement('canvas');
+            c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            dataUrl = c.toDataURL('image/jpeg', 0.82);
+          }
+          projCoverSetPreview(dataUrl);
+        };
+        img.onerror = function(){ projCoverSetPreview(reader.result); };
+        img.src = reader.result;
+      }catch(e){ projCoverSetPreview(reader.result); }
+    };
+    reader.readAsDataURL(file);
+  };
+  window.projCoverGet = function(){
+    var hid = document.getElementById('p-cover-data');
+    return hid ? (hid.value || '') : '';
+  };
+  var _om = window.openModal;
+  if(typeof _om === 'function' && !window._projCoverModalPatched){
+    window._projCoverModalPatched = true;
+    window.openModal = function(id){
+      var r = _om.apply(this, arguments);
+      if(id === 'm-proj' && !window._editProjectId){
+        setTimeout(function(){ if(typeof projCoverClear==='function') projCoverClear(); }, 30);
+      }
       return r;
     };
   }
