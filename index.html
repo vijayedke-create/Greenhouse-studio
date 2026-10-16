@@ -3160,6 +3160,33 @@ header,.topbar{position:relative;z-index:15}
   width:100%;height:36px;border:1px solid var(--bdr);border-radius:8px;padding:2px;cursor:pointer;background:var(--surf);
 }
 
+
+/* Professional quotations */
+.qt-layout{display:grid;grid-template-columns:minmax(240px,320px) 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.qt-layout{grid-template-columns:1fr}}
+.qt-list-card,.qt-editor-card{padding:16px 18px}
+.qt-list-head,.qt-editor-title{font-family:var(--font-display),Georgia,serif;font-size:16px;font-weight:600;color:var(--ink)}
+.qt-editor-sub{font-size:12px;color:var(--mut);margin-top:2px}
+.qt-editor-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--bdr)}
+.qt-item{
+  padding:12px;border-radius:10px;border:1px solid var(--bdr);margin-bottom:8px;cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+.qt-item:hover,.qt-item.active{border-color:var(--gold);background:rgba(184,151,90,.06)}
+.qt-item-title{font-size:13px;font-weight:700;color:var(--ink)}
+.qt-item-meta{font-size:11px;color:var(--mut);margin-top:3px}
+.qt-line{
+  display:grid;grid-template-columns:1fr 90px 36px;gap:8px;align-items:center;margin-bottom:8px;
+}
+.qt-total-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:10px;padding:12px 14px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(44,62,45,.08),rgba(184,151,90,.1));
+  font-weight:700;font-size:13px;color:var(--ink);
+}
+.qt-total-row span{font-family:var(--font-display),Georgia,serif;font-size:18px;color:var(--grn)}
+.qt-empty{text-align:center;padding:24px;color:var(--mut);font-size:13px;border:1.5px dashed var(--bdr2);border-radius:12px}
+
 </style>
 
 <style id="tp-abhipray-css">
@@ -3292,6 +3319,7 @@ header,.topbar{position:relative;z-index:15}
     <div class="nav-sec">Finance</div>
     <button class="nav-btn" data-view="payments" onclick="switchView('payments')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M8 21h8"/><path d="M5 9h14"/><path d="M7 9l-2 6h4L7 9zM17 9l-2 6h4l-2-6z"/></svg></span>Payments</button>
     <button class="nav-btn" data-view="reports" onclick="switchView('reports')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7V3z"/><path d="M15 3v4h4"/><path d="M10 12h6M10 16h6M10 8h2"/></svg></span>Reports & PDF</button>
+    <button class="nav-btn" data-view="quotations" onclick="switchView('quotations')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4"/><path d="M9 13h7M9 17h5M9 9h3"/></svg></span>Quotations</button>
     <div class="nav-sec">Tools</div>
     <button class="nav-btn" data-view="estimates" onclick="switchView('estimates')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L20 4"/><path d="M14 4l6 6"/><path d="M8 10l2 2M11 7l2 2M5 13l2 2"/></svg></span>Estimates</button>
     <button class="nav-btn" data-view="expenses" onclick="switchView('expenses')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16"/><path d="M6 18V10l3-2 3 2v8"/><path d="M12 18V8l3-2 3 2v10"/></svg></span>Expenses</button>
@@ -3610,6 +3638,54 @@ header,.topbar{position:relative;z-index:15}
     </div>
 
     <!-- ── SETTINGS ── -->
+    <div 
+    <div id="view-quotations" class="view-section">
+      <div class="sec-head">
+        <div class="sec-title">Professional Quotations</div>
+        <button class="btn btn-gold" type="button" onclick="qtOpenNew()">+ New Quotation</button>
+      </div>
+      <div class="qt-layout">
+        <div class="card qt-list-card">
+          <div class="qt-list-head">Saved quotations</div>
+          <div id="qt-list"></div>
+        </div>
+        <div class="card qt-editor-card">
+          <div class="qt-editor-head">
+            <div>
+              <div class="qt-editor-title" id="qt-editor-title">New quotation</div>
+              <div class="qt-editor-sub">Client-ready PDF with fee stages &amp; terms</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="btn btn-s" onclick="qtSave()">Save</button>
+              <button type="button" class="btn btn-gold" onclick="qtDownloadPDF()">⬇ PDF</button>
+            </div>
+          </div>
+          <input type="hidden" id="qt-id">
+          <div class="form-row c2">
+            <div class="fg"><label>Client *</label><select class="fi fi-sel" id="qt-client"></select></div>
+            <div class="fg"><label>Project (optional)</label><select class="fi fi-sel" id="qt-project"><option value="">— Select —</option></select></div>
+          </div>
+          <div class="form-row c2">
+            <div class="fg"><label>Quotation title *</label><input class="fi" id="qt-title" placeholder="Architectural design fees — Residential G+1"></div>
+            <div class="fg"><label>Date</label><input class="fi" type="date" id="qt-date"></div>
+          </div>
+          <div class="form-row c2">
+            <div class="fg"><label>Valid until</label><input class="fi" type="date" id="qt-valid"></div>
+            <div class="fg"><label>Reference no.</label><input class="fi" id="qt-ref" placeholder="Auto"></div>
+          </div>
+          <div class="fg"><label>Scope / description</label><textarea class="fi fi-ta" id="qt-scope" rows="3" placeholder="Design development, municipal drawings, 3D elevation, working drawings…"></textarea></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px">
+            <div style="font-size:12px;font-weight:700;color:var(--ink)">Fee stages</div>
+            <button type="button" class="btn btn-s btn-sm" onclick="qtAddLine()">+ Line</button>
+          </div>
+          <div id="qt-lines"></div>
+          <div class="qt-total-row">Total fee <span id="qt-total">₹ 0</span></div>
+          <div class="fg" style="margin-top:12px"><label>Terms &amp; conditions</label><textarea class="fi fi-ta" id="qt-terms" rows="4"></textarea></div>
+          <div class="fg"><label>Notes (internal / footer)</label><textarea class="fi fi-ta" id="qt-notes" rows="2" placeholder="Optional note on PDF footer"></textarea></div>
+        </div>
+      </div>
+    </div>
+
     <div id="view-settings" class="view-section">
       <div class="sec-head"><div class="sec-title">Settings & Sync</div></div>
 
@@ -4939,7 +5015,7 @@ const DRAWINGS=[
 const VIEW_TITLES={
   dashboard:'Dashboard',contacts:'Contacts',projects:'Projects',
   payments:'Payment Records',reports:'Reports & PDF',settings:'Settings & Sync',
-  permcase:'Permission Case File',leads:'Leads & Enquiries',
+  permcase:'Permission Case File',leads:'Leads & Enquiries',quotations:'Professional Quotations',
   expenses:'Expense Tracker',analytics:'Analytics'
 };
 
@@ -5269,6 +5345,7 @@ function loadLocal(){
     if(!db.tasks) db.tasks = [];
     if(!Array.isArray(db.tasks)) db.tasks = [];
     if(!db.leads) db.leads = [];
+    if(!db.quotations) db.quotations = [];
     if(!db.contacts) db.contacts = [];
     if(!db.projects) db.projects = [];
     if(!db.payments) db.payments = [];
@@ -6001,6 +6078,7 @@ function renderView(v){
     projects:renderProjects,
     payments:renderPayments,
     reports:function(){renderReports();renderRptContacts('All');},
+    quotations:function(){if(window.renderQuotations)renderQuotations();},
     estimates:renderEstimates,
     expenses:renderExpenses,
     leads:renderLeads,
@@ -25891,6 +25969,388 @@ html += '</div>';
     window.switchView = function(v){
       var r = _sv.apply(this, arguments);
       if(v === 'settings') setTimeout(abUpdateUI, 50);
+      return r;
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  var QT_DEFAULT_TERMS =
+    '1. Fees are payable as per the stages mentioned above.\n'+
+    '2. Government fees, scrutiny charges, printouts and third-party consultant fees are extra unless stated.\n'+
+    '3. Validity of this quotation is as mentioned; rates may be revised thereafter.\n'+
+    '4. Work shall commence on receipt of signed acceptance and advance payment.\n'+
+    '5. Additional site visits / revisions beyond the agreed scope will be charged separately.';
+
+  function qtEnsure(){
+    if(typeof db === 'undefined' || !db) return [];
+    if(!db.quotations) db.quotations = [];
+    return db.quotations;
+  }
+  function qtSaveDb(){
+    try{ if(typeof saveAll==='function') saveAll(); else if(typeof saveLocal==='function') saveLocal(); }catch(e){}
+  }
+  function qtEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function qtFmt(n){
+    if(typeof fmt==='function') return fmt(n);
+    return '₹ '+Math.round(n||0).toLocaleString('en-IN');
+  }
+  function qtVal(id){ var e=document.getElementById(id); return e?String(e.value||'').trim():''; }
+  function qtUid(){ return (typeof uid==='function')?uid('QT'):('QT-'+Date.now()); }
+
+  function qtFillClients(){
+    var sel=document.getElementById('qt-client');
+    if(!sel) return;
+    var cur=sel.value;
+    var list=(db.contacts||[]).slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+    sel.innerHTML='<option value="">— Select client —</option>'+list.map(function(c){
+      return '<option value="'+qtEsc(c.id)+'">'+qtEsc(c.name)+(c.cat?(' ('+qtEsc(c.cat)+')'):'')+'</option>';
+    }).join('');
+    if(cur) sel.value=cur;
+  }
+  function qtFillProjects(){
+    var sel=document.getElementById('qt-project');
+    if(!sel) return;
+    var cid=qtVal('qt-client');
+    var cur=sel.value;
+    var list=(db.projects||[]).filter(function(p){ return !cid || p.clientId===cid; });
+    sel.innerHTML='<option value="">— Select —</option>'+list.map(function(p){
+      return '<option value="'+qtEsc(p.id)+'">'+qtEsc(p.name)+'</option>';
+    }).join('');
+    if(cur) sel.value=cur;
+  }
+
+  window.qtAddLine = function(desc, amt){
+    var box=document.getElementById('qt-lines');
+    if(!box) return;
+    var row=document.createElement('div');
+    row.className='qt-line';
+    row.innerHTML=
+      '<input class="fi qt-line-desc" placeholder="Stage / item (e.g. Concept design)" value="'+qtEsc(desc||'')+'">'+
+      '<input class="fi qt-line-amt" type="number" placeholder="Amount" value="'+(amt!=null?amt:'')+'" oninput="qtRecalcTotal()">'+
+      '<button type="button" class="btn btn-s btn-sm" style="color:var(--red)" onclick="this.parentNode.remove();qtRecalcTotal()">✕</button>';
+    box.appendChild(row);
+    qtRecalcTotal();
+  };
+  window.qtRecalcTotal = function(){
+    var total=0;
+    document.querySelectorAll('.qt-line-amt').forEach(function(inp){
+      total += parseFloat(inp.value)||0;
+    });
+    var el=document.getElementById('qt-total');
+    if(el) el.textContent = qtFmt(total);
+    return total;
+  };
+  function qtCollectLines(){
+    var lines=[];
+    document.querySelectorAll('#qt-lines .qt-line').forEach(function(row){
+      var d=row.querySelector('.qt-line-desc');
+      var a=row.querySelector('.qt-line-amt');
+      var desc=d?d.value.trim():'';
+      var amt=a?parseFloat(a.value)||0:0;
+      if(desc || amt) lines.push({desc:desc, amount:amt});
+    });
+    return lines;
+  }
+
+  window.qtOpenNew = function(){
+    qtEnsure();
+    document.getElementById('qt-id').value='';
+    document.getElementById('qt-editor-title').textContent='New quotation';
+    document.getElementById('qt-title').value='';
+    document.getElementById('qt-scope').value='';
+    document.getElementById('qt-notes').value='';
+    document.getElementById('qt-terms').value=QT_DEFAULT_TERMS;
+    document.getElementById('qt-ref').value='';
+    var d=new Date();
+    var iso=d.toISOString().slice(0,10);
+    document.getElementById('qt-date').value=iso;
+    var v=new Date(d.getTime()+15*24*60*60*1000);
+    document.getElementById('qt-valid').value=v.toISOString().slice(0,10);
+    document.getElementById('qt-lines').innerHTML='';
+    qtAddLine('Concept / schematic design', 0);
+    qtAddLine('Municipal / sanction drawings', 0);
+    qtAddLine('Working drawings', 0);
+    qtFillClients(); qtFillProjects();
+    document.querySelectorAll('.qt-item').forEach(function(x){x.classList.remove('active');});
+    qtRecalcTotal();
+  };
+
+  window.qtLoad = function(id){
+    var q=qtEnsure().find(function(x){return x.id===id;});
+    if(!q) return;
+    document.getElementById('qt-id').value=q.id;
+    document.getElementById('qt-editor-title').textContent='Edit quotation';
+    qtFillClients();
+    document.getElementById('qt-client').value=q.clientId||'';
+    qtFillProjects();
+    document.getElementById('qt-project').value=q.projectId||'';
+    document.getElementById('qt-title').value=q.title||'';
+    document.getElementById('qt-date').value=q.date||'';
+    document.getElementById('qt-valid').value=q.validUntil||'';
+    document.getElementById('qt-ref').value=q.ref||'';
+    document.getElementById('qt-scope').value=q.scope||'';
+    document.getElementById('qt-terms').value=q.terms||QT_DEFAULT_TERMS;
+    document.getElementById('qt-notes').value=q.notes||'';
+    var box=document.getElementById('qt-lines');
+    box.innerHTML='';
+    (q.lines||[]).forEach(function(ln){ qtAddLine(ln.desc, ln.amount); });
+    if(!(q.lines||[]).length) qtAddLine('',0);
+    qtRecalcTotal();
+    document.querySelectorAll('.qt-item').forEach(function(x){
+      x.classList.toggle('active', x.getAttribute('data-id')===id);
+    });
+  };
+
+  window.qtSave = function(){
+    qtEnsure();
+    var clientId=qtVal('qt-client');
+    var title=qtVal('qt-title');
+    if(!clientId){ alert('Select client'); return; }
+    if(!title){ alert('Enter quotation title'); return; }
+    var lines=qtCollectLines();
+    var total=qtRecalcTotal();
+    var id=qtVal('qt-id');
+    var row={
+      clientId:clientId,
+      projectId:qtVal('qt-project'),
+      title:title,
+      date:qtVal('qt-date'),
+      validUntil:qtVal('qt-valid'),
+      ref:qtVal('qt-ref')||('QT/'+new Date().getFullYear()+'/'+String((db.quotations||[]).length+1).padStart(3,'0')),
+      scope:qtVal('qt-scope'),
+      terms:qtVal('qt-terms')||QT_DEFAULT_TERMS,
+      notes:qtVal('qt-notes'),
+      lines:lines,
+      total:total,
+      updatedAt:new Date().toISOString()
+    };
+    if(id){
+      var q=db.quotations.find(function(x){return x.id===id;});
+      if(q) Object.assign(q, row);
+    } else {
+      row.id=qtUid();
+      row.createdAt=new Date().toISOString();
+      db.quotations.unshift(row);
+      document.getElementById('qt-id').value=row.id;
+      document.getElementById('qt-ref').value=row.ref;
+    }
+    qtSaveDb();
+    renderQuotations();
+    if(typeof showOk==='function') showOk('Quotation saved');
+  };
+
+  window.qtDelete = function(id, ev){
+    if(ev) ev.stopPropagation();
+    if(!confirm('Delete this quotation?')) return;
+    qtEnsure();
+    db.quotations=db.quotations.filter(function(x){return x.id!==id;});
+    qtSaveDb();
+    if(qtVal('qt-id')===id) qtOpenNew();
+    renderQuotations();
+  };
+
+  window.renderQuotations = function(){
+    qtEnsure();
+    qtFillClients();
+    var list=document.getElementById('qt-list');
+    if(!list) return;
+    var items=db.quotations.slice();
+    if(!items.length){
+      list.innerHTML='<div class="qt-empty">No quotations yet.<br><b style="cursor:pointer;color:var(--grn)" onclick="qtOpenNew()">+ Create first quote</b></div>';
+    } else {
+      list.innerHTML=items.map(function(q){
+        var c=(typeof gc==='function')?gc(q.clientId):null;
+        return '<div class="qt-item" data-id="'+qtEsc(q.id)+'" onclick="qtLoad(\''+q.id+'\')">'+
+          '<div class="qt-item-title">'+qtEsc(q.title||'Untitled')+'</div>'+
+          '<div class="qt-item-meta">'+(c?qtEsc(c.name):'Client')+' · '+(q.date||'')+' · <b>'+qtFmt(q.total||0)+'</b></div>'+
+          '<div style="margin-top:6px"><button type="button" class="btn btn-s btn-sm" style="color:var(--red)" onclick="qtDelete(\''+q.id+'\',event)">Delete</button></div>'+
+          '</div>';
+      }).join('');
+    }
+    // client change → projects
+    var cs=document.getElementById('qt-client');
+    if(cs && !cs._qtBound){
+      cs._qtBound=true;
+      cs.addEventListener('change', qtFillProjects);
+    }
+    if(!qtVal('qt-id') && !qtVal('qt-title')){
+      // first visit empty editor defaults
+      if(!document.getElementById('qt-terms').value) document.getElementById('qt-terms').value=QT_DEFAULT_TERMS;
+      if(!document.getElementById('qt-lines').children.length){
+        qtOpenNew();
+      }
+    }
+  };
+
+  window.qtDownloadPDF = function(){
+    try{
+      // auto-save first
+      if(qtVal('qt-client') && qtVal('qt-title')) qtSave();
+      if(!window.jspdf || !window.jspdf.jsPDF){ alert('jsPDF not loaded'); return; }
+      var o=(typeof officeInfo!=='undefined'&&officeInfo)?officeInfo:{};
+      var name=o.name||'Greenhouse Studio';
+      var arch=o.arch||'';
+      var addr=o.addr||o.address||'';
+      var phone=o.phone||'';
+      var email=o.email||'';
+      var client=(typeof gc==='function')?gc(qtVal('qt-client')):null;
+      var title=qtVal('qt-title');
+      var lines=qtCollectLines();
+      var total=qtRecalcTotal();
+      var doc=new window.jspdf.jsPDF('p','mm','a4');
+      var W=210,H=297;
+
+      doc.setFillColor(26,58,42);
+      doc.rect(0,0,W,36,'F');
+      doc.setFillColor(201,168,76);
+      doc.rect(0,36,W,1.8,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(16);
+      doc.text(name,16,16);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(201,168,76);
+      doc.text('ARCHITECTURE  ·  INTERIORS  ·  PERMISSIONS',16,23);
+      doc.setTextColor(220,220,220);
+      doc.setFontSize(8);
+      var contact=[addr,phone,email].filter(Boolean).join('  |  ');
+      if(contact) doc.text(contact,16,30);
+      doc.setTextColor(201,168,76);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(11);
+      doc.text('QUOTATION', W-16, 16, {align:'right'});
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(230,230,230);
+      doc.text(qtVal('qt-ref')||'', W-16, 23, {align:'right'});
+      doc.text(qtVal('qt-date')||'', W-16, 29, {align:'right'});
+
+      var y=48;
+      doc.setTextColor(26,58,42);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(13);
+      doc.text(title||'Professional quotation', 16, y);
+      y+=8;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.setTextColor(60,60,60);
+      doc.text('To: '+(client?client.name:'Client')+(client&&client.address?('  ·  '+client.address):''), 16, y);
+      y+=5;
+      if(qtVal('qt-valid')){ doc.text('Valid until: '+qtVal('qt-valid'), 16, y); y+=6; }
+      else y+=2;
+
+      if(qtVal('qt-scope')){
+        doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(26,58,42);
+        doc.text('Scope of work', 16, y); y+=5;
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(55,55,55);
+        var scopeLines=doc.splitTextToSize(qtVal('qt-scope'), 178);
+        doc.text(scopeLines, 16, y);
+        y += scopeLines.length*4.5 + 6;
+      }
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(26,58,42);
+      doc.text('Fee schedule', 16, y); y+=4;
+      // table header
+      doc.setFillColor(26,58,42);
+      doc.rect(16, y, 178, 8, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(8);
+      doc.text('Description / Stage', 20, y+5.5);
+      doc.text('Amount (INR)', 188, y+5.5, {align:'right'});
+      y+=10;
+      doc.setTextColor(40,40,40);
+      doc.setFont('helvetica','normal');
+      lines.forEach(function(ln, i){
+        if(y>270){ doc.addPage(); y=20; }
+        if(i%2===0){ doc.setFillColor(247,245,240); doc.rect(16, y-4, 178, 8, 'F'); }
+        doc.setFontSize(9);
+        var dlines=doc.splitTextToSize(ln.desc||'—', 140);
+        doc.text(dlines, 20, y);
+        doc.setFont('helvetica','bold');
+        doc.text(qtFmt(ln.amount).replace('₹','Rs.'), 188, y, {align:'right'});
+        doc.setFont('helvetica','normal');
+        y += Math.max(8, dlines.length*4.5);
+      });
+      y+=2;
+      doc.setFillColor(26,58,42);
+      doc.rect(16, y, 178, 10, 'F');
+      doc.setTextColor(201,168,76);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.text('TOTAL', 20, y+6.5);
+      doc.text(qtFmt(total).replace('₹','Rs.'), 188, y+6.5, {align:'right'});
+      y+=16;
+
+      if(qtVal('qt-terms')){
+        if(y>250){ doc.addPage(); y=20; }
+        doc.setTextColor(26,58,42);
+        doc.setFont('helvetica','bold'); doc.setFontSize(10);
+        doc.text('Terms & conditions', 16, y); y+=5;
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(70,70,70);
+        var tlines=doc.splitTextToSize(qtVal('qt-terms'), 178);
+        doc.text(tlines, 16, y);
+        y += tlines.length*3.8 + 10;
+      }
+
+      if(y>250){ doc.addPage(); y=20; }
+      doc.setDrawColor(200,200,200);
+      doc.line(16, y, 90, y);
+      y+=5;
+      doc.setFontSize(8); doc.setTextColor(100,100,100);
+      doc.text('Authorised signatory', 16, y);
+      y+=4;
+      doc.setTextColor(26,58,42); doc.setFont('helvetica','bold');
+      doc.text(arch||name, 16, y);
+      y+=4; doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120);
+      doc.text(name, 16, y);
+
+      doc.setFontSize(7); doc.setTextColor(150,150,150);
+      doc.text('This quotation is computer generated for '+name+'.', 16, H-12);
+      if(qtVal('qt-notes')) doc.text(qtVal('qt-notes'), 16, H-7);
+
+      var fname=(qtVal('qt-ref')||'Quotation').replace(/[^\w\-]+/g,'_')+'.pdf';
+      doc.save(fname);
+      if(typeof showOk==='function') showOk('Quotation PDF downloaded');
+    }catch(err){
+      console.error(err);
+      alert('PDF error: '+(err.message||err));
+    }
+  };
+
+  // Keyboard shortcuts (professional)
+  document.addEventListener('keydown', function(e){
+    var tag=(e.target&&e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable) return;
+    if(e.key==='n' && !e.metaKey && !e.ctrlKey){ e.preventDefault(); if(typeof openModal==='function') openModal('m-proj'); }
+    if(e.key==='c' && !e.metaKey && !e.ctrlKey){ e.preventDefault(); if(typeof openAddContact==='function') openAddContact(); else if(typeof openModal==='function') openModal('m-contact'); }
+    if(e.key==='p' && !e.metaKey && !e.ctrlKey){ e.preventDefault(); if(typeof openModal==='function') openModal('m-pay'); }
+    if(e.key==='/' && !e.metaKey && !e.ctrlKey){
+      e.preventDefault();
+      var s=document.querySelector('input[placeholder*="Client"], input[placeholder*="Search"], #global-search');
+      if(s) s.focus();
+    }
+  });
+
+  // ensure db
+  if(typeof ensureDbExtensions==='function'){
+    var _ed=ensureDbExtensions;
+    window.ensureDbExtensions=function(){
+      _ed.apply(this, arguments);
+      if(db && !db.quotations) db.quotations=[];
+    };
+  }
+
+  var _sv=window.switchView;
+  if(typeof _sv==='function' && !window._qtSwitchPatched){
+    window._qtSwitchPatched=true;
+    window.switchView=function(v){
+      var r=_sv.apply(this, arguments);
+      if(v==='quotations') setTimeout(function(){ renderQuotations(); }, 40);
       return r;
     };
   }
