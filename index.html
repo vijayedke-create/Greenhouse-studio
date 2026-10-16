@@ -3140,6 +3140,26 @@ header,.topbar{position:relative;z-index:15}
 .p-cover-ph{font-size:13px;color:var(--mut);font-weight:600}
 .p-cover-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
+
+/* Color theme picker */
+.ct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.ct-card{
+  border:1.5px solid var(--bdr);border-radius:12px;padding:12px;cursor:pointer;
+  background:var(--surf);transition:border-color .2s,transform .2s,box-shadow .2s;
+  text-align:left;
+}
+.ct-card:hover{transform:translateY(-2px);border-color:var(--gold)}
+.ct-card.active{border-color:var(--grn);box-shadow:0 0 0 2px rgba(44,62,45,.15)}
+.ct-swatches{display:flex;gap:4px;margin-bottom:8px}
+.ct-sw{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.08)}
+.ct-name{font-size:12px;font-weight:700;color:var(--ink)}
+.ct-desc{font-size:10px;color:var(--mut);margin-top:2px}
+.ct-custom-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.ct-pick{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;color:var(--mut)}
+.ct-pick input[type=color]{
+  width:100%;height:36px;border:1px solid var(--bdr);border-radius:8px;padding:2px;cursor:pointer;background:var(--surf);
+}
+
 </style>
 
 <style id="tp-abhipray-css">
@@ -3593,6 +3613,27 @@ header,.topbar{position:relative;z-index:15}
     <div id="view-settings" class="view-section">
       <div class="sec-head"><div class="sec-title">Settings & Sync</div></div>
 
+      <div class="setting-section" id="color-theme-section">
+        <h3>🎨 Website colours</h3>
+        <p style="font-size:12px;color:var(--mut);margin-bottom:14px;line-height:1.6">
+          Studio look बदला — sidebar, buttons, accents. Selection save होते localStorage मध्ये.
+        </p>
+        <div class="ct-grid" id="ct-grid"></div>
+        <div class="ct-custom" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--bdr)">
+          <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:10px">Custom accents</div>
+          <div class="ct-custom-row">
+            <label class="ct-pick"><span>Primary (green)</span><input type="color" id="ct-grn" value="#2c3e2d" onchange="ctApplyCustom()"></label>
+            <label class="ct-pick"><span>Gold accent</span><input type="color" id="ct-gold" value="#b8975a" onchange="ctApplyCustom()"></label>
+            <label class="ct-pick"><span>Background</span><input type="color" id="ct-bg" value="#f7f5f0" onchange="ctApplyCustom()"></label>
+            <label class="ct-pick"><span>Surface</span><input type="color" id="ct-surf" value="#fffcf7" onchange="ctApplyCustom()"></label>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button type="button" class="btn btn-gold" onclick="ctApplyCustom()">Apply custom</button>
+            <button type="button" class="btn btn-s" onclick="ctResetDefault()">Reset default</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Sync Status -->
       <div class="setting-section">
         <h3>☁️ Firebase Real-Time Sync</h3>
@@ -3680,6 +3721,47 @@ header,.topbar{position:relative;z-index:15}
         <div style="margin-top:10px;font-size:11px;color:var(--mut)">
           Last saved: <span id="last-saved">—</span> &nbsp;|&nbsp;
           Records: <span id="data-counts">—</span>
+        </div>
+      </div>
+
+      <div class="setting-section" id="auto-backup-section">
+        <h3>💾 Auto backup · Drive / Email</h3>
+        <p style="font-size:12px;color:var(--mut);margin-bottom:12px;line-height:1.65">
+          Data हरवू नये म्हणून automatic local backup + Google Drive / Email साठी download.
+          (Browser मध्ये Direct Drive upload साठी Google login API लागतो — येथे one-click download + Drive/Email open होते.)
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;max-width:480px">
+          <div class="fg" style="margin:0">
+            <label>Auto backup</label>
+            <select class="fi fi-sel" id="ab-enabled" onchange="abSaveSettings()">
+              <option value="1">On</option>
+              <option value="0">Off</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Frequency</label>
+            <select class="fi fi-sel" id="ab-freq" onchange="abSaveSettings()">
+              <option value="daily">Every day</option>
+              <option value="3day">Every 3 days</option>
+              <option value="weekly">Every week</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--mut);margin-bottom:12px">
+          Last auto backup: <b id="ab-last">—</b>
+          &nbsp;·&nbsp; Snapshots in browser: <b id="ab-snap-count">0</b>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-gold" onclick="abDownloadNow()">⬇ Backup now (JSON)</button>
+          <button type="button" class="btn btn-p" onclick="abSaveToDrive()">📁 Google Drive वर ठेवा</button>
+          <button type="button" class="btn btn-s" onclick="abEmailBackup()">✉ Email backup</button>
+          <button type="button" class="btn btn-s" onclick="abRestoreLatestSnapshot()">↩ Restore last snapshot</button>
+        </div>
+        <div style="margin-top:12px;padding:12px;border-radius:10px;background:var(--surf2);border:1px solid var(--bdr);font-size:12px;line-height:1.7;color:var(--mut)">
+          <b style="color:var(--ink)">Google Drive steps:</b><br>
+          1. <b>Backup now</b> किंवा <b>Google Drive वर ठेवा</b> दाबा → JSON file download होईल<br>
+          2. <a href="https://drive.google.com" target="_blank" style="color:var(--grn);font-weight:600">drive.google.com</a> → Upload → ती JSON file निवडा<br>
+          3. Drive folder: <b>Greenhouse Studio Backups</b> तयार करा (recommended)
         </div>
       </div>
 
@@ -25501,6 +25583,314 @@ html += '</div>';
       if(id === 'm-proj' && !window._editProjectId){
         setTimeout(function(){ if(typeof projCoverClear==='function') projCoverClear(); }, 30);
       }
+      return r;
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  var CT_PRESETS = {
+    classic: {
+      name: 'Classic Studio',
+      desc: 'Olive + gold (default)',
+      grn: '#2c3e2d', grn2: '#3d5340', gold: '#b8975a', gold2: '#d4b87a',
+      bg: '#f7f5f0', surf: '#fffcf7', surf2: '#f3f0ea', ink: '#1c1b19'
+    },
+    forest: {
+      name: 'Deep Forest',
+      desc: 'Dark green + brass',
+      grn: '#1a2f24', grn2: '#2a4638', gold: '#c4a35a', gold2: '#e0c57a',
+      bg: '#f4f6f3', surf: '#ffffff', surf2: '#eef1ec', ink: '#141a16'
+    },
+    slate: {
+      name: 'Slate Blue',
+      desc: 'Architect blueprint',
+      grn: '#2c3e50', grn2: '#3d566e', gold: '#a67c52', gold2: '#c49a6c',
+      bg: '#f5f6f8', surf: '#ffffff', surf2: '#eef0f3', ink: '#1a1d21'
+    },
+    terracotta: {
+      name: 'Terracotta',
+      desc: 'Warm clay + sand',
+      grn: '#6b3e2e', grn2: '#8a5240', gold: '#c9a227', gold2: '#e0bc4a',
+      bg: '#faf6f1', surf: '#fffdfb', surf2: '#f3ebe3', ink: '#2a1f1a'
+    },
+    charcoal: {
+      name: 'Charcoal Gold',
+      desc: 'Modern dark accent',
+      grn: '#2b2b2b', grn2: '#3f3f3f', gold: '#d4af37', gold2: '#e8c95a',
+      bg: '#f6f5f3', surf: '#ffffff', surf2: '#eeedeb', ink: '#1a1a1a'
+    },
+    ocean: {
+      name: 'Ocean Mist',
+      desc: 'Teal + soft gold',
+      grn: '#1f4e5f', grn2: '#2d6a7e', gold: '#b8956c', gold2: '#d4b48a',
+      bg: '#f3f7f8', surf: '#ffffff', surf2: '#e8f0f2', ink: '#15252b'
+    }
+  };
+
+  function ctHexToRgb(hex){
+    hex = String(hex||'').replace('#','');
+    if(hex.length===3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    var n = parseInt(hex, 16);
+    return [(n>>16)&255, (n>>8)&255, n&255];
+  }
+  function ctApplyVars(p){
+    if(!p) return;
+    var r = document.documentElement;
+    r.style.setProperty('--grn', p.grn);
+    r.style.setProperty('--grn2', p.grn2 || p.grn);
+    r.style.setProperty('--grn3', p.grn2 || p.grn);
+    r.style.setProperty('--gold', p.gold);
+    r.style.setProperty('--gold2', p.gold2 || p.gold);
+    var rgb = ctHexToRgb(p.gold);
+    r.style.setProperty('--gold-bg', 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',.12)');
+    if(p.bg) r.style.setProperty('--bg', p.bg);
+    if(p.surf) r.style.setProperty('--surf', p.surf);
+    if(p.surf2) r.style.setProperty('--surf2', p.surf2);
+    if(p.ink) r.style.setProperty('--ink', p.ink);
+    // sidebar uses --grn heavily; force aside bg if needed
+    var aside = document.getElementById('sidebar');
+    if(aside) aside.style.background = p.grn;
+  }
+
+  window.ctSelectPreset = function(id){
+    var p = CT_PRESETS[id];
+    if(!p) return;
+    ctApplyVars(p);
+    try{
+      localStorage.setItem('gs_color_theme', JSON.stringify({preset:id, vars:p}));
+    }catch(e){}
+    // update pickers
+    var map = { 'ct-grn': p.grn, 'ct-gold': p.gold, 'ct-bg': p.bg, 'ct-surf': p.surf };
+    Object.keys(map).forEach(function(k){
+      var el = document.getElementById(k);
+      if(el && map[k]) el.value = map[k];
+    });
+    document.querySelectorAll('.ct-card').forEach(function(c){
+      c.classList.toggle('active', c.getAttribute('data-ct') === id);
+    });
+    if(typeof showOk === 'function') showOk('Theme: ' + p.name);
+  };
+
+  window.ctApplyCustom = function(){
+    function v(id, d){ var e=document.getElementById(id); return (e && e.value) ? e.value : d; }
+    var grn = v('ct-grn', '#2c3e2d');
+    var gold = v('ct-gold', '#b8975a');
+    var bg = v('ct-bg', '#f7f5f0');
+    var surf = v('ct-surf', '#fffcf7');
+    // derive grn2 slightly lighter
+    var p = {
+      name: 'Custom',
+      grn: grn, grn2: grn, gold: gold, gold2: gold,
+      bg: bg, surf: surf, surf2: bg, ink: '#1c1b19'
+    };
+    ctApplyVars(p);
+    try{ localStorage.setItem('gs_color_theme', JSON.stringify({preset:'custom', vars:p})); }catch(e){}
+    document.querySelectorAll('.ct-card').forEach(function(c){ c.classList.remove('active'); });
+    if(typeof showOk === 'function') showOk('Custom colours applied');
+  };
+
+  window.ctResetDefault = function(){
+    ctSelectPreset('classic');
+  };
+
+  window.ctRenderGrid = function(){
+    var grid = document.getElementById('ct-grid');
+    if(!grid) return;
+    var saved = null;
+    try{ saved = JSON.parse(localStorage.getItem('gs_color_theme')||'null'); }catch(e){}
+    var active = (saved && saved.preset) ? saved.preset : 'classic';
+    grid.innerHTML = Object.keys(CT_PRESETS).map(function(id){
+      var p = CT_PRESETS[id];
+      return '<button type="button" class="ct-card'+(active===id?' active':'')+'" data-ct="'+id+'" onclick="ctSelectPreset(\''+id+'\')">'+
+        '<div class="ct-swatches">'+
+          '<span class="ct-sw" style="background:'+p.grn+'"></span>'+
+          '<span class="ct-sw" style="background:'+p.gold+'"></span>'+
+          '<span class="ct-sw" style="background:'+p.bg+';border-color:#ccc"></span>'+
+        '</div>'+
+        '<div class="ct-name">'+p.name+'</div>'+
+        '<div class="ct-desc">'+p.desc+'</div></button>';
+    }).join('');
+  };
+
+  window.ctInit = function(){
+    var saved = null;
+    try{ saved = JSON.parse(localStorage.getItem('gs_color_theme')||'null'); }catch(e){}
+    if(saved && saved.vars){
+      ctApplyVars(saved.vars);
+      var p = saved.vars;
+      var map = { 'ct-grn': p.grn, 'ct-gold': p.gold, 'ct-bg': p.bg, 'ct-surf': p.surf };
+      Object.keys(map).forEach(function(k){
+        var el = document.getElementById(k);
+        if(el && map[k]) el.value = map[k];
+      });
+    }
+    ctRenderGrid();
+  };
+
+  // Load early + on settings
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(ctInit, 50); });
+  } else setTimeout(ctInit, 50);
+
+  var _sv = window.switchView;
+  if(typeof _sv === 'function' && !window._ctSwitchPatched){
+    window._ctSwitchPatched = true;
+    window.switchView = function(v){
+      var r = _sv.apply(this, arguments);
+      if(v === 'settings') setTimeout(ctRenderGrid, 40);
+      return r;
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  var AB_KEY = 'gs_auto_backup_settings';
+  var AB_SNAP = 'gs_backup_snapshots';
+  var AB_LAST = 'gs_auto_backup_last';
+
+  function abPayload(){
+    return {
+      db: (typeof db !== 'undefined' ? db : {}),
+      officeInfo: (typeof officeInfo !== 'undefined' ? officeInfo : {}),
+      exportedAt: new Date().toISOString(),
+      version: '2.0',
+      type: 'greenhouse-auto-backup'
+    };
+  }
+  function abFilename(){
+    var d = new Date();
+    var pad = function(n){ return (n<10?'0':'')+n; };
+    return 'Greenhouse_Backup_' + d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes()) + '.json';
+  }
+  function abDownloadBlob(payload, name){
+    var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name || abFilename();
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 800);
+  }
+  function abGetSettings(){
+    try{
+      var s = JSON.parse(localStorage.getItem(AB_KEY) || '{}');
+      return { enabled: s.enabled !== false && s.enabled !== 0 && s.enabled !== '0', freq: s.freq || 'daily' };
+    }catch(e){ return {enabled:true, freq:'daily'}; }
+  }
+  function abFreqMs(freq){
+    if(freq === 'weekly') return 7*24*60*60*1000;
+    if(freq === '3day') return 3*24*60*60*1000;
+    return 24*60*60*1000;
+  }
+  function abSaveSnapshot(){
+    try{
+      var payload = abPayload();
+      var snaps = [];
+      try{ snaps = JSON.parse(localStorage.getItem(AB_SNAP) || '[]'); }catch(e){ snaps = []; }
+      if(!Array.isArray(snaps)) snaps = [];
+      snaps.unshift({ at: new Date().toISOString(), data: payload });
+      snaps = snaps.slice(0, 5);
+      localStorage.setItem(AB_SNAP, JSON.stringify(snaps));
+      localStorage.setItem(AB_LAST, new Date().toISOString());
+      if(typeof saveLocal === 'function') try{ saveLocal(); }catch(e){}
+      return true;
+    }catch(e){
+      console.error('abSaveSnapshot', e);
+      try{
+        localStorage.setItem(AB_SNAP, JSON.stringify([{ at: new Date().toISOString(), data: abPayload() }]));
+        localStorage.setItem(AB_LAST, new Date().toISOString());
+        return true;
+      }catch(e2){ return false; }
+    }
+  }
+  function abShouldRun(){
+    var s = abGetSettings();
+    if(!s.enabled) return false;
+    var last = localStorage.getItem(AB_LAST);
+    if(!last) return true;
+    var t0 = Date.parse(last);
+    if(isNaN(t0)) return true;
+    return (Date.now() - t0) >= abFreqMs(s.freq);
+  }
+  function abUpdateUI(){
+    var s = abGetSettings();
+    var en = document.getElementById('ab-enabled');
+    var fr = document.getElementById('ab-freq');
+    if(en) en.value = s.enabled ? '1' : '0';
+    if(fr) fr.value = s.freq || 'daily';
+    var last = localStorage.getItem(AB_LAST);
+    var el = document.getElementById('ab-last');
+    if(el) el.textContent = last ? new Date(last).toLocaleString() : 'Never';
+    var snaps = [];
+    try{ snaps = JSON.parse(localStorage.getItem(AB_SNAP)||'[]'); }catch(e){}
+    var sc = document.getElementById('ab-snap-count');
+    if(sc) sc.textContent = Array.isArray(snaps) ? snaps.length : 0;
+  }
+
+  window.abSaveSettings = function(){
+    var en = document.getElementById('ab-enabled');
+    var fr = document.getElementById('ab-freq');
+    try{ localStorage.setItem(AB_KEY, JSON.stringify({ enabled: en ? en.value === '1' : true, freq: fr ? fr.value : 'daily' })); }catch(e){}
+    if(typeof showOk === 'function') showOk('Auto backup settings saved');
+    abUpdateUI();
+  };
+  window.abDownloadNow = function(){
+    abSaveSnapshot(); abDownloadBlob(abPayload(), abFilename()); abUpdateUI();
+    if(typeof showOk === 'function') showOk('Backup downloaded');
+  };
+  window.abSaveToDrive = function(){
+    abSaveSnapshot(); abDownloadBlob(abPayload(), abFilename()); abUpdateUI();
+    setTimeout(function(){
+      window.open('https://drive.google.com/drive/my-drive', '_blank');
+      alert('JSON download झाली.\n\nGoogle Drive → New → File upload → backup file निवडा.\nFolder: Greenhouse Studio Backups');
+    }, 600);
+  };
+  window.abEmailBackup = function(){
+    abSaveSnapshot(); abDownloadBlob(abPayload(), abFilename()); abUpdateUI();
+    var sub = encodeURIComponent('Greenhouse Studio backup ' + new Date().toLocaleDateString());
+    var body = encodeURIComponent('Attach the downloaded Greenhouse_Backup_....json file to this email and send to yourself.\n\nRestore: Settings → Import JSON.\n\nExported: ' + new Date().toLocaleString());
+    setTimeout(function(){ window.location.href = 'mailto:?subject=' + sub + '&body=' + body; }, 500);
+    if(typeof showOk === 'function') showOk('Backup downloaded — attach to email');
+  };
+  window.abRestoreLatestSnapshot = function(){
+    var snaps = [];
+    try{ snaps = JSON.parse(localStorage.getItem(AB_SNAP)||'[]'); }catch(e){}
+    if(!snaps.length){ alert('No snapshot. Run Backup now first.'); return; }
+    if(!confirm('Restore snapshot from ' + (snaps[0].at||'') + '?')) return;
+    try{
+      var data = snaps[0].data;
+      if(data.db){ db = data.db; if(data.officeInfo) officeInfo = data.officeInfo; }
+      else if(data.contacts || data.projects) db = data;
+      if(typeof ensureDbExtensions === 'function') ensureDbExtensions();
+      if(typeof saveLocal === 'function') saveLocal();
+      if(typeof refreshAll === 'function') refreshAll();
+      else if(typeof renderDashboard === 'function') renderDashboard();
+      if(typeof showOk === 'function') showOk('Snapshot restored');
+    }catch(e){ alert('Restore failed: ' + (e.message||e)); }
+  };
+  window.abCheckAuto = function(){
+    try{
+      if(abShouldRun()){ abSaveSnapshot(); console.log('Auto backup OK'); }
+      abUpdateUI();
+    }catch(e){ console.error(e); }
+  };
+
+  function abBoot(){ abUpdateUI(); abCheckAuto(); setInterval(abCheckAuto, 60*60*1000); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(abBoot, 800); });
+  else setTimeout(abBoot, 800);
+
+  var _sv = window.switchView;
+  if(typeof _sv === 'function' && !window._abSwitchPatched){
+    window._abSwitchPatched = true;
+    window.switchView = function(v){
+      var r = _sv.apply(this, arguments);
+      if(v === 'settings') setTimeout(abUpdateUI, 50);
       return r;
     };
   }
