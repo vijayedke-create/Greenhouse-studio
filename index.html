@@ -3886,24 +3886,23 @@ header,.topbar{position:relative;z-index:15}
         </div>
         <button class="btn btn-gold" onclick="saveOfficeInfo()" style="margin-top:4px">Save Office Info</button>
       </div>
-    </div>
 
-    <!-- ── ROLES & PINS ── -->
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-head"><span class="card-title">🔐 Roles &amp; PINs</span></div>
-      <p style="font-size:12px;color:var(--mut);margin:0 0 12px">
-        Admin/Engineer/Staff साठी 4-digit shared PIN — app उघडताना role निवडून हा PIN टाकावा लागतो.
-        Engineer ला फक्त Dashboard, Projects, Completion Report, Materials, Timeline दिसतं.
-        Staff ला Dashboard, Contacts, Projects, Payments, Estimates दिसतं. Admin ला सगळं.
-      </p>
-      <div class="form-row c2">
-        <div class="fg"><label>🛡️ Admin PIN</label><input class="fi" id="s-pin-admin" maxlength="4" inputmode="numeric" placeholder="4-digit"></div>
-        <div class="fg"><label>📐 Engineer PIN</label><input class="fi" id="s-pin-engineer" maxlength="4" inputmode="numeric" placeholder="4-digit"></div>
+      <!-- ── ROLES & PINS (Settings only) ── -->
+      <div class="setting-section" id="roles-pins-section">
+        <h3>🔐 Roles &amp; PINs</h3>
+        <p style="font-size:12px;color:var(--mut);margin:0 0 12px;line-height:1.6">
+          Admin / Engineer / Staff साठी 4-digit shared PIN — app उघडताना role निवडून PIN टाकावा लागतो.
+          Engineer: Dashboard, Projects, reports. Staff: Dashboard, Contacts, Projects, Payments, Estimates. Admin: सर्व.
+        </p>
+        <div class="form-row c2">
+          <div class="fg"><label>🛡️ Admin PIN</label><input class="fi" id="s-pin-admin" maxlength="4" inputmode="numeric" placeholder="4-digit" autocomplete="off"></div>
+          <div class="fg"><label>📐 Engineer PIN</label><input class="fi" id="s-pin-engineer" maxlength="4" inputmode="numeric" placeholder="4-digit" autocomplete="off"></div>
+        </div>
+        <div class="form-row c2">
+          <div class="fg"><label>🗂️ Staff PIN</label><input class="fi" id="s-pin-staff" maxlength="4" inputmode="numeric" placeholder="4-digit" autocomplete="off"></div>
+        </div>
+        <button type="button" class="btn btn-gold" onclick="saveRolePins()" style="margin-top:4px">Save PINs</button>
       </div>
-      <div class="form-row c2">
-        <div class="fg"><label>🗂️ Staff PIN</label><input class="fi" id="s-pin-staff" maxlength="4" inputmode="numeric" placeholder="4-digit"></div>
-      </div>
-      <button class="btn btn-gold" onclick="saveRolePins()" style="margin-top:4px">Save PINs</button>
     </div>
 
     <!-- ── ESTIMATES ── -->
