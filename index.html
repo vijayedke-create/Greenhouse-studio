@@ -11,6 +11,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}</script>
 
 <style>
 :root{
@@ -3187,6 +3189,40 @@ header,.topbar{position:relative;z-index:15}
 .qt-total-row span{font-family:var(--font-display),Georgia,serif;font-size:18px;color:var(--grn)}
 .qt-empty{text-align:center;padding:24px;color:var(--mut);font-size:13px;border:1.5px dashed var(--bdr2);border-radius:12px}
 
+
+/* Client Drawing Set */
+.ds-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start}
+@media(max-width:900px){.ds-grid{grid-template-columns:1fr}}
+.ds-card{padding:18px 20px}
+.ds-h{font-family:var(--font-display),Georgia,serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:12px}
+.ds-row{
+  display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;
+  padding:10px 12px;border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px;
+  background:var(--surf);
+}
+.ds-row.on{border-color:rgba(184,151,90,.45);background:rgba(184,151,90,.06)}
+.ds-row label{font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.ds-row .ds-meta{font-size:11px;color:var(--mut);font-weight:500}
+.ds-thumb{
+  width:52px;height:40px;border-radius:6px;object-fit:cover;border:1px solid var(--bdr);
+  background:var(--surf2);
+}
+.ds-thumb-ph{
+  width:52px;height:40px;border-radius:6px;border:1.5px dashed var(--bdr2);
+  display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--mut);background:var(--surf2);
+}
+.ds-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ds-preview{margin:0;padding-left:20px;font-size:13px;color:var(--ink2);line-height:1.8}
+.ds-preview b{color:var(--grn)}
+
+
+.ds-cover-bg-prev{
+  width:100%;height:120px;border-radius:10px;overflow:hidden;
+  border:1.5px dashed var(--bdr2);background:var(--surf2);
+  display:flex;align-items:center;justify-content:center;
+}
+.ds-cover-bg-prev img{width:100%;height:100%;object-fit:cover;display:block}
+
 </style>
 
 <style id="tp-abhipray-css">
@@ -3327,6 +3363,7 @@ header,.topbar{position:relative;z-index:15}
     <button class="nav-btn" type="button" onclick="openPresentation()"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 22h8M12 18v4"/></svg></span>Presentation</button>
     <button class="nav-btn" data-view="analytics" onclick="switchView('analytics')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/><path d="M12 12l4-5M12 12l-2 3"/></svg></span>Analytics</button>
     <button class="nav-btn" data-view="tools" onclick="switchView('tools')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><path d="M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg></span>Tools</button>
+    <button class="nav-btn" data-view="drawingset" onclick="switchView('drawingset')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>Drawing Set PDF</button>
     <div class="nav-sec">Manage</div>
     <button class="nav-btn" data-view="settings" onclick="switchView('settings')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8h4v12M10 20V4h4v16M16 20v-7h4v7"/></svg></span>Settings & Sync</button>
     <div style="height:1px;background:rgba(255,255,255,.1);margin:8px 14px"></div>
@@ -3682,6 +3719,74 @@ header,.topbar{position:relative;z-index:15}
           <div class="qt-total-row">Total fee <span id="qt-total">₹ 0</span></div>
           <div class="fg" style="margin-top:12px"><label>Terms &amp; conditions</label><textarea class="fi fi-ta" id="qt-terms" rows="4"></textarea></div>
           <div class="fg"><label>Notes (internal / footer)</label><textarea class="fi fi-ta" id="qt-notes" rows="2" placeholder="Optional note on PDF footer"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <div 
+    <div id="view-drawingset" class="view-section">
+      <div class="sec-head">
+        <div>
+          <div class="sec-title">Client Drawing Set</div>
+          <div style="font-size:12px;color:var(--mut);margin-top:4px">Cover + Index + सर्व drawings → एक professional PDF</div>
+        </div>
+        <button type="button" class="btn btn-gold" onclick="dsGeneratePDF()">⬇ Download Presentation PDF</button>
+      </div>
+
+      <div class="ds-grid">
+        <div class="card ds-card">
+          <div class="ds-h">1 · Project &amp; client</div>
+          <div class="fg"><label>Project *</label>
+            <select class="fi fi-sel" id="ds-project" onchange="dsOnProject()"></select>
+          </div>
+          <div class="form-row c2">
+            <div class="fg"><label>Client name</label><input class="fi" id="ds-client" placeholder="Auto from project"></div>
+            <div class="fg"><label>Project address</label><input class="fi" id="ds-address" placeholder="Site address"></div>
+          </div>
+          <div class="form-row c2">
+            <div class="fg"><label>Set title</label><input class="fi" id="ds-title" value="Architectural Drawing Set"></div>
+            <div class="fg"><label>Date</label><input class="fi" type="date" id="ds-date"></div>
+          </div>
+          <div class="fg"><label>Cover subtitle (optional)</label><input class="fi" id="ds-subtitle" placeholder="Sanction drawings · Working drawings · 3D views"></div>
+          <div class="fg" style="margin-top:12px">
+            <label>Cover background image <span class="ml">Front elevation / 3D / जे हवे</span></label>
+            <div class="ds-cover-bg">
+              <div class="ds-cover-bg-prev" id="ds-cover-prev"><span style="color:var(--mut);font-size:12px">No background — optional</span></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                <label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">📷 Upload cover image
+                  <input type="file" id="ds-cover-file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" style="display:none" onchange="dsCoverBgUpload(this)">
+                </label>
+                <button type="button" class="btn btn-s btn-sm" style="color:var(--red)" onclick="dsCoverBgClear()">Remove</button>
+              </div>
+              <div style="font-size:11px;color:var(--mut);margin-top:6px">Front elevation / 3D view cover वर full background दिसेल (dark overlay + text).</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card ds-card">
+          <div class="ds-h">2 · Select drawings · Upload</div>
+          <p style="font-size:12px;color:var(--mut);margin:0 0 10px;line-height:1.5">
+            Check करा जे PDF मध्ये हवे. प्रत्येक drawing साठी <b>JPG / PNG</b> किंवा <b>PDF</b> upload करा. Multi-page PDF = multiple sheets. Index आपोआप बनेल.
+          </p>
+          <div id="ds-list"></div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn btn-s" onclick="dsAddCustom()">+ Other drawing</button>
+            <button type="button" class="btn btn-s" onclick="dsSelectAll(true)">Select all</button>
+            <button type="button" class="btn btn-s" onclick="dsSelectAll(false)">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card ds-card" style="margin-top:16px">
+        <div class="ds-h">3 · Preview structure</div>
+        <ol class="ds-preview" id="ds-preview">
+          <li><b>Page 1</b> — Cover (portrait · logo · optional front elevation background)</li>
+          <li><b>Page 2</b> — Index (drawing list + page numbers)</li>
+          <li>Selected drawings…</li>
+        </ol>
+        <div style="margin-top:12px;font-size:12px;color:var(--mut)">
+          Uploaded sheets: <b id="ds-count">0</b>
+          &nbsp;·&nbsp; Ready PDF pages ≈ <b id="ds-pages">2</b>
         </div>
       </div>
     </div>
@@ -5014,7 +5119,7 @@ const DRAWINGS=[
 const VIEW_TITLES={
   dashboard:'Dashboard',contacts:'Contacts',projects:'Projects',
   payments:'Payment Records',reports:'Reports & PDF',settings:'Settings & Sync',
-  permcase:'Permission Case File',leads:'Leads & Enquiries',quotations:'Professional Quotations',
+  permcase:'Permission Case File',leads:'Leads & Enquiries',quotations:'Professional Quotations',drawingset:'Client Drawing Set',
   expenses:'Expense Tracker',analytics:'Analytics'
 };
 
@@ -6078,6 +6183,7 @@ function renderView(v){
     payments:renderPayments,
     reports:function(){renderReports();renderRptContacts('All');},
     quotations:function(){if(window.renderQuotations)renderQuotations();},
+    drawingset:function(){if(window.renderDrawingSet)renderDrawingSet();},
     estimates:renderEstimates,
     expenses:renderExpenses,
     leads:renderLeads,
@@ -26350,6 +26456,701 @@ html += '</div>';
     window.switchView=function(v){
       var r=_sv.apply(this, arguments);
       if(v==='quotations') setTimeout(function(){ renderQuotations(); }, 40);
+      return r;
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  var DS_DEFAULT = [
+    {id:'gfp', name:'Ground Floor Plan', group:'Plans'},
+    {id:'ffp', name:'First Floor Plan', group:'Plans'},
+    {id:'sfp', name:'Second Floor Plan', group:'Plans'},
+    {id:'tfp', name:'Terrace / Roof Plan', group:'Plans'},
+    {id:'site', name:'Site Plan', group:'Plans'},
+    {id:'parking', name:'Parking Layout', group:'Plans'},
+    {id:'centerline', name:'Centre Line Plan', group:'Plans'},
+    {id:'1bhk', name:'1 BHK Plan', group:'Unit Plans'},
+    {id:'2bhk', name:'2 BHK Plan', group:'Unit Plans'},
+    {id:'3bhk', name:'3 BHK Plan', group:'Unit Plans'},
+    {id:'4bhk', name:'4 BHK Plan', group:'Unit Plans'},
+    {id:'5bhk', name:'5 BHK Plan', group:'Unit Plans'},
+    {id:'fe', name:'Front Elevation', group:'Elevations'},
+    {id:'re', name:'Rear Elevation', group:'Elevations'},
+    {id:'se1', name:'Side Elevation 1', group:'Elevations'},
+    {id:'se2', name:'Side Elevation 2', group:'Elevations'},
+    {id:'sec', name:'Section AA', group:'Sections'},
+    {id:'secb', name:'Section BB', group:'Sections'},
+    {id:'3d-front', name:'3D View — Front', group:'3D'},
+    {id:'3d-iso', name:'3D View — Isometric', group:'3D'},
+    {id:'3d-night', name:'3D View — Night', group:'3D'},
+    {id:'3d-plan', name:'3D Plan (Aerial / Bird-eye)', group:'3D'},
+    {id:'3d-walk', name:'3D Walkthrough Still', group:'3D'},
+    {id:'plumb', name:'Plumbing Layout', group:'Services'},
+    {id:'elec', name:'Electrical Layout', group:'Services'},
+    {id:'drain', name:'Drainage Layout', group:'Services'},
+    {id:'furniture', name:'Furniture Layout', group:'Interiors'},
+    {id:'toilet', name:'Toilet Detail', group:'Details'},
+    {id:'stair', name:'Staircase Detail', group:'Details'},
+    {id:'compound', name:'Compound Wall / Gate', group:'Details'},
+    {id:'schedule', name:'Door / Window Schedule', group:'Schedules'}
+  ];
+
+  function dsState(){
+    if(!window._dsState){
+      window._dsState = { coverBg:'', items: DS_DEFAULT.map(function(d){ return Object.assign({checked:false, dataUrl:'', fileName:''}, d); }) };
+    } else {
+      // merge newly added default drawings (parking, BHK, 3D plan…)
+      DS_DEFAULT.forEach(function(d){
+        if(!window._dsState.items.some(function(x){ return x.id===d.id; })){
+          window._dsState.items.push(Object.assign({checked:false, dataUrl:'', fileName:''}, d));
+        }
+      });
+    }
+    return window._dsState;
+  }
+
+  function dsEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+  window.dsOnProject = function(){
+    var pid = (document.getElementById('ds-project')||{}).value;
+    var p = (typeof gp==='function') ? gp(pid) : ((db.projects||[]).find(function(x){return x.id===pid;}));
+    if(!p) return;
+    var c = (typeof gc==='function') ? gc(p.clientId) : null;
+    var cl = document.getElementById('ds-client');
+    var ad = document.getElementById('ds-address');
+    if(cl) cl.value = c ? c.name : '';
+    if(ad) ad.value = p.address || '';
+  };
+
+  window.dsSelectAll = function(on){
+    dsState().items.forEach(function(it){ it.checked = !!on; });
+    renderDrawingSet();
+  };
+
+  window.dsToggle = function(id, el){
+    var it = dsState().items.find(function(x){return x.id===id;});
+    if(it) it.checked = !!(el && el.checked);
+    dsUpdatePreview();
+    var row = el && el.closest('.ds-row');
+    if(row) row.classList.toggle('on', !!it.checked);
+  };
+
+  window.dsUpload = function(id, input){
+    var file = input && input.files && input.files[0];
+    if(!file) return;
+    var isPdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name);
+    var isImg = /^image\//i.test(file.type);
+    if(!isPdf && !isImg){
+      alert('Upload JPG, PNG, WebP किंवा PDF file.');
+      input.value='';
+      return;
+    }
+    if(file.size > 12*1024*1024){
+      alert('File too large (max 12 MB).');
+      return;
+    }
+
+    function applyImage(dataUrl, fileName, targetId){
+      var tid = targetId || id;
+      try{
+        var img = new Image();
+        img.onload = function(){
+          var max = 2200;
+          var scale = Math.min(1, max/img.width, max/img.height);
+          var out = dataUrl;
+          if(scale < 1){
+            var c = document.createElement('canvas');
+            c.width = Math.round(img.width*scale);
+            c.height = Math.round(img.height*scale);
+            c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+            out = c.toDataURL('image/jpeg', 0.88);
+          }
+          var it = dsState().items.find(function(x){return x.id===tid;});
+          if(it){ it.dataUrl = out; it.fileName = fileName; it.checked = true; }
+          renderDrawingSet();
+        };
+        img.onerror = function(){
+          var it = dsState().items.find(function(x){return x.id===tid;});
+          if(it){ it.dataUrl = dataUrl; it.fileName = fileName; it.checked = true; }
+          renderDrawingSet();
+        };
+        img.src = dataUrl;
+      }catch(e){
+        var it = dsState().items.find(function(x){return x.id===tid;});
+        if(it){ it.dataUrl = dataUrl; it.fileName = fileName; it.checked = true; }
+        renderDrawingSet();
+      }
+    }
+
+    if(isImg){
+      var reader = new FileReader();
+      reader.onload = function(){ applyImage(reader.result, file.name, id); };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // PDF → render page(s) to image via pdf.js
+    if(!window.pdfjsLib){
+      alert('PDF library loading… page refresh करा, किंवा image upload करा.');
+      return;
+    }
+    var reader2 = new FileReader();
+    reader2.onload = function(){
+      var typed = new Uint8Array(reader2.result);
+      pdfjsLib.getDocument({data: typed}).promise.then(function(pdf){
+        var n = pdf.numPages;
+        var baseName = file.name.replace(/\.pdf$/i,'');
+        var chain = Promise.resolve();
+        var firstId = id;
+        for(var p=1; p<=n; p++){
+          (function(pageNo){
+            chain = chain.then(function(){
+              return pdf.getPage(pageNo).then(function(page){
+                var scale = 1.8;
+                var viewport = page.getViewport({scale: scale});
+                var canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                var ctx = canvas.getContext('2d');
+                return page.render({canvasContext: ctx, viewport: viewport}).promise.then(function(){
+                  var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                  var targetId = firstId;
+                  if(pageNo === 1){
+                    applyImage(dataUrl, baseName+(n>1?(' p.'+pageNo):'')+'.pdf', targetId);
+                  } else {
+                    // extra pages → new custom sheets
+                    var newId = 'pdf-'+Date.now()+'-'+pageNo;
+                    var src = dsState().items.find(function(x){return x.id===firstId;});
+                    var label = (src?src.name:baseName) + ' (p.'+pageNo+')';
+                    dsState().items.push({
+                      id: newId,
+                      name: label,
+                      group: (src&&src.group)||'Other',
+                      checked: true,
+                      dataUrl: '',
+                      fileName: baseName+' p.'+pageNo+'.pdf'
+                    });
+                    applyImage(dataUrl, baseName+' p.'+pageNo+'.pdf', newId);
+                  }
+                });
+              });
+            });
+          })(p);
+        }
+        return chain.then(function(){ return n; });
+      }).then(function(pageCount){
+        if(typeof showOk==='function') showOk('PDF imported ('+pageCount+' page'+(pageCount>1?'s':'')+')');
+      }).catch(function(err){
+        console.error(err);
+        alert('PDF read error: '+(err.message||err));
+      });
+    };
+    reader2.readAsArrayBuffer(file);
+  };
+
+  window.dsClearImg = function(id){
+    var it = dsState().items.find(function(x){return x.id===id;});
+    if(it){ it.dataUrl=''; it.fileName=''; }
+    renderDrawingSet();
+  };
+
+  window.dsAddCustom = function(){
+    var name = prompt('Drawing name (e.g. Rainwater Harvesting Detail)');
+    if(!name || !name.trim()) return;
+    var id = 'custom-'+Date.now();
+    dsState().items.push({id:id, name:name.trim(), group:'Other', checked:true, dataUrl:'', fileName:''});
+    renderDrawingSet();
+  };
+
+  function dsUpdatePreview(){
+    var sel = dsState().items.filter(function(x){return x.checked;});
+    var withImg = sel.filter(function(x){return x.dataUrl;});
+    var countEl = document.getElementById('ds-count');
+    var pagesEl = document.getElementById('ds-pages');
+    if(countEl) countEl.textContent = withImg.length;
+    if(pagesEl) pagesEl.textContent = 2 + withImg.length;
+    var prev = document.getElementById('ds-preview');
+    if(!prev) return;
+    var html = '<li><b>Page 1</b> — Cover (logo, office, client, project)</li>'+
+               '<li><b>Page 2</b> — Index / Contents</li>';
+    withImg.forEach(function(it, i){
+      html += '<li><b>Page '+(i+3)+'</b> — '+dsEsc(it.name)+'</li>';
+    });
+    if(!withImg.length) html += '<li style="color:var(--mut)">Upload drawings to add sheets…</li>';
+    prev.innerHTML = html;
+  }
+
+  window.renderDrawingSet = function(){
+    // projects
+    var sel = document.getElementById('ds-project');
+    if(sel){
+      var cur = sel.value;
+      var list = (db.projects||[]).slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+      sel.innerHTML = '<option value="">— Select project —</option>'+list.map(function(p){
+        return '<option value="'+dsEsc(p.id)+'">'+dsEsc(p.name)+'</option>';
+      }).join('');
+      if(cur) sel.value = cur;
+    }
+    var dateEl = document.getElementById('ds-date');
+    if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+
+    var box = document.getElementById('ds-list');
+    if(!box) return;
+    var items = dsState().items;
+    var groups = [];
+    items.forEach(function(it){
+      if(groups.indexOf(it.group)===-1) groups.push(it.group);
+    });
+    var html = '';
+    groups.forEach(function(g){
+      html += '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:12px 0 6px">'+dsEsc(g)+'</div>';
+      items.filter(function(x){return x.group===g;}).forEach(function(it){
+        html += '<div class="ds-row'+(it.checked?' on':'')+'">'+
+          '<input type="checkbox" '+(it.checked?'checked':'')+' onchange="dsToggle(\''+it.id+'\',this)">'+
+          '<label onclick="var cb=this.parentNode.querySelector(\'input[type=checkbox]\');cb.checked=!cb.checked;dsToggle(\''+it.id+'\',cb)">'+
+            dsEsc(it.name)+
+            (it.fileName?'<div class="ds-meta">'+dsEsc(it.fileName)+'</div>':'')+
+          '</label>'+
+          '<div class="ds-actions">'+
+            (it.dataUrl
+              ? '<img class="ds-thumb" src="'+it.dataUrl+'" alt="">'
+              : '<div class="ds-thumb-ph">No file</div>')+
+            '<label class="btn btn-s btn-sm" style="cursor:pointer;margin:0">Upload'+
+              '<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" style="display:none" onchange="dsUpload(\''+it.id+'\',this)">'+
+            '</label>'+
+            (it.dataUrl?'<button type="button" class="btn btn-s btn-sm" style="color:var(--red)" onclick="dsClearImg(\''+it.id+'\')">✕</button>':'')+
+          '</div></div>';
+      });
+    });
+    box.innerHTML = html;
+    dsUpdatePreview();
+  };
+
+  function dsLoadImage(dataUrl){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+
+  
+  window.dsCoverBgUpload = function(input){
+    var file = input && input.files && input.files[0];
+    if(!file) return;
+    var isPdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name);
+    var isImg = /^image\//i.test(file.type);
+    if(!isPdf && !isImg){ alert('Image किंवा PDF upload करा'); return; }
+    function setBg(dataUrl){
+      if(!window._dsState) dsState();
+      window._dsState.coverBg = dataUrl;
+      var prev = document.getElementById('ds-cover-prev');
+      if(prev) prev.innerHTML = '<img src="'+dataUrl+'" alt="Cover">';
+      if(typeof showOk==='function') showOk('Cover background set');
+    }
+    if(isImg){
+      var r = new FileReader();
+      r.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          var max=2200, sc=Math.min(1,max/img.width,max/img.height);
+          var c=document.createElement('canvas');
+          c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc);
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          setBg(c.toDataURL('image/jpeg',0.9));
+        };
+        img.onerror=function(){ setBg(r.result); };
+        img.src=r.result;
+      };
+      r.readAsDataURL(file);
+      return;
+    }
+    // PDF first page
+    if(!window.pdfjsLib){ alert('PDF library missing — image use करा'); return; }
+    var r2 = new FileReader();
+    r2.onload = function(){
+      pdfjsLib.getDocument({data: new Uint8Array(r2.result)}).promise.then(function(pdf){
+        return pdf.getPage(1).then(function(page){
+          var vp = page.getViewport({scale: 2});
+          var canvas = document.createElement('canvas');
+          canvas.width = vp.width; canvas.height = vp.height;
+          return page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise.then(function(){
+            setBg(canvas.toDataURL('image/jpeg', 0.9));
+          });
+        });
+      }).catch(function(e){ alert('PDF error: '+(e.message||e)); });
+    };
+    r2.readAsArrayBuffer(file);
+  };
+  window.dsCoverBgClear = function(){
+    if(window._dsState) window._dsState.coverBg = '';
+    var prev = document.getElementById('ds-cover-prev');
+    if(prev) prev.innerHTML = '<span style="color:var(--mut);font-size:12px">No background — optional</span>';
+    var f = document.getElementById('ds-cover-file');
+    if(f) f.value = '';
+  };
+
+  window.dsGeneratePDF = async function(){
+    try{
+      if(!window.jspdf || !window.jspdf.jsPDF){
+        alert('jsPDF not loaded. Hard refresh करा.');
+        return;
+      }
+      var pid = (document.getElementById('ds-project')||{}).value;
+      if(!pid){ alert('Project select करा'); return; }
+      var sheets = dsState().items.filter(function(x){ return x.checked && x.dataUrl; });
+      if(!sheets.length){ alert('कमीत कमी एक drawing upload + select करा'); return; }
+
+      var o = (typeof officeInfo!=='undefined' && officeInfo) ? officeInfo : {};
+      var officeName = o.name || 'Greenhouse Studio';
+      var arch = o.arch || '';
+      var addr = o.addr || o.address || '';
+      var phone = o.phone || '';
+      var email = o.email || '';
+      var logo = o.logo || '';
+      var clientName = (document.getElementById('ds-client')||{}).value || 'Client';
+      var siteAddr = (document.getElementById('ds-address')||{}).value || '';
+      var setTitle = (document.getElementById('ds-title')||{}).value || 'Architectural Drawing Set';
+      var subtitle = (document.getElementById('ds-subtitle')||{}).value || '';
+      var dateStr = (document.getElementById('ds-date')||{}).value || new Date().toISOString().slice(0,10);
+      var p = (typeof gp==='function') ? gp(pid) : null;
+      var projName = p ? p.name : 'Project';
+
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF('p', 'mm', 'a3'); // portrait A3
+      var W = doc.internal.pageSize.getWidth();
+      var H = doc.internal.pageSize.getHeight();
+
+      function footer(page, total){
+        doc.setDrawColor(201,168,76);
+        doc.setLineWidth(0.3);
+        doc.line(16, H-12, W-16, H-12);
+        doc.setFontSize(7);
+        doc.setTextColor(120,120,120);
+        doc.setFont('helvetica','normal');
+        doc.text(officeName+'  ·  '+projName+'  ·  Confidential', 16, H-7);
+        doc.text('Page '+page+' of '+total, W-16, H-7, {align:'right'});
+      }
+
+      var totalPages = 2 + sheets.length;
+
+      // Soft center text watermark only — "Greenhouse Studio" (no logo; drawing stays clear)
+      var wmText = officeName || 'Greenhouse Studio';
+      function dsDrawWatermark(doc, W, H){
+        try{
+          doc.saveGraphicsState && doc.saveGraphicsState();
+          var cx = W/2, cy = H/2;
+          // Diagonal soft text — very light so drawing is not hidden
+          doc.setTextColor(180, 180, 180);
+          doc.setFont('helvetica', 'bold');
+          // size relative to page
+          var fs = Math.min(W, H) * 0.045;
+          if(fs < 14) fs = 14;
+          if(fs > 28) fs = 28;
+          doc.setFontSize(fs);
+          // jsPDF rotate around center
+          var angle = 35;
+          if(doc.GState){
+            try{ doc.setGState(new doc.GState({opacity: 0.12})); }catch(e1){}
+          }
+          doc.text(wmText, cx, cy, {align:'center', angle: angle});
+          // second lighter pass slightly offset = soft/blur feel
+          if(doc.GState){
+            try{ doc.setGState(new doc.GState({opacity: 0.06})); }catch(e2){}
+          }
+          doc.setFontSize(fs * 1.02);
+          doc.text(wmText, cx+0.4, cy+0.3, {align:'center', angle: angle});
+          doc.restoreGraphicsState && doc.restoreGraphicsState();
+        }catch(e){
+          // fallback without GState
+          try{
+            doc.setTextColor(210, 210, 210);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text(wmText, W/2, H/2, {align:'center', angle: 35});
+          }catch(e3){}
+        }
+      }
+
+      // ═══════ PAGE 1 — COVER (portrait) — full 3D / elevation view ═══════
+      var coverBg = (window._dsState && window._dsState.coverBg) ? window._dsState.coverBg : '';
+      if(coverBg){
+        try{
+          var cfmt = (coverBg.indexOf('png')>=0 && coverBg.indexOf('jpeg')<0) ? 'PNG' : 'JPEG';
+          // Full-bleed cover: image fills entire page (object-fit: cover)
+          var cimg = await dsLoadImage(coverBg);
+          var ir = cimg.width / cimg.height;
+          var pr = W / H;
+          var dw, dh, dx, dy;
+          if(ir > pr){
+            // image wider — fit height, crop sides
+            dh = H; dw = H * ir; dx = (W - dw) / 2; dy = 0;
+          } else {
+            // image taller — fit width, crop top/bottom
+            dw = W; dh = W / ir; dx = 0; dy = (H - dh) / 2;
+          }
+          doc.addImage(coverBg, cfmt, dx, dy, dw, dh);
+          // NO full solid bands — only thin soft scrims for text readability
+          if(doc.GState){
+            try{
+              doc.saveGraphicsState();
+              doc.setGState(new doc.GState({opacity: 0.35}));
+              doc.setFillColor(8, 18, 14);
+              doc.rect(0, 0, W, 58, 'F');
+              doc.rect(0, H - 52, W, 52, 'F');
+              doc.restoreGraphicsState();
+            }catch(ge){
+              // very light solid if no opacity
+              doc.setFillColor(20, 40, 32);
+              doc.rect(0, 0, W, 4, 'F');
+              doc.rect(0, H-4, W, 4, 'F');
+            }
+          }
+        }catch(e){
+          coverBg = '';
+          doc.setFillColor(26,58,42);
+          doc.rect(0,0,W,H,'F');
+        }
+      } else {
+        doc.setFillColor(26,58,42);
+        doc.rect(0,0,W,H,'F');
+      }
+      // gold frame
+      doc.setDrawColor(201,168,76);
+      doc.setLineWidth(1.2);
+      doc.rect(8,8,W-16,H-16);
+      doc.setLineWidth(0.35);
+      doc.rect(11,11,W-22,H-22);
+      dsDrawWatermark(doc, W, H);
+
+      // logo — top, smaller so 3D stays hero
+      var logoY = 16;
+      if(logo && logo.indexOf('data:image')===0){
+        try{
+          var fmt = logo.indexOf('png')>=0 ? 'PNG' : 'JPEG';
+          doc.addImage(logo, fmt, W/2-16, logoY, 32, 32);
+          logoY = 52;
+        }catch(e){ logoY = 22; }
+      }
+
+      doc.setTextColor(201,168,76);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.text('ARCHITECTURE  ·  INTERIORS  ·  PERMISSIONS', W/2, logoY, {align:'center'});
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(26);
+      doc.setTextColor(255,255,255);
+      doc.text(officeName, W/2, logoY+12, {align:'center'});
+      if(arch){
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(13);
+        doc.setTextColor(201,168,76);
+        doc.text(arch, W/2, logoY+22, {align:'center'});
+      }
+
+      // Set title mid-upper over 3D
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(16);
+      doc.setTextColor(255,255,255);
+      doc.text(setTitle, W/2, logoY+36, {align:'center'});
+      if(subtitle){
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(11);
+        doc.setTextColor(230, 210, 160);
+        doc.text(subtitle, W/2, logoY+44, {align:'center'});
+      }
+
+      // Client block — bottom, compact, over full 3D
+      var cy = H - 38;
+      if(doc.GState){
+        try{
+          doc.saveGraphicsState();
+          doc.setGState(new doc.GState({opacity: 0.72}));
+          doc.setFillColor(12, 28, 20);
+          doc.roundedRect(W/2-85, cy-14, 170, 36, 3, 3, 'F');
+          doc.restoreGraphicsState();
+        }catch(e){
+          doc.setFillColor(12, 28, 20);
+          doc.roundedRect(W/2-85, cy-14, 170, 36, 3, 3, 'F');
+        }
+      } else {
+        doc.setFillColor(12, 28, 20);
+        doc.roundedRect(W/2-85, cy-14, 170, 36, 3, 3, 'F');
+      }
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(201,168,76);
+      doc.text('PREPARED FOR', W/2, cy-6, {align:'center'});
+      doc.setFontSize(15);
+      doc.setTextColor(255,255,255);
+      doc.text(clientName, W/2, cy+4, {align:'center'});
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(220,220,220);
+      doc.text(projName, W/2, cy+12, {align:'center'});
+      if(siteAddr){
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+        doc.setTextColor(180,180,180);
+        doc.text(siteAddr, W/2, cy+19, {align:'center'});
+      }
+
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(201,168,76);
+      doc.text(dateStr, W/2, H-8, {align:'center'});
+
+      // ═══════ PAGE 2 — INDEX ═══════
+      doc.addPage();
+      doc.setFillColor(247,245,240);
+      doc.rect(0,0,W,H,'F');
+      doc.setFillColor(26,58,42);
+      doc.rect(0,0,W,28,'F');
+      doc.setFillColor(201,168,76);
+      doc.rect(0,28,W,1.5,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(20);
+      doc.text('Contents / Index', 18, 18);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.setTextColor(201,168,76);
+      doc.text(projName+'  ·  '+clientName, 18, 24);
+      doc.setTextColor(200,200,200);
+      doc.text(officeName, W-18, 18, {align:'right'});
+      dsDrawWatermark(doc, W, H);
+
+      var y = 42;
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(26,58,42);
+      doc.text('No.', 18, y);
+      doc.text('Drawing', 32, y);
+      doc.text('Page', W-18, y, {align:'right'});
+      doc.setDrawColor(201,168,76);
+      doc.setLineWidth(0.4);
+      doc.line(18, y+2, W-18, y+2);
+      y += 10;
+
+      // cover + index in list for clarity
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(10);
+      doc.setTextColor(80,80,80);
+      doc.text('—', 18, y);
+      doc.text('Cover', 32, y);
+      doc.text('1', W-18, y, {align:'right'});
+      y += 8;
+      doc.text('—', 18, y);
+      doc.text('Contents / Index', 32, y);
+      doc.text('2', W-18, y, {align:'right'});
+      y += 10;
+
+      sheets.forEach(function(it, i){
+        if(y > H-20){ doc.addPage(); y=20; }
+        var pageNo = i+3;
+        if(i%2===0){
+          doc.setFillColor(255,255,255);
+          doc.rect(16, y-5, W-32, 8, 'F');
+        }
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(10);
+        doc.setTextColor(26,58,42);
+        doc.text(String(i+1).padStart(2,'0'), 18, y);
+        doc.setFont('helvetica','normal');
+        doc.setTextColor(40,40,40);
+        doc.text(it.name, 32, y);
+        doc.setFont('helvetica','bold');
+        doc.setTextColor(26,58,42);
+        doc.text(String(pageNo), W-18, y, {align:'right'});
+        y += 9;
+      });
+
+      footer(2, totalPages);
+
+      // ═══════ DRAWING PAGES — full sheet + large bold title ═══════
+      for(var i=0;i<sheets.length;i++){
+        var it = sheets[i];
+        doc.addPage();
+        doc.setFillColor(255,255,255);
+        doc.rect(0,0,W,H,'F');
+        // Taller header — large bold drawing title
+        var headH = 22;
+        doc.setFillColor(26,58,42);
+        doc.rect(0,0,W,headH,'F');
+        doc.setFillColor(201,168,76);
+        doc.rect(0,headH,W,2,'F');
+        doc.setTextColor(255,255,255);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(18);
+        // title may be long — fit
+        var title = it.name || 'Drawing';
+        var maxTitleW = W - 100;
+        while(doc.getTextWidth(title) > maxTitleW && doc.getFontSize() > 12){
+          doc.setFontSize(doc.getFontSize()-1);
+        }
+        doc.text(title, 14, headH/2 + 5);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(10);
+        doc.setTextColor(201,168,76);
+        doc.text(clientName, W-14, 9, {align:'right'});
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+        doc.setTextColor(200,200,200);
+        doc.text(projName, W-14, 16, {align:'right'});
+
+        try{
+          var img = await dsLoadImage(it.dataUrl);
+          // Full page drawing — minimal margins
+          var margin = 6;
+          var top = headH + 4;
+          var bot = 11;
+          var maxW = W - margin*2;
+          var maxH = H - top - bot;
+          var iw = img.width, ih = img.height;
+          var scale = Math.min(maxW/iw, maxH/ih);
+          // Prefer filling page (cover mode if almost square enough)
+          var dw = iw*scale, dh = ih*scale;
+          var dx = (W-dw)/2;
+          var dy = top + Math.max(0, (maxH-dh)/2);
+          var fmt = (it.dataUrl.indexOf('png')>=0 && it.dataUrl.indexOf('jpeg')<0) ? 'PNG' : 'JPEG';
+          doc.addImage(it.dataUrl, fmt, dx, dy, dw, dh);
+          // Center logo watermark (soft / blur-style) over drawing
+          dsDrawWatermark(doc, W, H);
+          // thin gold border around drawing
+          doc.setDrawColor(201,168,76);
+          doc.setLineWidth(0.35);
+          doc.rect(dx, dy, dw, dh);
+        }catch(e){
+          doc.setFontSize(14);
+          doc.setTextColor(150,150,150);
+          doc.text('Image could not be embedded', W/2, H/2, {align:'center'});
+          dsDrawWatermark(doc, W, H);
+        }
+        footer(i+3, totalPages);
+      }
+
+      var fname = (projName||'Drawing_Set').replace(/[^\w\-]+/g,'_') + '_Presentation.pdf';
+      doc.save(fname);
+      if(typeof showOk==='function') showOk('Drawing set PDF downloaded');
+      else alert('PDF downloaded: '+fname);
+    }catch(err){
+      console.error(err);
+      alert('PDF error: '+(err.message||err));
+    }
+  };
+
+  // switchView hook
+  var _sv = window.switchView;
+  if(typeof _sv==='function' && !window._dsSwitchPatched){
+    window._dsSwitchPatched = true;
+    window.switchView = function(v){
+      var r = _sv.apply(this, arguments);
+      if(v==='drawingset') setTimeout(function(){ renderDrawingSet(); }, 40);
       return r;
     };
   }
