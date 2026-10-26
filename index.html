@@ -15755,6 +15755,10 @@ let invItems=[];
 function renderInvoiceView(){
   const el=document.getElementById('inv-body');
   if(!el)return;
+  if(!db.invoices) db.invoices=[];
+  const yr=new Date().getFullYear();
+  const seq=String((db.invoices.filter(function(x){return (x.invNo||'').indexOf('GS-'+yr)>=0;}).length)+1).padStart(3,'0');
+  const autoInvNo='GS-'+yr+'-'+seq;
   const projOpts=(db.projects||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   el.innerHTML=`
   <div style="display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start">
@@ -15762,7 +15766,7 @@ function renderInvoiceView(){
 
       <div class="card">
         <div class="card-head" style="background:var(--grn);padding:12px 16px">
-          <span style="font-family:'Playfair Display',serif;color:var(--gold);font-size:14px">🧾 GST Tax Invoice</span>
+          <span style="font-family:'Playfair Display',serif;color:var(--gold);font-size:14px">🧾 Formal Tax Invoice</span>
         </div>
         <div class="card-body" style="padding:14px;display:flex;flex-direction:column;gap:10px">
           <div class="fg" style="margin-bottom:0"><label>Link Project (Auto-fill)</label>
@@ -15771,7 +15775,7 @@ function renderInvoiceView(){
             </select>
           </div>
           <div class="form-row c2" style="margin-bottom:0">
-            <div class="fg" style="margin-bottom:0"><label>Invoice No.</label><input class="fi" id="inv-no" value="GS-${new Date().getFullYear()}-001"></div>
+            <div class="fg" style="margin-bottom:0"><label>Invoice No.</label><input class="fi" id="inv-no" value="${autoInvNo}"></div>
             <div class="fg" style="margin-bottom:0"><label>Invoice Date</label><input class="fi" type="date" id="inv-date" value="${new Date().toISOString().split('T')[0]}"></div>
           </div>
           <div style="height:1px;background:var(--bdr)"></div>
@@ -15802,7 +15806,14 @@ function renderInvoiceView(){
           <div class="fg" style="margin-bottom:0"><label>Notes / Payment Details</label>
             <textarea class="fi fi-ta" id="inv-notes" rows="2" placeholder="UPI: 9XXXXXXXX@upi | A/c: XXXXX | IFSC: XXXXX"></textarea>
           </div>
-          <button onclick="invGeneratePDF()" style="width:100%;padding:12px;background:var(--grn);color:#fff;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">📄 Generate GST Invoice PDF</button>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+            <button type="button" onclick="invGeneratePDF()" style="width:100%;padding:12px;background:var(--grn);color:#fff;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">📄 Download Formal Tax Invoice PDF</button>
+            <button type="button" onclick="invSendWhatsApp()" class="btn-wa" style="width:100%;padding:11px;border:none;border-radius:10px;font-weight:700;cursor:pointer">📲 Send Invoice on WhatsApp</button>
+            <button type="button" onclick="invSaveRecord()" class="btn btn-s" style="width:100%;padding:10px;border-radius:10px;font-weight:600;cursor:pointer">💾 Save Invoice Record</button>
+          </div>
+          <div style="font-size:11px;color:var(--mut);margin-top:8px;line-height:1.5">
+            Formal Tax Invoice — letterhead, Bill To, line items, GST, total in words, bank/UPI details.
+          </div>
         </div>
       </div>
     </div>
@@ -15970,7 +15981,7 @@ function invGeneratePDF(){
   doc.setTextColor(...gold);doc.setFont('helvetica','bold');doc.setFontSize(17);doc.text(firm.toUpperCase(),nx,14);
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(210,210,210);
   doc.text(officeInfo.addr||'',nx,20);if(officeInfo.phone)doc.text('Ph: '+officeInfo.phone,nx,26);
-  doc.setTextColor(...gold);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('TAX INVOICE',W-13,13,{align:'right'});
+  doc.setTextColor(...gold);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setFontSize(13);doc.text('TAX INVOICE',W-13,12,{align:'right'});doc.setFontSize(7);doc.setTextColor(180,180,180);doc.text('Formal · Architecture Services',W-13,17,{align:'right'});doc.setFontSize(8);doc.setTextColor(200,200,200);
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(200,200,200);
   doc.text('Invoice No: '+invNo,W-13,20,{align:'right'});doc.text('Date: '+dateStr,W-13,26,{align:'right'});
   let y=44;
@@ -16019,9 +16030,105 @@ function invGeneratePDF(){
   doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(180,160,100);
   doc.text('Computer Generated Invoice · '+firm,13,293);doc.text('Invoice No: '+invNo+' · '+dateStr,W-13,293,{align:'right'});
 
-  doc.save('Invoice_'+invNo+'_'+new Date().toISOString().split('T')[0]+'.pdf');
-  showOk('✅ GST Invoice PDF downloaded!');
+  doc.save('Invoice_'+invNo.replace(/[^\w\-]+/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.pdf');
+  try{ invSaveRecord(true); }catch(e){}
+  if(typeof showOk==='function') showOk('✅ Formal Tax Invoice PDF downloaded!');
+  else alert('Invoice PDF downloaded');
 }
+
+function invCollectData(){
+  const v=id=>(document.getElementById(id)||{value:''}).value.trim();
+  const subtotal=(window.invItems||[]).reduce((a,i)=>a+(parseFloat(i.amt)||0),0);
+  const gstPct=parseFloat(v('inv-gst'))||0;
+  const gstAmt=Math.round(subtotal*gstPct/100);
+  return {
+    invNo: v('inv-no')||('GS-'+new Date().getFullYear()+'-001'),
+    date: v('inv-date'),
+    projectId: v('inv-proj'),
+    clientName: v('inv-cname'),
+    clientGst: v('inv-cgst'),
+    clientAddr: v('inv-caddr'),
+    items: (window.invItems||[]).slice(),
+    gstPct: gstPct,
+    sac: v('inv-sac')||'998311',
+    notes: v('inv-notes'),
+    bank: v('inv-pay')||v('inv-bank')||'',
+    subtotal: subtotal,
+    gstAmt: gstAmt,
+    total: subtotal+gstAmt,
+    savedAt: new Date().toISOString()
+  };
+}
+
+function invSaveRecord(silent){
+  try{
+    if(!db.invoices) db.invoices=[];
+    const data=invCollectData();
+    if(!data.clientName && !(window.invItems||[]).length){
+      if(!silent) alert('Client name आणि items भरा');
+      return;
+    }
+    const existing=db.invoices.findIndex(x=>x.invNo===data.invNo);
+    if(existing>=0) db.invoices[existing]=Object.assign({}, db.invoices[existing], data);
+    else db.invoices.unshift(Object.assign({id:(typeof uid==='function'?uid('INV'):('INV-'+Date.now()))}, data));
+    if(typeof saveAll==='function') saveAll();
+    else if(typeof saveLocal==='function') saveLocal();
+    if(!silent && typeof showOk==='function') showOk('Invoice saved');
+    else if(!silent) alert('Invoice saved');
+  }catch(e){ console.error(e); if(!silent) alert('Save failed: '+(e.message||e)); }
+}
+
+function invSendWhatsApp(){
+  try{
+    const data=invCollectData();
+    if(!data.clientName){ alert('Client name भरा'); return; }
+    let wa='';
+    const pid=data.projectId;
+    if(pid && typeof gp==='function'){
+      const p=gp(pid);
+      if(p && typeof gc==='function'){
+        const c=gc(p.clientId);
+        if(c && c.wa) wa=c.wa;
+      }
+    }
+    if(!wa){
+      const match=(db.contacts||[]).find(c=>c.name && data.clientName && c.name.toLowerCase().indexOf(data.clientName.toLowerCase())>=0);
+      if(match && match.wa) wa=match.wa;
+    }
+    if(!wa){
+      wa=prompt('Client WhatsApp number (e.g. 9198XXXXXXXX):');
+      if(!wa) return;
+    }
+    invGeneratePDF();
+    const fmtN=n=>'Rs.'+Number(n||0).toLocaleString('en-IN');
+    const firm=(typeof officeInfo!=='undefined'&&officeInfo.name)?officeInfo.name:'Greenhouse Studio';
+    let msg='🧾 *TAX INVOICE — '+firm+'*\n';
+    msg+='━━━━━━━━━━━━━━━━━━\n';
+    msg+='Invoice No: *'+data.invNo+'*\n';
+    msg+='Date: '+(data.date||'')+'\n';
+    msg+='Client: *'+data.clientName+'*\n\n';
+    (data.items||[]).forEach(function(it,i){
+      msg+=(i+1)+'. '+(it.desc||it.name||'Item')+' — '+fmtN(it.amt)+'\n';
+    });
+    msg+='\nSubtotal: '+fmtN(data.subtotal)+'\n';
+    if(data.gstPct) msg+='GST ('+data.gstPct+'%): '+fmtN(data.gstAmt)+'\n';
+    msg+='*Total Due: '+fmtN(data.total)+'*\n\n';
+    if(data.notes) msg+='Payment: '+data.notes+'\n\n';
+    msg+='📄 Formal invoice PDF has been downloaded — please attach it with this chat.\n';
+    msg+='_Thank you_\n'+firm;
+    const num=String(wa).replace(/\D/g,'');
+    setTimeout(function(){
+      window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
+    }, 700);
+  }catch(e){
+    console.error(e);
+    alert('WhatsApp error: '+(e.message||e));
+  }
+}
+
+
+// Auto next invoice number when opening view
+const _invRenderOrig = typeof renderInvoiceView==='function' ? renderInvoiceView : null;
 
 // ════════════════════════════════════════════════
 // 2. PROJECT TIMELINE / GANTT
