@@ -3354,6 +3354,7 @@ header,.topbar{position:relative;z-index:15}
     <button class="nav-btn" data-view="projects" onclick="switchView('projects')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M9 11h.01M15 11h.01"/></svg></span>Projects<span class="nav-badge" id="nb-p">0</span></button>
     <div class="nav-sec">Finance</div>
     <button class="nav-btn" data-view="payments" onclick="switchView('payments')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M8 21h8"/><path d="M5 9h14"/><path d="M7 9l-2 6h4L7 9zM17 9l-2 6h4l-2-6z"/></svg></span>Payments</button>
+    <button class="nav-btn" data-view="invoice" onclick="switchView('invoice')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4"/><path d="M9 11h6M9 15h4"/></svg></span>Tax Invoice</button>
     <button class="nav-btn" data-view="reports" onclick="switchView('reports')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7V3z"/><path d="M15 3v4h4"/><path d="M10 12h6M10 16h6M10 8h2"/></svg></span>Reports & PDF</button>
     <button class="nav-btn" data-view="quotations" onclick="switchView('quotations')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4"/><path d="M9 13h7M9 17h5M9 9h3"/></svg></span>Quotations</button>
     <div class="nav-sec">Tools</div>
@@ -3370,7 +3371,7 @@ header,.topbar{position:relative;z-index:15}
     <button class="nav-btn" data-view="clientportal" style="color:var(--gold2);font-weight:700" onclick="openClientPortalMgr()"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="2.5"/><circle cx="16" cy="9" r="2"/><path d="M3 19c.8-2.5 2.5-4 6-4s5 1.5 6 4"/><path d="M14 15c1.5-.6 2.8-.6 4.5.2 1.2.6 2 1.8 2.5 3.8"/></svg></span>Client Portal</button>
     <button class="nav-btn" data-view="udcpr" onclick="switchView('udcpr')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="1"/><path d="M5 8h3M5 12h2M5 16h3M16 8h3M15 12h4M16 16h3"/></svg></span>UDCPR Q&A</button>
     <button class="nav-btn" data-view="agreement" onclick="switchView('agreement')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6V3z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h5"/><path d="M9 9h3"/></svg></span>Agreement</button>
-    <button class="nav-btn" data-view="invoice" onclick="switchView('invoice')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h10v20l-2-1.5L13 22l-2-1.5L9 22l-2-1.5V2z"/><path d="M10 8h4M10 12h4M10 16h3"/></svg></span>GST Invoice</button>
+    
     <button class="nav-btn" data-view="timeline" onclick="switchView('timeline')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><circle cx="7" cy="12" r="2.5" fill="none"/><circle cx="12" cy="12" r="2.5"/><circle cx="17" cy="12" r="2.5"/></svg></span>Timeline</button>
     <button class="nav-btn" data-view="materials" onclick="switchView('materials')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l9 5 9-5"/><path d="M3 12l9 5 9-5"/><path d="M3 8l9-5 9 5-9 5L3 8z"/></svg></span>Materials</button>
     <button class="nav-btn" data-view="interiorest" onclick="switchView('interiorest')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10h16v10"/><path d="M2 10h20"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></span>Interior Estimate</button>
@@ -3522,6 +3523,7 @@ header,.topbar{position:relative;z-index:15}
       <div class="sec-head" style="flex-wrap:wrap;gap:10px">
         <div class="sec-title">Payment Records</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <button type="button" class="btn btn-gold" onclick="openSimpleBillModal()" style="font-size:12px;padding:7px 12px">🧾 Simple Bill (Pending)</button>
           <input class="fi" id="pay-search" placeholder="🔍 Project / Client शोधा..." style="width:200px;padding:7px 12px;font-size:12px" oninput="renderPayments()">
           <select class="fi fi-sel" id="pay-sort" style="width:150px;font-size:12px;padding:7px 10px" onchange="renderPayments()">
             <option value="date_new">Latest First</option>
@@ -4151,7 +4153,15 @@ header,.topbar{position:relative;z-index:15}
     <div id="view-agreement" class="view-section">
       <div id="agr-body"></div>
     </div>
-    <div id="view-invoice" class="view-section"><div id="inv-body"></div></div>
+    <div id="view-invoice" class="view-section">
+      <div class="sec-head">
+        <div>
+          <div class="sec-title">Formal Tax Invoice (GST)</div>
+          <div style="font-size:12px;color:var(--mut);margin-top:4px">Client ला formal bill / tax invoice PDF + WhatsApp</div>
+        </div>
+      </div>
+      <div id="inv-body"></div>
+    </div>
     <div id="view-timeline" class="view-section"><div id="tl-body"></div></div>
     
     <div id="view-intcomm" class="view-section">
@@ -15754,7 +15764,7 @@ let invItems=[];
 
 function renderInvoiceView(){
   const el=document.getElementById('inv-body');
-  if(!el)return;
+  if(!el){ console.warn('inv-body missing'); return; }
   if(!db.invoices) db.invoices=[];
   const yr=new Date().getFullYear();
   const seq=String((db.invoices.filter(function(x){return (x.invNo||'').indexOf('GS-'+yr)>=0;}).length)+1).padStart(3,'0');
@@ -24314,7 +24324,7 @@ const RG_DEFAULT_PINS={admin:'1111',engineer:'2222',staff:'3333'};
 const ROLE_ACCESS={
   admin:null, /* null = full access */
   engineer:['dashboard','projects','completion','materials','timeline'],
-  staff:['dashboard','contacts','projects','payments','estimates','intcomm','interiorest','expenses']
+  staff:['dashboard','contacts','projects','payments','invoice','estimates','intcomm','interiorest','expenses','reports']
 };
 const ROLE_LABEL={admin:'Principal Architect',engineer:'Site Engineer',staff:'Office Staff'};
 
@@ -27261,6 +27271,296 @@ html += '</div>';
       return r;
     };
   }
+})();
+</script>
+
+
+<div class="modal-bg" id="m-simple-bill">
+  <div class="modal-box" style="width:520px;max-width:96vw">
+    <div class="modal-head">
+      <div class="modal-title">🧾 Simple Payment Bill (Item-wise)</div>
+      <button type="button" class="modal-close" onclick="closeModal('m-simple-bill')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+      <p style="font-size:12px;color:var(--mut);margin:0;line-height:1.5">
+        GST Tax Invoice <b>नाही</b> — item-wise pending bill. Tax Invoice वेगळे (sidebar → Tax Invoice).
+      </p>
+      <div class="fg"><label>Project *</label>
+        <select class="fi fi-sel" id="sb-proj" onchange="sbFill()"></select>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>Client</label><input class="fi" id="sb-client" readonly></div>
+        <div class="fg"><label>WhatsApp</label><input class="fi" id="sb-wa" placeholder="98xxxxxxxx"></div>
+      </div>
+      <div class="form-row c2">
+        <div class="fg"><label>Project fee</label><input class="fi" id="sb-total" readonly></div>
+        <div class="fg"><label>Received</label><input class="fi" id="sb-paid" readonly></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--ink)">Bill items</label>
+        <button type="button" class="btn btn-s btn-sm" onclick="sbAddItem()">+ Add item</button>
+      </div>
+      <div id="sb-items" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;background:rgba(184,151,90,.1);border:1px solid var(--bdr)">
+        <span style="font-weight:700;font-size:13px">Bill total</span>
+        <span id="sb-items-total" style="font-weight:800;font-size:16px;color:var(--grn)">₹ 0</span>
+      </div>
+      <div class="fg"><label>Note (optional)</label><input class="fi" id="sb-note" placeholder="e.g. Kindly clear balance this week"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn btn-gold" style="flex:1" onclick="sbDownloadPDF()">📄 Download Bill PDF</button>
+        <button type="button" class="btn-wa" style="flex:1;padding:10px;border:none;border-radius:10px;font-weight:700;cursor:pointer" onclick="sbSendWA()">📲 WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  window._sbItems = window._sbItems || [];
+
+  function sbFmt(n){
+    if(typeof fmt==='function') return fmt(n);
+    return '₹ '+Math.round(Number(n)||0).toLocaleString('en-IN');
+  }
+  function sbNum(n){ return Math.round(Number(n)||0); }
+
+  window.sbAddItem = function(desc, amt){
+    window._sbItems.push({desc: desc||'', amt: amt!=null?sbNum(amt):0});
+    sbRenderItems();
+  };
+  window.sbRemoveItem = function(i){
+    window._sbItems.splice(i,1);
+    sbRenderItems();
+  };
+  window.sbRenderItems = function(){
+    var box = document.getElementById('sb-items');
+    if(!box) return;
+    if(!window._sbItems.length){
+      box.innerHTML = '<div style="font-size:12px;color:var(--mut);padding:8px;border:1px dashed var(--bdr);border-radius:8px;text-align:center">No items — + Add item किंवा project select करा</div>';
+    } else {
+      box.innerHTML = window._sbItems.map(function(it,i){
+        return '<div style="display:grid;grid-template-columns:1fr 100px 32px;gap:6px;align-items:center">'+
+          '<input class="fi" placeholder="Item / stage" value="'+String(it.desc||'').replace(/"/g,'&quot;')+'" onchange="window._sbItems['+i+'].desc=this.value;sbRecalc()">'+
+          '<input class="fi" type="number" placeholder="₹" value="'+(it.amt||'')+'" onchange="window._sbItems['+i+'].amt=parseFloat(this.value)||0;sbRecalc()">'+
+          '<button type="button" class="btn btn-s btn-sm" style="color:var(--red);padding:6px" onclick="sbRemoveItem('+i+')">✕</button></div>';
+      }).join('');
+    }
+    sbRecalc();
+  };
+  window.sbRecalc = function(){
+    var tot = window._sbItems.reduce(function(a,it){ return a+sbNum(it.amt); },0);
+    var el = document.getElementById('sb-items-total');
+    if(el) el.textContent = sbFmt(tot);
+    return tot;
+  };
+
+  window.openSimpleBillModal = function(pid){
+    var sel = document.getElementById('sb-proj');
+    if(!sel){ alert('Simple Bill UI missing — hard refresh करा'); return; }
+    var list = (db.projects||[]).slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+    sel.innerHTML = '<option value="">— Select project —</option>' + list.map(function(p){
+      var bal = (typeof pbal==='function') ? pbal(p.id) : 0;
+      var tag = bal>0 ? (' · pending '+sbNum(bal)) : '';
+      return '<option value="'+p.id+'">'+String(p.name||'').replace(/</g,'')+tag+'</option>';
+    }).join('');
+    if(pid){ sel.value = pid; }
+    if(typeof openModal==='function') openModal('m-simple-bill');
+    else {
+      var m=document.getElementById('m-simple-bill');
+      if(m) m.classList.add('open');
+    }
+    sbFill();
+  };
+
+  window.sbFill = function(){
+    var pid = (document.getElementById('sb-proj')||{}).value;
+    var p = (typeof gp==='function') ? gp(pid) : (db.projects||[]).find(function(x){return x.id===pid;});
+    var c = p && (typeof gc==='function') ? gc(p.clientId) : null;
+    var total = p ? (sbNum(p.total)||0) : 0;
+    var paid = 0;
+    if(p && typeof ppaid==='function') paid = sbNum(ppaid(p.id));
+    else if(p && db.payments){
+      paid = (db.payments||[]).filter(function(x){return x.projectId===pid;}).reduce(function(a,x){return a+sbNum(x.amount);},0);
+    }
+    var bal = (p && typeof pbal==='function') ? sbNum(pbal(p.id)) : Math.max(0, total-paid);
+    var set = function(id,v){ var e=document.getElementById(id); if(e) e.value = v; };
+    set('sb-client', c ? c.name : '');
+    set('sb-wa', c ? (c.wa||c.phone||'') : '');
+    set('sb-total', total);
+    set('sb-paid', paid);
+
+    // Default item-wise: pending as one line (user can split)
+    window._sbItems = [];
+    if(bal > 0){
+      window._sbItems.push({desc: 'Pending / balance due', amt: bal});
+    } else if(total > 0){
+      window._sbItems.push({desc: 'Project fee', amt: total});
+    } else {
+      window._sbItems.push({desc: '', amt: 0});
+    }
+    sbRenderItems();
+  };
+
+  function sbData(){
+    var v=function(id){ var e=document.getElementById(id); return e?String(e.value||'').trim():''; };
+    var pid=v('sb-proj');
+    var p=(typeof gp==='function')?gp(pid):(db.projects||[]).find(function(x){return x.id===pid;});
+    // sync from inputs
+    var rows = document.querySelectorAll('#sb-items input');
+    // already updated via onchange
+    var items = (window._sbItems||[]).filter(function(it){ return (it.desc&&it.desc.trim()) || sbNum(it.amt); });
+    return {
+      pid: pid,
+      project: p ? p.name : '',
+      address: p ? (p.address||'') : '',
+      client: v('sb-client'),
+      wa: v('sb-wa'),
+      total: sbNum(v('sb-total')),
+      paid: sbNum(v('sb-paid')),
+      items: items,
+      pending: items.reduce(function(a,it){return a+sbNum(it.amt);},0),
+      note: v('sb-note')
+    };
+  }
+
+  window.sbDownloadPDF = function(){
+    try{
+      var d = sbData();
+      if(!d.pid){ alert('Project select करा'); return; }
+      if(!d.items.length){ alert('कमीत कमी एक item add करा'); return; }
+      if(!window.jspdf||!window.jspdf.jsPDF){ alert('jsPDF not loaded'); return; }
+      var o = (typeof officeInfo!=='undefined'&&officeInfo)?officeInfo:{};
+      var firm = o.name||'Greenhouse Studio';
+      var arch = o.arch||'';
+      var doc = new window.jspdf.jsPDF('p','mm','a4');
+      var W=210;
+      doc.setFillColor(26,58,42);
+      doc.rect(0,0,W,32,'F');
+      doc.setFillColor(201,168,76);
+      doc.rect(0,32,W,1.5,'F');
+      doc.setTextColor(201,168,76);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(14);
+      doc.text(firm, 14, 14);
+      doc.setFontSize(9);
+      doc.setTextColor(220,220,220);
+      if(arch) doc.text(arch, 14, 21);
+      doc.setTextColor(201,168,76);
+      doc.setFontSize(12);
+      doc.text('PAYMENT BILL', W-14, 14, {align:'right'});
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(200,200,200);
+      doc.text(new Date().toLocaleDateString('en-IN'), W-14, 21, {align:'right'});
+      doc.setFontSize(7);
+      doc.text('(Not a GST Tax Invoice)', W-14, 27, {align:'right'});
+
+      var y=42;
+      doc.setTextColor(26,58,42);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(11);
+      doc.text('To: '+d.client, 14, y); y+=6;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(10);
+      doc.setTextColor(60,60,60);
+      doc.text('Project: '+d.project, 14, y); y+=5;
+      if(d.address){ doc.text('Site: '+d.address, 14, y); y+=5; }
+      doc.setFontSize(9);
+      doc.text('Project fee: '+sbFmt(d.total).replace('₹','Rs.')+'  ·  Received: '+sbFmt(d.paid).replace('₹','Rs.'), 14, y);
+      y+=8;
+
+      // Item table header
+      doc.setFillColor(26,58,42);
+      doc.rect(14, y, W-28, 8, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.text('#', 16, y+5.5);
+      doc.text('Particulars', 24, y+5.5);
+      doc.text('Amount (Rs.)', W-16, y+5.5, {align:'right'});
+      y+=10;
+
+      doc.setFont('helvetica','normal');
+      d.items.forEach(function(it, i){
+        if(y > 270){ doc.addPage(); y=20; }
+        if(i%2===0){ doc.setFillColor(247,245,240); doc.rect(14, y-4, W-28, 8, 'F'); }
+        doc.setTextColor(40,40,40);
+        doc.setFontSize(9);
+        doc.text(String(i+1), 16, y);
+        var lines = doc.splitTextToSize(it.desc||'Item', 130);
+        doc.text(lines, 24, y);
+        doc.setFont('helvetica','bold');
+        doc.text(sbFmt(it.amt).replace('₹','Rs.'), W-16, y, {align:'right'});
+        doc.setFont('helvetica','normal');
+        y += Math.max(8, lines.length*4.5);
+      });
+
+      y+=2;
+      doc.setFillColor(26,58,42);
+      doc.rect(14, y, W-28, 10, 'F');
+      doc.setTextColor(201,168,76);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(11);
+      doc.text('TOTAL DUE', 18, y+6.5);
+      doc.text(sbFmt(d.pending).replace('₹','Rs.'), W-16, y+6.5, {align:'right'});
+      y+=16;
+
+      if(d.note){
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(9);
+        doc.setTextColor(80,80,80);
+        doc.text('Note: '+d.note, 14, y);
+        y+=8;
+      }
+
+      doc.setFontSize(9);
+      doc.setTextColor(100,100,100);
+      doc.text('Kindly clear the amount at the earliest. Thank you.', 14, y+2);
+      y+=12;
+      doc.setDrawColor(200,200,200);
+      doc.line(14, y, 70, y);
+      y+=5;
+      doc.setFontSize(8);
+      doc.text('Authorised signatory', 14, y);
+      y+=4;
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(26,58,42);
+      doc.text(arch||firm, 14, y);
+
+      doc.setFontSize(7);
+      doc.setTextColor(150,150,150);
+      doc.text('Simple item-wise payment bill — not a GST tax invoice.', 14, 285);
+      doc.text(firm, 14, 290);
+
+      doc.save('PaymentBill_'+(d.project||'Client').replace(/[^\w\-]+/g,'_')+'.pdf');
+      if(typeof showOk==='function') showOk('Item-wise bill PDF downloaded');
+    }catch(e){
+      console.error(e);
+      alert('Bill PDF error: '+(e.message||e));
+    }
+  };
+
+  window.sbSendWA = function(){
+    var d = sbData();
+    if(!d.pid){ alert('Project select करा'); return; }
+    if(!d.items.length){ alert('Items add करा'); return; }
+    if(!d.wa){ alert('WhatsApp number भरा'); return; }
+    sbDownloadPDF();
+    var firm = (typeof officeInfo!=='undefined'&&officeInfo.name)?officeInfo.name:'Greenhouse Studio';
+    var msg = '🏗️ *'+firm+'*\n━━━━━━━━━━━━━━━━━━\n🧾 *Payment Bill (Item-wise)*\n\n';
+    msg += 'Client: *'+d.client+'*\nProject: *'+d.project+'*\n\n';
+    d.items.forEach(function(it,i){
+      msg += (i+1)+'. '+(it.desc||'Item')+' — *'+sbFmt(it.amt)+'*\n';
+    });
+    msg += '\n*Total due: '+sbFmt(d.pending)+'*\n';
+    if(d.note) msg += '\nNote: '+d.note+'\n';
+    msg += '\n📄 Bill PDF download झाली — attach करा.\n_Thank you_';
+    var num = String(d.wa).replace(/\D/g,'');
+    setTimeout(function(){
+      window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg), '_blank');
+    }, 600);
+  };
 })();
 </script>
 
