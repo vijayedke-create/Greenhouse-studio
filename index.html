@@ -27442,7 +27442,7 @@ html += '</div>';
 </script>
 
 
-<div class="modal-bg" id="m-simple-bill">
+<div class="modal-bg" id="m-simple-bill" style="z-index:500">
   <div class="modal-box" style="width:520px;max-width:96vw">
     <div class="modal-head">
       <div class="modal-title">🧾 Simple Payment Bill (Item-wise)</div>
@@ -27485,111 +27485,134 @@ html += '</div>';
 
 
 <script>
+/* ═══ Simple Payment Bill (item-wise, amount optional) ═══ */
 (function(){
   window._sbItems = window._sbItems || [];
 
   function sbFmt(n){
-    if(typeof fmt==='function') return fmt(n);
+    try{ if(typeof fmt==='function') return fmt(n); }catch(e){}
     return '₹ '+Math.round(Number(n)||0).toLocaleString('en-IN');
   }
-  function sbNum(n){ return Math.round(Number(n)||0); }
+  function sbNum(n){
+    if(n===null||n===undefined||n==='') return 0;
+    var x=Number(n); return isFinite(x)?Math.round(x):0;
+  }
+  function sbGetJsPDF(){
+    if(window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+    if(window.jsPDF) return window.jsPDF;
+    return null;
+  }
+  function sbShowModal(){
+    var m=document.getElementById('m-simple-bill');
+    if(!m){ alert('Simple Bill modal missing — page refresh करा'); return false; }
+    if(typeof openModal==='function'){
+      try{ openModal('m-simple-bill'); }catch(e){ console.error(e); }
+    }
+    m.classList.add('open');
+    m.style.display='flex';
+    return true;
+  }
 
   window.sbAddItem = function(desc, amt){
-    window._sbItems.push({desc: desc||'', amt: amt!=null?sbNum(amt):0});
-    sbRenderItems();
+    window._sbItems.push({desc: desc||'', amt: (amt===undefined||amt===null||amt==='')?null:sbNum(amt)});
+    window.sbRenderItems();
   };
   window.sbRemoveItem = function(i){
     window._sbItems.splice(i,1);
-    sbRenderItems();
+    window.sbRenderItems();
+  };
+  window.sbRecalc = function(){
+    var tot = (window._sbItems||[]).reduce(function(a,it){ return a+sbNum(it.amt); },0);
+    var el = document.getElementById('sb-items-total');
+    if(el) el.textContent = sbFmt(tot);
+    return tot;
   };
   window.sbRenderItems = function(){
     var box = document.getElementById('sb-items');
     if(!box) return;
     if(!window._sbItems.length){
       box.innerHTML = '<div style="font-size:12px;color:var(--mut);padding:8px;border:1px dashed var(--bdr);border-radius:8px;text-align:center">No items — + Add item किंवा project select करा</div>';
-    } else {
-      box.innerHTML = window._sbItems.map(function(it,i){
-        return '<div style="display:grid;grid-template-columns:1fr 100px 32px;gap:6px;align-items:center">'+
-          '<input class="fi" placeholder="Item / stage" value="'+String(it.desc||'').replace(/"/g,'&quot;')+'" onchange="window._sbItems['+i+'].desc=this.value;sbRecalc()">'+
-          '<input class="fi" type="number" placeholder="₹ optional" value="'+(it.amt?it.amt:'')+'" onchange="var v=this.value.trim();window._sbItems['+i+'].amt=(v===''?null:parseFloat(v)||0);sbRecalc()">'+
-          '<button type="button" class="btn btn-s btn-sm" style="color:var(--red);padding:6px" onclick="sbRemoveItem('+i+')">✕</button></div>';
-      }).join('');
+      window.sbRecalc();
+      return;
     }
-    sbRecalc();
-  };
-  window.sbRecalc = function(){
-    var tot = window._sbItems.reduce(function(a,it){ return a+sbNum(it.amt); },0);
-    var el = document.getElementById('sb-items-total');
-    if(el) el.textContent = sbFmt(tot);
-    return tot;
+    box.innerHTML = window._sbItems.map(function(it,i){
+      return '<div style="display:grid;grid-template-columns:1fr 110px 32px;gap:6px;align-items:center">'+
+        '<input class="fi" placeholder="Item / stage name" value="'+String(it.desc||'').replace(/"/g,'&quot;')+'" onchange="window._sbItems['+i+'].desc=this.value;sbRecalc()">'+
+        '<input class="fi" type="number" placeholder="₹ optional" value="'+(it.amt!=null&&it.amt!==''?it.amt:'')+'" onchange="var v=this.value.trim();window._sbItems['+i+'].amt=(v===\'\'?null:parseFloat(v)||0);sbRecalc()">'+
+        '<button type="button" class="btn btn-s btn-sm" style="color:var(--red);padding:6px" onclick="sbRemoveItem('+i+')">✕</button></div>';
+    }).join('');
+    window.sbRecalc();
   };
 
   window.openSimpleBillModal = function(pid){
-    var sel = document.getElementById('sb-proj');
-    if(!sel){ alert('Simple Bill UI missing — hard refresh करा'); return; }
-    var list = (db.projects||[]).slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
-    sel.innerHTML = '<option value="">— Select project —</option>' + list.map(function(p){
-      var bal = (typeof pbal==='function') ? pbal(p.id) : 0;
-      var tag = bal>0 ? (' · pending '+sbNum(bal)) : '';
-      return '<option value="'+p.id+'">'+String(p.name||'').replace(/</g,'')+tag+'</option>';
-    }).join('');
-    if(pid){ sel.value = pid; }
-    if(typeof openModal==='function') openModal('m-simple-bill');
-    else {
-      var m=document.getElementById('m-simple-bill');
-      if(m) m.classList.add('open');
+    try{
+      if(!window.db) window.db = {projects:[],payments:[],contacts:[]};
+      if(!db.simpleBills) db.simpleBills = [];
+      var sel = document.getElementById('sb-proj');
+      if(!sel){ alert('Simple Bill form missing — hard refresh (Ctrl+Shift+R) करा'); return; }
+      var list = (db.projects||[]).slice().sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||'')); });
+      sel.innerHTML = '<option value="">— Select project —</option>' + list.map(function(p){
+        var bal = 0;
+        try{ if(typeof pbal==='function') bal = pbal(p.id); }catch(e){}
+        var tag = bal>0 ? (' · pending '+sbNum(bal)) : '';
+        return '<option value="'+p.id+'">'+String(p.name||'Project').replace(/</g,'')+tag+'</option>';
+      }).join('');
+      if(pid) sel.value = pid;
+      if(!sbShowModal()) return;
+      window.sbFill();
+    }catch(err){
+      console.error('openSimpleBillModal', err);
+      alert('Simple Bill error: '+(err.message||err));
     }
-    sbFill();
   };
 
   window.sbFill = function(){
-    var pid = (document.getElementById('sb-proj')||{}).value;
-    var p = (typeof gp==='function') ? gp(pid) : (db.projects||[]).find(function(x){return x.id===pid;});
-    var c = p && (typeof gc==='function') ? gc(p.clientId) : null;
-    var total = p ? (sbNum(p.total)||0) : 0;
-    var paid = 0;
-    if(p && typeof ppaid==='function') paid = sbNum(ppaid(p.id));
-    else if(p && db.payments){
-      paid = (db.payments||[]).filter(function(x){return x.projectId===pid;}).reduce(function(a,x){return a+sbNum(x.amount);},0);
-    }
-    var bal = (p && typeof pbal==='function') ? sbNum(pbal(p.id)) : Math.max(0, total-paid);
-    var set = function(id,v){ var e=document.getElementById(id); if(e) e.value = v; };
-    set('sb-client', c ? c.name : '');
-    set('sb-wa', c ? (c.wa||c.phone||'') : '');
-    set('sb-total', total);
-    set('sb-paid', paid);
-
-    // Default item-wise: pending as one line (user can split)
-    window._sbItems = [];
-    if(bal > 0){
-      window._sbItems.push({desc: 'Pending / balance due', amt: bal});
-    } else if(total > 0){
-      window._sbItems.push({desc: 'Project fee', amt: total});
-    } else {
-      window._sbItems.push({desc: '', amt: 0});
-    }
-    sbRenderItems();
+    try{
+      var pid = (document.getElementById('sb-proj')||{}).value;
+      var p = null;
+      try{ if(typeof gp==='function') p = gp(pid); }catch(e){}
+      if(!p) p = (db.projects||[]).find(function(x){ return x.id===pid; });
+      var c = null;
+      if(p){ try{ if(typeof gc==='function') c = gc(p.clientId); }catch(e){}
+        if(!c) c = (db.contacts||[]).find(function(x){ return x.id===p.clientId; });
+      }
+      var total = p ? sbNum(p.total) : 0;
+      var paid = 0;
+      try{ if(p && typeof ppaid==='function') paid = sbNum(ppaid(p.id)); }catch(e){}
+      if(p && !paid && db.payments){
+        paid = (db.payments||[]).filter(function(x){ return x.projectId===pid; }).reduce(function(a,x){ return a+sbNum(x.amount); },0);
+      }
+      var bal = 0;
+      try{ if(p && typeof pbal==='function') bal = sbNum(pbal(p.id)); else bal = Math.max(0, total-paid); }catch(e){ bal = Math.max(0, total-paid); }
+      function set(id,v){ var e=document.getElementById(id); if(e) e.value = v==null?'':v; }
+      set('sb-client', c ? (c.name||'') : '');
+      set('sb-wa', c ? (c.wa||c.phone||'') : '');
+      set('sb-total', total);
+      set('sb-paid', paid);
+      window._sbItems = [];
+      if(bal > 0) window._sbItems.push({desc:'Pending / balance due', amt:bal});
+      else if(total > 0) window._sbItems.push({desc:'Project fee', amt:total});
+      else window._sbItems.push({desc:'', amt:null});
+      window.sbRenderItems();
+      if(typeof window.sbRenderSaved==='function') window.sbRenderSaved();
+    }catch(err){ console.error('sbFill', err); }
   };
 
   function sbData(){
     var v=function(id){ var e=document.getElementById(id); return e?String(e.value||'').trim():''; };
     var pid=v('sb-proj');
-    var p=(typeof gp==='function')?gp(pid):(db.projects||[]).find(function(x){return x.id===pid;});
-    // sync from inputs
-    var rows = document.querySelectorAll('#sb-items input');
-    // already updated via onchange
-    var items = (window._sbItems||[]).filter(function(it){ return (it.desc&&String(it.desc).trim()); });
+    var p=null;
+    try{ if(typeof gp==='function') p=gp(pid); }catch(e){}
+    if(!p) p=(db.projects||[]).find(function(x){return x.id===pid;});
+    var items=(window._sbItems||[]).filter(function(it){ return it.desc && String(it.desc).trim(); })
+      .map(function(it){ return {desc:String(it.desc).trim(), amt:(it.amt===null||it.amt===undefined||it.amt==='')?null:sbNum(it.amt)}; });
     return {
-      pid: pid,
-      project: p ? p.name : '',
-      address: p ? (p.address||'') : '',
-      client: v('sb-client'),
-      wa: v('sb-wa'),
-      total: sbNum(v('sb-total')),
-      paid: sbNum(v('sb-paid')),
-      items: items,
-      pending: items.reduce(function(a,it){return a+sbNum(it.amt);},0),
-      note: v('sb-note')
+      pid:pid, project:p?p.name:'', address:p?(p.address||''):'',
+      client:v('sb-client'), wa:v('sb-wa'),
+      total:sbNum(v('sb-total')), paid:sbNum(v('sb-paid')),
+      items:items,
+      pending:items.reduce(function(a,it){return a+sbNum(it.amt);},0),
+      note:v('sb-note')
     };
   }
 
@@ -27597,142 +27620,98 @@ html += '</div>';
     try{
       var d = sbData();
       if(!d.pid){ alert('Project select करा'); return; }
-      if(!d.items.length){ alert('कमीत कमी एक item (नाव) add करा — amount optional'); return; }
-      if(!window.jspdf||!window.jspdf.jsPDF){ alert('jsPDF not loaded'); return; }
+      if(!d.items.length){ alert('कमीत कमी एक item नाव add करा (amount optional)'); return; }
+      var JsPDF = sbGetJsPDF();
+      if(!JsPDF){ alert('jsPDF library load झाले नाही — internet check करा'); return; }
       var o = (typeof officeInfo!=='undefined'&&officeInfo)?officeInfo:{};
       var firm = o.name||'Greenhouse Studio';
       var arch = o.arch||'';
-      var doc = new window.jspdf.jsPDF('p','mm','a4');
+      var doc = new JsPDF('p','mm','a4');
       var W=210;
-      doc.setFillColor(26,58,42);
-      doc.rect(0,0,W,32,'F');
-      doc.setFillColor(201,168,76);
-      doc.rect(0,32,W,1.5,'F');
-      doc.setTextColor(201,168,76);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(14);
+      doc.setFillColor(26,58,42); doc.rect(0,0,W,32,'F');
+      doc.setFillColor(201,168,76); doc.rect(0,32,W,1.5,'F');
+      doc.setTextColor(201,168,76); doc.setFont('helvetica','bold'); doc.setFontSize(14);
       doc.text(firm, 14, 14);
-      doc.setFontSize(9);
-      doc.setTextColor(220,220,220);
-      if(arch) doc.text(arch, 14, 21);
-      doc.setTextColor(201,168,76);
-      doc.setFontSize(12);
+      doc.setFontSize(9); doc.setTextColor(220,220,220);
+      if(arch) doc.text(String(arch), 14, 21);
+      doc.setTextColor(201,168,76); doc.setFontSize(12);
       doc.text('PAYMENT BILL', W-14, 14, {align:'right'});
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(8);
-      doc.setTextColor(200,200,200);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(200,200,200);
       doc.text(new Date().toLocaleDateString('en-IN'), W-14, 21, {align:'right'});
-      doc.setFontSize(7);
-      doc.text('(Not a GST Tax Invoice)', W-14, 27, {align:'right'});
-
+      doc.setFontSize(7); doc.text('(Not a GST Tax Invoice)', W-14, 27, {align:'right'});
       var y=42;
-      doc.setTextColor(26,58,42);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(11);
-      doc.text('To: '+d.client, 14, y); y+=6;
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(10);
-      doc.setTextColor(60,60,60);
-      doc.text('Project: '+d.project, 14, y); y+=5;
+      doc.setTextColor(26,58,42); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('To: '+(d.client||'—'), 14, y); y+=6;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60,60,60);
+      doc.text('Project: '+(d.project||'—'), 14, y); y+=5;
       if(d.address){ doc.text('Site: '+d.address, 14, y); y+=5; }
       doc.setFontSize(9);
       doc.text('Project fee: '+sbFmt(d.total).replace('₹','Rs.')+'  ·  Received: '+sbFmt(d.paid).replace('₹','Rs.'), 14, y);
       y+=8;
-
-      // Item table header
-      doc.setFillColor(26,58,42);
-      doc.rect(14, y, W-28, 8, 'F');
-      doc.setTextColor(255,255,255);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(9);
-      doc.text('#', 16, y+5.5);
-      doc.text('Particulars', 24, y+5.5);
-      doc.text('Amount (Rs.)', W-16, y+5.5, {align:'right'});
-      y+=10;
-
+      doc.setFillColor(26,58,42); doc.rect(14, y, W-28, 8, 'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      doc.text('#', 16, y+5.5); doc.text('Particulars', 24, y+5.5);
+      doc.text('Amount (Rs.)', W-16, y+5.5, {align:'right'}); y+=10;
       doc.setFont('helvetica','normal');
-      d.items.forEach(function(it, i){
-        if(y > 270){ doc.addPage(); y=20; }
+      d.items.forEach(function(it,i){
+        if(y>270){ doc.addPage(); y=20; }
         if(i%2===0){ doc.setFillColor(247,245,240); doc.rect(14, y-4, W-28, 8, 'F'); }
-        doc.setTextColor(40,40,40);
-        doc.setFontSize(9);
+        doc.setTextColor(40,40,40); doc.setFontSize(9);
         doc.text(String(i+1), 16, y);
         var lines = doc.splitTextToSize(it.desc||'Item', 130);
         doc.text(lines, 24, y);
         doc.setFont('helvetica','bold');
-        var amtStr = (it.amt!=null && it.amt!=='' && Number(it.amt)!==0) ? sbFmt(it.amt).replace('₹','Rs.') : '—';
+        var amtStr = (it.amt!=null && Number(it.amt)!==0) ? sbFmt(it.amt).replace('₹','Rs.') : '—';
         doc.text(amtStr, W-16, y, {align:'right'});
         doc.setFont('helvetica','normal');
         y += Math.max(8, lines.length*4.5);
       });
-
       y+=2;
-      doc.setFillColor(26,58,42);
-      doc.rect(14, y, W-28, 10, 'F');
-      doc.setTextColor(201,168,76);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(11);
+      doc.setFillColor(26,58,42); doc.rect(14, y, W-28, 10, 'F');
+      doc.setTextColor(201,168,76); doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text(d.pending>0 ? 'TOTAL DUE' : 'ITEMS', 18, y+6.5);
       doc.text(d.pending>0 ? sbFmt(d.pending).replace('₹','Rs.') : '—', W-16, y+6.5, {align:'right'});
       y+=16;
-
-      if(d.note){
-        doc.setFont('helvetica','normal');
-        doc.setFontSize(9);
-        doc.setTextColor(80,80,80);
-        doc.text('Note: '+d.note, 14, y);
-        y+=8;
-      }
-
-      doc.setFontSize(9);
-      doc.setTextColor(100,100,100);
+      if(d.note){ doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(80,80,80); doc.text('Note: '+d.note, 14, y); y+=8; }
+      doc.setFontSize(9); doc.setTextColor(100,100,100);
       doc.text('Kindly clear the amount at the earliest. Thank you.', 14, y+2);
-      y+=12;
-      doc.setDrawColor(200,200,200);
-      doc.line(14, y, 70, y);
-      y+=5;
-      doc.setFontSize(8);
-      doc.text('Authorised signatory', 14, y);
-      y+=4;
-      doc.setFont('helvetica','bold');
-      doc.setTextColor(26,58,42);
-      doc.text(arch||firm, 14, y);
-
-      doc.setFontSize(7);
-      doc.setTextColor(150,150,150);
+      y+=12; doc.setDrawColor(200,200,200); doc.line(14, y, 70, y); y+=5;
+      doc.setFontSize(8); doc.text('Authorised signatory', 14, y); y+=4;
+      doc.setFont('helvetica','bold'); doc.setTextColor(26,58,42); doc.text(arch||firm, 14, y);
+      doc.setFontSize(7); doc.setTextColor(150,150,150);
       doc.text('Simple item-wise payment bill — not a GST tax invoice.', 14, 285);
       doc.text(firm, 14, 290);
-
       doc.save('PaymentBill_'+(d.project||'Client').replace(/[^\w\-]+/g,'_')+'.pdf');
-      if(typeof showOk==='function') showOk('Item-wise bill PDF downloaded');
-    }catch(e){
-      console.error(e);
-      alert('Bill PDF error: '+(e.message||e));
+      try{ window.sbSaveBill(true); }catch(e){}
+      if(typeof showOk==='function') showOk('Simple bill PDF downloaded');
+      else alert('Bill PDF downloaded');
+    }catch(err){
+      console.error(err);
+      alert('Bill PDF error: '+(err.message||err));
     }
   };
 
   window.sbSendWA = function(){
-    var d = sbData();
-    if(!d.pid){ alert('Project select करा'); return; }
-    if(!d.items.length){ alert('Item नाव add करा (amount optional)'); return; }
-    if(!d.wa){ alert('WhatsApp number भरा'); return; }
-    sbDownloadPDF();
-    var firm = (typeof officeInfo!=='undefined'&&officeInfo.name)?officeInfo.name:'Greenhouse Studio';
-    var msg = '🏗️ *'+firm+'*\n━━━━━━━━━━━━━━━━━━\n🧾 *Payment Bill (Item-wise)*\n\n';
-    msg += 'Client: *'+d.client+'*\nProject: *'+d.project+'*\n\n';
-    d.items.forEach(function(it,i){
-      var line = (i+1)+'. '+(it.desc||'Item');
-      if(it.amt!=null && it.amt!=='' && Number(it.amt)!==0) line += ' — *'+sbFmt(it.amt)+'*';
-      msg += line+'\n';
-    });
-    if(d.pending>0) msg += '\n*Total due: '+sbFmt(d.pending)+'*\n';
-    else msg += '\n';
-    if(d.note) msg += '\nNote: '+d.note+'\n';
-    msg += '\n📄 Bill PDF download झाली — attach करा.\n_Thank you_';
-    var num = String(d.wa).replace(/\D/g,'');
-    setTimeout(function(){
-      window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg), '_blank');
-    }, 600);
+    try{
+      var d = sbData();
+      if(!d.pid){ alert('Project select करा'); return; }
+      if(!d.items.length){ alert('Item नाव add करा'); return; }
+      if(!d.wa){ alert('WhatsApp number भरा (Contact मध्ये)'); return; }
+      window.sbDownloadPDF();
+      var firm = (typeof officeInfo!=='undefined'&&officeInfo.name)?officeInfo.name:'Greenhouse Studio';
+      var msg = '🏗️ *'+firm+'*\n━━━━━━━━━━━━━━━━━━\n🧾 *Payment Bill (Item-wise)*\n\n';
+      msg += 'Client: *'+(d.client||'')+'*\nProject: *'+(d.project||'')+'*\n\n';
+      d.items.forEach(function(it,i){
+        var line = (i+1)+'. '+(it.desc||'Item');
+        if(it.amt!=null && Number(it.amt)!==0) line += ' — *'+sbFmt(it.amt)+'*';
+        msg += line+'\n';
+      });
+      if(d.pending>0) msg += '\n*Total due: '+sbFmt(d.pending)+'*\n';
+      if(d.note) msg += '\nNote: '+d.note+'\n';
+      msg += '\n📄 Bill PDF download झाली — attach करा.\n_Thank you_';
+      var num = String(d.wa).replace(/\D/g,'');
+      setTimeout(function(){ window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank'); }, 500);
+    }catch(err){ alert('WhatsApp error: '+(err.message||err)); }
   };
 
   window.sbSaveBill = function(silent){
@@ -27740,32 +27719,20 @@ html += '</div>';
       if(!db.simpleBills) db.simpleBills = [];
       var d = sbData();
       if(!d.pid){ if(!silent) alert('Project select करा'); return null; }
-      if(!d.items.length){ if(!silent) alert('Item नाव add करा (amount optional)'); return null; }
+      if(!d.items.length){ if(!silent) alert('Item नाव add करा'); return null; }
       var row = {
         id: (typeof uid==='function'?uid('SB'):('SB-'+Date.now())),
-        projectId: d.pid,
-        project: d.project,
-        client: d.client,
-        wa: d.wa,
-        totalFee: d.total,
-        received: d.paid,
-        items: d.items.map(function(it){ return {desc:it.desc, amt:(it.amt==null||it.amt==='')?null:sbNum(it.amt)}; }),
-        billTotal: d.pending,
-        note: d.note,
-        createdAt: new Date().toISOString()
+        projectId:d.pid, project:d.project, client:d.client, wa:d.wa,
+        totalFee:d.total, received:d.paid, items:d.items, billTotal:d.pending,
+        note:d.note, createdAt:new Date().toISOString()
       };
       db.simpleBills.unshift(row);
       if(typeof saveAll==='function') saveAll();
       else if(typeof saveLocal==='function') saveLocal();
-      sbRenderSaved();
-      if(!silent && typeof showOk==='function') showOk('Simple bill saved');
-      else if(!silent) alert('Bill saved');
+      window.sbRenderSaved();
+      if(!silent){ if(typeof showOk==='function') showOk('Bill saved'); else alert('Bill saved'); }
       return row;
-    }catch(e){
-      console.error(e);
-      if(!silent) alert('Save failed: '+(e.message||e));
-      return null;
-    }
+    }catch(e){ if(!silent) alert('Save failed: '+(e.message||e)); return null; }
   };
 
   window.sbRenderSaved = function(){
@@ -27773,47 +27740,38 @@ html += '</div>';
     if(!box) return;
     var pid = (document.getElementById('sb-proj')||{}).value;
     var list = (db.simpleBills||[]).filter(function(b){ return !pid || b.projectId===pid; }).slice(0,5);
-    if(!list.length){ box.innerHTML = ''; return; }
-    box.innerHTML = '<div style="font-weight:700;margin-bottom:4px;color:var(--ink)">Saved bills</div>' + list.map(function(b){
-      var dt = (b.createdAt||'').slice(0,10);
-      var n = (b.items||[]).length;
-      var tot = b.billTotal>0 ? sbFmt(b.billTotal) : 'no amount';
-      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--bdr)">'+
-        '<span>'+dt+' · '+n+' items · '+tot+'</span>'+
+    if(!list.length){ box.innerHTML=''; return; }
+    box.innerHTML = '<div style="font-weight:700;margin-bottom:4px">Saved bills</div>'+list.map(function(b){
+      return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px">'+
+        '<span>'+(b.createdAt||'').slice(0,10)+' · '+(b.items||[]).length+' items</span>'+
         '<button type="button" class="btn btn-s btn-sm" onclick="sbLoadSaved(\''+b.id+'\')">Load</button></div>';
     }).join('');
   };
 
   window.sbLoadSaved = function(id){
-    var b = (db.simpleBills||[]).find(function(x){return x.id===id;});
+    var b=(db.simpleBills||[]).find(function(x){return x.id===id;});
     if(!b) return;
-    var sel = document.getElementById('sb-proj');
-    if(sel && b.projectId){ sel.value = b.projectId; }
-    sbFill();
-    window._sbItems = (b.items||[]).map(function(it){ return {desc:it.desc||'', amt:it.amt}; });
-    if(!window._sbItems.length) window._sbItems = [{desc:'', amt:null}];
-    var note = document.getElementById('sb-note');
-    if(note) note.value = b.note||'';
-    sbRenderItems();
-    if(typeof showOk==='function') showOk('Bill loaded');
+    var sel=document.getElementById('sb-proj');
+    if(sel && b.projectId) sel.value=b.projectId;
+    window.sbFill();
+    window._sbItems=(b.items||[]).map(function(it){return {desc:it.desc||'', amt:it.amt};});
+    if(!window._sbItems.length) window._sbItems=[{desc:'', amt:null}];
+    var note=document.getElementById('sb-note'); if(note) note.value=b.note||'';
+    window.sbRenderItems();
   };
 
-  // auto-save on PDF download
-  var _sbDl = window.sbDownloadPDF;
-  window.sbDownloadPDF = function(){
-    var r = _sbDl.apply(this, arguments);
-    try{ sbSaveBill(true); }catch(e){}
-    return r;
-  };
-
-  // after fill, refresh saved list
-  var _sbFill = window.sbFill;
-  window.sbFill = function(){
-    _sbFill.apply(this, arguments);
-    try{ sbRenderSaved(); }catch(e){}
-  };
+  // close on X already uses closeModal — enhance close to clear display style
+  var _cm = window.closeModal;
+  if(typeof _cm==='function'){
+    window.closeModal = function(id){
+      _cm(id);
+      if(id==='m-simple-bill'){
+        var m=document.getElementById('m-simple-bill');
+        if(m){ m.style.display=''; }
+      }
+    };
+  }
 })();
-
 </script>
 
 </body>
