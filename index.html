@@ -22535,7 +22535,7 @@ const EST_TPL={
 };
 let estFoundType='footing';
 
-const EST_FIELDS=['owner1','owner2','date','ptitle','gat','plot','loc1','loc2','dist','permit','permitdate','ssr','days','cert','eng','lic','ref'];
+const EST_FIELDS=['owner1','owner2','date','ptitle','gat','plot','survey','loc1','loc2','dist','permit','permitdate','ssr','days','cert','eng','lic','ref'];
 
 let estSec=[],estEx=[],estId=null,estZoom=.62,estDrawn=false,estHTML='',estLH=localStorage.getItem('gs_est_lh')!=='0';
 
@@ -22614,6 +22614,7 @@ window.renderBankEstView=function(){
           <div class="fg"><label>Ref. no. (internal)</label><input id="est-ref" oninput="estRender()"></div>
           <div class="fg w"><label>Project title</label><input id="est-ptitle" oninput="estRender()" placeholder="Proposed Estimate of Residential Building"></div>
           <div class="fg"><label>Gat no.</label><input id="est-gat" oninput="estRender()" placeholder="94/2"></div>
+          <div class="fg"><label>Survey no.</label><input id="est-survey" oninput="estRender()" placeholder="S.No-35/5"></div>
           <div class="fg"><label>Plot no.</label><input id="est-plot" oninput="estRender()" placeholder="36"></div>
           <div class="fg"><label>Village / area</label><input id="est-loc1" oninput="estRender()" placeholder="Bale"></div>
           <div class="fg"><label>Locality</label><input id="est-loc2" oninput="estRender()" placeholder="Godavari Nagar, North Solapur"></div>
@@ -22622,6 +22623,53 @@ window.renderBankEstView=function(){
           <div class="fg"><label>Building Permit no.</label><input id="est-permit" oninput="estRender()" placeholder="1623996"></div>
           <div class="fg"><label>Permit date</label><input id="est-permitdate" type="date" oninput="estRender()"></div>
         </div>
+      </div></div>
+
+      <div class="est-card"><h4 onclick="estTog(this)">📐 Plan Takeoff (Image + DXF)<span class="ar">▼</span></h4><div class="eb">
+        <p style="font-size:11px;color:var(--mut);margin:0 0 10px;line-height:1.45">
+          2D plan <b>feet</b> मध्ये असल्यास scale set करा → measure → <b>meter</b> मध्ये qty estimate item वर apply.
+          DXF upload करून wall length / area auto वाचता येते.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <label class="btn btn-s btn-sm" style="cursor:pointer">🖼 Upload plan image
+            <input type="file" id="pt-img" accept="image/*" style="display:none" onchange="ptLoadImage(this)">
+          </label>
+          <label class="btn btn-s btn-sm" style="cursor:pointer">📄 Upload DXF
+            <input type="file" id="pt-dxf" accept=".dxf,image/vnd.dxf,application/dxf,text/plain" style="display:none" onchange="ptLoadDxf(this)">
+          </label>
+          <button type="button" class="btn btn-s btn-sm" onclick="ptSetMode('scale')">📏 Set scale</button>
+          <button type="button" class="btn btn-s btn-sm" onclick="ptSetMode('len')">Straight length</button>
+          <button type="button" class="btn btn-s btn-sm" onclick="ptSetMode('area')">Polygon area</button>
+          <button type="button" class="btn btn-s btn-sm" onclick="ptUndo()">Undo</button>
+          <button type="button" class="btn btn-s btn-sm" onclick="ptClear()">Clear measures</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="fg" style="margin:0"><label>Scale length (feet)</label>
+            <input class="fi" id="pt-scale-ft" type="number" step="any" value="10" placeholder="e.g. 10">
+          </div>
+          <div class="fg" style="margin:0"><label>DXF units</label>
+            <select class="fi fi-sel" id="pt-dxf-unit">
+              <option value="ft">Feet (convert → m)</option>
+              <option value="m">Already meters</option>
+              <option value="mm">Millimeters → m</option>
+            </select>
+          </div>
+        </div>
+        <div id="pt-status" style="font-size:12px;font-weight:600;color:var(--grn3);margin-bottom:8px">Upload plan → Set scale (2 clicks + known feet)</div>
+        <div style="border:1px solid var(--bdr);border-radius:10px;overflow:auto;max-height:320px;background:#1a1a18">
+          <canvas id="pt-canvas" style="display:block;max-width:100%;cursor:crosshair"></canvas>
+        </div>
+        <div id="pt-result" style="margin-top:10px;padding:10px;background:var(--surf2);border-radius:10px;font-size:12px;line-height:1.5"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:10px;align-items:end">
+          <div class="fg" style="margin:0"><label>Apply to section</label>
+            <select class="fi fi-sel" id="pt-sec" onchange="ptFillItems()"></select>
+          </div>
+          <div class="fg" style="margin:0"><label>Estimate item</label>
+            <select class="fi fi-sel" id="pt-item"></select>
+          </div>
+          <button type="button" class="btn btn-gold btn-sm" onclick="ptApplyQty()">Apply qty (m / m²)</button>
+        </div>
+        <div id="pt-dxf-list" style="margin-top:10px;max-height:160px;overflow:auto;font-size:11px"></div>
       </div></div>
 
       <div class="est-card"><h4 onclick="estTog(this)">📑 Abstract sections<span class="ar">▼</span></h4><div class="eb">
@@ -23204,7 +23252,7 @@ function estDrawEx(){
 /* ══════════════════ document build ══════════════════ */
 function estHeadBlock(){
   const loc=[egv('loc1'),egv('loc2'),egv('dist')?'Dist- '+egv('dist'):''].filter(Boolean).join(', ');
-  const site=[egv('gat')?'Gat No. '+egv('gat'):'',egv('plot')?'Plot No. '+egv('plot'):''].filter(Boolean).join(', ');
+  const site=[egv('gat')?'Gat No. '+egv('gat'):'',egv('survey')?'Survey No. '+egv('survey'):'',egv('plot')?'Plot No. '+egv('plot'):''].filter(Boolean).join(', ');
   return `<div class="eh">
     <div class="rowb"><div><b>Owner Name - ${ece(egv('owner1'))}</b></div><div><b>Date - ${ece(edmy(egv('date')))}</b></div></div>
     ${egv('owner2')?`<div class="ind"><b>${ece(egv('owner2'))}</b></div>`:''}
@@ -27771,6 +27819,320 @@ html += '</div>';
       }
     };
   }
+})();
+</script>
+
+
+<script>
+/* ═══ Plan Takeoff: image measure + DXF → meters → estimate qty ═══ */
+(function(){
+  const FT_TO_M = 0.3048;
+  const SQFT_TO_SQM = 0.09290304;
+  window._pt = {
+    mode:'scale', img:null, scalePx:0, scaleFt:10,
+    pts:[], measures:[], lastQty:null, lastUnit:'m'
+  };
+
+  function status(msg){ var e=document.getElementById('pt-status'); if(e) e.textContent=msg; }
+  function resultHtml(html){ var e=document.getElementById('pt-result'); if(e) e.innerHTML=html; }
+
+  window.ptSetMode = function(m){
+    window._pt.mode=m; window._pt.pts=[];
+    status(m==='scale'?'Scale: plan वर 2 points click करा, नंतर feet value confirm':'Mode: '+m+' — canvas वर click करा');
+    ptDraw();
+  };
+
+  window.ptLoadImage = function(input){
+    var f=input.files&&input.files[0]; if(!f) return;
+    var url=URL.createObjectURL(f);
+    var img=new Image();
+    img.onload=function(){
+      window._pt.img=img; window._pt.pts=[]; window._pt.measures=[];
+      var c=document.getElementById('pt-canvas');
+      if(!c) return;
+      var maxW=720;
+      var sc=Math.min(1, maxW/img.width);
+      c.width=Math.round(img.width*sc);
+      c.height=Math.round(img.height*sc);
+      c._ptScale=sc;
+      ptDraw();
+      status('Image loaded. First: Set scale (2 clicks on a known length in feet).');
+      ptFillSecs();
+    };
+    img.src=url;
+  };
+
+  function canvasPos(ev){
+    var c=document.getElementById('pt-canvas');
+    var r=c.getBoundingClientRect();
+    return {x:(ev.clientX-r.left)*(c.width/r.width), y:(ev.clientY-r.top)*(c.height/r.height)};
+  }
+
+  function ptDraw(){
+    var c=document.getElementById('pt-canvas'); if(!c) return;
+    var ctx=c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    if(window._pt.img) ctx.drawImage(window._pt.img,0,0,c.width,c.height);
+    else {
+      ctx.fillStyle='#222'; ctx.fillRect(0,0,c.width||400,c.height||200);
+      ctx.fillStyle='#888'; ctx.font='14px sans-serif'; ctx.fillText('Upload plan image',20,40);
+    }
+    // measures
+    ctx.strokeStyle='#c9a84c'; ctx.fillStyle='#c9a84c'; ctx.lineWidth=2;
+    (window._pt.measures||[]).forEach(function(m){
+      if(m.type==='len'&&m.pts.length>=2){
+        ctx.beginPath(); ctx.moveTo(m.pts[0].x,m.pts[0].y); ctx.lineTo(m.pts[1].x,m.pts[1].y); ctx.stroke();
+      }
+      if(m.type==='area'&&m.pts.length>=2){
+        ctx.beginPath(); ctx.moveTo(m.pts[0].x,m.pts[0].y);
+        m.pts.forEach(function(p,i){ if(i) ctx.lineTo(p.x,p.y); });
+        ctx.closePath(); ctx.stroke();
+        ctx.globalAlpha=0.15; ctx.fill(); ctx.globalAlpha=1;
+      }
+    });
+    // current pts
+    ctx.fillStyle='#1f9d4d';
+    (window._pt.pts||[]).forEach(function(p){ ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill(); });
+    if(window._pt.pts.length>=2){
+      ctx.strokeStyle='#1f9d4d'; ctx.beginPath();
+      ctx.moveTo(window._pt.pts[0].x,window._pt.pts[0].y);
+      window._pt.pts.forEach(function(p,i){ if(i) ctx.lineTo(p.x,p.y); });
+      ctx.stroke();
+    }
+  }
+
+  function dist(a,b){ var dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
+  function polyArea(pts){
+    var a=0; for(var i=0;i<pts.length;i++){ var j=(i+1)%pts.length; a+=pts[i].x*pts[j].y-pts[j].x*pts[i].y; }
+    return Math.abs(a)/2;
+  }
+
+  function pxToFt(px){
+    if(!window._pt.scalePx || window._pt.scalePx<=0) return null;
+    var ft=parseFloat((document.getElementById('pt-scale-ft')||{}).value)||window._pt.scaleFt||10;
+    return px * (ft / window._pt.scalePx);
+  }
+
+  function showMeasure(kind, pxVal){
+    var ft=pxToFt(pxVal);
+    if(ft==null){ status('आधी scale set करा (2 clicks + feet)'); return; }
+    if(kind==='len'){
+      var m=ft*FT_TO_M;
+      window._pt.lastQty=Math.round(m*1000)/1000;
+      window._pt.lastUnit='m';
+      resultHtml('<b>Length</b><br>Feet: <b>'+ft.toFixed(3)+' ft</b><br>Meters: <b>'+m.toFixed(3)+' m</b><br><span style="color:var(--mut)">Apply → item qty (running m / wall length)</span>');
+      status('Length measured. Select item → Apply qty');
+    } else {
+      var sqft=ft; // pxVal was area in px² converted via scale: area_ft = area_px * (ft/px)^2
+      var sqm=sqft*SQFT_TO_SQM;
+      window._pt.lastQty=Math.round(sqm*1000)/1000;
+      window._pt.lastUnit='sq.m';
+      resultHtml('<b>Area</b><br>Sq.ft: <b>'+sqft.toFixed(3)+' ft²</b><br>Sq.m: <b>'+sqm.toFixed(3)+' m²</b><br><span style="color:var(--mut)">Apply → item qty (flooring / built-up)</span>');
+      status('Area measured. Select item → Apply qty');
+    }
+    ptFillSecs();
+  }
+
+  function onCanvasClick(ev){
+    var p=canvasPos(ev);
+    var mode=window._pt.mode;
+    window._pt.pts.push(p);
+    if(mode==='scale' && window._pt.pts.length>=2){
+      window._pt.scalePx=dist(window._pt.pts[0], window._pt.pts[1]);
+      window._pt.scaleFt=parseFloat((document.getElementById('pt-scale-ft')||{}).value)||10;
+      window._pt.pts=[];
+      status('Scale set: '+window._pt.scalePx.toFixed(1)+' px = '+window._pt.scaleFt+' ft. आता length/area measure करा.');
+      ptDraw(); return;
+    }
+    if(mode==='len' && window._pt.pts.length>=2){
+      var px=dist(window._pt.pts[0], window._pt.pts[1]);
+      window._pt.measures.push({type:'len', pts:window._pt.pts.slice(0,2)});
+      window._pt.pts=[];
+      showMeasure('len', px);
+      ptDraw(); return;
+    }
+    // area: accumulate until double-click handled separately
+    ptDraw();
+  }
+
+  function onCanvasDblClick(ev){
+    if(window._pt.mode!=='area') return;
+    if(window._pt.pts.length<3){ status('Area साठी किमान 3 points'); return; }
+    var pts=window._pt.pts.slice();
+    var areaPx=polyArea(pts);
+    // convert px² to ft² using scale
+    if(!window._pt.scalePx){ status('आधी scale set करा'); return; }
+    var ftPerPx=(parseFloat((document.getElementById('pt-scale-ft')||{}).value)||10)/window._pt.scalePx;
+    var areaFt=areaPx * ftPerPx * ftPerPx;
+    window._pt.measures.push({type:'area', pts:pts});
+    window._pt.pts=[];
+    showMeasure('area', areaFt); // pass ft² directly - adjust showMeasure for area
+    // fix: showMeasure area expects px path - we pass ft as special
+    var sqm=areaFt*SQFT_TO_SQM;
+    window._pt.lastQty=Math.round(sqm*1000)/1000;
+    window._pt.lastUnit='sq.m';
+    resultHtml('<b>Area</b><br>Sq.ft: <b>'+areaFt.toFixed(3)+' ft²</b><br>Sq.m: <b>'+sqm.toFixed(3)+' m²</b>');
+    status('Area measured. Select item → Apply qty');
+    ptDraw();
+  }
+
+  window.ptUndo=function(){
+    if(window._pt.pts.length){ window._pt.pts.pop(); }
+    else if(window._pt.measures.length){ window._pt.measures.pop(); }
+    ptDraw();
+  };
+  window.ptClear=function(){
+    window._pt.pts=[]; window._pt.measures=[]; window._pt.lastQty=null;
+    resultHtml(''); status('Measures cleared'); ptDraw();
+  };
+
+  window.ptFillSecs=function(){
+    var sec=document.getElementById('pt-sec'); if(!sec) return;
+    var list=(typeof estSec!=='undefined'&&estSec)?estSec:[];
+    sec.innerHTML=list.map(function(s,i){ return '<option value="'+i+'">'+String(s.name||('Section '+(i+1))).replace(/</g,'')+'</option>'; }).join('')||'<option value="">— no sections —</option>';
+    ptFillItems();
+  };
+  window.ptFillItems=function(){
+    var sec=document.getElementById('pt-sec');
+    var item=document.getElementById('pt-item'); if(!item) return;
+    var si=parseInt(sec&&sec.value,10);
+    var list=(typeof estSec!=='undefined'&&estSec&&estSec[si])?estSec[si].items:[];
+    item.innerHTML=list.map(function(it,i){
+      var d=String(it.d||'Item').slice(0,60).replace(/</g,'');
+      return '<option value="'+i+'">#'+(i+1)+' '+d+(it.u?(' ['+it.u+']'):'')+'</option>';
+    }).join('')||'<option value="">— no items —</option>';
+  };
+
+  window.ptApplyQty=function(){
+    try{
+      if(window._pt.lastQty==null){ alert('आधी measure किंवा DXF value select करा'); return; }
+      var si=parseInt((document.getElementById('pt-sec')||{}).value,10);
+      var ii=parseInt((document.getElementById('pt-item')||{}).value,10);
+      if(isNaN(si)||isNaN(ii)||!estSec[si]||!estSec[si].items[ii]){ alert('Section / item select करा'); return; }
+      var q=window._pt.lastQty;
+      estSec[si].items[ii].q=String(q);
+      // if unit is sq.ft-ish and we have sq.m, leave unit as in item
+      if(typeof estDrawSecs==='function') estDrawSecs();
+      if(typeof estRender==='function') estRender();
+      status('Qty '+q+' applied to item #'+(ii+1));
+      if(typeof showOk==='function') showOk('Qty applied: '+q);
+      else alert('Qty applied: '+q);
+    }catch(e){ alert('Apply failed: '+(e.message||e)); }
+  };
+
+  /* ── DXF parser (LINE + LWPOLYLINE) ── */
+  function parseDxf(text){
+    var lines=text.split(/\r?\n/);
+    var entities=[]; var i=0;
+    function next(){ return i<lines.length?lines[i++].trim():null; }
+    while(i<lines.length){
+      var code=next(); if(code===null) break;
+      var val=next(); if(val===null) break;
+      if(code==='0' && val==='LINE'){
+        var x1,y1,x2,y2;
+        while(i<lines.length){
+          var c=next(),v=next(); if(c===null) break;
+          if(c==='0'){ i-=2; break; }
+          if(c==='10') x1=parseFloat(v);
+          if(c==='20') y1=parseFloat(v);
+          if(c==='11') x2=parseFloat(v);
+          if(c==='21') y2=parseFloat(v);
+        }
+        if([x1,y1,x2,y2].every(function(n){return isFinite(n);})){
+          var len=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+          entities.push({type:'LINE', len:len});
+        }
+      } else if(code==='0' && (val==='LWPOLYLINE'||val==='POLYLINE')){
+        var pts=[]; var closed=false; var bulgeWait=false;
+        if(val==='LWPOLYLINE'){
+          while(i<lines.length){
+            var c2=next(),v2=next(); if(c2===null) break;
+            if(c2==='0'){ i-=2; break; }
+            if(c2==='70') closed=!!(parseInt(v2,10)&1);
+            if(c2==='10'){ var x=parseFloat(v2); var c3=next(),v3=next(); var y=parseFloat(v3); if(c3==='20') pts.push({x:x,y:y}); else { i-=2; } }
+          }
+        }
+        if(pts.length>=2){
+          var plen=0;
+          for(var k=0;k<pts.length-1;k++) plen+=Math.sqrt(Math.pow(pts[k+1].x-pts[k].x,2)+Math.pow(pts[k+1].y-pts[k].y,2));
+          if(closed&&pts.length>2) plen+=Math.sqrt(Math.pow(pts[0].x-pts[pts.length-1].x,2)+Math.pow(pts[0].y-pts[pts.length-1].y,2));
+          var area=0;
+          if(closed&&pts.length>=3){
+            for(var a=0;a<pts.length;a++){ var b=(a+1)%pts.length; area+=pts[a].x*pts[b].y-pts[b].x*pts[a].y; }
+            area=Math.abs(area)/2;
+          }
+          entities.push({type:'POLY', len:plen, area:area, closed:closed, n:pts.length});
+        }
+      }
+    }
+    return entities;
+  }
+
+  function toMetersLen(v, unit){
+    if(unit==='m') return v;
+    if(unit==='mm') return v/1000;
+    return v*FT_TO_M; // ft
+  }
+  function toMetersArea(v, unit){
+    if(unit==='m') return v;
+    if(unit==='mm') return v/1e6;
+    return v*SQFT_TO_SQM;
+  }
+
+  window.ptLoadDxf = function(input){
+    var f=input.files&&input.files[0]; if(!f) return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var ents=parseDxf(String(reader.result||''));
+        var unit=(document.getElementById('pt-dxf-unit')||{}).value||'ft';
+        var totalLen=0, totalArea=0, nLine=0, nPoly=0;
+        ents.forEach(function(e){
+          if(e.type==='LINE'){ totalLen+=e.len; nLine++; }
+          if(e.type==='POLY'){ totalLen+=e.len; nPoly++; if(e.closed&&e.area) totalArea+=e.area; }
+        });
+        var lenM=toMetersLen(totalLen, unit);
+        var areaM=toMetersArea(totalArea, unit);
+        var box=document.getElementById('pt-dxf-list');
+        if(box){
+          box.innerHTML='<b>DXF summary</b> ('+ents.length+' entities)<br>'+
+            'Lines: '+nLine+' · Polylines: '+nPoly+'<br>'+
+            'Total length: <b>'+lenM.toFixed(3)+' m</b>'+(unit==='ft'?' (from ft)':'')+'<br>'+
+            'Closed areas: <b>'+areaM.toFixed(3)+' m²</b><br>'+
+            '<button type="button" class="btn btn-s btn-sm" style="margin-top:6px" onclick="ptUseDxfLen()">Use length as qty</button> '+
+            '<button type="button" class="btn btn-s btn-sm" style="margin-top:6px" onclick="ptUseDxfArea()">Use area as qty</button>';
+        }
+        window._pt.dxfLenM=Math.round(lenM*1000)/1000;
+        window._pt.dxfAreaM=Math.round(areaM*1000)/1000;
+        status('DXF loaded. Length/area meters मध्ये ready.');
+        ptFillSecs();
+      }catch(e){ alert('DXF parse error: '+(e.message||e)); }
+    };
+    reader.readAsText(f);
+  };
+  window.ptUseDxfLen=function(){
+    window._pt.lastQty=window._pt.dxfLenM; window._pt.lastUnit='m';
+    resultHtml('<b>DXF length</b><br>Meters: <b>'+(window._pt.dxfLenM||0)+' m</b>');
+  };
+  window.ptUseDxfArea=function(){
+    window._pt.lastQty=window._pt.dxfAreaM; window._pt.lastUnit='sq.m';
+    resultHtml('<b>DXF area</b><br>Sq.m: <b>'+(window._pt.dxfAreaM||0)+' m²</b>');
+  };
+
+  function bindCanvas(){
+    var c=document.getElementById('pt-canvas');
+    if(!c||c._ptBound) return;
+    c._ptBound=true;
+    c.addEventListener('click', onCanvasClick);
+    c.addEventListener('dblclick', onCanvasDblClick);
+  }
+  // bind when bank estimate drawn
+  var _er=window.estRender;
+  if(typeof _er==='function'){
+    window.estRender=function(){ var r=_er.apply(this,arguments); try{ bindCanvas(); ptFillSecs(); }catch(e){} return r; };
+  }
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(bindCanvas, 500); });
+  setTimeout(bindCanvas, 800);
 })();
 </script>
 
