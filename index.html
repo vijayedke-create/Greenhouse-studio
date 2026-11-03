@@ -22377,43 +22377,38 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.completion='📋 Completion Report'
   padding:6px 8px!important;border-color:#cfcbc3!important;
 }
 
-.cmp-sheet.est /* Owner name + address: double line allowed */
-.cmp-sheet.est .eh{margin:0 0 6px!important;padding:0!important}
-.cmp-sheet.est .eh-table{width:100%!important;border-collapse:collapse!important;table-layout:fixed!important}
-.cmp-sheet.est .eh-table td{border:none!important;padding:1px 0!important;vertical-align:top!important}
-.cmp-sheet.est .eh-own{
-  width:72%!important;
-  white-space:normal!important;
-  font-size:9.5pt!important;
-  line-height:1.35!important;
-}
-.cmp-sheet.est .eh-own2{
-  width:72%!important;
+.cmp-sheet.est /* Owner one-below-one; project wrap; NO leading gap on lower lines */
+.cmp-sheet.est .eh{margin:0 0 6px!important;padding:0!important;font-size:9.5pt!important;line-height:1.4!important}
+.cmp-sheet.est .eh-top{display:flex!important;justify-content:space-between!important;align-items:flex-start!important;gap:8px!important;width:100%!important}
+.cmp-sheet.est .eh-names{flex:1!important;min-width:0!important}
+.cmp-sheet.est .eh-o1,
+.cmp-sheet.est .eh-o2,
+.cmp-sheet.est .eh-pr,
+.cmp-sheet.est .eh-addr{
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
   padding-left:0!important;
-  font-size:9.5pt!important;
-  line-height:1.35!important;
+  text-indent:0!important;
+  margin-left:0!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  line-height:1.4!important;
+  text-align:left!important;
 }
-.cmp-sheet.est .eh-dt{
-  width:28%!important;
-  text-align:right!important;
+.cmp-sheet.est .eh-o2{margin-top:1px!important}
+.cmp-sheet.est .eh-date{
+  flex:0 0 auto!important;
   white-space:nowrap!important;
-  font-size:9.5pt!important;
-  vertical-align:top!important;
+  text-align:right!important;
+  padding:0!important;
+  margin:0!important;
 }
-.cmp-sheet.est .eh-pr{
-  white-space:normal!important;
-  font-size:9pt!important;
-  line-height:1.35!important;
-  padding-top:3px!important;
-}
-.cmp-sheet.est .eh-addr,
-.cmp-sheet.est .eh-addr2{
-  white-space:normal!important;
-  font-size:9pt!important;
-  line-height:1.35!important;
-}
-.cmp-sheet.est .eh-addr2{padding-left:0!important}
+.cmp-sheet.est .eh-pr{margin-top:4px!important}
+.cmp-sheet.est .eh-addr{margin-top:2px!important}
 .cmp-sheet.est .eh .ind{display:none!important}
+.cmp-sheet.est .eh-table{display:none!important}
 
 
 #est-body .exrow{display:grid;grid-template-columns:minmax(0,1fr) 58px 86px 24px;gap:5px;align-items:center;margin-bottom:6px}
@@ -22475,7 +22470,7 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.completion='📋 Completion Report'
 .cmp-sheet.est .eh{font-size:9pt;line-height:1.25;margin-bottom:5px}
 .cmp-sheet.est .eh .rowb{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .cmp-sheet.est .eh b{font-weight:700}
-.cmp-sheet.est .eh .ind{display:none!important;padding-left:0}
+.cmp-sheet.est .eh .ind{display:none!important;padding-left:0!important}
 .cmp-sheet.est .ct{text-align:center;font-weight:700;font-size:13pt;text-decoration:underline;margin:0 0 11px}
 .cmp-sheet.est .ab{text-align:center;font-weight:700;font-size:11.2pt;text-decoration:underline;margin:9px 0 6px}
 .cmp-sheet.est .sn{font-weight:700;font-size:10.6pt;margin:0 0 5px}
@@ -23294,29 +23289,25 @@ function estHeadBlock(){
   const o1=String(egv('owner1')||'').replace(/[\r\n]+/g,' ').trim();
   const o2=String(egv('owner2')||'').replace(/[\r\n]+/g,' ').trim();
   const site=[egv('gat')?'Gat No. '+egv('gat'):'',egv('survey')?'Survey No. '+egv('survey'):'',egv('plot')?'Plot No. '+egv('plot'):''].filter(Boolean).join(', ');
-  // Address: line1 village/locality, line2 district (double line)
   const addr1=[egv('loc1'),egv('loc2')].filter(Boolean).join(', ');
   const addr2=egv('dist')?('Dist- '+egv('dist')):'';
   const title=egv('ptitle')||'';
+  // Owner: each name on its own line, NO left indent on 2nd line
+  // Project/address: normal wrap, no hanging indent / no extra gap
   return `<div class="eh">
-<table class="eh-table" width="100%" cellspacing="0" cellpadding="0">
-<tr>
-  <td class="eh-own"><b>Owner Name - ${ece(o1||'—')}</b></td>
-  <td class="eh-dt" rowspan="2"><b>Date - ${ece(edmy(egv('date')))}</b></td>
-</tr>
-<tr>
-  <td class="eh-own2">${o2?`<b>${ece(o2)}</b>`:'&nbsp;'}</td>
-</tr>
-<tr>
-  <td colspan="2" class="eh-pr"><b>Project - ${ece(title)}${site?' — '+ece(site):''}</b></td>
-</tr>
-<tr>
-  <td colspan="2" class="eh-addr">${addr1?`<b>Address - ${ece(addr1)}</b>`:''}</td>
-</tr>
-${addr2?`<tr><td colspan="2" class="eh-addr2"><b>${ece(addr2)}</b></td></tr>`:''}
-</table>
+<div class="eh-top">
+  <div class="eh-names">
+    <div class="eh-o1"><b>Owner Name - ${ece(o1||'—')}</b></div>
+    ${o2?`<div class="eh-o2"><b>${ece(o2)}</b></div>`:''}
+  </div>
+  <div class="eh-date"><b>Date - ${ece(edmy(egv('date')))}</b></div>
+</div>
+<div class="eh-pr"><b>Project - ${ece(title)}${site?' — '+ece(site):''}</b></div>
+${addr1?`<div class="eh-addr"><b>Address - ${ece(addr1)}</b></div>`:''}
+${addr2?`<div class="eh-addr"><b>${ece(addr2)}</b></div>`:''}
   </div>`;
 }
+
 function estSignBlock(){
   const sig=localStorage.getItem('gs_signature')||'';
   return `<div class="esg"><div class="s">${sig?`<img src="${sig}">`:'<div class="sp"></div>'}
