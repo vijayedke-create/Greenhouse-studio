@@ -5461,6 +5461,11 @@ function loadLocal(){
     if(!db.leads) db.leads = [];
     if(!db.quotations) db.quotations = [];
     if(!db.simpleBills) db.simpleBills = [];
+    if(!db.csLetters) db.csLetters = [];
+    if(!db.awLetters) db.awLetters = [];
+    if(!db.apLetters) db.apLetters = [];
+    if(!db.tpLetters) db.tpLetters = [];
+    if(!db.nocLetters) db.nocLetters = [];
     if(!db.contacts) db.contacts = [];
     if(!db.projects) db.projects = [];
     if(!db.payments) db.payments = [];
@@ -24304,7 +24309,7 @@ window.renderAreaWarrantyView=function(){
   const box=document.getElementById('areawarranty-body');
   if(!box)return;
   if(awDrawn){awRender();return}
-  box.innerHTML=`<div class="sec-head"><div class="sec-title">📐 क्षेत्रफळाबाबत हमीपत्र</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="awNew()">New</button><button class="btn btn-gold" onclick="awPrint()">🖨 Print / PDF</button></div></div>
+  box.innerHTML=`<div class="sec-head"><div class="sec-title">📐 क्षेत्रफळाबाबत हमीपत्र</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="awNew()">New</button><button class="btn btn-sm" onclick="awStore()">💾 Save</button><button class="btn btn-gold" onclick="awPrint()">🖨 Print / PDF</button></div></div>
   <div class="aw-grid">
     <div>
       <div class="aw-card"><h4 onclick="awTog(this)">📍 जागा व अर्जदार माहिती<span class="ar">▼</span></h4><div class="eb"><div class="aw-f">
@@ -24424,7 +24429,7 @@ window.csNew=()=>{q('date').value=today();q('city').value='सोलापूर
 window.csToggleLH=v=>{csLH=!!v;localStorage.setItem('gs_cs_lh',v?'1':'0');render()};
 window.csPrint=()=>{const body=q('pv').innerHTML;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups to print.');w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>स्वयं-घोषणापत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>html,body{margin:0;padding:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cmp-sheet.csd{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0 auto!important;padding:18mm 18mm!important;box-sizing:border-box!important;box-shadow:none!important;transform:none!important;overflow:hidden!important;background:#fff!important;color:#111;font-size:14pt;line-height:1.65}.cmp-sheet.csd .cs-title{text-align:center;font-weight:700;font-size:16pt;text-decoration:underline;margin:0 0 18px}@page{size:A4 portrait;margin:0!important}@media print{.cmp-sheet{break-after:auto;page-break-after:auto}}</style></head><body>'+body+'</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},700)};
 window.csRender=function(){try{render();}catch(e){console.error('csRender',e);}};
-window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){csRender();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="csRender()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="csRender()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="csRender()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="csRender()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="csRender()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="csRender()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
+window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){csRender();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-sm" onclick="csStore()">💾 Save</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="csRender()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="csRender()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="csRender()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="csRender()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="csRender()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="csRender()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.clientself='📄 Client Self Declaration';
 })();
 </script>
@@ -24475,7 +24480,7 @@ window.tpRender=function(){try{tpRender();}catch(e){console.error(e);}};
 window.renderTPAbhiprayView=function(){
   const box=document.getElementById('tpabhipray-body');if(!box)return;
   if(tpDrawn){tpRender();return;}
-  box.innerHTML=`<div class="sec-head"><div class="sec-title">🏛️ TP अभिप्राय पत्र</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="tpNew()">New</button><button class="btn btn-gold" onclick="tpPrint()">🖨 Print / PDF</button></div></div>
+  box.innerHTML=`<div class="sec-head"><div class="sec-title">🏛️ TP अभिप्राय पत्र</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="tpNew()">New</button><button class="btn btn-sm" onclick="tpStore()">💾 Save</button><button class="btn btn-gold" onclick="tpPrint()">🖨 Print / PDF</button></div></div>
   <div class="tp-grid"><div>
     <div class="tp-card"><h4 onclick="tpTog(this)">📄 कार्यालयीन माहिती<span class="ar">▼</span></h4><div class="eb"><div class="tp-f">
       <label>आवक नंबर</label><input id="tp-incoming" oninput="tpRender()">
@@ -24910,6 +24915,7 @@ window.renderArchProjView=function(){
   box.innerHTML=
     '<div class="sec-head"><div class="sec-title">🏗 Architectural Projection हमीपत्र</div>'+
     '<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="apNew()">New</button>'+
+    '<button class="btn btn-sm" onclick="apStore()">💾 Save</button>'+
     '<button class="btn btn-gold" onclick="apPrint()">🖨 Print / PDF</button></div></div>'+
     '<div class="g2" style="align-items:start;gap:16px">'+
     '<div>'+
@@ -28243,6 +28249,297 @@ html += '</div>';
   });
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindAllPermLive);
   else setTimeout(bindAllPermLive, 300);
+})();
+</script>
+
+
+<script>
+/* ═══ Permission Docs: Save + side-text edit (all forms) ═══ */
+(function(){
+  function toast(m){
+    if(typeof showOk==='function') showOk(m);
+    else if(typeof nocToast==='function') nocToast(m);
+    else console.log(m);
+  }
+  function saveDb(){
+    try{ if(typeof saveAll==='function') saveAll(); else if(typeof saveLocal==='function') saveLocal(); }catch(e){}
+  }
+  function uid(p){ return p+'-'+Date.now().toString(36); }
+
+  function collectFields(prefix, ids){
+    var o={};
+    (ids||[]).forEach(function(id){
+      var el=document.getElementById(prefix+id);
+      if(el) o[id]=el.value;
+    });
+    return o;
+  }
+  function fillFields(prefix, data){
+    if(!data) return;
+    Object.keys(data).forEach(function(k){
+      if(k==='id'||k==='saved'||k==='owners'||k==='sideHtml') return;
+      var el=document.getElementById(prefix+k);
+      if(el && data[k]!=null) el.value=data[k];
+    });
+  }
+
+  /* Make preview letter body editable */
+  function enableSideEdit(pvId){
+    var pv=document.getElementById(pvId);
+    if(!pv) return;
+    var sheets=pv.querySelectorAll('.cmp-sheet, .cmp-sheet *');
+    // Enable edit on main text blocks inside preview
+    pv.querySelectorAll('.cbody, .pr, .npara, .cs-body, .aw-body, .tp-body, p, .letter-body, .noc-body, .words').forEach(function(el){
+      el.setAttribute('contenteditable','true');
+      el.style.outline='1px dashed transparent';
+      el.addEventListener('focus', function(){ el.style.outline='1px dashed rgba(184,151,90,.5)'; });
+      el.addEventListener('blur', function(){ el.style.outline='1px dashed transparent'; });
+    });
+    // whole inner sheet as fallback for free edit
+    pv.querySelectorAll('.cmp-sheet .in, .cmp-sheet').forEach(function(el){
+      if(!el.getAttribute('contenteditable')){
+        // don't contenteditable the outer sheet if children handle it
+      }
+    });
+    // Mark paragraphs inside sheets
+    pv.querySelectorAll('.cmp-sheet div, .cmp-sheet p, .cmp-sheet span').forEach(function(el){
+      if(el.closest('table')) return;
+      if(el.children.length>2) return;
+      if((el.textContent||'').trim().length<8) return;
+      if(el.querySelector('input,button,textarea')) return;
+      el.setAttribute('contenteditable','true');
+    });
+  }
+
+  function getSideHtml(pvId){
+    var pv=document.getElementById(pvId);
+    return pv?pv.innerHTML:'';
+  }
+  function setSideHtml(pvId, html){
+    var pv=document.getElementById(pvId);
+    if(pv && html){ pv.innerHTML=html; enableSideEdit(pvId); }
+  }
+
+  /* ── Client Self ── */
+  window.csStore=function(){
+    try{
+      if(!db.csLetters) db.csLetters=[];
+      var o=collectFields('cs-',['date','city','site','addr','contact','ltp']);
+      o.id=window._csId||uid('CS');
+      window._csId=o.id;
+      o.owners=(typeof csOwners!=='undefined'?csOwners.slice():[]);
+      o.sideHtml=getSideHtml('cs-pv');
+      o.saved=new Date().toISOString();
+      var i=db.csLetters.findIndex(function(r){return r.id===o.id;});
+      if(i<0) db.csLetters.unshift(o); else db.csLetters[i]=o;
+      saveDb();
+      csDrawSaved();
+      toast('Client Self Declaration saved');
+    }catch(e){ alert('Save failed: '+(e.message||e)); }
+  };
+  window.csLoad=function(id){
+    var o=(db.csLetters||[]).find(function(r){return r.id===id;});
+    if(!o) return;
+    window._csId=o.id;
+    fillFields('cs-', o);
+    if(typeof csOwners!=='undefined'){ csOwners=o.owners&&o.owners.length?o.owners.slice():['']; if(typeof drawOwners==='function') drawOwners(); }
+    if(window.csRender) csRender();
+    if(o.sideHtml) setTimeout(function(){ setSideHtml('cs-pv', o.sideHtml); }, 80);
+  };
+  window.csDrawSaved=function(){
+    var box=document.getElementById('cs-saved');
+    if(!box) return;
+    var list=db.csLetters||[];
+    box.innerHTML=list.length?list.slice(0,12).map(function(r){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px">'+
+        '<span>'+(r.date||'')+' · '+(r.city||'')+'</span>'+
+        '<span><button type="button" class="btn btn-s btn-sm" onclick="csLoad(\''+r.id+'\')">Load</button></span></div>';
+    }).join(''):'<div style="color:var(--mut);font-size:12px">No saved letters</div>';
+  };
+
+  /* ── Area Warranty ── */
+  var AW_IDS=['date','city','applicant','addr','contact','location','oldsn','newsn','cts','tps','finalplot','subplot','area'];
+  window.awStore=function(){
+    try{
+      if(!db.awLetters) db.awLetters=[];
+      var o=collectFields('aw-', AW_IDS);
+      o.id=window._awId||uid('AW'); window._awId=o.id;
+      o.sideHtml=getSideHtml('aw-pv'); o.saved=new Date().toISOString();
+      var i=db.awLetters.findIndex(function(r){return r.id===o.id;});
+      if(i<0) db.awLetters.unshift(o); else db.awLetters[i]=o;
+      saveDb(); awDrawSaved(); toast('क्षेत्रफळ हमीपत्र saved');
+    }catch(e){ alert('Save failed: '+(e.message||e)); }
+  };
+  window.awLoad=function(id){
+    var o=(db.awLetters||[]).find(function(r){return r.id===id;});
+    if(!o) return;
+    window._awId=o.id; fillFields('aw-', o);
+    if(window.awRender) awRender();
+    if(o.sideHtml) setTimeout(function(){ setSideHtml('aw-pv', o.sideHtml); }, 80);
+  };
+  window.awDrawSaved=function(){
+    var box=document.getElementById('aw-saved');
+    if(!box) return;
+    var list=db.awLetters||[];
+    box.innerHTML=list.length?list.slice(0,12).map(function(r){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px">'+
+        '<span>'+(r.date||'')+' · '+(r.applicant||'')+'</span>'+
+        '<button type="button" class="btn btn-s btn-sm" onclick="awLoad(\''+r.id+'\')">Load</button></div>';
+    }).join(''):'<div style="color:var(--mut);font-size:12px">No saved</div>';
+  };
+
+  /* ── Arch Projection ── */
+  window.apStore=function(){
+    try{
+      if(!db.apLetters) db.apLetters=[];
+      var ids=['applicant','addr','site','city','date','contact','details'];
+      var o=collectFields('ap-', ids);
+      // gather any ap- inputs
+      document.querySelectorAll('[id^="ap-"]').forEach(function(el){
+        if(el.id==='ap-pv'||el.id==='ap-saved') return;
+        var k=el.id.replace(/^ap-/,'');
+        if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT') o[k]=el.value;
+      });
+      o.id=window._apId||uid('AP'); window._apId=o.id;
+      o.sideHtml=getSideHtml('ap-pv'); o.saved=new Date().toISOString();
+      var i=db.apLetters.findIndex(function(r){return r.id===o.id;});
+      if(i<0) db.apLetters.unshift(o); else db.apLetters[i]=o;
+      saveDb(); apDrawSaved(); toast('Architectural Projection saved');
+    }catch(e){ alert('Save failed: '+(e.message||e)); }
+  };
+  window.apLoad=function(id){
+    var o=(db.apLetters||[]).find(function(r){return r.id===id;});
+    if(!o) return;
+    window._apId=o.id;
+    Object.keys(o).forEach(function(k){
+      if(k==='id'||k==='saved'||k==='sideHtml') return;
+      var el=document.getElementById('ap-'+k);
+      if(el) el.value=o[k];
+    });
+    if(window.apRender) apRender();
+    if(o.sideHtml) setTimeout(function(){ setSideHtml('ap-pv', o.sideHtml); }, 80);
+  };
+  window.apDrawSaved=function(){
+    var box=document.getElementById('ap-saved');
+    if(!box) return;
+    var list=db.apLetters||[];
+    box.innerHTML=list.length?list.slice(0,12).map(function(r){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px">'+
+        '<span>'+(r.date||'')+' · '+(r.applicant||'')+'</span>'+
+        '<button type="button" class="btn btn-s btn-sm" onclick="apLoad(\''+r.id+'\')">Load</button></div>';
+    }).join(''):'<div style="color:var(--mut);font-size:12px">No saved</div>';
+  };
+
+  /* ── TP Abhipray ── */
+  window.tpStore=function(){
+    try{
+      if(!db.tpLetters) db.tpLetters=[];
+      var o={};
+      document.querySelectorAll('[id^="tp-"]').forEach(function(el){
+        if(el.id==='tp-pv'||el.id==='tp-saved') return;
+        if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT')
+          o[el.id.replace(/^tp-/,'')]=el.value;
+      });
+      o.id=window._tpId||uid('TP'); window._tpId=o.id;
+      o.sideHtml=getSideHtml('tp-pv'); o.saved=new Date().toISOString();
+      var i=db.tpLetters.findIndex(function(r){return r.id===o.id;});
+      if(i<0) db.tpLetters.unshift(o); else db.tpLetters[i]=o;
+      saveDb(); tpDrawSaved(); toast('TP अभिप्राय saved');
+    }catch(e){ alert('Save failed: '+(e.message||e)); }
+  };
+  window.tpLoad=function(id){
+    var o=(db.tpLetters||[]).find(function(r){return r.id===id;});
+    if(!o) return;
+    window._tpId=o.id;
+    Object.keys(o).forEach(function(k){
+      if(k==='id'||k==='saved'||k==='sideHtml') return;
+      var el=document.getElementById('tp-'+k);
+      if(el) el.value=o[k];
+    });
+    if(window.tpRender) tpRender();
+    if(o.sideHtml) setTimeout(function(){ setSideHtml('tp-pv', o.sideHtml); }, 80);
+  };
+  window.tpDrawSaved=function(){
+    var box=document.getElementById('tp-saved');
+    if(!box) return;
+    var list=db.tpLetters||[];
+    box.innerHTML=list.length?list.slice(0,12).map(function(r){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px">'+
+        '<span>'+(r.date||'')+' · '+(r.applicant||r.incoming||'')+'</span>'+
+        '<button type="button" class="btn btn-s btn-sm" onclick="tpLoad(\''+r.id+'\')">Load</button></div>';
+    }).join(''):'<div style="color:var(--mut);font-size:12px">No saved</div>';
+  };
+
+  /* Inject saved lists + edit hint into forms when opened */
+  function ensureSavedCard(bodyId, listId, title){
+    var body=document.getElementById(bodyId);
+    if(!body||document.getElementById(listId)) return;
+    var left=body.querySelector('.noc-grid > div, .cs-grid > div, .aw-grid > div, .tp-grid > div, .g2 > div');
+    if(!left) left=body;
+    var card=document.createElement('div');
+    card.className='card';
+    card.style.marginTop='12px';
+    card.innerHTML='<div class="card-head"><div class="card-title">💾 '+title+'</div></div><div class="card-body" id="'+listId+'"></div>';
+    left.appendChild(card);
+  }
+  function afterOpen(name){
+    setTimeout(function(){
+      try{
+        if(name==='noc'){ enableSideEdit('noc-pv'); }
+        if(name==='cs'){ ensureSavedCard('clientself-body','cs-saved','Saved letters'); csDrawSaved(); enableSideEdit('cs-pv'); }
+        if(name==='aw'){ ensureSavedCard('areawarranty-body','aw-saved','Saved letters'); awDrawSaved(); enableSideEdit('aw-pv'); }
+        if(name==='ap'){ ensureSavedCard('archproj-body','ap-saved','Saved letters'); apDrawSaved(); enableSideEdit('ap-pv'); }
+        if(name==='tp'){ ensureSavedCard('tpabhipray-body','tp-saved','Saved letters'); tpDrawSaved(); enableSideEdit('tp-pv'); }
+      }catch(e){ console.error(e); }
+    }, 100);
+  }
+
+  // Hook view renders
+  function wrap(name, key){
+    var orig=window[name];
+    if(typeof orig!=='function' || orig._permSaveWrapped) return;
+    var w=function(){
+      var r=orig.apply(this, arguments);
+      afterOpen(key);
+      return r;
+    };
+    w._permSaveWrapped=true;
+    window[name]=w;
+  }
+  wrap('renderNocView','noc');
+  wrap('renderClientSelfView','cs');
+  wrap('renderAreaWarrantyView','aw');
+  wrap('renderArchProjView','ap');
+  wrap('renderTPAbhiprayView','tp');
+
+  // Re-enable side edit after each preview refresh
+  ['nocRender','csRender','awRender','apRender','tpRender'].forEach(function(fn){
+    var orig=window[fn];
+    if(typeof orig!=='function' || orig._sideWrapped) return;
+    window[fn]=function(){
+      var r=orig.apply(this, arguments);
+      setTimeout(function(){
+        var map={nocRender:'noc-pv',csRender:'cs-pv',awRender:'aw-pv',apRender:'ap-pv',tpRender:'tp-pv'};
+        enableSideEdit(map[fn]);
+      }, 40);
+      return r;
+    };
+    window[fn]._sideWrapped=true;
+  });
+
+  // Enhance nocStore to also save side HTML
+  if(typeof window.nocStore==='function' && !window.nocStore._side){
+    var _ns=window.nocStore;
+    window.nocStore=function(){
+      _ns.apply(this, arguments);
+      try{
+        var a=db.nocLetters||[];
+        if(a[0]) a[0].sideHtml=getSideHtml('noc-pv');
+        saveDb();
+      }catch(e){}
+    };
+    window.nocStore._side=true;
+  }
 })();
 </script>
 
