@@ -24299,6 +24299,7 @@ function awRender(){
   </div></div>`;
 }
 
+window.awRender=function(){try{awRender();}catch(e){console.error(e);}};
 window.renderAreaWarrantyView=function(){
   const box=document.getElementById('areawarranty-body');
   if(!box)return;
@@ -24389,6 +24390,7 @@ if(typeof VIEW_TITLES==='object')VIEW_TITLES.areawarranty='📐 क्षेत�
 <script>
 (function(){
 let csOwners=['']; let csDrawn=false; let csLH=localStorage.getItem('gs_cs_lh')==='1';
+
 const q=id=>document.getElementById('cs-'+id);
 const gv=id=>{const e=q(id);return e?e.value:''};
 const esc=s=>String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -24421,7 +24423,8 @@ window.csOwner=(i,v)=>{csOwners[i]=v;render()};window.csAdd=()=>{csOwners.push('
 window.csNew=()=>{q('date').value=today();q('city').value='सोलापूर';q('site').value='';q('addr').value='';q('contact').value='';q('ltp').value='';csOwners=[''];drawOwners();render()};
 window.csToggleLH=v=>{csLH=!!v;localStorage.setItem('gs_cs_lh',v?'1':'0');render()};
 window.csPrint=()=>{const body=q('pv').innerHTML;const w=window.open('','_blank');if(!w)return alert('Pop-up blocked — allow pop-ups to print.');w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>स्वयं-घोषणापत्र</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"><style>html,body{margin:0;padding:0;background:#fff;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cmp-sheet.csd{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0 auto!important;padding:18mm 18mm!important;box-sizing:border-box!important;box-shadow:none!important;transform:none!important;overflow:hidden!important;background:#fff!important;color:#111;font-size:14pt;line-height:1.65}.cmp-sheet.csd .cs-title{text-align:center;font-weight:700;font-size:16pt;text-decoration:underline;margin:0 0 18px}@page{size:A4 portrait;margin:0!important}@media print{.cmp-sheet{break-after:auto;page-break-after:auto}}</style></head><body>'+body+'</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},700)};
-window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){render();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="render()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="render()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="render()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="render()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="render()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="render()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
+window.csRender=function(){try{render();}catch(e){console.error('csRender',e);}};
+window.renderClientSelfView=function(){const box=document.getElementById('clientself-body');if(!box)return;if(csDrawn){csRender();return}box.innerHTML=`<div class="sec-head"><div class="sec-title">📄 Client Self Declaration</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="csNew()">New</button><button class="btn btn-gold" onclick="csPrint()">🖨 Print / PDF</button></div></div><div class="cs-grid"><div><div class="cs-card"><h4 onclick="csTog(this)">👤 मालक व मूलभूत माहिती<span class="ar">▼</span></h4><div class="eb"><div class="cs-f"><label>दिनांक</label><input type="date" id="cs-date" oninput="csRender()"><label>शहर / गाव</label><input id="cs-city" value="सोलापूर" oninput="csRender()"><label>मालकांची नावे</label><div id="cs-owners"></div><button class="chip" onclick="csAdd()" style="margin-bottom:9px">+ आणखी एक मालक</button><label>बांधकामाचा पत्ता</label><textarea id="cs-site" placeholder="स. नं. / सि.स.नं. / प्लॉट नं. / पत्ता" oninput="csRender()"></textarea><label>मालकाचा पत्ता</label><textarea id="cs-addr" placeholder="संपूर्ण राहण्याचा पत्ता" oninput="csRender()"></textarea><label>संपर्क क्र.</label><input id="cs-contact" oninput="csRender()"><label>Licensed Technical Person / Architect / Designer</label><input id="cs-ltp" placeholder="नाव" oninput="csRender()"></div></div></div></div><div><div class="cs-pvbox"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600"><span>Preview — A4 Portrait</span><label style="margin-left:auto"><input type="checkbox" onchange="csToggleLH(this.checked)"> Letterhead</label></div><div id="cs-pv"></div></div></div></div>`;csDrawn=true;csNew()};
 if(typeof VIEW_TITLES==='object')VIEW_TITLES.clientself='📄 Client Self Declaration';
 })();
 </script>
@@ -24468,6 +24471,7 @@ function tpRender(){
     <div class="tp-sign">आपला<br><b>विश्वासू</b></div>
   </div></div>`;
 }
+window.tpRender=function(){try{tpRender();}catch(e){console.error(e);}};
 window.renderTPAbhiprayView=function(){
   const box=document.getElementById('tpabhipray-body');if(!box)return;
   if(tpDrawn){tpRender();return;}
@@ -24898,6 +24902,7 @@ function apRender(){
   '</div></div>';
 }
 
+window.apRender=function(){try{apRender();}catch(e){console.error(e);}};
 window.renderArchProjView=function(){
   const box=document.getElementById('archproj-body');
   if(!box)return;
@@ -28182,6 +28187,62 @@ html += '</div>';
   }
   document.addEventListener('DOMContentLoaded', function(){ setTimeout(bindCanvas, 500); });
   setTimeout(bindCanvas, 800);
+})();
+</script>
+
+
+<script>
+(function(){
+  function bindLive(rootId, fnName){
+    var root=document.getElementById(rootId);
+    if(!root||root._permLive) return;
+    root._permLive=true;
+    root.addEventListener('input', function(e){
+      var t=e.target;
+      if(!t||!(t.matches('input,textarea,select'))) return;
+      try{
+        var fn=window[fnName];
+        if(typeof fn==='function') fn();
+      }catch(err){ console.error(fnName, err); }
+    });
+    root.addEventListener('change', function(e){
+      var t=e.target;
+      if(!t||!(t.matches('input,textarea,select'))) return;
+      try{
+        var fn=window[fnName];
+        if(typeof fn==='function') fn();
+      }catch(err){ console.error(fnName, err); }
+    });
+  }
+  function bindAllPermLive(){
+    bindLive('noc-body','nocRender');
+    bindLive('clientself-body','csRender');
+    bindLive('areawarranty-body','awRender');
+    bindLive('archproj-body','apRender');
+    bindLive('tpabhipray-body','tpRender');
+  }
+  // after each view render
+  ['renderNocView','renderClientSelfView','renderAreaWarrantyView','renderArchProjView','renderTPAbhiprayView'].forEach(function(name){
+    var orig=window[name];
+    if(typeof orig!=='function') return;
+    window[name]=function(){
+      var r=orig.apply(this, arguments);
+      setTimeout(bindAllPermLive, 30);
+      // also force one preview refresh
+      setTimeout(function(){
+        try{
+          if(name==='renderNocView'&&window.nocRender) window.nocRender();
+          if(name==='renderClientSelfView'&&window.csRender) window.csRender();
+          if(name==='renderAreaWarrantyView'&&window.awRender) window.awRender();
+          if(name==='renderArchProjView'&&window.apRender) window.apRender();
+          if(name==='renderTPAbhiprayView'&&window.tpRender) window.tpRender();
+        }catch(e){}
+      }, 50);
+      return r;
+    };
+  });
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindAllPermLive);
+  else setTimeout(bindAllPermLive, 300);
 })();
 </script>
 
