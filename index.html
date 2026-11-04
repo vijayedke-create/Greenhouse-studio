@@ -3508,6 +3508,12 @@ header,.topbar{position:relative;z-index:15}
             <button class="tab-btn" data-pf="Builder">Builder</button>
             <button class="tab-btn" data-pf="Direct">Direct</button>
           </div>
+          <select class="fi fi-sel" id="pf-engineer" style="min-width:140px;max-width:180px;font-size:12px;padding:6px 8px" onchange="filterProjectsByPerson(this.value,'Engineer')" title="Specific Engineer">
+            <option value="">— Engineer —</option>
+          </select>
+          <select class="fi fi-sel" id="pf-builder" style="min-width:140px;max-width:180px;font-size:12px;padding:6px 8px" onchange="filterProjectsByPerson(this.value,'Builder')" title="Specific Builder">
+            <option value="">— Builder —</option>
+          </select>
           <div class="view-toggle-grp" id="pc-view-toggle">
             <button class="vtog active" data-view="cards" onclick="setProjectView('cards')" title="Cards">⊞</button>
             <button class="vtog" data-view="list"  onclick="setProjectView('list')"  title="List">☰</button>
@@ -3913,7 +3919,7 @@ header,.topbar{position:relative;z-index:15}
           Data हरवू नये म्हणून automatic local backup + Google Drive / Email साठी download.
           (Browser मध्ये Direct Drive upload साठी Google login API लागतो — येथे one-click download + Drive/Email open होते.)
         </p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;max-width:480px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;max-width:720px">
           <div class="fg" style="margin:0">
             <label>Auto backup</label>
             <select class="fi fi-sel" id="ab-enabled" onchange="abSaveSettings()">
@@ -3924,9 +3930,16 @@ header,.topbar{position:relative;z-index:15}
           <div class="fg" style="margin:0">
             <label>Frequency</label>
             <select class="fi fi-sel" id="ab-freq" onchange="abSaveSettings()">
-              <option value="daily">Every day</option>
+              <option value="daily">Every day (recommended)</option>
               <option value="3day">Every 3 days</option>
               <option value="weekly">Every week</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Auto download JSON file</label>
+            <select class="fi fi-sel" id="ab-autodl" onchange="abSaveSettings()">
+              <option value="1">On (daily file to Downloads)</option>
+              <option value="0">Off (browser only)</option>
             </select>
           </div>
         </div>
@@ -3936,6 +3949,7 @@ header,.topbar{position:relative;z-index:15}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="btn btn-gold" onclick="abDownloadNow()">⬇ Backup now (JSON)</button>
+          <button type="button" class="btn btn-s" onclick="abRestoreLatest()">↩ Restore last backup</button>
           <button type="button" class="btn btn-p" onclick="abSaveToDrive()">📁 Google Drive वर ठेवा</button>
           <button type="button" class="btn btn-s" onclick="abEmailBackup()">✉ Email backup</button>
           <button type="button" class="btn btn-s" onclick="abRestoreLatestSnapshot()">↩ Restore last snapshot</button>
@@ -5815,34 +5829,47 @@ function generateAndDownloadPDF(pid){
       try{doc.addImage(officeInfo.logo,'PNG',14,4,28,28);}catch(e){}
     }
 
-    // Studio name
+    // Layout: left block vs right receipt block (no overlap)
+    const rightColW=58;
+    const leftMax=pageW-14-rightColW-6;
+    const nameX=officeInfo.logo?46:14;
+    const nameMax=Math.max(40, leftMax-(nameX-14));
+
+    // Studio name (clipped to left column)
     doc.setTextColor(201,168,76);
     doc.setFont('helvetica','bold');
-    doc.setFontSize(21);
-    const nameX=officeInfo.logo?46:14;
-    doc.text((officeInfo.name||'Greenhouse Studio').toUpperCase(),nameX,17);
+    doc.setFontSize(16);
+    var studioName=(officeInfo.name||'Greenhouse Studio').toUpperCase();
+    var nameLines=doc.splitTextToSize(studioName, nameMax);
+    doc.text(nameLines[0], nameX, 15);
 
-    // Sub-line
+    // Sub-line — left column only
     doc.setTextColor(255,255,255);
     doc.setFont('helvetica','normal');
-    doc.setFontSize(8.5);
-    doc.text('Architect: '+(officeInfo.arch||'Vijay Edke')+'   |   '+(officeInfo.addr||'497, Sakhar Peth, Solapur'),14,25);
+    doc.setFontSize(8);
+    var line1='Architect: '+(officeInfo.arch||'Vijay Edke')+'  |  '+(officeInfo.addr||'497, Sakhar Peth, Solapur');
+    var line1s=doc.splitTextToSize(line1, leftMax);
+    doc.text(line1s[0], 14, 23);
+    if(line1s[1]) doc.text(line1s[1], 14, 28);
     if(officeInfo.phone||officeInfo.email){
-      doc.text((officeInfo.phone?'Ph: '+officeInfo.phone:'')+(officeInfo.phone&&officeInfo.email?'   |   ':'')+(officeInfo.email||''),14,32);
+      var line2=(officeInfo.phone?'Ph: '+officeInfo.phone:'')+(officeInfo.phone&&officeInfo.email?'  |  ':'')+(officeInfo.email||'');
+      var line2s=doc.splitTextToSize(line2, leftMax);
+      var y2=line1s[1]?33:29;
+      doc.text(line2s[0], 14, y2);
     }
 
-    // Right: Receipt label
+    // Right: Receipt label (fixed column)
     doc.setTextColor(201,168,76);
     doc.setFont('helvetica','bold');
-    doc.setFontSize(13);
-    doc.text('PAYMENT RECEIPT',pageW-14,18,{align:'right'});
+    doc.setFontSize(12);
+    doc.text('PAYMENT RECEIPT', pageW-14, 15, {align:'right'});
     doc.setFont('helvetica','normal');
     doc.setFontSize(8);
     doc.setTextColor(210,210,210);
-    doc.text('Date: '+new Date().toLocaleDateString('en-IN'),pageW-14,26,{align:'right'});
-    doc.text('Ref No: '+p.id,pageW-14,33,{align:'right'});
+    doc.text('Date: '+new Date().toLocaleDateString('en-IN'), pageW-14, 23, {align:'right'});
+    doc.text('Ref No: '+String(p.id||''), pageW-14, 30, {align:'right'});
 
-    let y=50;
+    let y=52;
 
     // ── PROJECT INFO BOX ───────────────────────────
     doc.setFillColor(246,243,237);
@@ -26355,8 +26382,12 @@ html += '</div>';
   function abGetSettings(){
     try{
       var s = JSON.parse(localStorage.getItem(AB_KEY) || '{}');
-      return { enabled: s.enabled !== false && s.enabled !== 0 && s.enabled !== '0', freq: s.freq || 'daily' };
-    }catch(e){ return {enabled:true, freq:'daily'}; }
+      return {
+        enabled: s.enabled !== false && s.enabled !== 0 && s.enabled !== '0',
+        freq: s.freq || 'daily',
+        autoDownload: s.autoDownload !== false && s.autoDownload !== 0 && s.autoDownload !== '0'
+      };
+    }catch(e){ return {enabled:true, freq:'daily', autoDownload:true}; }
   }
   function abFreqMs(freq){
     if(freq === 'weekly') return 7*24*60*60*1000;
@@ -26370,7 +26401,7 @@ html += '</div>';
       try{ snaps = JSON.parse(localStorage.getItem(AB_SNAP) || '[]'); }catch(e){ snaps = []; }
       if(!Array.isArray(snaps)) snaps = [];
       snaps.unshift({ at: new Date().toISOString(), data: payload });
-      snaps = snaps.slice(0, 5);
+      snaps = snaps.slice(0, 7); /* keep 7 daily copies */
       localStorage.setItem(AB_SNAP, JSON.stringify(snaps));
       localStorage.setItem(AB_LAST, new Date().toISOString());
       if(typeof saveLocal === 'function') try{ saveLocal(); }catch(e){}
@@ -26384,11 +26415,19 @@ html += '</div>';
       }catch(e2){ return false; }
     }
   }
+  function abDayKey(d){
+    d = d || new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
   function abShouldRun(){
     var s = abGetSettings();
     if(!s.enabled) return false;
     var last = localStorage.getItem(AB_LAST);
     if(!last) return true;
+    // Daily = once per calendar day (more reliable than exact 24h)
+    if((s.freq||'daily')==='daily'){
+      return abDayKey(new Date(last)) !== abDayKey(new Date());
+    }
     var t0 = Date.parse(last);
     if(isNaN(t0)) return true;
     return (Date.now() - t0) >= abFreqMs(s.freq);
@@ -26399,6 +26438,8 @@ html += '</div>';
     var fr = document.getElementById('ab-freq');
     if(en) en.value = s.enabled ? '1' : '0';
     if(fr) fr.value = s.freq || 'daily';
+    var ad = document.getElementById('ab-autodl');
+    if(ad) ad.value = s.autoDownload !== false ? '1' : '0';
     var last = localStorage.getItem(AB_LAST);
     var el = document.getElementById('ab-last');
     if(el) el.textContent = last ? new Date(last).toLocaleString() : 'Never';
@@ -26411,7 +26452,12 @@ html += '</div>';
   window.abSaveSettings = function(){
     var en = document.getElementById('ab-enabled');
     var fr = document.getElementById('ab-freq');
-    try{ localStorage.setItem(AB_KEY, JSON.stringify({ enabled: en ? en.value === '1' : true, freq: fr ? fr.value : 'daily' })); }catch(e){}
+    var ad = document.getElementById('ab-autodl');
+    try{ localStorage.setItem(AB_KEY, JSON.stringify({
+      enabled: en ? en.value === '1' : true,
+      freq: fr ? fr.value : 'daily',
+      autoDownload: ad ? ad.value === '1' : true
+    })); }catch(e){}
     if(typeof showOk === 'function') showOk('Auto backup settings saved');
     abUpdateUI();
   };
@@ -26451,7 +26497,16 @@ html += '</div>';
   };
   window.abCheckAuto = function(){
     try{
-      if(abShouldRun()){ abSaveSnapshot(); console.log('Auto backup OK'); }
+      if(abShouldRun()){
+        var ok = abSaveSnapshot();
+        console.log('Auto backup OK', ok);
+        // Daily auto file download (once per day when app opens)
+        var s = abGetSettings();
+        if(ok && s.autoDownload !== false){
+          try{ abDownloadBlob(abPayload(), abFilename()); }catch(e){}
+        }
+        if(typeof showOk==='function') showOk('Daily backup completed');
+      }
       abUpdateUI();
     }catch(e){ console.error(e); }
   };
@@ -26888,7 +26943,11 @@ html += '</div>';
     {id:'toilet', name:'Toilet Detail', group:'Details'},
     {id:'stair', name:'Staircase Detail', group:'Details'},
     {id:'compound', name:'Compound Wall / Gate', group:'Details'},
-    {id:'schedule', name:'Door / Window Schedule', group:'Schedules'}
+    {id:'schedule', name:'Door / Window Schedule', group:'Schedules'},
+    {id:'est-bank', name:'Bank Loan Estimate', group:'Estimate'},
+    {id:'est-quote', name:'Quotation / Fee Estimate', group:'Estimate'},
+    {id:'est-abstract', name:'Abstract / BOQ Summary', group:'Estimate'},
+    {id:'est-cert', name:'Estimate Certificate', group:'Estimate'}
   ];
 
   function dsState(){
@@ -28540,6 +28599,85 @@ html += '</div>';
     };
     window.nocStore._side=true;
   }
+})();
+</script>
+
+
+<script>
+/* Engineer / Builder specific project filter */
+(function(){
+  window.filterProjectsByPerson = function(contactId, cat){
+    try{
+      if(!contactId){
+        window.pfClientId = null;
+        window.pfClientName = '';
+        if(typeof renderProjects==='function') renderProjects(cat||'All');
+        return;
+      }
+      var c = (typeof gc==='function') ? gc(contactId) : (db.contacts||[]).find(function(x){return x.id===contactId;});
+      window.pfClientId = contactId;
+      window.pfClientName = c ? c.name : (cat||'Contact');
+      window.pfFilter = 'All';
+      if(cat==='Engineer'){
+        var b=document.getElementById('pf-builder'); if(b) b.value='';
+      } else if(cat==='Builder'){
+        var e=document.getElementById('pf-engineer'); if(e) e.value='';
+      }
+      if(typeof switchView==='function'){
+        var v=document.getElementById('view-projects');
+        if(!v || v.style.display==='none' || !v.classList.contains('active')) switchView('projects');
+      }
+      setTimeout(function(){ if(typeof renderProjects==='function') renderProjects('All'); }, 30);
+    }catch(err){ console.error(err); alert('Filter error: '+(err.message||err)); }
+  };
+
+  window.populatePersonFilters = function(){
+    var eng=document.getElementById('pf-engineer');
+    var bld=document.getElementById('pf-builder');
+    if(!eng && !bld) return;
+    var contacts = (window.db && db.contacts) ? db.contacts : [];
+    function fill(sel, cat){
+      if(!sel) return;
+      var cur=sel.value;
+      var list=contacts.filter(function(c){ return c.cat===cat; })
+        .sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||'')); });
+      sel.innerHTML = '<option value="">— '+cat+' —</option>' + list.map(function(c){
+        var n=String(c.name||'Unnamed').replace(/</g,'');
+        var cnt=(db.projects||[]).filter(function(p){return p.clientId===c.id;}).length;
+        return '<option value="'+c.id+'">'+n+(cnt?' ('+cnt+')':'')+'</option>';
+      }).join('');
+      try{ if(cur) sel.value=cur; }catch(e){}
+    }
+    fill(eng,'Engineer');
+    fill(bld,'Builder');
+  };
+
+  var _rp = window.renderProjects;
+  if(typeof _rp==='function' && !_rp._personFilterHook){
+    window.renderProjects = function(filter){
+      try{
+        if(filter && filter!=='All' && !window.pfClientId){
+          var eng=document.getElementById('pf-engineer');
+          var bld=document.getElementById('pf-builder');
+          if(filter!=='Engineer' && eng) eng.value='';
+          if(filter!=='Builder' && bld) bld.value='';
+        }
+        if(filter==='All' && !window.pfClientId){
+          var eng2=document.getElementById('pf-engineer');
+          var bld2=document.getElementById('pf-builder');
+          if(eng2) eng2.value='';
+          if(bld2) bld2.value='';
+        }
+      }catch(e){}
+      var r = _rp.apply(this, arguments);
+      try{ populatePersonFilters(); }catch(e){}
+      return r;
+    };
+    window.renderProjects._personFilterHook = true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(populatePersonFilters, 600); });
+  setTimeout(function(){ try{ populatePersonFilters(); }catch(e){} }, 1200);
 })();
 </script>
 
