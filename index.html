@@ -3733,12 +3733,15 @@ header,.topbar{position:relative;z-index:15}
 
     <div 
     <div id="view-drawingset" class="view-section">
-      <div class="sec-head">
+      <div class="sec-head" style="flex-wrap:wrap;gap:10px">
         <div>
           <div class="sec-title">Client Drawing Set</div>
-          <div style="font-size:12px;color:var(--mut);margin-top:4px">Cover + Index + सर्व drawings → एक professional PDF</div>
+          <div style="font-size:12px;color:var(--mut);margin-top:4px">Cover + Index + IFC + Material schedule → professional PDF</div>
         </div>
-        <button type="button" class="btn btn-gold" onclick="dsGeneratePDF()">⬇ Download Presentation PDF</button>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button type="button" class="btn btn-s" onclick="dsOpenTools()">🛠 Revisions / IFC / Material</button>
+          <button type="button" class="btn btn-gold" onclick="dsGeneratePDF()">⬇ Download Presentation PDF</button>
+        </div>
       </div>
 
       <div class="ds-grid">
@@ -27481,32 +27484,37 @@ html += '</div>';
       doc.setFontSize(9);
       doc.setTextColor(26,58,42);
       doc.text('No.', 18, y);
-      doc.text('Drawing', 32, y);
+      doc.text('Drawing / Sheet', 32, y);
+      doc.text('Rev', W-70, y);
+      doc.text('Status', W-50, y);
       doc.text('Page', W-18, y, {align:'right'});
       doc.setDrawColor(201,168,76);
       doc.setLineWidth(0.4);
       doc.line(18, y+2, W-18, y+2);
       y += 10;
 
-      // cover + index in list for clarity
       doc.setFont('helvetica','normal');
       doc.setFontSize(10);
       doc.setTextColor(80,80,80);
       doc.text('—', 18, y);
       doc.text('Cover', 32, y);
+      doc.text('—', W-70, y);
+      doc.text('—', W-50, y);
       doc.text('1', W-18, y, {align:'right'});
       y += 8;
       doc.text('—', 18, y);
       doc.text('Contents / Index', 32, y);
+      doc.text('—', W-70, y);
+      doc.text('—', W-50, y);
       doc.text('2', W-18, y, {align:'right'});
       y += 10;
 
       sheets.forEach(function(it, i){
-        if(y > H-20){ doc.addPage(); y=20; }
+        if(y > H-22){ doc.addPage(); y=20; }
         var pageNo = i+3;
         if(i%2===0){
           doc.setFillColor(255,255,255);
-          doc.rect(16, y-5, W-32, 8, 'F');
+          doc.rect(16, y-5, W-32, 9, 'F');
         }
         doc.setFont('helvetica','bold');
         doc.setFontSize(10);
@@ -27514,7 +27522,15 @@ html += '</div>';
         doc.text(String(i+1).padStart(2,'0'), 18, y);
         doc.setFont('helvetica','normal');
         doc.setTextColor(40,40,40);
-        doc.text(it.name, 32, y);
+        var nm = it.name||'Drawing';
+        if(it.ifc) nm += '  ·  IFC';
+        doc.text(nm, 32, y);
+        doc.setFont('helvetica','bold');
+        doc.setTextColor(26,58,42);
+        doc.text(String(it.revision||'R00'), W-70, y);
+        doc.setFont('helvetica','normal');
+        doc.setTextColor(it.ifc?26:120, it.ifc?120:120, it.ifc?60:120);
+        doc.text(it.ifc?'IFC':'Working', W-50, y);
         doc.setFont('helvetica','bold');
         doc.setTextColor(26,58,42);
         doc.text(String(pageNo), W-18, y, {align:'right'});
@@ -27548,11 +27564,14 @@ html += '</div>';
         doc.setFont('helvetica','bold');
         doc.setFontSize(10);
         doc.setTextColor(201,168,76);
-        doc.text(clientName, W-14, 9, {align:'right'});
+        var revTag = (it.revision||'R00') + (it.ifc ? '  ·  IFC' : '');
+        doc.text(revTag, W-14, 8, {align:'right'});
+        doc.setFontSize(9);
+        doc.text(clientName, W-14, 14, {align:'right'});
         doc.setFont('helvetica','normal');
-        doc.setFontSize(8);
+        doc.setFontSize(7);
         doc.setTextColor(200,200,200);
-        doc.text(projName, W-14, 16, {align:'right'});
+        doc.text(projName, W-14, 19, {align:'right'});
 
         try{
           var img = await dsLoadImage(it.dataUrl);
@@ -28678,6 +28697,287 @@ html += '</div>';
 
   document.addEventListener('DOMContentLoaded', function(){ setTimeout(populatePersonFilters, 600); });
   setTimeout(function(){ try{ populatePersonFilters(); }catch(e){} }, 1200);
+})();
+</script>
+
+
+<script>
+/* Drawing Set: revision compare, IFC, material schedule */
+(function(){
+  function toast(m){ if(typeof showOk==='function') showOk(m); else console.log(m); }
+  function today(){ return new Date().toISOString().slice(0,10); }
+
+  window.dsBumpRev = function(id){
+    var it = dsState().items.find(function(x){return x.id===id;});
+    if(!it) return;
+    var m = String(it.revision||'R00').match(/R?(\d+)/i);
+    var n = m ? (parseInt(m[1],10)+1) : 1;
+    it.revision = 'R'+String(n).padStart(2,'0');
+    toast(it.name+' → '+it.revision);
+    if(typeof renderDrawingSet==='function') renderDrawingSet();
+  };
+
+  window.dsSetRev = function(id, val){
+    var it = dsState().items.find(function(x){return x.id===id;});
+    if(!it) return;
+    it.revision = (val||'R00').toUpperCase();
+  };
+
+  window.dsMarkIFC = function(id){
+    var it = dsState().items.find(function(x){return x.id===id;});
+    if(!it) return;
+    if(!it.dataUrl){ alert('आधी drawing upload करा'); return; }
+    it.ifc = true;
+    it.ifcDate = today();
+    var st = dsState();
+    st.releaseLog = st.releaseLog||[];
+    st.releaseLog.unshift({
+      at: new Date().toISOString(),
+      drawing: it.name,
+      id: it.id,
+      revision: it.revision||'R00',
+      date: it.ifcDate
+    });
+    toast('IFC: '+it.name+' ('+it.revision+')');
+    if(typeof renderDrawingSet==='function') renderDrawingSet();
+  };
+
+  window.dsUnmarkIFC = function(id){
+    var it = dsState().items.find(function(x){return x.id===id;});
+    if(!it) return;
+    it.ifc = false; it.ifcDate = '';
+    if(typeof renderDrawingSet==='function') renderDrawingSet();
+  };
+
+  window.dsCompare = function(id){
+    var it = dsState().items.find(function(x){return x.id===id;});
+    if(!it) return;
+    if(!it.prevDataUrl || !it.dataUrl){
+      alert('Compare साठी: जुनी file upload → नंतर नवीन file upload (previous auto save होते)');
+      return;
+    }
+    var w = window.open('','_blank');
+    if(!w){ alert('Pop-up blocked'); return; }
+    w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Revision compare — '+
+      (it.name||'')+'</title><style>body{margin:0;font-family:system-ui;background:#1a1a18;color:#eee}'+
+      'h1{font-size:16px;padding:12px 16px;margin:0;background:#0f2a1e;color:#c9a84c}'+
+      '.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;height:calc(100vh - 52px)}'+
+      '.col{background:#111;border-radius:8px;overflow:auto;display:flex;flex-direction:column}'+
+      '.col h2{font-size:13px;margin:0;padding:8px 10px;background:#222;color:#c9a84c}'+
+      'img{width:100%;height:auto;display:block}</style></head><body>'+
+      '<h1>Revision compare · '+(it.name||'')+' · Current '+(it.revision||'')+'</h1>'+
+      '<div class="grid"><div class="col"><h2>Previous</h2><img src="'+it.prevDataUrl+'"></div>'+
+      '<div class="col"><h2>Current ('+(it.revision||'R??')+(it.ifc?' · IFC':'')+')</h2><img src="'+it.dataUrl+'"></div></div>'+
+      '</body></html>');
+    w.document.close();
+  };
+
+  window.dsMatAdd = function(){
+    var st=dsState();
+    st.materialRows = st.materialRows||[];
+    st.materialRows.push({item:'', type:'Door', qty:'1', size:'', notes:''});
+    dsRenderMat();
+  };
+  window.dsMatDel = function(i){
+    dsState().materialRows.splice(i,1);
+    dsRenderMat();
+  };
+  window.dsMatUpd = function(i,k,v){
+    if(dsState().materialRows[i]) dsState().materialRows[i][k]=v;
+  };
+  window.dsRenderMat = function(){
+    var box=document.getElementById('ds-mat-list');
+    if(!box) return;
+    var rows=dsState().materialRows||[];
+    if(!rows.length){
+      box.innerHTML='<div style="font-size:12px;color:var(--mut)">Doors / windows qty rows add करा</div>';
+      return;
+    }
+    box.innerHTML = rows.map(function(r,i){
+      return '<div style="display:grid;grid-template-columns:1fr 90px 60px 90px 28px;gap:4px;margin-bottom:4px">'+
+        '<input class="fi" placeholder="Item name" value="'+(r.item||'').replace(/"/g,'&quot;')+'" onchange="dsMatUpd('+i+',\'item\',this.value)">'+
+        '<select class="fi fi-sel" onchange="dsMatUpd('+i+',\'type\',this.value)">'+
+          ['Door','Window','Ventilator','Railing','Other'].map(function(t){return '<option'+(r.type===t?' selected':'')+'>'+t+'</option>';}).join('')+
+        '</select>'+
+        '<input class="fi" type="number" placeholder="Qty" value="'+(r.qty||'')+'" onchange="dsMatUpd('+i+',\'qty\',this.value)">'+
+        '<input class="fi" placeholder="Size" value="'+(r.size||'').replace(/"/g,'&quot;')+'" onchange="dsMatUpd('+i+',\'size\',this.value)">'+
+        '<button type="button" class="btn btn-s btn-sm" style="color:var(--red)" onclick="dsMatDel('+i+')">✕</button></div>';
+    }).join('');
+  };
+
+  window.dsOpenTools = function(){
+    var existing=document.getElementById('ds-tools-panel');
+    if(existing){ existing.style.display=existing.style.display==='none'?'block':'none'; dsRenderMat(); dsRenderReleaseLog(); return; }
+    var host=document.querySelector('#view-drawingset .ds-grid')||document.getElementById('view-drawingset');
+    if(!host) return;
+    var panel=document.createElement('div');
+    panel.id='ds-tools-panel';
+    panel.className='card';
+    panel.style.cssText='margin:12px 0;padding:14px;grid-column:1/-1';
+    panel.innerHTML =
+      '<div style="font-weight:700;margin-bottom:8px">🛠 Drawing tools</div>'+
+      '<div style="font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.5">'+
+      '<b>Revision compare:</b> जुनी file → नवीन file upload → Compare.<br>'+
+      '<b>IFC:</b> sheet वर Issued for Construction mark + release log.<br>'+
+      '<b>Index:</b> PDF मध्ये auto (Rev + Status columns).<br>'+
+      '<b>Material schedule:</b> doors/windows qty → PDF शेवटी page.'+
+      '</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">'+
+      '<button type="button" class="btn btn-s btn-sm" onclick="dsMarkAllIFC()">✓ Mark selected as IFC</button>'+
+      '<button type="button" class="btn btn-s btn-sm" onclick="dsBumpSelectedRev()">⬆ Bump rev (selected)</button>'+
+      '</div>'+
+      '<div style="font-weight:600;margin:8px 0 6px">Material schedule (Doors / Windows)</div>'+
+      '<div id="ds-mat-list"></div>'+
+      '<button type="button" class="btn btn-s btn-sm" style="margin-top:6px" onclick="dsMatAdd()">+ Add item</button>'+
+      '<div style="font-weight:600;margin:14px 0 6px">IFC Release log</div>'+
+      '<div id="ds-release-log" style="font-size:12px;max-height:140px;overflow:auto"></div>';
+    host.insertBefore(panel, host.firstChild);
+    dsRenderMat();
+    dsRenderReleaseLog();
+  };
+
+  window.dsRenderReleaseLog = function(){
+    var box=document.getElementById('ds-release-log');
+    if(!box) return;
+    var log=dsState().releaseLog||[];
+    if(!log.length){ box.innerHTML='<span style="color:var(--mut)">अजून IFC mark नाही</span>'; return; }
+    box.innerHTML=log.slice(0,20).map(function(r){
+      return '<div style="padding:4px 0;border-bottom:1px solid var(--bdr)">'+
+        (r.date||'')+' · <b>'+(r.drawing||'')+'</b> · '+(r.revision||'')+' · IFC</div>';
+    }).join('');
+  };
+
+  window.dsMarkAllIFC = function(){
+    dsState().items.filter(function(x){return x.checked && x.dataUrl;}).forEach(function(it){
+      it.ifc=true; it.ifcDate=today();
+      dsState().releaseLog.unshift({at:new Date().toISOString(), drawing:it.name, id:it.id, revision:it.revision||'R00', date:it.ifcDate});
+    });
+    toast('Selected sheets marked IFC');
+    dsRenderReleaseLog();
+    if(typeof renderDrawingSet==='function') renderDrawingSet();
+  };
+  window.dsBumpSelectedRev = function(){
+    dsState().items.filter(function(x){return x.checked;}).forEach(function(it){
+      var m=String(it.revision||'R00').match(/R?(\d+)/i);
+      var n=m?(parseInt(m[1],10)+1):1;
+      it.revision='R'+String(n).padStart(2,'0');
+    });
+    toast('Revision bumped');
+    if(typeof renderDrawingSet==='function') renderDrawingSet();
+  };
+
+  // Enhance list rows: rev / IFC / compare controls
+  var _rds = window.renderDrawingSet;
+  if(typeof _rds==='function' && !_rds._toolsHook){
+    window.renderDrawingSet = function(){
+      var r = _rds.apply(this, arguments);
+      try{
+        var box=document.getElementById('ds-list');
+        if(!box) return r;
+        dsState().items.forEach(function(it){
+          // find row by checkbox onchange containing id
+          var inputs=box.querySelectorAll('input[type=checkbox]');
+          // append tools under each row via data attribute approach: inject after list
+        });
+        // Build compact toolbar under list once
+        var bar=document.getElementById('ds-sheet-tools');
+        if(!bar){
+          bar=document.createElement('div');
+          bar.id='ds-sheet-tools';
+          bar.style.cssText='margin-top:10px;max-height:280px;overflow:auto;font-size:12px';
+          box.parentNode.appendChild(bar);
+        }
+        var checked=dsState().items.filter(function(x){return x.checked;});
+        bar.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Sheet status (selected / uploaded)</div>'+
+          dsState().items.filter(function(x){return x.dataUrl || x.checked;}).map(function(it){
+            return '<div style="display:grid;grid-template-columns:1fr 70px 72px 72px 72px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--bdr)">'+
+              '<span><b>'+String(it.name||'').replace(/</g,'')+'</b>'+(it.ifc?' <span style="color:var(--rgreen)">IFC</span>':'')+'</span>'+
+              '<input class="fi" style="padding:4px 6px" value="'+(it.revision||'R00')+'" onchange="dsSetRev(\''+it.id+'\',this.value)" title="Revision">'+
+              '<button type="button" class="btn btn-s btn-sm" onclick="dsBumpRev(\''+it.id+'\')">R+1</button>'+
+              (it.ifc
+                ? '<button type="button" class="btn btn-s btn-sm" onclick="dsUnmarkIFC(\''+it.id+'\')">Un-IFC</button>'
+                : '<button type="button" class="btn btn-s btn-sm" onclick="dsMarkIFC(\''+it.id+'\')">IFC</button>')+
+              '<button type="button" class="btn btn-s btn-sm" onclick="dsCompare(\''+it.id+'\')">Compare</button>'+
+              '</div>';
+          }).join('') || '<div style="color:var(--mut)">Upload drawings to manage revisions</div>';
+      }catch(e){ console.error(e); }
+      return r;
+    };
+    window.renderDrawingSet._toolsHook=true;
+  }
+
+  // Append material schedule page at end of PDF
+  var _pdf = window.dsGeneratePDF;
+  if(typeof _pdf==='function' && !_pdf._matHook){
+    window.dsGeneratePDF = async function(){
+      // temporarily patch after original by wrapping result: call original then we need access to doc - better inject material before save
+      // Monkey-patch: store flag; original saves at end - find by wrapping differently
+      var mats = (dsState().materialRows||[]).filter(function(r){return (r.item||'').trim();});
+      // Hook jspdf save - too hard. Instead run original and if mats, we enhance by replacing save
+      var origSave = null;
+      var JsPDF = window.jspdf && window.jspdf.jsPDF;
+      if(JsPDF && mats.length){
+        var _proto = JsPDF.prototype;
+        if(_proto && !_proto._dsMatPatched){
+          var _save = _proto.save;
+          _proto.save = function(name){
+            try{
+              if(this.__dsAddMat && mats.length){
+                this.addPage();
+                var W=this.internal.pageSize.getWidth();
+                var H=this.internal.pageSize.getHeight();
+                this.setFillColor(26,58,42); this.rect(0,0,W,22,'F');
+                this.setFillColor(201,168,76); this.rect(0,22,W,1.5,'F');
+                this.setTextColor(255,255,255); this.setFont('helvetica','bold'); this.setFontSize(16);
+                this.text('Material Schedule — Doors / Windows', 16, 14);
+                this.setFontSize(9); this.setTextColor(201,168,76);
+                this.text('From Drawing Set', 16, 19);
+                var y=34;
+                this.setFont('helvetica','bold'); this.setFontSize(9); this.setTextColor(26,58,42);
+                this.text('#', 16, y); this.text('Item', 26, y); this.text('Type', 100, y); this.text('Qty', 130, y); this.text('Size', 150, y);
+                this.setDrawColor(201,168,76); this.line(16,y+2,W-16,y+2); y+=8;
+                this.setFont('helvetica','normal'); this.setTextColor(40,40,40);
+                mats.forEach(function(r,i){
+                  if(y>H-20){ this.addPage(); y=20; }
+                  this.text(String(i+1), 16, y);
+                  this.text(String(r.item||''), 26, y);
+                  this.text(String(r.type||''), 100, y);
+                  this.text(String(r.qty||''), 130, y);
+                  this.text(String(r.size||''), 150, y);
+                  y+=7;
+                }.bind(this));
+              }
+            }catch(e){ console.error(e); }
+            return _save.apply(this, arguments);
+          };
+          _proto._dsMatPatched = true;
+        }
+      }
+      // Mark next jsPDF instance - set on construction is hard; set global flag
+      window.__dsAddMat = mats.length>0;
+      // Patch constructor to mark instances
+      if(JsPDF && !JsPDF._dsFlagPatch){
+        var Orig=JsPDF;
+        var Wrapped=function(){
+          var inst = new (Function.prototype.bind.apply(Orig, [null].concat([].slice.call(arguments))))();
+          // simpler:
+          return inst;
+        };
+        // skip constructor wrap; set flag on save via checking window.__dsAddMat in save - already done
+        // Need instances to see __dsAddMat - save uses this.__dsAddMat
+        var _save2 = JsPDF.prototype.save;
+        if(!JsPDF.prototype._dsMatFlag){
+          JsPDF.prototype.save = function(name){
+            this.__dsAddMat = !!window.__dsAddMat;
+            return _save2.apply(this, arguments);
+          };
+          JsPDF.prototype._dsMatFlag = true;
+        }
+      }
+      return await _pdf.apply(this, arguments);
+    };
+    window.dsGeneratePDF._matHook=true;
+  }
 })();
 </script>
 
