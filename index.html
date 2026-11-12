@@ -29119,30 +29119,79 @@ html += '</div>';
     var p=null;
     try{ if(typeof gp==='function') p=gp(pid); }catch(e){}
     if(!p) p=(db.projects||[]).find(function(x){return x.id===pid;});
+
     var opts=[];
     var seen={};
-    function add(id, tag){
+    function add(id, tag, forceName){
       if(!id || seen[id]) return;
       seen[id]=true;
       var c=null;
       try{ if(typeof gc==='function') c=gc(id); }catch(e){}
       if(!c) c=(db.contacts||[]).find(function(x){return x.id===id;});
-      var name=c?(c.name||'Contact'):id;
-      var cat=c?(c.cat||tag||''):tag;
-      opts.push({id:id, text:name+(cat?' · '+cat:'')});
+      var name = forceName || (c && c.name) || id;
+      var cat = (c && c.cat) ? c.cat : '';
+      var label = name;
+      if(tag) label += ' — '+tag;
+      else if(cat) label += ' · '+cat;
+      opts.push({id:id, text:label});
     }
+
+    // 1) Project client FIRST (always visible)
+    if(p && p.clientId){
+      add(p.clientId, '★ Project Client', null);
+    }
+    // If clientId missing but project name matches a contact, add that
+    if(p && !p.clientId && p.name){
+      var byName=(db.contacts||[]).find(function(c){
+        return String(c.name||'').toLowerCase()===String(p.name||'').toLowerCase();
+      });
+      if(byName) add(byName.id, '★ Project Client');
+    }
+    // 2) Linked engineer / builder
     if(p){
-      add(p.clientId, 'Client / Owner');
-      add(p.engineerId, 'Engineer');
-      add(p.builderId, 'Builder');
+      add(p.engineerId, 'Engineer (linked)');
+      add(p.builderId, 'Builder (linked)');
     }
-    (db.contacts||[]).forEach(function(c){ add(c.id, c.cat||'Contact'); });
+    // 3) All other contacts
+    (db.contacts||[]).slice().sort(function(a,b){
+      return String(a.name||'').localeCompare(String(b.name||''));
+    }).forEach(function(c){
+      add(c.id, null);
+    });
+
     var cur=sel.value;
     sel.innerHTML='<option value="">— Select who paid —</option>'+opts.map(function(o){
       return '<option value="'+o.id+'">'+String(o.text||'').replace(/</g,'')+'</option>';
     }).join('');
-    if(p && p.clientId && !cur) sel.value=p.clientId;
-    else if(cur) try{ sel.value=cur; }catch(e){}
+
+    // Default select project client
+    if(p && p.clientId){
+      sel.value=p.clientId;
+    }
+    if(cur && seen[cur]) sel.value=cur;
+
+    // Hint under dropdown
+    var hint=document.getElementById('pay-payer-hint');
+    if(!hint){
+      hint=document.createElement('div');
+      hint.id='pay-payer-hint';
+      hint.style.cssText='font-size:11px;font-weight:600;color:var(--grn3);margin-top:6px';
+      if(sel.parentNode) sel.parentNode.appendChild(hint);
+    }
+    if(p && p.clientId){
+      var cc=null;
+      try{ if(typeof gc==='function') cc=gc(p.clientId); }catch(e){}
+      if(!cc) cc=(db.contacts||[]).find(function(x){return x.id===p.clientId;});
+      hint.textContent = cc
+        ? ('📋 या project चा client: '+cc.name+' — Paid by मध्ये पहिली option')
+        : ('📋 Project client id: '+p.clientId+' (contact list मध्ये नाव मिळाले नाही — Contacts मध्ये check करा)');
+    } else if(p){
+      hint.textContent='⚠ या project ला Client link नाही — Project Edit मध्ये Client select करा';
+      hint.style.color='var(--red)';
+    } else {
+      hint.textContent='आधी Project select करा — मग client नाव दिसेल';
+      hint.style.color='var(--mut)';
+    }
   };
 
   // When opening pay modal, fill payers
