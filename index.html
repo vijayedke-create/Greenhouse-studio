@@ -24587,63 +24587,108 @@ const tpToday=()=>new Date().toISOString().slice(0,10);
 const tpDmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
 function tpRender(){
   if(!tpDrawn)return;
-  const incoming=te(tv('incoming')||'________');
-  const date=tpDmy(tv('date'));
-  const applicant=te(tv('applicant')||'श्री./श्रीमती./सौ. __________________________');
-  const tp=te(tv('tp')||'________');
-  const finalplot=te(tv('finalplot')||'________');
-  const subplot=te(tv('subplot')||'________');
+  const date=tpDmy(tv('date'))||'&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;';
+  const applicant=te(tv('applicant')||'______________________________');
+  const mobile=te(tv('mobile')||'______________');
+  const fileNo=te(tv('fileno')||'______________');
   const peth=te(tv('peth')||'________');
   const nagar=te(tv('nagar')||'________');
+  const finalplot=te(tv('finalplot')||'________');
+  const scheme=te(tv('scheme')||'________');
   const cs=te(tv('cs')||'________');
-  const city=te(tv('city')||'सोलापूर');
-  const purpose=te(tv('purpose')||'बांधकाम परवानगी / सुधारीत बांधकाम परवानगी');
+  const sn=te(tv('sn')||'________');
+  const allplot=te(tv('allplot')||'________');
+  const purpose=te(tv('purpose')||'बांधकाम परवानगी / एकत्रीकरण / विभागणी / लेआउट / TDR');
+  const engName=te(tv('engname')||'______________________________');
+  const engLic=te(tv('englic')||'______________');
+  const engMob=te(tv('engmob')||'______________');
   const extra=te(tv('extra')||'');
   tq('pv').innerHTML=`<div class="tp-sheet"><div class="tp-in">
-    <div class="tp-head">आवक नंबर / ${incoming}<br>दि. ${date}</div>
-    <div class="tp-office">सोलापूर महानगरपालिका, सोलापूर.</div>
-    <div class="tp-to">सहा. अभियंता, (नगर रचना) यांचेकडे,</div>
-    <div class="tp-subject">विषय :- ${purpose} करीता अभिप्राय मिळणेबाबत.</div>
-    <div class="tp-meta"><b>अर्जदार :-</b> ${applicant}</div>
-    <div class="tp-meta"><b>टी.पी. :-</b> ${tp} &nbsp;&nbsp;&nbsp; <b>फा. प्लॉट नं. :-</b> ${finalplot} &nbsp;&nbsp;&nbsp; <b>सब प्लॉट नं. :-</b> ${subplot}</div>
-    <div class="tp-meta"><b>पेठ :-</b> ${peth} &nbsp;&nbsp;&nbsp; <b>नगर :-</b> ${nagar} &nbsp;&nbsp;&nbsp; <b>सि.स.नं. :-</b> ${cs}</div>
-    <div class="tp-body">
-      <p>वरील विषयांकित जागेवरील बांधकाम परवानगी घेणेकरीता नकाशेसोबत जोडले आहेत.</p>
-      <p>तरी उपरोक्त जागेबाबत विकास योजना, नगर रचना योजनेनुसार आरक्षण, झोन व रस्ते याबाबत आपला सविस्तर अभिप्राय मिळणेची विनंती आहे.</p>
-      ${extra?`<p>${extra}</p>`:''}
+    <div class="tp-head" style="text-align:right">दि. ${date}</div>
+    <div class="tp-to" style="margin-top:14px">
+      <b>प्रति,</b><br>
+      मा. सस. संचालक, नगर रचना<br>
+      सोलापूर महानगरपालिका, सोलापूर
     </div>
-    <div class="tp-encl"><b>सोबत :-</b> संपूर्ण प्रकरण.</div>
-    <div class="tp-sign">आपला<br><b>विश्वासू</b></div>
+    <div class="tp-subject" style="margin-top:16px">
+      <b>विषय :-</b> ${purpose} करीता अभिप्राय मिळणेबाबत.
+    </div>
+    <div class="tp-meta" style="margin-top:12px"><b>अर्जदार :-</b> श्री/श्रीमती/सौ. ${applicant}</div>
+    <div class="tp-meta"><b>मोबाईल नं. :-</b> ${mobile}</div>
+    <div class="tp-meta"><b>मोबाईल फाईल नं. :-</b> ${fileNo}</div>
+    <div class="tp-body" style="margin-top:14px;text-align:justify;line-height:1.75">
+      <p style="text-indent:12mm;margin:0 0 10px">
+        उपरोक्त विषयांस अनुसरुन माझे मालकीचे पेठ <b>${peth}</b> नगर <b>${nagar}</b>
+        फा.प्लॉट नं. <b>${finalplot}</b> टो.पो. स्कीम नं. <b>${scheme}</b>
+        सि.स.नं. <b>${cs}</b> स.नं. <b>${sn}</b>
+        सब प्लॉट नं. <b>${allplot}</b>
+        या जागेचे खालील नमूद कागदपत्रे सोबत जोडून सादर करीत आहे.
+      </p>
+      <p style="text-indent:12mm;margin:0 0 10px">
+        तरी आपल्या कार्यालयाचे मंजूर विकास योजना आराखडा (१९७७-२०११) व प्रारुप विकास आराखडा (२०२१-२०४३) नुसार अभिप्राय मिळणे विनंती आहे.
+      </p>
+      ${extra?`<p style="margin:0 0 10px">${extra}</p>`:''}
+    </div>
+    <div class="tp-sign" style="margin-top:28px;text-align:right">
+      आपला विश्वासू<br><br>
+      ( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )
+    </div>
+    <div class="tp-encl" style="margin-top:22px;font-size:10.5pt;line-height:1.65">
+      <b>सोबत -</b><br>
+      १. ७/१२ उतारा / मालमत्ता पत्रक (६ महिन्याचे आतील) / सोसायटी अलॉटमेंट लेटर / करार पावती<br>
+      २. लेआउट मंजुरीचे पत्र व नकाशा / सदर / मोजणी नकाशा / गाव नकाशा / टाईप नकाशा<br>
+      ३. Tax N.O.C. (चालू वर्षाचे)<br>
+      ४. जुना टी.पी. नकाशा व नविन टी.पी. नकाशा इंजिनिअर यांची सही शिक्का (पुढेवारी लेआउट असेल तर)<br>
+      ५. इंजिनिअर / आर्कि. / सर्वेअर नाव. &nbsp;&nbsp; <b>${engName}</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;इंजिनिअर / आर्कि. / सर्वेअर लायसन्स नं. &nbsp; <b>${engLic}</b><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;इंजिनिअर / आर्कि. / सर्वेअर मो.नं. &nbsp; <b>${engMob}</b>
+    </div>
   </div></div>`;
 }
 window.tpRender=function(){try{tpRender();}catch(e){console.error(e);}};
 window.renderTPAbhiprayView=function(){
   const box=document.getElementById('tpabhipray-body');if(!box)return;
-  if(tpDrawn){tpRender();return;}
+  if(tpDrawn){
+    var en=document.getElementById('tp-engname');
+    if(en&&!en.value) en.value='Vijaykumar Prakash Edke';
+    var el=document.getElementById('tp-englic');
+    if(el&&!el.value) el.value='STATE/R/2025/APL/21936';
+    var em=document.getElementById('tp-engmob');
+    if(em&&!em.value) em.value='9175038900';
+    tpRender();return;
+  }
   box.innerHTML=`<div class="sec-head"><div class="sec-title">🏛️ TP अभिप्राय पत्र</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-sm" onclick="tpNew()">New</button><button class="btn btn-sm" onclick="tpStore()">💾 Save</button><button class="btn btn-gold" onclick="tpPrint()">🖨 Print / PDF</button></div></div>
   <div class="tp-grid"><div>
-    <div class="tp-card"><h4 onclick="tpTog(this)">📄 कार्यालयीन माहिती<span class="ar">▼</span></h4><div class="eb"><div class="tp-f">
-      <label>आवक नंबर</label><input id="tp-incoming" oninput="tpRender()">
+    <div class="tp-card"><h4 onclick="tpTog(this)">📄 अर्जदार व विषय<span class="ar">▼</span></h4><div class="eb"><div class="tp-f">
       <label>दिनांक</label><input type="date" id="tp-date" oninput="tpRender()">
-      <label>अर्जदार</label><input id="tp-applicant" placeholder="श्री./श्रीमती./सौ." oninput="tpRender()">
-      <label>अभिप्रायाचा विषय</label><input id="tp-purpose" value="बांधकाम परवानगी / सुधारीत बांधकाम परवानगी" oninput="tpRender()">
+      <label>अर्जदार (श्री/श्रीमती/सौ.)</label><input id="tp-applicant" placeholder="पूर्ण नाव" oninput="tpRender()">
+      <label>मोबाईल नं.</label><input id="tp-mobile" placeholder="९८xxxxxxxx" oninput="tpRender()">
+      <label>मोबाईल फाईल नं. (ऐच्छिक)</label><input id="tp-fileno" oninput="tpRender()">
+      <label>विषय</label><input id="tp-purpose" value="बांधकाम परवानगी / एकत्रीकरण / विभागणी / लेआउट / TDR" oninput="tpRender()">
     </div></div></div>
     <div class="tp-card"><h4 onclick="tpTog(this)">📍 जागेचा तपशील<span class="ar">▼</span></h4><div class="eb"><div class="tp-f">
-      <div class="tp-f2"><div><label>टी.पी. नं.</label><input id="tp-tp" oninput="tpRender()"></div><div><label>फा. प्लॉट नं.</label><input id="tp-finalplot" oninput="tpRender()"></div></div>
-      <div class="tp-f2"><div><label>सब प्लॉट नं.</label><input id="tp-subplot" oninput="tpRender()"></div><div><label>सि.स. नं.</label><input id="tp-cs" oninput="tpRender()"></div></div>
       <div class="tp-f2"><div><label>पेठ</label><input id="tp-peth" oninput="tpRender()"></div><div><label>नगर</label><input id="tp-nagar" oninput="tpRender()"></div></div>
-      <label>शहर / गाव</label><input id="tp-city" value="सोलापूर" oninput="tpRender()">
+      <div class="tp-f2"><div><label>फा. प्लॉट नं.</label><input id="tp-finalplot" oninput="tpRender()"></div><div><label>टो.पो. स्कीम नं.</label><input id="tp-scheme" oninput="tpRender()"></div></div>
+      <div class="tp-f2"><div><label>सि.स. नं.</label><input id="tp-cs" oninput="tpRender()"></div><div><label>स. नं.</label><input id="tp-sn" oninput="tpRender()"></div></div>
+      <label>सब प्लॉट नं.</label><input id="tp-allplot" oninput="tpRender()">
     </div></div></div>
-    <div class="tp-card"><h4 onclick="tpTog(this)">📝 अतिरिक्त मजकूर<span class="ar">▼</span></h4><div class="eb"><div class="tp-f"><label>अतिरिक्त नोंद (ऐच्छिक)</label><textarea id="tp-extra" placeholder="आवश्यक असल्यास अतिरिक्त मजकूर..." oninput="tpRender()"></textarea></div></div></div>
+    <div class="tp-card"><h4 onclick="tpTog(this)">👷 इंजिनिअर / आर्किटेक्ट<span class="ar">▼</span></h4><div class="eb"><div class="tp-f">
+      <label>नाव</label><input id="tp-engname" value="Vijaykumar Prakash Edke" placeholder="इंजिनिअर / आर्कि. / सर्वेअर" oninput="tpRender()">
+      <label>लायसन्स नं.</label><input id="tp-englic" value="STATE/R/2025/APL/21936" oninput="tpRender()">
+      <label>मो. नं.</label><input id="tp-engmob" value="9175038900" oninput="tpRender()">
+      <label>अतिरिक्त नोंद (ऐच्छिक)</label><textarea id="tp-extra" placeholder="आवश्यक असल्यास..." oninput="tpRender()"></textarea>
+    </div></div></div>
   </div><div><div class="tp-pvbox"><div style="margin-bottom:9px;font-size:11px;color:var(--mut);font-weight:600">Preview — A4 Portrait</div><div id="tp-pv"></div></div></div></div>`;
   tpDrawn=true;tpNew();
 };
 window.tpTog=h=>h.parentElement.classList.toggle('cl');
 window.tpNew=()=>{
   const d=tq('date');if(d)d.value=tpToday();
-  ['incoming','applicant','tp','finalplot','subplot','peth','nagar','cs','extra'].forEach(id=>{const e=tq(id);if(e)e.value=''});
-  const city=tq('city');if(city)city.value='सोलापूर';
-  const purpose=tq('purpose');if(purpose)purpose.value='बांधकाम परवानगी / सुधारीत बांधकाम परवानगी';
+  ['applicant','mobile','fileno','peth','nagar','finalplot','scheme','cs','sn','allplot','extra'].forEach(id=>{const e=tq(id);if(e)e.value=''});
+  const purpose=tq('purpose');if(purpose)purpose.value='बांधकाम परवानगी / एकत्रीकरण / विभागणी / लेआउट / TDR';
+  const en=tq('engname');if(en)en.value='Vijaykumar Prakash Edke';
+  const el=tq('englic');if(el)el.value='STATE/R/2025/APL/21936';
+  const em=tq('engmob');if(em)em.value='9175038900';
   tpRender();
 };
 window.tpPrint=()=>{
