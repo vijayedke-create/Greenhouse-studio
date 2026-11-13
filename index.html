@@ -8763,16 +8763,42 @@ function saveContact(){
   }
 }
 function populateProjModal(){
-  // Client dropdown
+  // Client dropdown — ALL contacts, sorted (Direct/Client first)
   const sel=document.getElementById('p-client');
   if(!sel){console.error('p-client select not found');return;}
+  var list=(db.contacts||[]).slice().sort(function(a,b){
+    function rank(c){
+      var cat=String(c.cat||'').toLowerCase();
+      if(cat==='direct'||cat==='client'||cat==='owner') return 0;
+      if(cat.indexOf('engineer')>=0) return 2;
+      if(cat.indexOf('builder')>=0) return 3;
+      return 1;
+    }
+    var d=rank(a)-rank(b);
+    if(d) return d;
+    return String(a.name||'').localeCompare(String(b.name||''),'en',{sensitivity:'base'});
+  });
   sel.innerHTML='<option value="">-- Select Client --</option>';
-  (db.contacts||[]).forEach(function(c){
+  list.forEach(function(c){
     const o=document.createElement('option');
     o.value=c.id;
-    o.textContent=c.name+' ('+(c.cat||'Client')+')';
+    o.textContent=(c.name||'Unnamed')+' ('+(c.cat||'Client')+')';
     sel.appendChild(o);
   });
+  // Quick-add button next to client if missing
+  try{
+    var fg=sel.closest('.fg')||sel.parentNode;
+    if(fg && !document.getElementById('p-client-add-btn')){
+      var btn=document.createElement('button');
+      btn.type='button';
+      btn.id='p-client-add-btn';
+      btn.className='btn btn-s btn-sm';
+      btn.style.cssText='margin-top:6px';
+      btn.textContent='+ नवीन Client (नाव टाका)';
+      btn.onclick=function(){ window.quickAddProjectClient(); };
+      fg.appendChild(btn);
+    }
+  }catch(e){}
   function fillRole(id, cats){
     var s=document.getElementById(id); if(!s) return;
     var cur=s.value;
@@ -21911,7 +21937,7 @@ Portal मध्ये पाहता येईल:
 /* Bank Estimate pages — content margins (letterhead image stays full-page behind) */
 .cmp-sheet.est{
   /* ALL letterhead pages: content below logo + right service list */
-  padding:56mm 12mm 8mm 14mm !important;
+  padding:52mm 12mm 6mm 14mm !important;
   box-sizing:border-box !important;
 }
 .cmp-sheet.est.est-cert{
@@ -21919,12 +21945,12 @@ Portal मध्ये पाहता येईल:
 }
 .cmp-sheet.est.nolh{
   background-image:none !important;
-  padding:8mm 12mm 8mm 14mm !important;
+  padding:7mm 12mm 5mm 14mm !important;
 }
 @media print{
-  .cmp-sheet.est{padding:56mm 12mm 8mm 14mm !important;}
+  .cmp-sheet.est{padding:52mm 12mm 6mm 14mm !important;}
   .cmp-sheet.est.est-cert{padding:56mm 12mm 10mm 14mm !important;}
-  .cmp-sheet.est.nolh{padding:8mm 12mm 8mm 14mm !important;}
+  .cmp-sheet.est.nolh{padding:7mm 12mm 5mm 14mm !important;}
 }
 /* keep title/owner above table, below letterhead band */
 .cmp-sheet.est .ct,
@@ -23509,16 +23535,28 @@ function estAbTotalRow(t){return `<tr class="tt"><td></td><td></td><td></td><td>
    height and tells us nothing. Fragments are therefore measured in a plain block
    box set to the sheet's exact content width. */
 function estMetrics(mode){
-  /* mode: 'lh' | 'nolh' | 'cert' — correct usable height per page type */
+  /* mode: 'lh' | 'nolh' | 'cert' — usable content height (fill page, minimal bottom gap) */
   const m=document.getElementById('est-measure');
-  if(!m) return {avail:900,w:480};
+  if(!m) return {avail:980,w:480};
   let cls='cmp-sheet est';
   if(mode==='nolh') cls+=' nolh';
   if(mode==='cert') cls+=' est-cert';
-  m.innerHTML='<div class="'+cls+'" id="est-ms" style="transform:none;zoom:1"></div>';
-  const s=document.getElementById('est-ms'),cs=getComputedStyle(s);
-  const avail=Math.max(200, s.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom));
-  const w=Math.max(200, s.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight));
+  m.innerHTML='<div class="'+cls+'" id="est-ms" style="transform:none!important;zoom:1!important;margin:0!important"></div>';
+  const s=document.getElementById('est-ms');
+  if(!s) return {avail:980,w:480};
+  const cs=getComputedStyle(s);
+  const pt=parseFloat(cs.paddingTop)||0;
+  const pb=parseFloat(cs.paddingBottom)||0;
+  const pl=parseFloat(cs.paddingLeft)||0;
+  const pr=parseFloat(cs.paddingRight)||0;
+  let pageH=s.getBoundingClientRect().height || s.clientHeight || 0;
+  if(pageH<400){
+    /* fallback A4 @ ~96dpi */
+    pageH = 297 * (96/25.4);
+  }
+  /* use almost full content box; small 4px safety only */
+  const avail=Math.max(280, pageH - pt - pb - 4);
+  const w=Math.max(200, (s.clientWidth||s.getBoundingClientRect().width) - pl - pr);
   return {avail:avail, w:w};
 }
 function estBox(html,w){
@@ -23553,61 +23591,64 @@ function estAbstractPages(sec){
   const G_nl = estMetrics('nolh');
   const w = G_lh.w || G_nl.w;
   const M = estRowHeights(sec, w);
-  const rowH = M.rows.slice(0, sec.items.length);
-  const totH = M.rows[M.rows.length-1] || 22;
-  const headH = estMeasure(estHeadBlock()+'<div class="ab">ABSTRACT SHEET</div><div class="sn">X</div>', w);
-  const signH = estMeasure(estSignBlock(), w);
-  const contH = estMeasure('<div class="sn">X (contd.)</div>', w);
+  /* slight shrink — measured heights often overestimate → left empty gap */
+  const H_SCALE = 0.92;
+  const rowH = (M.rows||[]).slice(0, sec.items.length).map(function(h){ return Math.max(16, (h||24)*H_SCALE); });
+  const totH = Math.max(18, ((M.rows&&M.rows[M.rows.length-1])||22)*H_SCALE);
+  const headH = estMeasure(estHeadBlock()+'<div class="ab">ABSTRACT SHEET</div><div class="sn">X</div>', w) * H_SCALE;
+  const signH = Math.max(28, estMeasure(estSignBlock(), w) * H_SCALE * 0.85);
+  const contH = estMeasure('<div class="sn">X (contd.)</div>', w) * H_SCALE;
 
   const pages=[]; let cur=[], used=0, first=true, prevCat='';
-  const catH = M.catH || 20;
-  const thead = M.thead || 22;
+  const catH = Math.max(14, (M.catH||20)*H_SCALE);
+  const thead = Math.max(16, (M.thead||22)*H_SCALE);
 
-  function pageAvail(){
-    const G = (first && useSecLH) ? G_lh : G_nl;
-    // only reserve header + thead; fill rest with items
-    return Math.max(120, G.avail - (first ? headH : contH) - thead - 2);
+  function pageCap(isFirst){
+    const G = (isFirst && useSecLH) ? G_lh : G_nl;
+    /* fill as much as possible; 1px fudge only */
+    return Math.max(160, G.avail - (isFirst ? headH : contH) - thead - 1);
   }
 
   for(let i=0; i<sec.items.length; i++){
-    const h = Math.max(18, rowH[i] || 24);
+    const h = rowH[i] || 20;
     const cat = estItemCat(sec.items[i]);
     const catExtra = (cat && cat !== prevCat) ? catH : 0;
-    const remaining = sec.items.length - i - 1;
-    // only reserve total+sign when few items left on this closing stretch
-    const reserveEnd = (remaining === 0) ? (totH + signH) : 0;
-    const need = h + catExtra + reserveEnd;
-    const cap = pageAvail();
+    const need = h + catExtra;
+    const cap = pageCap(first);
 
     if(cur.length && used + need > cap){
-      // not enough room for this item (+ end if last) → new page
+      /* page full → flush, start next (item continues on next page) */
       pages.push({first:first, rows:cur.slice(), last:false});
       first = false;
       cur = [];
       used = 0;
       prevCat = '';
-      // recompute need without previous page context
       const catExtra2 = cat ? catH : 0;
-      const need2 = h + catExtra2 + (remaining===0 ? totH+signH : 0);
-      // if single item taller than page, still put it alone (no HTML row-split)
       cur.push(i);
       used = h + catExtra2;
       prevCat = cat || prevCat;
       continue;
     }
     cur.push(i);
-    used += h + catExtra;
+    used += need;
     prevCat = cat || prevCat;
   }
 
-  // ensure total+sign fit on last page; if not, move last item(s) forward
-  while(cur.length > 1 && used + totH + signH > pageAvail()){
+  /* Last page: try keep total+sign; only spill if truly needed */
+  function usedOf(rows){
+    let u=0, pc='';
+    rows.forEach(function(ix){
+      const cat=estItemCat(sec.items[ix]);
+      u += (rowH[ix]||20) + ((cat && cat!==pc)?catH:0);
+      pc = cat||pc;
+    });
+    return u;
+  }
+  while(cur.length > 1 && usedOf(cur) + totH + signH > pageCap(first)){
     const moved = cur.pop();
-    // recompute used roughly
     pages.push({first:first, rows:cur.slice(), last:false});
     first = false;
     cur = [moved];
-    used = Math.max(18, rowH[moved] || 24);
   }
   pages.push({first:first, rows:cur, last:true});
 
