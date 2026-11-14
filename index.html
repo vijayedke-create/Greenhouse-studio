@@ -24587,64 +24587,79 @@ const tpToday=()=>new Date().toISOString().slice(0,10);
 const tpDmy=d=>{if(!d)return '';const p=String(d).split('-');return p.length===3?p[2]+' / '+p[1]+' / '+p[0]:d};
 function tpRender(){
   if(!tpDrawn)return;
-  const date=tpDmy(tv('date'))||'&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;';
-  const applicant=te(tv('applicant')||'______________________________');
-  const mobile=te(tv('mobile')||'______________');
-  const fileNo=te(tv('fileno')||'______________');
-  const peth=te(tv('peth')||'________');
-  const nagar=te(tv('nagar')||'________');
-  const finalplot=te(tv('finalplot')||'________');
-  const scheme=te(tv('scheme')||'________');
-  const cs=te(tv('cs')||'________');
-  const sn=te(tv('sn')||'________');
-  const allplot=te(tv('allplot')||'________');
+  const date=tpDmy(tv('date'))||'____ / ____ / ________';
+  const applicant=te(tv('applicant')||'___________________________');
+  const mobile=te(tv('mobile')||'__________________');
+  const peth=te(tv('peth')||'__________');
+  const nagar=te(tv('nagar')||'__________');
+  const scheme=te(tv('scheme')||'__________');
+  const cs=te(tv('cs')||'__________');
+  const sn=te(tv('sn')||'__________');
+  const finalplot=te(tv('finalplot')||'__________');
+  const allplot=te(tv('allplot')||'__________');
   const purpose=te(tv('purpose')||'बांधकाम परवानगी / एकत्रीकरण / विभागणी / लेआउट / TDR');
-  const engName=te(tv('engname')||'______________________________');
-  const engLic=te(tv('englic')||'______________');
-  const engMob=te(tv('engmob')||'______________');
+  const engName=te(tv('engname')||'Vijaykumar Prakash Edke');
+  const engLic=te(tv('englic')||'STATE/R/2025/APL/21936');
+  const engMob=te(tv('engmob')||'9175038900');
   const extra=te(tv('extra')||'');
-  tq('pv').innerHTML=`<div class="tp-sheet"><div class="tp-in">
-    <div class="tp-head" style="text-align:right">दि. ${date}</div>
-    <div class="tp-to" style="margin-top:14px">
+  /* Preserve side-edits if user typed in preview (data-tp-lock) */
+  var pv=tq('pv');
+  if(pv && pv.getAttribute('data-tp-edited')==='1'){
+    return; /* keep manual side text until New */
+  }
+  tq('pv').innerHTML=`<div class="tp-sheet"><div class="tp-in" id="tp-editable-root">
+    <div class="tp-head" style="text-align:right" contenteditable="true">दि. ${date}</div>
+    <div class="tp-to" style="margin-top:16px" contenteditable="true">
       <b>प्रति,</b><br>
-      मा. सस. संचालक, नगर रचना<br>
-      सोलापूर महानगरपालिका, सोलापूर
+      मा. सहा. संचालक, नगर रचना<br>
+      सोलापूर महानगरपालिका, सोलापूर.
     </div>
-    <div class="tp-subject" style="margin-top:16px">
-      <b>विषय :-</b> ${purpose} करीता अभिप्राय मिळणेबाबत.
+    <div class="tp-subject" style="margin-top:16px" contenteditable="true">
+      <b>विषय :-</b> ${purpose} करिता अभिप्राय मिळणे बाबत.
     </div>
-    <div class="tp-meta" style="margin-top:12px"><b>अर्जदार :-</b> श्री/श्रीमती/सौ. ${applicant}</div>
-    <div class="tp-meta"><b>मोबाईल नं. :-</b> ${mobile}</div>
-    <div class="tp-meta"><b>मोबाईल फाईल नं. :-</b> ${fileNo}</div>
-    <div class="tp-body" style="margin-top:14px;text-align:justify;line-height:1.75">
-      <p style="text-indent:12mm;margin:0 0 10px">
-        उपरोक्त विषयांस अनुसरुन माझे मालकीचे पेठ <b>${peth}</b> नगर <b>${nagar}</b>
-        फा.प्लॉट नं. <b>${finalplot}</b> टो.पो. स्कीम नं. <b>${scheme}</b>
-        सि.स.नं. <b>${cs}</b> स.नं. <b>${sn}</b>
-        सब प्लॉट नं. <b>${allplot}</b>
-        या जागेचे खालील नमूद कागदपत्रे सोबत जोडून सादर करीत आहे.
+    <div class="tp-meta" style="margin-top:12px" contenteditable="true"><b>अर्जदार :-</b> श्री./श्रीमती/सौ. ${applicant}</div>
+    <div class="tp-meta" contenteditable="true"><b>मोबाईल नं.</b> ${mobile}</div>
+    <div class="tp-body" style="margin-top:14px;text-align:justify;line-height:1.8" contenteditable="true">
+      <p style="text-indent:12mm;margin:0 0 12px">
+        उपरोक्त विषयांस अनुसरून माझे मालकीचे पेठ <b>${peth}</b> नगर <b>${nagar}</b>
+        टी.पी. स्कीम नं. <b>${scheme}</b> सि.स.नं. <b>${cs}</b> स.नं. <b>${sn}</b>
+        फा. प्लॉट नं. <b>${finalplot}</b> सब प्लॉट नं. <b>${allplot}</b>
+        या जागेचे खालील नमूद कागदपत्रे सोबत जोडून अर्ज सादर करीत आहे.
       </p>
-      <p style="text-indent:12mm;margin:0 0 10px">
-        तरी आपल्या कार्यालयाचे मंजूर विकास योजना आराखडा (१९७७-२०११) व प्रारुप विकास आराखडा (२०२१-२०४३) नुसार अभिप्राय मिळणे विनंती आहे.
+      <p style="text-indent:12mm;margin:0 0 12px">
+        तरी आपल्या कार्यालयाचे मंजूर विकास योजना आराखडा (१९९७-२०१७) व प्रसिद्ध प्रारूप विकास आराखडा (२०२३-२०४३) नुसार अभिप्राय मिळणे विनंती आहे.
       </p>
       ${extra?`<p style="margin:0 0 10px">${extra}</p>`:''}
     </div>
-    <div class="tp-sign" style="margin-top:28px;text-align:right">
+    <div class="tp-sign" style="margin-top:28px;text-align:right" contenteditable="true">
       आपला विश्वासू<br><br>
-      ( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )
+      (__________________)
     </div>
-    <div class="tp-encl" style="margin-top:22px;font-size:10.5pt;line-height:1.65">
-      <b>सोबत -</b><br>
-      १. ७/१२ उतारा / मालमत्ता पत्रक (६ महिन्याचे आतील) / सोसायटी अलॉटमेंट लेटर / करार पावती<br>
-      २. लेआउट मंजुरीचे पत्र व नकाशा / सदर / मोजणी नकाशा / गाव नकाशा / टाईप नकाशा<br>
-      ३. Tax N.O.C. (चालू वर्षाचे)<br>
-      ४. जुना टी.पी. नकाशा व नविन टी.पी. नकाशा इंजिनिअर यांची सही शिक्का (पुढेवारी लेआउट असेल तर)<br>
-      ५. इंजिनिअर / आर्कि. / सर्वेअर नाव. &nbsp;&nbsp; <b>${engName}</b><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;इंजिनिअर / आर्कि. / सर्वेअर लायसन्स नं. &nbsp; <b>${engLic}</b><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;इंजिनिअर / आर्कि. / सर्वेअर मो.नं. &nbsp; <b>${engMob}</b>
+    <div class="tp-encl" style="margin-top:22px;font-size:10.5pt;line-height:1.7" contenteditable="true">
+      <b>सोबत जोडलेली कागदपत्रे</b><br>
+      1) ७/१२ उतारा / मालमत्ता पत्रक (६ महिन्यांचे आतील) / सोसायटी अलॉटमेंट लेटर / कब्जा पावती.<br>
+      2) लेआउट मंजुरीचे पत्र व नकाशा / सनद / मोजणी नकाशा / गाव नकाशा / टाईप नकाशा.<br>
+      3) Tax N.O.C. (चालू वर्षाचे).<br>
+      4) जुना डी.पी. नकाशा व नवीन डी.पी. नकाशा इंजिनिअर यांची सही शिक्का (गुंठेवारी लेआउट असेल तर).<br><br>
+      इंजिनिअर / आर्कि. / सर्व्हेअर नाव : <b>${engName}</b><br>
+      इंजिनिअर / आर्कि. / सर्व्हेअर लायसन्स नं. : <b>${engLic}</b><br>
+      इंजिनिअर / आर्कि. / सर्व्हेअर मो.नं. : <b>${engMob}</b>
     </div>
   </div></div>`;
+  /* Mark when user edits side text so form oninput doesn't wipe it */
+  var root=document.getElementById('tp-editable-root');
+  if(root){
+    root.querySelectorAll('[contenteditable=true]').forEach(function(el){
+      el.addEventListener('input', function(){
+        var p=tq('pv'); if(p) p.setAttribute('data-tp-edited','1');
+      });
+      el.style.outline='1px dashed transparent';
+      el.addEventListener('focus', function(){ el.style.outline='1px dashed rgba(184,151,90,.45)'; });
+      el.addEventListener('blur', function(){ el.style.outline='1px dashed transparent'; });
+    });
+  }
 }
+
 window.tpRender=function(){try{tpRender();}catch(e){console.error(e);}};
 window.renderTPAbhiprayView=function(){
   const box=document.getElementById('tpabhipray-body');if(!box)return;
@@ -24689,6 +24704,7 @@ window.tpNew=()=>{
   const en=tq('engname');if(en)en.value='Vijaykumar Prakash Edke';
   const el=tq('englic');if(el)el.value='STATE/R/2025/APL/21936';
   const em=tq('engmob');if(em)em.value='9175038900';
+  var pv=tq('pv'); if(pv) pv.removeAttribute('data-tp-edited');
   tpRender();
 };
 window.tpPrint=()=>{
