@@ -7749,210 +7749,58 @@ function downloadClientSummaryPDF(){
 function generateClientSummaryPDF(cid){
   const c = gc(cid);
   if(!c) return;
-
   const projs = (db.projects||[]).filter(p=>p.clientId===cid);
-  if(!projs.length){ showErr('No projects found'); return; }
-
-  const fmt  = n => '₹' + Number(n||0).toLocaleString('en-IN');
-  const logo = officeInfo.logo ? `<img src="${officeInfo.logo}" style="height:48px;object-fit:contain">` : '';
+  if(!projs.length){ if(typeof showErr==='function') showErr('No projects found'); else alert('No projects'); return; }
+  const fmt = n => '₹' + Number(n||0).toLocaleString('en-IN');
   const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
-
-  // Totals
-  const totalVal  = projs.reduce((a,p)=>a+p.total, 0);
-  const totalPaid = projs.reduce((a,p)=>a+ppaid(p.id), 0);
+  const totalVal  = projs.reduce((a,p)=>a+(p.total||0), 0);
+  const totalPaid = projs.reduce((a,p)=>a+(typeof ppaid==='function'?ppaid(p.id):0), 0);
   const totalBal  = totalVal - totalPaid;
   const pct = totalVal>0 ? Math.round(totalPaid/totalVal*100) : 0;
+  const office = (typeof officeInfo!=='undefined' && officeInfo) ? officeInfo : {};
+  const logo = office.logo ? ('<img src="'+office.logo+'" style="height:48px;object-fit:contain">') : '';
 
-  // Bulk advances for this client
-  const bulkList = (db.bulkAdvances||[]).filter(b=>b.clientId===cid);
+  let projHtml = '';
+  projs.forEach(function(p,i){
+    const paid = typeof ppaid==='function' ? ppaid(p.id) : 0;
+    const bal  = typeof pbal==='function' ? pbal(p.id) : ((p.total||0)-paid);
+    const pPct = p.total>0 ? Math.round(paid/p.total*100) : 0;
+    projHtml += '<tr style="background:'+(i%2===0?'#f5f2ec':'#fff')+'">'+
+      '<td style="padding:10px;font-weight:700">'+(p.name||'')+'</td>'+
+      '<td style="padding:10px">'+(p.stage||'—')+'</td>'+
+      '<td style="padding:10px;text-align:right">'+fmt(p.total)+'</td>'+
+      '<td style="padding:10px;text-align:right;color:#27ae60">'+fmt(paid)+'</td>'+
+      '<td style="padding:10px;text-align:right;color:'+(bal>0?'#c0392b':'#27ae60')+'">'+(bal>0?fmt(bal):'Nil')+'</td>'+
+      '<td style="padding:10px">'+pPct+'%</td></tr>';
+  });
 
-  // All advances for this client (sorted by date)
-  const allPays = (db.payments||[]).filter(x=>(db.projects||[]).some(p=>p.clientId===cid&&p.id===x.projectId)).sort((a,b)=>a.date.localeCompare(b.date));
-  const advancePays = allPays.filter(x=>x.stage==='Advance'||x.stage?.toLowerCase().includes('advance'));
-  const totalAdvance = advancePays.reduce((a,x)=>a+x.amount,0);
-
-  // Project rows
-  const projRows = projs.map((p,i)=>{
-    const paid  = ppaid(p.id);
-    const bal   = pbal(p.id);
-    const pPct  = p.total>0 ? Math.round(paid/p.total*100) : 0;
-    const pays = (db.payments||[]).filter(x=>x.projectId===p.id).sort((a,b)=>a.date.localeCompare(b.date));
-    const payRows = pays.map(x=>`
-      <tr style="background:#f9f7f4">
-        <td style="padding:5px 10px;font-size:11px;color:#6b7280" colspan="2">&nbsp;&nbsp;&nbsp;↳ ${x.date} · ${x.stage} · ${x.mode||'—'} ${x.bulkAdvanceId?'<span style="font-size:10px;background:#fff3cd;padding:1px 6px;border-radius:10px;color:#856404">Bulk</span>':''}</td>
-        <td style="padding:5px 10px;font-size:11px;color:#27ae60;font-weight:600;text-align:right">+${fmt(x.amount)}</td>
-        <td></td>
-      </tr>`).join('');
-
-    return `
-    <tr style="background:${i%2===0?'#f5f2ec':'#fff'}">
-      <td style="padding:11px 14px;font-size:13px;font-weight:700;color:#1a3a2a">${p.name}</td>
-      <td style="padding:11px 14px;font-size:12px;color:#6b7280">${p.stage||'—'} ${p.deadline?'· 📅 '+p.deadline:''}</td>
-      <td style="padding:11px 14px;font-size:13px;font-weight:700;text-align:right">${fmt(p.total)}</td>
-      <td style="padding:11px 14px;font-size:13px;font-weight:700;text-align:right;color:#27ae60">${fmt(paid)}</td>
-      <td style="padding:11px 14px;font-size:13px;font-weight:700;text-align:right;color:${bal>0?'#c0392b':'#27ae60'}">${bal>0?fmt(bal):'✅ Nil'}</td>
-      <td style="padding:11px 14px">
-        <div style="background:#e8e2d9;border-radius:20px;height:6px;width:80px;overflow:hidden">
-          <div style="background:${pPct>=100?'#27ae60':'#1a3a2a'};height:100%;width:${pPct}%"></div>
-        </div>
-        <div style="font-size:10px;color:#6b7280;margin-top:2px">${pPct}%</div>
-      </td>
-    </tr>
-    ${payRows}`;
-  }).join('');
-
-  // Bulk advances section
-  const bulkSection = bulkList.length ? `
-    <div style="margin-top:28px">
-      <div style="font-size:13px;font-weight:800;color:#1a3a6a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #1a3a6a">
-        💰 Bulk Advance History
-      </div>
-      ${bulkList.map(ba=>`
-        <div style="background:#fffbee;border:1px solid #c9a84c;border-radius:10px;padding:14px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-            <div>
-              <div style="font-size:13px;font-weight:800;color:#1a3a2a">📅 ${ba.date} — ${ba.mode}</div>
-              <div style="font-size:11px;color:#6b7280">${ba.note||''} · Ref: ${ba.id}</div>
-            </div>
-            <div style="font-size:18px;font-weight:800;color:#c9a84c">${fmt(ba.totalAmount)}</div>
-          </div>
-          <table style="width:100%;border-collapse:collapse">
-            <tr style="font-size:10px;font-weight:700;color:#7a5a00;text-transform:uppercase">
-              <td style="padding:4px 8px">Project</td>
-              <td style="padding:4px 8px">Stage</td>
-              <td style="padding:4px 8px;text-align:right">Amount</td>
-            </tr>
-            ${(ba.payments||[]).map(p=>`
-            <tr style="border-top:1px solid #e8d58a">
-              <td style="padding:5px 8px;font-size:12px;font-weight:600">${p.pname}</td>
-              <td style="padding:5px 8px;font-size:12px;color:#7a5a00">${p.stage}</td>
-              <td style="padding:5px 8px;font-size:12px;font-weight:700;text-align:right;color:#1a3a2a">${fmt(p.amt)}</td>
-            </tr>`).join('')}
-          </table>
-        </div>`).join('')}
-    </div>` : '';
-
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Summary Report — ${c.name}</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Plus Jakarta Sans',sans-serif;color:#1a1a18;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-@media print{@page{margin:1.2cm}body{font-size:12px}}
-</style>
-</head>
-<body>
-
-<!-- Header -->
-<div style="background:linear-gradient(135deg,#1a3a2a 0%,#2d5a3d 100%);padding:22px 32px;display:flex;justify-content:space-between;align-items:center">
-  <div style="display:flex;align-items:center;gap:14px">
-    ${logo}
-    <div>
-      <div style="font-family:'Playfair Display',serif;font-size:22px;color:#c9a84c">${officeInfo.name||'Greenhouse Studio'}</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.5)">${officeInfo.addr||''} ${officeInfo.phone?'· '+officeInfo.phone:''}</div>
-    </div>
-  </div>
-  <div style="text-align:right">
-    <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:.5px">CLIENT SUMMARY REPORT</div>
-    <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">Generated: ${today}</div>
-  </div>
-</div>
-<div style="height:4px;background:linear-gradient(90deg,#c9a84c,#e8c96e,#c9a84c)"></div>
-
-<!-- Client Info Card -->
-<div style="padding:20px 32px;background:#f5f2ec;border-bottom:2px solid #e8e2d9">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px">
-    <div>
-      <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Client / Engineer</div>
-      <div style="font-size:22px;font-weight:800;color:#1a3a2a;font-family:'Playfair Display',serif">${c.name}</div>
-      <div style="font-size:12px;color:#6b7280;margin-top:4px">
-        ${c.phone?'📞 '+c.phone+'&nbsp;&nbsp;':''}
-        ${c.wa?'📱 '+c.wa+'&nbsp;&nbsp;':''}
-        ${c.address?'📍 '+c.address:''}
-      </div>
-    </div>
-    <div style="display:flex;gap:14px;flex-wrap:wrap">
-      <div style="background:#fff;border-radius:12px;padding:14px 18px;text-align:center;min-width:100px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Projects</div>
-        <div style="font-size:28px;font-weight:800;color:#1a3a2a;line-height:1.2">${projs.length}</div>
-      </div>
-      <div style="background:#fff;border-radius:12px;padding:14px 18px;text-align:center;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Contract Value</div>
-        <div style="font-size:16px;font-weight:800;color:#1a3a2a;font-family:'JetBrains Mono',monospace">${fmt(totalVal)}</div>
-      </div>
-      <div style="background:#e8f7ee;border-radius:12px;padding:14px 18px;text-align:center;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="font-size:10px;font-weight:700;color:#27ae60;text-transform:uppercase;letter-spacing:.5px">Total Received</div>
-        <div style="font-size:16px;font-weight:800;color:#27ae60;font-family:'JetBrains Mono',monospace">${fmt(totalPaid)}</div>
-      </div>
-      <div style="background:${totalBal>0?'#fdecea':'#e8f7ee'};border-radius:12px;padding:14px 18px;text-align:center;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="font-size:10px;font-weight:700;color:${totalBal>0?'#c0392b':'#27ae60'};text-transform:uppercase;letter-spacing:.5px">Balance Due</div>
-        <div style="font-size:16px;font-weight:800;color:${totalBal>0?'#c0392b':'#27ae60'};font-family:'JetBrains Mono',monospace">${totalBal>0?fmt(totalBal):'✅ Nil'}</div>
-      </div>
-    </div>
-  </div>
-  <!-- Overall Progress Bar -->
-  <div style="margin-top:16px">
-    <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:5px">
-      <span>Overall Collection Progress</span><span style="font-weight:700">${pct}%</span>
-    </div>
-    <div style="background:#e8e2d9;border-radius:20px;height:10px;overflow:hidden">
-      <div style="background:${pct>=100?'#27ae60':'#1a3a2a'};height:100%;width:${pct}%;border-radius:20px"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Projects Table -->
-<div style="padding:24px 32px">
-  <div style="font-size:12px;font-weight:800;color:#1a3a2a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">📋 All Projects & Payment Details</div>
-  <table style="width:100%;border-collapse:collapse">
-    <thead>
-      <tr style="background:#1a3a2a">
-        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left">Project Name</th>
-        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:left">Stage</th>
-        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:right">Contract</th>
-        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:right">Advance / Paid</th>
-        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;text-align:right">Balance</th>
-        <th style="padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff">Progress</th>
-      </tr>
-    </thead>
-    <tbody>${projRows}</tbody>
-    <tfoot>
-      <tr style="background:#1a3a2a">
-        <td colspan="2" style="padding:12px 14px;color:#fff;font-weight:800;font-size:13px">TOTAL</td>
-        <td style="padding:12px 14px;color:#c9a84c;font-weight:800;font-size:14px;text-align:right;font-family:'JetBrains Mono',monospace">${fmt(totalVal)}</td>
-        <td style="padding:12px 14px;color:#27ae60;font-weight:800;font-size:14px;text-align:right;font-family:'JetBrains Mono',monospace">${fmt(totalPaid)}</td>
-        <td style="padding:12px 14px;color:${totalBal>0?'#ff6b6b':'#27ae60'};font-weight:800;font-size:14px;text-align:right;font-family:'JetBrains Mono',monospace">${totalBal>0?fmt(totalBal):'✅ Nil'}</td>
-        <td style="padding:12px 14px;color:#fff;font-weight:700">${pct}% collected</td>
-      </tr>
-    </tfoot>
-  </table>
-
-  ${bulkSection}
-
-  <!-- Footer -->
-  <div style="margin-top:32px;padding-top:16px;border-top:2px solid #e8e2d9;display:flex;justify-content:space-between;align-items:flex-end">
-    <div style="font-size:11px;color:#6b7280">
-      <div>Generated by <b>${officeInfo.name||'Greenhouse Studio'}</b></div>
-      <div>${today} · Confidential</div>
-    </div>
-    <div style="text-align:right">
-      <div style="height:35px;border-bottom:1.5px solid #999;width:180px;margin-bottom:5px"></div>
-      <div style="font-size:12px;font-weight:700;color:#1a3a2a">${officeInfo.arch||'Architect'}</div>
-      <div style="font-size:11px;color:#6b7280">${officeInfo.name||'Greenhouse Studio'}</div>
-    </div>
-  </div>
-</div>
-
-<script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500));<\/script>
-</body></html>`;
+  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Client Summary — '+(c.name||'')+'</title>'+
+    '<style>body{font-family:system-ui,sans-serif;padding:24px;color:#1a1a18}'+
+    'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#1a3a2a;color:#fff;padding:8px;text-align:left;font-size:12px}'+
+    'td{border-bottom:1px solid #e5e2db;font-size:13px}@media print{body{padding:0}}</style></head><body>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #c9a84c;padding-bottom:12px">'+
+    '<div>'+logo+'<div style="font-size:20px;font-weight:800;color:#1a3a2a">'+(office.name||'Greenhouse Studio')+'</div>'+
+    '<div style="font-size:12px;color:#666">'+(office.addr||'')+'</div></div>'+
+    '<div style="text-align:right;font-size:12px;color:#666">Client Summary<br>'+today+'</div></div>'+
+    '<h2 style="margin:18px 0 6px">'+(c.name||'')+'</h2>'+
+    '<div style="font-size:13px;color:#555">'+(c.phone||c.wa||'')+' · '+(c.cat||'')+' · '+(c.address||'')+'</div>'+
+    '<div style="display:flex;gap:16px;margin:16px 0">'+
+    '<div style="flex:1;background:#f5f2ec;padding:12px;border-radius:8px"><div style="font-size:11px;color:#666">Contract</div><div style="font-size:18px;font-weight:800">'+fmt(totalVal)+'</div></div>'+
+    '<div style="flex:1;background:#eaf7ee;padding:12px;border-radius:8px"><div style="font-size:11px;color:#666">Received</div><div style="font-size:18px;font-weight:800;color:#27ae60">'+fmt(totalPaid)+'</div></div>'+
+    '<div style="flex:1;background:#fdecea;padding:12px;border-radius:8px"><div style="font-size:11px;color:#666">Balance</div><div style="font-size:18px;font-weight:800;color:#c0392b">'+fmt(totalBal)+'</div></div>'+
+    '<div style="flex:1;background:#f5f2ec;padding:12px;border-radius:8px"><div style="font-size:11px;color:#666">Paid</div><div style="font-size:18px;font-weight:800">'+pct+'%</div></div></div>'+
+    '<table><thead><tr><th>Project</th><th>Stage</th><th>Total</th><th>Paid</th><th>Balance</th><th>%</th></tr></thead><tbody>'+
+    projHtml+'</tbody></table>'+
+    '<p style="margin-top:24px;font-size:11px;color:#888">Generated by '+(office.name||'Greenhouse Studio')+'</p>'+
+    '</body></html>';
 
   const w = window.open('','_blank');
+  if(!w){ alert('Pop-up blocked'); return; }
   w.document.write(html);
   w.document.close();
+  setTimeout(function(){ try{ w.focus(); w.print(); }catch(e){} }, 400);
 }
+
 
 function renderBulkAdvances(){
   const el = document.getElementById('bulk-advance-list');
@@ -29413,6 +29261,70 @@ html += '</div>';
       return r;
     };
     window.renderPayments._payerLabel=true;
+  }
+})();
+</script>
+
+
+<script>
+window.quickAddProjectClient = function(){
+  try{
+    var name = prompt('नवीन Client चे पूर्ण नाव (उदा. Avinash Rathod):');
+    if(name == null) return;
+    name = String(name).trim();
+    if(!name){ alert('नाव टाका'); return; }
+    if(typeof db === 'undefined' || !db){ alert('Data load झाले नाही. Page refresh करा.'); return; }
+    if(!db.contacts) db.contacts = [];
+    var exists = db.contacts.find(function(c){
+      return String(c.name||'').trim().toLowerCase() === name.toLowerCase();
+    });
+    if(exists){
+      var sel0 = document.getElementById('p-client');
+      if(sel0){
+        if(![].some.call(sel0.options, function(o){ return o.value === exists.id; })){
+          var o = document.createElement('option');
+          o.value = exists.id;
+          o.textContent = exists.name + ' (' + (exists.cat||'Direct') + ')';
+          sel0.appendChild(o);
+        }
+        sel0.value = exists.id;
+      }
+      alert('Contact आधीच आहे — Client select: ' + exists.name);
+      return;
+    }
+    var id = (typeof uid === 'function') ? uid('C') : ('C-' + Date.now().toString(36));
+    db.contacts.push({
+      id: id, name: name, cat: 'Direct', phone: '', wa: '', address: '',
+      source: 'Project quick-add', createdAt: new Date().toISOString()
+    });
+    try{
+      if(typeof saveAll === 'function') saveAll();
+      else if(typeof saveLocal === 'function') saveLocal();
+    }catch(e){}
+    var sel = document.getElementById('p-client');
+    if(sel){
+      var opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = name + ' (Direct)';
+      sel.appendChild(opt);
+      sel.value = id;
+    }
+    if(typeof showOk === 'function') showOk('Client add: ' + name);
+    else alert('Client add झाला: ' + name);
+  }catch(err){
+    console.error(err);
+    alert('Client add failed: ' + (err && err.message ? err.message : err));
+  }
+};
+
+// Guard populatePersonFilters if db missing
+(function(){
+  var orig = window.populatePersonFilters;
+  if(typeof orig === 'function'){
+    window.populatePersonFilters = function(){
+      if(typeof db === 'undefined' || !db) return;
+      try{ return orig.apply(this, arguments); }catch(e){ console.warn(e); }
+    };
   }
 })();
 </script>
