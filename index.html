@@ -9799,17 +9799,7 @@ function icDownloadReport(){
     '</tbody></table>'+
     '<div class="tot">Total Commission: '+icFmt(total)+'</div>'+
     '<div class="mut" style="margin-top:20px">Generated from Greenhouse Studio · filtered list as shown on screen</div>'+
-    '
-<script>
-(function(){
-  function forceSave(){
-    try{ if(typeof saveAll==='function') saveAll(); else if(typeof saveLocal==='function') saveLocal(); }catch(e){}
-  }
-  setInterval(forceSave, 30000);
-  window.addEventListener('beforeunload', forceSave);
-})();
-</script>
-</body></html>';
+    '</'+'body></'+'html>';
   const w=window.open('','_blank');
   if(!w){ alert('Pop-up blocked — allow pop-ups for report.'); return; }
   w.document.write(html); w.document.close();
@@ -29590,5 +29580,15 @@ window.renderLicCertView=function(){
 };
 </script>
 
+
+<script>
+(function(){
+  function forceSave(){
+    try{ if(typeof saveAll==='function') saveAll(); else if(typeof saveLocal==='function') saveLocal(); }catch(e){}
+  }
+  setInterval(forceSave, 30000);
+  window.addEventListener('beforeunload', forceSave);
+})();
+</script>
 </body>
 </html>
