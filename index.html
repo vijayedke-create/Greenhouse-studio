@@ -973,7 +973,7 @@ aside.collapsed .nav-icon svg{width:20px;height:20px}
   overflow:hidden;cursor:pointer;border:2px solid var(--bdr);
 }
 .permission-docs-group .perm-chevron{display:inline-block;margin-left:auto;font-size:14px;opacity:.7;min-width:14px;text-align:center;transition:transform .2s}
-.permission-docs-sub{overflow:hidden;max-height:280px;transition:max-height .28s ease,opacity .2s ease;opacity:1}
+.permission-docs-sub{overflow:hidden;max-height:420px;transition:max-height .28s ease,opacity .2s ease;opacity:1}
 .permission-docs-group.perm-collapsed .permission-docs-sub{
   display:block!important;max-height:0!important;opacity:0;padding-top:0!important;padding-bottom:0!important;pointer-events:none;
 }
@@ -1981,7 +1981,7 @@ nav{flex:1;padding:12px 10px;overflow-y:auto;display:flex;flex-direction:column;
 .nav-btn.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);height:60%;width:3px;background:var(--gold);border-radius:0 3px 3px 0}
 .nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
 .nav-badge{margin-left:auto;background:var(--gold);color:var(--grn);font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px}
-.sync-dot{width:8px;height:8px;border-radius:50%;margin-left:auto;flex-shrink:0}
+.sync-dot{width:8px;height:8px;border-radius:50%;margin-left:auto;flex-shrink:0;cursor:pointer}
 .sync-dot.green{background:#4caf50;box-shadow:0 0 6px rgba(76,175,80,.7)}
 .sync-dot.yellow{background:#ff9800;box-shadow:0 0 6px rgba(255,152,0,.7)}
 .sync-dot.red{background:#f44336}
@@ -3386,6 +3386,7 @@ header,.topbar{position:relative;z-index:15}
         <button class="nav-btn perm-sub-btn" data-view="areawarranty" onclick="switchView('areawarranty')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>क्षेत्रफळाबाबत हमीपत्र</button>
         <button class="nav-btn perm-sub-btn" data-view="archproj" onclick="switchView('archproj')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>Architectural Projection हमीपत्र</button>
         <button class="nav-btn perm-sub-btn" data-view="tpabhipray" onclick="switchView('tpabhipray')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="0.5"/><path d="M6 10h12M10 6v12"/></svg></span>TP अभिप्राय पत्र</button>
+        <button class="nav-btn perm-sub-btn" data-view="liccert" onclick="switchView('liccert')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg></span>Certificate by Licensed Person</button>
         <button class="nav-btn perm-sub-btn" data-view="permcase" onclick="switchView('permcase')"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v4H8z"/><path d="M6 7h12v14H6z"/><path d="M9 12h6M9 16h4"/></svg></span>Permission Case File</button>
       </div>
     </div>
@@ -3394,7 +3395,7 @@ header,.topbar{position:relative;z-index:15}
     <div class="user-row gs-glass-user" title="User profile">
       <div class="user-av">VE</div>
       <div class="user-info"><p>Vijay Edke</p><span>Principal Architect</span></div>
-      <div id="sync-dot" class="sync-dot gray" title="Sync Status"></div>
+      <div id="sync-dot" class="sync-dot gray" title="Sync Status — click for info" onclick="showSyncInfo()" style="cursor:pointer"></div>
     </div>
   </div>
 </aside>
@@ -4215,6 +4216,7 @@ header,.topbar{position:relative;z-index:15}
     <div id="view-areawarranty" class="view-section"><div id="areawarranty-body"></div></div>
     <div id="view-archproj" class="view-section"><div id="archproj-body"></div></div>
     <div id="view-tpabhipray" class="view-section"><div id="tpabhipray-body"></div></div>
+    <div id="view-liccert" class="view-section"><div id="liccert-body"></div></div>
     <div id="view-permcase" class="view-section"><div id="permcase-body"></div></div>
     <div id="view-interiorest" class="view-section">
       <div class="sec-head">
@@ -5168,7 +5170,7 @@ const DRAWINGS=[
 const VIEW_TITLES={
   dashboard:'Dashboard',contacts:'Contacts',projects:'Projects',
   payments:'Payment Records',reports:'Reports & PDF',settings:'Settings & Sync',
-  permcase:'Permission Case File',leads:'Leads & Enquiries',quotations:'Professional Quotations',drawingset:'Client Drawing Set',
+  permcase:'Permission Case File',liccert:'Certificate by Licensed Person',tpabhipray:'TP अभिप्राय पत्र',archproj:'Architectural Projection',leads:'Leads & Enquiries',quotations:'Professional Quotations',drawingset:'Client Drawing Set',
   expenses:'Expense Tracker',analytics:'Analytics'
 };
 
@@ -5448,14 +5450,19 @@ function gsCountRecords(d){
 }
 function saveLocal(){
   try{
-    if(!db) return;
+    if(typeof db==='undefined'||!db) return;
+    window.db = db;
     if(!db.tasks) db.tasks=[];
     if(!db.leads) db.leads=[];
+    if(!db.contacts) db.contacts=[];
+    if(!db.projects) db.projects=[];
+    if(!db.payments) db.payments=[];
     var payload = JSON.stringify(db);
     localStorage.setItem('gs_db', payload);
     localStorage.setItem('gs_db_backup', payload);
     localStorage.setItem('gs_office', JSON.stringify(officeInfo||{}));
     localStorage.setItem('gs_saved', new Date().toLocaleString());
+    try{ sessionStorage.setItem('gs_db_session', payload); }catch(e){}
     var el = document.getElementById('last-saved');
     if(el) el.textContent = localStorage.getItem('gs_saved') || '—';
     var dc = document.getElementById('data-count');
@@ -5484,15 +5491,15 @@ function loadLocal(){
         }
         var incoming = gsCountRecords(parsed);
         var current = gsCountRecords(db);
-        // Prefer loaded data if it has any records, or if current is only seed
-        if(incoming > 0 || current === 0){
+        // Always prefer localStorage when it has data
+        if(incoming > 0){
           db = parsed;
-        } else if(incoming === 0 && current > 0){
-          // keep current seed / in-memory rather than wipe with empty
-          console.warn('loadLocal: skipped empty storage overwrite');
+        } else if(current === 0){
+          db = parsed;
         } else {
-          db = parsed;
+          console.warn('loadLocal: storage empty, keeping in-memory seed');
         }
+        window.db = db;
       }
     }
     if(!db.tasks) db.tasks = [];
@@ -5508,6 +5515,7 @@ function loadLocal(){
     if(!db.contacts) db.contacts = [];
     if(!db.projects) db.projects = [];
     if(!db.payments) db.payments = [];
+    window.db = db;
     var o = localStorage.getItem('gs_office');
     if(o){
       try{ officeInfo = Object.assign(officeInfo||{}, JSON.parse(o)); }catch(e){}
@@ -5544,10 +5552,27 @@ function cleanDbUrl(inp){ const c=stripQuotes(inp.value); if(c!==inp.value) inp.
 
 function setSyncStatus(color,text){
   const dot=document.getElementById('sync-dot');
-  if(dot){dot.className='sync-dot '+color;dot.title=text;}
+  if(dot){
+    dot.className='sync-dot '+(color||'gray');
+    dot.title=text||'Sync status';
+    dot.setAttribute('data-sync-msg', text||'');
+  }
   const badge=document.getElementById('sync-status-badge');
-  if(badge) badge.textContent=(color==='green'?'● ':color==='yellow'?'● ':'⚫ ')+text;
+  if(badge) badge.textContent=(color==='green'?'● Live ':color==='yellow'?'● Local ':color==='red'?'● Error ':'● ')+(text||'');
+  window._lastSyncMsg = text||'';
+  window._lastSyncColor = color||'gray';
 }
+window.showSyncInfo=function(){
+  var msg=window._lastSyncMsg||(document.getElementById('sync-dot')||{}).title||'';
+  var c=window._lastSyncColor||'gray';
+  var mean={
+    green:'Cloud/Firebase sync OK — data online आहे.',
+    yellow:'Local save OK — Firebase connect नसेल / pending. या PC browser मध्ये data safe.',
+    red:'Sync error — Firebase URL/key तपासा (Settings). Local data तरीही save होते.',
+    gray:'अजून connect नाही / idle.'
+  };
+  alert('Sync status: '+(c||'')+'\n\n'+(msg||'')+'\n\n'+(mean[c]||''));
+};
 
 // ── SAVE ──────────────────────────────────────────
 async function syncData(){
@@ -5555,7 +5580,7 @@ async function syncData(){
   if(fbDbUrl){
     try{ await syncFirebase(); }catch(e){ console.error('syncFirebase', e); }
   } else {
-    try{ setSyncStatus('yellow','Saved locally — Firebase not connected'); }catch(e){}
+    try{ setSyncStatus('yellow','Saved locally (this browser)'); }catch(e){}
   }
 }
 // Alias — always persist locally even if called without await
@@ -5567,7 +5592,7 @@ function saveAll(){
       if(p && typeof p.then==='function') p.catch(function(e){ console.error(e); });
     }catch(e){ console.error(e); }
   } else {
-    try{ setSyncStatus('yellow','Saved locally — Firebase not connected'); }catch(e){}
+    try{ setSyncStatus('yellow','Saved locally (this browser)'); }catch(e){}
   }
 }
 
@@ -5578,8 +5603,8 @@ async function loadRemoteData(){
 }
 
 // ── POLL for remote changes ───────────────────────
-async function pollRemote(){
-  if(fbDbUrl){ await fbPoll(); }
+async async function pollRemote(){
+  if(fbDbUrl){ try{ await fbPoll(); }catch(e){ console.warn('poll',e); } }
 }
 
 // ── FIREBASE REST (standalone only) ──────────────
@@ -5592,27 +5617,65 @@ async function syncFirebase(){
   if(!fbDbUrl)return;
   setSyncStatus('yellow','Syncing...');
   try{
-    // Ensure all arrays exist before sync
     if(!db.expenses) db.expenses=[];
     if(!db.estimates) db.estimates=[];
     if(!db.siteVisits) db.siteVisits=[];
     if(!db.activities) db.activities=[];
-    var payload={db:db,officeInfo:officeInfo};
+    var payload={db:db,officeInfo:officeInfo,savedAt:new Date().toISOString()};
     var body=JSON.stringify(payload);
     var r=await fetch(fbUrl(),{method:'PUT',headers:{'Content-Type':'application/json'},body:body});
-    if(!r.ok) throw new Error('HTTP '+r.status+' — Firebase Rules: Test mode चालू करा');
+    if(!r.ok){
+      var tip='';
+      if(r.status===401||r.status===403) tip=' — Rules: Realtime Database → Rules → test mode (.write/.read true)';
+      else if(r.status===404) tip=' — URL बरोबर आहे का? ...firebaseio.com (path नको)';
+      throw new Error('HTTP '+r.status+tip);
+    }
     setSyncStatus('green','Synced ✓ '+new Date().toLocaleTimeString());
+    var badge=document.getElementById('fb-inline-status')||document.getElementById('sync-status-badge');
+    if(badge){ badge.className='sync-status active'; badge.textContent='🟢 Firebase Connected'; }
+    var errEl=document.getElementById('fb-inline-error');
+    if(errEl){ errEl.style.display='none'; }
   }catch(e){
-    setSyncStatus('red','Sync Error');
-    console.error('Firebase sync:',e.message);
-    throw e; // re-throw so connectFirebaseInline can catch it
+    var msg=(e&&e.message)?e.message:'Sync Error';
+    setSyncStatus('red', msg);
+    console.error('Firebase sync:',msg);
+    var badge=document.getElementById('sync-status-badge');
+    if(badge){ badge.className='sync-status inactive'; badge.textContent='🔴 Sync failed'; }
+    var errEl=document.getElementById('fb-inline-error');
+    if(errEl){
+      errEl.style.display='block';
+      errEl.style.background='#f8d7da';
+      errEl.style.color='#721c24';
+      errEl.textContent='Sync error: '+msg+' | Local data तरी save आहे.';
+    }
+    throw e;
   }
 }
+
+/** Re-test connection; updates red/green dot */
+window.testFirebaseConnection=async function(){
+  if(!fbDbUrl){ setSyncStatus('gray','Not connected'); return false; }
+  try{
+    setSyncStatus('yellow','Checking Firebase...');
+    var r=await fetch(fbUrl());
+    if(!r.ok) throw new Error('HTTP '+r.status+(r.status===401||r.status===403?' — Database Rules lock आहे':''));
+    setSyncStatus('green','Connected ✓');
+    return true;
+  }catch(e){
+    setSyncStatus('red', (e&&e.message)||'Connection failed');
+    return false;
+  }
+};
+
 async function fbPoll(){
   if(!fbDbUrl)return;
   var url=fbUrl();
   if(!url)return;
   try{
+    /* Quota-safe: skip if polled < 2 min ago */
+    var now=Date.now();
+    if(window._fbLastPollAt && (now-window._fbLastPollAt)<120000) return;
+    window._fbLastPollAt=now;
     var r=await fetch(url);
     if(!r.ok)return;
     var data=await r.json();
@@ -5717,9 +5780,9 @@ async function connectFirebaseInline(){
     fbDbUrl=url;
     await syncFirebase();
 
-    // Step 4: Start polling for remote changes (every 6 seconds)
+    // Step 4: Start polling for remote changes (every 5 minutes (quota-safe))
     if(fbPollTimer) clearInterval(fbPollTimer);
-    fbPollTimer=setInterval(pollRemote,6000);
+    fbPollTimer=setInterval(pollRemote,300000);
 
     // Step 5: Save to localStorage
     localStorage.setItem('gs_fb_url',url);
@@ -5770,7 +5833,7 @@ async function loadSavedFirebaseConfig(){
     if(!db.activities) db.activities=[];
     await fbPoll();
     if(fbPollTimer) clearInterval(fbPollTimer);
-    fbPollTimer=setInterval(pollRemote,6000);
+    fbPollTimer=setInterval(pollRemote,300000);
     var discBtn=document.getElementById('btn-disconnect');
     if(discBtn) discBtn.style.display='';
     var badge=document.getElementById('sync-status-badge');
@@ -5786,35 +5849,96 @@ function loadFirebaseFormValues(){
 // IMPORT / EXPORT
 // ════════════════════════════════════════════════
 function exportData(){
-  const payload={db,officeInfo,exportedAt:new Date().toISOString(),version:'2.0'};
+  try{
+    // Prefer live db; if empty try localStorage
+    if(typeof loadLocal==='function'){ try{ loadLocal(); }catch(e){} }
+    var n=(db&&db.contacts?db.contacts.length:0)+(db&&db.projects?db.projects.length:0)+(db&&db.payments?db.payments.length:0);
+    if(n===0){
+      var raw=null;
+      try{ raw=localStorage.getItem('gs_db')||localStorage.getItem('gs_db_backup'); }catch(e){}
+      if(raw){
+        try{
+          var p=JSON.parse(raw);
+          if(p&&p.db) p=p.db;
+          if(p&&((p.projects||[]).length||(p.contacts||[]).length)){
+            db=p; window.db=db;
+            n=(db.contacts||[]).length+(db.projects||[]).length+(db.payments||[]).length;
+          }
+        }catch(e){}
+      }
+    }
+    if(n===0){
+      alert('Backup रिकामे पडेल (0 contacts/projects).\n\n1) दुसऱ्या browser/profile मध्ये data असू शकते\n2) Firebase Data viewer तपासा\n3) जुनी मोठी JSON backup शोधा (KB/MB size, 134 bytes नको)');
+      return;
+    }
+  }catch(e){ console.warn(e); }
+  const payload={db:db,officeInfo:officeInfo,exportedAt:new Date().toISOString(),version:'2.0'};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;a.download='greenhouse-studio-'+new Date().toISOString().split('T')[0]+'.json';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  if(typeof showOk==='function') showOk('Backup OK — '+(db.projects||[]).length+' projects');
 }
 function importData(input){
   const file=input.files[0];if(!file)return;
+  if(file.size < 50){
+    alert('File खूप छोटी आहे ('+file.size+' bytes).\nही valid backup नाही.\n\n134-byte files रिकाम्या असतात. मोठी JSON (KB+) शोधा.\nकिंवा: Restore last snapshot वापरा.');
+    input.value='';
+    return;
+  }
   const reader=new FileReader();
   reader.onload=e=>{
     try{
-      const payload=JSON.parse(e.target.result);
-      const imp=payload.db||payload;
-      const mode=confirm('REPLACE all data with imported data?\n\nOK = Replace (all current data deleted)\nCancel = Merge (new records added, existing kept)');
+      var text=e.target.result||'';
+      if(typeof text!=='string') text=String(text);
+      text=text.replace(/^\uFEFF/,''); // BOM
+      var payload;
+      try{ payload=JSON.parse(text); }
+      catch(pe){
+        alert('JSON parse error: '+(pe.message||pe)+'\n\nFile: '+file.name+' ('+file.size+' bytes)\nGreenhouse Studio backup JSONच वापरा.');
+        return;
+      }
+      // Accept formats: {db, officeInfo} | raw db | {contacts, projects}
+      var imp=payload;
+      if(payload && payload.db && typeof payload.db==='object') imp=payload.db;
+      if(!imp || typeof imp!=='object'){ alert('File मध्ये data object नाही'); return; }
+      if(!imp.contacts && !imp.projects && !imp.payments){
+        // maybe nested greenhouseStudio
+        if(payload.greenhouseStudio && payload.greenhouseStudio.db) imp=payload.greenhouseStudio.db;
+        else if(payload.data && payload.data.db) imp=payload.data.db;
+      }
+      var nc=(imp.contacts&&imp.contacts.length)||0;
+      var np=(imp.projects&&imp.projects.length)||0;
+      var npay=(imp.payments&&imp.payments.length)||0;
+      if(nc+np+npay===0){
+        alert('Backup मध्ये 0 contacts/projects/payments.\nही file रिकामी आहे — import करू नका.');
+        return;
+      }
+      const mode=confirm('Import: '+nc+' contacts, '+np+' projects, '+npay+' payments\n\nOK = Replace (आताचे 0 records जाऊन हे येतील)\nCancel = Merge');
+      if(!db) db={contacts:[],projects:[],payments:[],activities:[]};
       if(mode){
         db=imp;
+        if(!db.contacts) db.contacts=[];
+        if(!db.projects) db.projects=[];
+        if(!db.payments) db.payments=[];
       }else{
-        // Merge by ID
+        if(!db.contacts) db.contacts=[];
+        if(!db.projects) db.projects=[];
+        if(!db.payments) db.payments=[];
         if(imp.contacts) imp.contacts.forEach(c=>{if(!db.contacts.find(x=>x.id===c.id))db.contacts.push(c);});
         if(imp.projects) imp.projects.forEach(p=>{if(!db.projects.find(x=>x.id===p.id))db.projects.push(p);});
         if(imp.payments) imp.payments.forEach(p=>{if(!db.payments.find(x=>x.id===p.id))db.payments.push(p);});
-        if(imp.activities) db.activities=[...imp.activities,...db.activities].slice(0,20);
+        if(imp.activities) db.activities=[...(imp.activities||[]),...(db.activities||[])].slice(0,50);
       }
       if(payload.officeInfo) officeInfo=payload.officeInfo;
-      saveAll();refreshAll();
-      alert('Import successful!');
-    }catch(err){alert('Invalid file. Please use a valid Greenhouse Studio backup JSON.');}
+      window.db=db;
+      try{ saveAll(); }catch(e){ try{ saveLocal(); }catch(x){} }
+      if(typeof refreshAll==='function') refreshAll();
+      else if(typeof renderDashboard==='function') renderDashboard();
+      alert('Import successful!\n'+((db.contacts||[]).length)+' contacts, '+((db.projects||[]).length)+' projects');
+    }catch(err){alert('Import failed: '+(err&&err.message?err.message:err));}
   };
   reader.readAsText(file);
   input.value='';
@@ -6271,6 +6395,7 @@ function renderView(v){
     areawarranty:function(){if(window.renderAreaWarrantyView)renderAreaWarrantyView();},
     archproj:function(){if(window.renderArchProjView)renderArchProjView();},
     tpabhipray:function(){if(window.renderTPAbhiprayView)renderTPAbhiprayView();},
+    liccert:function(){if(window.renderLicCertView)renderLicCertView();},
     permcase:function(){
       try{
         if(typeof window.renderPermCaseView==='function') window.renderPermCaseView();
@@ -6311,7 +6436,7 @@ function switchView(v){
     var m=b.getAttribute('data-mob');
     b.classList.toggle('active', m===v || (m==='dashboard'&&v==='dashboard'));
   });
-  var permissionViews=['nocletter','clientself','areawarranty','archproj','tpabhipray','permcase'];
+  var permissionViews=['nocletter','clientself','areawarranty','archproj','tpabhipray','liccert','permcase'];
   if(permissionViews.indexOf(v)!==-1){
     var pnb=document.querySelector('.permission-docs-group > .nav-btn[data-view="nocletter"]');
     if(pnb) pnb.classList.add('active');
@@ -7792,7 +7917,47 @@ function generateClientSummaryPDF(cid){
     '<table><thead><tr><th>Project</th><th>Stage</th><th>Total</th><th>Paid</th><th>Balance</th><th>%</th></tr></thead><tbody>'+
     projHtml+'</tbody></table>'+
     '<p style="margin-top:24px;font-size:11px;color:#888">Generated by '+(office.name||'Greenhouse Studio')+'</p>'+
-    '</body></html>';
+    '
+<script>
+(function(){
+  function forceSave(){
+    try{
+      if(typeof saveAll==='function') saveAll();
+      else if(typeof saveLocal==='function') saveLocal();
+    }catch(e){ console.warn('autosave', e); }
+  }
+  setInterval(forceSave, 30000);
+  window.addEventListener('beforeunload', forceSave);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='hidden') forceSave();
+  });
+  // Show last saved in UI if element exists
+  setInterval(function(){
+    var el=document.getElementById('last-saved')||document.getElementById('gs-last-saved');
+    if(!el) return;
+    try{ el.textContent = localStorage.getItem('gs_saved')||'—'; }catch(e){}
+  }, 5000);
+})();
+</script>
+
+
+<script>
+(function(){
+  setTimeout(function(){
+    try{
+      if(typeof fbDbUrl!=='undefined' && fbDbUrl && typeof testFirebaseConnection==='function'){
+        testFirebaseConnection().then(function(ok){
+          if(ok && typeof syncFirebase==='function'){
+            syncFirebase().catch(function(){});
+          }
+        });
+      }
+    }catch(e){}
+  }, 2500);
+})();
+</script>
+
+</body></html>';
 
   const w = window.open('','_blank');
   if(!w){ alert('Pop-up blocked'); return; }
@@ -19042,7 +19207,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       ensureDbExtensions();
       refreshAll();
     }catch(e){console.warn('Remote:',e);}
-    setInterval(pollRemote,6000);
+    setInterval(pollRemote,300000);
   },500);
 });
 </script>
@@ -26380,6 +26545,7 @@ html += '</div>';
   var AB_LAST = 'gs_auto_backup_last';
 
   function abPayload(){
+    try{ if(typeof loadLocal==='function') loadLocal(); }catch(e){}
     return {
       db: (typeof db !== 'undefined' ? db : {}),
       officeInfo: (typeof officeInfo !== 'undefined' ? officeInfo : {}),
@@ -26387,6 +26553,11 @@ html += '</div>';
       version: '2.0',
       type: 'greenhouse-auto-backup'
     };
+  }
+  function abIsEmptyPayload(p){
+    var d=p&&p.db?p.db:p;
+    if(!d) return true;
+    return !((d.contacts&&d.contacts.length)||(d.projects&&d.projects.length)||(d.payments&&d.payments.length));
   }
   function abFilename(){
     var d = new Date();
@@ -26484,6 +26655,9 @@ html += '</div>';
     abUpdateUI();
   };
   window.abDownloadNow = function(){
+    var _p=abPayload();
+    if(abIsEmptyPayload(_p)){ alert("Backup रिकामे (0 records). Data load झाले आहे का ते तपासा."); return; }
+
     abSaveSnapshot(); abDownloadBlob(abPayload(), abFilename()); abUpdateUI();
     if(typeof showOk === 'function') showOk('Backup downloaded');
   };
@@ -29327,6 +29501,137 @@ window.quickAddProjectClient = function(){
     };
   }
 })();
+</script>
+
+
+<script>
+/* ══ Certificate by Licensed Person (UDCPR) ══ */
+var lcDrawn=false;
+function lcEl(id){ return document.getElementById('lc-'+id); }
+function lcVal(id){ var e=lcEl(id); return e?String(e.value||'').trim():''; }
+function lcEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function lcDmy(v){
+  if(!v) return '____ / ____ / ________';
+  try{
+    var p=String(v).split('-');
+    if(p.length===3) return p[2]+' / '+p[1]+' / '+p[0];
+  }catch(e){}
+  return v;
+}
+function lcToday(){
+  var d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+window.lcRender=function(){
+  if(!lcDrawn) return;
+  var name=lcEsc(lcVal('name')||'Vijaykumar Prakash Edke');
+  var reg=lcEsc(lcVal('reg')||'STATE/R/2025/APL/21936');
+  var date=lcDmy(lcVal('date'));
+  var city=lcEsc(lcVal('city')||'Solapur');
+  var extra=lcEsc(lcVal('extra')||'');
+  var pv=document.getElementById('lc-pv');
+  if(!pv) return;
+  if(pv.getAttribute('data-lc-edited')==='1') return;
+  pv.innerHTML=
+    '<div class="tp-sheet"><div class="tp-in" id="lc-edit-root" style="font-family:Noto Sans Devanagari,Plus Jakarta Sans,serif;line-height:1.65;color:#15150f">'+
+    '<div style="text-align:center;font-size:14pt;font-weight:800;letter-spacing:.04em;margin-bottom:6px;text-transform:uppercase" contenteditable="true">CERTIFICATE BY LICENSED PERSON</div>'+
+    '<div style="text-align:center;font-size:10pt;color:#444;margin-bottom:18px" contenteditable="true">(Under Unified Development Control and Promotion Regulations — Maharashtra)</div>'+
+    '<div style="text-align:right;font-size:11pt;margin-bottom:16px" contenteditable="true">Date: '+date+'</div>'+
+    '<div style="text-align:justify;font-size:11.5pt;line-height:1.85" contenteditable="true">'+
+    '<p style="text-indent:12mm;margin:0 0 14px">I hereby certify that the proposed building development submitted for approval has been prepared in accordance with the applicable provisions of the <b>Unified Development Control and Promotion Regulations (UDCPR), Maharashtra</b>, as amended from time to time.</p>'+
+    '<p style="text-indent:12mm;margin:0 0 14px">I further certify that the area calculations, FSI, building margins, building height, parking provisions and other applicable development control requirements have been duly verified and are in conformity with the applicable regulations.</p>'+
+    (extra?'<p style="margin:0 0 14px">'+extra+'</p>':'')+
+    '</div>'+
+    '<div style="margin-top:28px;font-size:11.5pt;line-height:2" contenteditable="true">'+
+    '<div><b>Name of Licensed Person:</b> '+name+'</div>'+
+    '<div><b>Registration No.:</b> '+reg+'</div>'+
+    '<div style="margin-top:22px"><b>Signature:</b> ____________________________</div>'+
+    '<div><b>Date:</b> '+date+'</div>'+
+    '<div style="margin-top:8px"><b>Place:</b> '+city+'</div>'+
+    '</div>'+
+    '</div></div>';
+  var root=document.getElementById('lc-edit-root');
+  if(root){
+    root.querySelectorAll('[contenteditable=true]').forEach(function(el){
+      el.addEventListener('input', function(){
+        var p=document.getElementById('lc-pv'); if(p) p.setAttribute('data-lc-edited','1');
+      });
+      el.style.outline='1px dashed transparent';
+      el.addEventListener('focus', function(){ el.style.outline='1px dashed rgba(184,151,90,.45)'; });
+      el.addEventListener('blur', function(){ el.style.outline='1px dashed transparent'; });
+    });
+  }
+};
+window.lcNew=function(){
+  var d=lcEl('date'); if(d) d.value=lcToday();
+  var n=lcEl('name'); if(n) n.value='Vijaykumar Prakash Edke';
+  var r=lcEl('reg'); if(r) r.value='STATE/R/2025/APL/21936';
+  var c=lcEl('city'); if(c) c.value='Solapur';
+  var e=lcEl('extra'); if(e) e.value='';
+  var pv=document.getElementById('lc-pv'); if(pv) pv.removeAttribute('data-lc-edited');
+  lcRender();
+};
+window.lcPrint=function(){
+  var body=document.getElementById('lc-pv');
+  if(!body) return;
+  var w=window.open('','_blank');
+  if(!w){ alert('Pop-up blocked'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Certificate by Licensed Person</title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">'+
+    '<style>html,body{margin:0;padding:0;background:#fff}'+
+    '.tp-sheet{width:210mm;min-height:297mm;padding:18mm 16mm;box-sizing:border-box;font-family:"Noto Sans Devanagari","Plus Jakarta Sans",sans-serif}'+
+    '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>'+
+    body.innerHTML+
+    '<script>document.fonts.ready.then(function(){setTimeout(function(){window.print()},400)})<\/script>'+
+    '</body></html>');
+  w.document.close();
+};
+window.lcStore=function(){
+  try{
+    if(typeof db==='undefined'||!db){ alert('DB not ready'); return; }
+    if(!db.licCerts) db.licCerts=[];
+    var row={
+      id:(typeof uid==='function'?uid('LC'):('LC-'+Date.now())),
+      name:lcVal('name'), reg:lcVal('reg'), date:lcVal('date'), city:lcVal('city'),
+      extra:lcVal('extra'), savedAt:new Date().toISOString()
+    };
+    db.licCerts.unshift(row);
+    if(db.licCerts.length>30) db.licCerts=db.licCerts.slice(0,30);
+    if(typeof saveAll==='function') saveAll();
+    else if(typeof saveLocal==='function') saveLocal();
+    if(typeof showOk==='function') showOk('Certificate saved');
+    else alert('Saved');
+  }catch(e){ alert('Save failed: '+(e.message||e)); }
+};
+window.renderLicCertView=function(){
+  var box=document.getElementById('liccert-body');
+  if(!box) return;
+  if(lcDrawn){ lcRender(); return; }
+  box.innerHTML=
+    '<div class="sec-head"><div class="sec-title">Certificate by Licensed Person</div>'+
+    '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
+    '<button class="btn btn-sm" onclick="lcNew()">New</button>'+
+    '<button class="btn btn-sm" onclick="lcStore()">Save</button>'+
+    '<button class="btn btn-gold" onclick="lcPrint()">Print / PDF</button></div></div>'+
+    '<div class="g2" style="align-items:start;gap:16px">'+
+    '<div>'+
+      '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Licensed Person</div></div><div class="card-body">'+
+        '<div class="fg"><label>Name of Licensed Person</label><input class="fi" id="lc-name" value="Vijaykumar Prakash Edke" oninput="lcRender()"></div>'+
+        '<div class="fg"><label>Registration No.</label><input class="fi" id="lc-reg" value="STATE/R/2025/APL/21936" oninput="lcRender()"></div>'+
+        '<div class="form-row c2"><div class="fg"><label>Date</label><input class="fi" type="date" id="lc-date" oninput="lcRender()"></div>'+
+        '<div class="fg"><label>Place</label><input class="fi" id="lc-city" value="Solapur" oninput="lcRender()"></div></div>'+
+        '<div class="fg"><label>Additional note (optional)</label><textarea class="fi" id="lc-extra" rows="2" oninput="lcRender()" placeholder="Optional extra line..."></textarea></div>'+
+      '</div></div>'+
+      '<div class="card"><div class="card-body" style="font-size:12px;color:var(--mut);line-height:1.55">'+
+      'UDCPR wording as provided. Preview is editable — click text to edit before print.'+
+      '</div></div>'+
+    '</div>'+
+    '<div><div style="margin-bottom:8px;font-size:11px;color:var(--mut);font-weight:600">Preview — A4</div>'+
+    '<div id="lc-pv" style="transform:scale(0.72);transform-origin:top left;width:210mm"></div></div>'+
+    '</div>';
+  lcDrawn=true;
+  lcNew();
+};
 </script>
 
 </body>
