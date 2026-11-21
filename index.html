@@ -5603,7 +5603,7 @@ async function loadRemoteData(){
 }
 
 // ── POLL for remote changes ───────────────────────
-async async function pollRemote(){
+async function pollRemote(){
   if(fbDbUrl){ try{ await fbPoll(); }catch(e){ console.warn('poll',e); } }
 }
 
@@ -7874,92 +7874,38 @@ function downloadClientSummaryPDF(){
 function generateClientSummaryPDF(cid){
   const c = gc(cid);
   if(!c) return;
-  const projs = (db.projects||[]).filter(p=>p.clientId===cid);
-  if(!projs.length){ if(typeof showErr==='function') showErr('No projects found'); else alert('No projects'); return; }
-  const fmt = n => '₹' + Number(n||0).toLocaleString('en-IN');
+  const projs = (db.projects||[]).filter(function(p){ return p.clientId===cid; });
+  if(!projs.length){ alert('No projects found'); return; }
+  const fmt = function(n){ return '₹' + Number(n||0).toLocaleString('en-IN'); };
   const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
-  const totalVal  = projs.reduce((a,p)=>a+(p.total||0), 0);
-  const totalPaid = projs.reduce((a,p)=>a+(typeof ppaid==='function'?ppaid(p.id):0), 0);
+  const totalVal  = projs.reduce(function(a,p){ return a+(p.total||0); }, 0);
+  const totalPaid = projs.reduce(function(a,p){ return a+(typeof ppaid==='function'?ppaid(p.id):0); }, 0);
   const totalBal  = totalVal - totalPaid;
   const pct = totalVal>0 ? Math.round(totalPaid/totalVal*100) : 0;
   const office = (typeof officeInfo!=='undefined' && officeInfo) ? officeInfo : {};
   const logo = office.logo ? ('<img src="'+office.logo+'" style="height:48px;object-fit:contain">') : '';
-
-  let projHtml = '';
+  var projHtml = '';
   projs.forEach(function(p,i){
-    const paid = typeof ppaid==='function' ? ppaid(p.id) : 0;
-    const bal  = typeof pbal==='function' ? pbal(p.id) : ((p.total||0)-paid);
-    const pPct = p.total>0 ? Math.round(paid/p.total*100) : 0;
-    projHtml += '<tr style="background:'+(i%2===0?'#f5f2ec':'#fff')+'">'+
-      '<td style="padding:10px;font-weight:700">'+(p.name||'')+'</td>'+
-      '<td style="padding:10px">'+(p.stage||'—')+'</td>'+
-      '<td style="padding:10px;text-align:right">'+fmt(p.total)+'</td>'+
-      '<td style="padding:10px;text-align:right;color:#27ae60">'+fmt(paid)+'</td>'+
-      '<td style="padding:10px;text-align:right;color:'+(bal>0?'#c0392b':'#27ae60')+'">'+(bal>0?fmt(bal):'Nil')+'</td>'+
-      '<td style="padding:10px">'+pPct+'%</td></tr>';
+    var paid = typeof ppaid==='function' ? ppaid(p.id) : 0;
+    var bal  = typeof pbal==='function' ? pbal(p.id) : ((p.total||0)-paid);
+    var pPct = p.total>0 ? Math.round(paid/p.total*100) : 0;
+    projHtml += '<tr><td style="padding:10px;font-weight:700">'+(p.name||'')+'</td><td style="padding:10px">'+(p.stage||'—')+
+      '</td><td style="padding:10px;text-align:right">'+fmt(p.total)+'</td><td style="padding:10px;text-align:right;color:#27ae60">'+fmt(paid)+
+      '</td><td style="padding:10px;text-align:right">'+(bal>0?fmt(bal):'Nil')+'</td><td style="padding:10px">'+pPct+'%</td></tr>';
   });
-
-  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Client Summary — '+(c.name||'')+'</title>'+
-    '<style>body{font-family:system-ui,sans-serif;padding:24px;color:#1a1a18}'+
-    'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#1a3a2a;color:#fff;padding:8px;text-align:left;font-size:12px}'+
-    'td{border-bottom:1px solid #e5e2db;font-size:13px}@media print{body{padding:0}}</style></head><body>'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #c9a84c;padding-bottom:12px">'+
-    '<div>'+logo+'<div style="font-size:20px;font-weight:800;color:#1a3a2a">'+(office.name||'Greenhouse Studio')+'</div>'+
-    '<div style="font-size:12px;color:#666">'+(office.addr||'')+'</div></div>'+
-    '<div style="text-align:right;font-size:12px;color:#666">Client Summary<br>'+today+'</div></div>'+
-    '<h2 style="margin:18px 0 6px">'+(c.name||'')+'</h2>'+
-    '<div style="font-size:13px;color:#555">'+(c.phone||c.wa||'')+' · '+(c.cat||'')+' · '+(c.address||'')+'</div>'+
-    '<div style="display:flex;gap:16px;margin:16px 0">'+
-    '<div style="flex:1;background:#f5f2ec;padding:12px;border-radius:8px"><div style="font-size:11px;color:#666">Contract</div><div style="font-size:18px;font-weight:800">'+fmt(totalVal)+'</div></div>'+
-    '<div style="flex:1;background:#eaf7ee;padding:12px;border-radius:8px"><div style="font-size:11px;color:#666">Received</div><div style="font-size:18px;font-weight:800;color:#27ae60">'+fmt(totalPaid)+'</div></div>'+
-    '<div style="flex:1;background:#fdecea;padding:12px;border-radius:8px"><div style="font-size:11px;color:#666">Balance</div><div style="font-size:18px;font-weight:800;color:#c0392b">'+fmt(totalBal)+'</div></div>'+
-    '<div style="flex:1;background:#f5f2ec;padding:12px;border-radius:8px"><div style="font-size:11px;color:#666">Paid</div><div style="font-size:18px;font-weight:800">'+pct+'%</div></div></div>'+
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Client Summary</title>'+
+    '<style>body{font-family:system-ui,sans-serif;padding:24px}table{width:100%;border-collapse:collapse}th{background:#1a3a2a;color:#fff;padding:8px;text-align:left}td{border-bottom:1px solid #ddd;font-size:13px}</style></head><body>'+
+    '<div style="display:flex;justify-content:space-between;border-bottom:2px solid #c9a84c;padding-bottom:12px">'+
+    '<div>'+logo+'<div style="font-size:20px;font-weight:800">'+(office.name||'Greenhouse Studio')+'</div></div>'+
+    '<div style="text-align:right;font-size:12px">Client Summary<br>'+today+'</div></div>'+
+    '<h2>'+(c.name||'')+'</h2>'+
+    '<div style="font-size:13px;color:#555">'+(c.phone||c.wa||'')+' · '+(c.cat||'')+'</div>'+
+    '<p><b>Contract:</b> '+fmt(totalVal)+' &nbsp; <b>Received:</b> '+fmt(totalPaid)+' &nbsp; <b>Balance:</b> '+fmt(totalBal)+' &nbsp; <b>Paid:</b> '+pct+'%</p>'+
     '<table><thead><tr><th>Project</th><th>Stage</th><th>Total</th><th>Paid</th><th>Balance</th><th>%</th></tr></thead><tbody>'+
     projHtml+'</tbody></table>'+
     '<p style="margin-top:24px;font-size:11px;color:#888">Generated by '+(office.name||'Greenhouse Studio')+'</p>'+
-    '
-<script>
-(function(){
-  function forceSave(){
-    try{
-      if(typeof saveAll==='function') saveAll();
-      else if(typeof saveLocal==='function') saveLocal();
-    }catch(e){ console.warn('autosave', e); }
-  }
-  setInterval(forceSave, 30000);
-  window.addEventListener('beforeunload', forceSave);
-  document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState==='hidden') forceSave();
-  });
-  // Show last saved in UI if element exists
-  setInterval(function(){
-    var el=document.getElementById('last-saved')||document.getElementById('gs-last-saved');
-    if(!el) return;
-    try{ el.textContent = localStorage.getItem('gs_saved')||'—'; }catch(e){}
-  }, 5000);
-})();
-</script>
-
-
-<script>
-(function(){
-  setTimeout(function(){
-    try{
-      if(typeof fbDbUrl!=='undefined' && fbDbUrl && typeof testFirebaseConnection==='function'){
-        testFirebaseConnection().then(function(ok){
-          if(ok && typeof syncFirebase==='function'){
-            syncFirebase().catch(function(){});
-          }
-        });
-      }
-    }catch(e){}
-  }, 2500);
-})();
-</script>
-
-</body></html>';
-
-  const w = window.open('','_blank');
+    '</'+'body></'+'html>';
+  var w = window.open('','_blank');
   if(!w){ alert('Pop-up blocked'); return; }
   w.document.write(html);
   w.document.close();
@@ -9853,7 +9799,17 @@ function icDownloadReport(){
     '</tbody></table>'+
     '<div class="tot">Total Commission: '+icFmt(total)+'</div>'+
     '<div class="mut" style="margin-top:20px">Generated from Greenhouse Studio · filtered list as shown on screen</div>'+
-    '</body></html>';
+    '
+<script>
+(function(){
+  function forceSave(){
+    try{ if(typeof saveAll==='function') saveAll(); else if(typeof saveLocal==='function') saveLocal(); }catch(e){}
+  }
+  setInterval(forceSave, 30000);
+  window.addEventListener('beforeunload', forceSave);
+})();
+</script>
+</body></html>';
   const w=window.open('','_blank');
   if(!w){ alert('Pop-up blocked — allow pop-ups for report.'); return; }
   w.document.write(html); w.document.close();
