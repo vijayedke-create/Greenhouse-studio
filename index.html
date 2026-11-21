@@ -29474,6 +29474,8 @@ window.lcRender=function(){
   var reg=lcEsc(lcVal('reg')||'STATE/R/2025/APL/21936');
   var date=lcDmy(lcVal('date'));
   var city=lcEsc(lcVal('city')||'Solapur');
+  var client=lcEsc(lcVal('client')||'___________________________');
+  var site=lcEsc(lcVal('site')||'___________________________');
   var extra=lcEsc(lcVal('extra')||'');
   var pv=document.getElementById('lc-pv');
   if(!pv) return;
@@ -29481,8 +29483,12 @@ window.lcRender=function(){
   pv.innerHTML=
     '<div class="tp-sheet"><div class="tp-in" id="lc-edit-root" style="font-family:Noto Sans Devanagari,Plus Jakarta Sans,serif;line-height:1.65;color:#15150f">'+
     '<div style="text-align:center;font-size:14pt;font-weight:800;letter-spacing:.04em;margin-bottom:6px;text-transform:uppercase" contenteditable="true">CERTIFICATE BY LICENSED PERSON</div>'+
-    '<div style="text-align:center;font-size:10pt;color:#444;margin-bottom:18px" contenteditable="true">(Under Unified Development Control and Promotion Regulations — Maharashtra)</div>'+
-    '<div style="text-align:right;font-size:11pt;margin-bottom:16px" contenteditable="true">Date: '+date+'</div>'+
+    '<div style="text-align:center;font-size:10pt;color:#444;margin-bottom:14px" contenteditable="true">(Under Unified Development Control and Promotion Regulations — Maharashtra)</div>'+
+    '<div style="text-align:right;font-size:11pt;margin-bottom:12px" contenteditable="true">Date: '+date+'</div>'+
+    '<div style="font-size:11.5pt;line-height:1.7;margin-bottom:14px" contenteditable="true">'+
+    '<div><b>Client Name:</b> '+client+'</div>'+
+    '<div style="margin-top:4px"><b>Site Address:</b> '+site+'</div>'+
+    '</div>'+
     '<div style="text-align:justify;font-size:11.5pt;line-height:1.85" contenteditable="true">'+
     '<p style="text-indent:12mm;margin:0 0 14px">I hereby certify that the proposed building development submitted for approval has been prepared in accordance with the applicable provisions of the <b>Unified Development Control and Promotion Regulations (UDCPR), Maharashtra</b>, as amended from time to time.</p>'+
     '<p style="text-indent:12mm;margin:0 0 14px">I further certify that the area calculations, FSI, building margins, building height, parking provisions and other applicable development control requirements have been duly verified and are in conformity with the applicable regulations.</p>'+
@@ -29513,6 +29519,8 @@ window.lcNew=function(){
   var n=lcEl('name'); if(n) n.value='Vijaykumar Prakash Edke';
   var r=lcEl('reg'); if(r) r.value='STATE/R/2025/APL/21936';
   var c=lcEl('city'); if(c) c.value='Solapur';
+  var cl=lcEl('client'); if(cl) cl.value='';
+  var s=lcEl('site'); if(s) s.value='';
   var e=lcEl('extra'); if(e) e.value='';
   var pv=document.getElementById('lc-pv'); if(pv) pv.removeAttribute('data-lc-edited');
   lcRender();
@@ -29539,6 +29547,7 @@ window.lcStore=function(){
     var row={
       id:(typeof uid==='function'?uid('LC'):('LC-'+Date.now())),
       name:lcVal('name'), reg:lcVal('reg'), date:lcVal('date'), city:lcVal('city'),
+      client:lcVal('client'), site:lcVal('site'),
       extra:lcVal('extra'), savedAt:new Date().toISOString()
     };
     db.licCerts.unshift(row);
@@ -29552,7 +29561,11 @@ window.lcStore=function(){
 window.renderLicCertView=function(){
   var box=document.getElementById('liccert-body');
   if(!box) return;
-  if(lcDrawn){ lcRender(); return; }
+  if(lcDrawn){
+    /* ensure new fields exist if form was drawn before update */
+    if(!document.getElementById('lc-client')){ lcDrawn=false; }
+    else { lcRender(); return; }
+  }
   box.innerHTML=
     '<div class="sec-head"><div class="sec-title">Certificate by Licensed Person</div>'+
     '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
@@ -29561,6 +29574,10 @@ window.renderLicCertView=function(){
     '<button class="btn btn-gold" onclick="lcPrint()">Print / PDF</button></div></div>'+
     '<div class="g2" style="align-items:start;gap:16px">'+
     '<div>'+
+      '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Project / Client</div></div><div class="card-body">'+
+        '<div class="fg"><label>Client Name</label><input class="fi" id="lc-client" placeholder="Owner / Client full name" oninput="lcRender()"></div>'+
+        '<div class="fg"><label>Site Address</label><textarea class="fi" id="lc-site" rows="2" placeholder="Plot / Survey / CTS, Area, City" oninput="lcRender()"></textarea></div>'+
+      '</div></div>'+
       '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Licensed Person</div></div><div class="card-body">'+
         '<div class="fg"><label>Name of Licensed Person</label><input class="fi" id="lc-name" value="Vijaykumar Prakash Edke" oninput="lcRender()"></div>'+
         '<div class="fg"><label>Registration No.</label><input class="fi" id="lc-reg" value="STATE/R/2025/APL/21936" oninput="lcRender()"></div>'+
